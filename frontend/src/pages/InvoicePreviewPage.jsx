@@ -1,0 +1,292 @@
+import React, { useState } from 'react';
+import { InvoiceTemplate } from '../components/ui/InvoiceTemplate';
+import { BRAND } from '../config/brand';
+
+const sampleReferenceOrder = {
+  _id: '68bc22849129031022',
+  orderId: '68bc22849129031022',
+  invoiceNumber: 'INV-2026-000022',
+  invoice: {
+    number: 'INV-2026-000022',
+    issuedAt: new Date('2026-09-06'),
+  },
+  createdAt: new Date('2026-09-06'),
+  paymentMethod: 'COD',
+  customer: 'Dhanush Atmakuri',
+  shippingAddress: {
+    name: 'Dhanush',
+    email: 'customer@example.com',
+    phone: '9876543210',
+    address: 'Flat 101, Green Meadows Apartments,',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    pincode: '500081',
+  },
+  store: {
+    displayName: BRAND.name,
+    legalCompanyName: BRAND.legalCompanyName || BRAND.name,
+    gstin: BRAND.gstin || '',
+    cin: BRAND.cin || '',
+    addressLine1: BRAND.address || '',
+    city: BRAND.city || '',
+    state: BRAND.state || '',
+    postalCode: BRAND.postalCode || '',
+    country: BRAND.country || 'India',
+  },
+  items: [
+    {
+      title: 'Kondapalli Family Set',
+      quantity: 1,
+      price: 1499,
+    },
+  ],
+  subtotal: 1499,
+  shippingFee: 0,
+  tax: {
+    taxableAmount: 1295.76,
+    cgst: 116.62,
+    sgst: 116.62,
+    totalTax: 233.24,
+    grandTotal: 1529,
+    currencySymbol: '₹',
+  },
+  totalAmount: 1529,
+};
+
+const sampleExtremeOrder = {
+  _id: '68bc99999999999999',
+  orderId: '68bc99999999999999',
+  invoiceNumber: 'INV-2026-999999-EXTREME-SPECIAL-EDITION',
+  createdAt: new Date(),
+  paymentMethod: 'ONLINE_PREPAID',
+  shippingAddress: {
+    name: 'Sri Sri Sri Ramachandra Venkata Subrahmanya Sastry Garu Bahadur',
+    email:
+      'ramachandra.venkata.subrahmanya.sastry.official.business.long.email@company-enterprise.org',
+    phone: '+91 9876543210 / 08592-234567',
+    address:
+      'Door No. 12-34/56, 3rd Floor, Golden Jubilee Tower, Behind Old Municipal Complex, Ramnagar Colony, Extension Phase 2',
+    city: 'Visakhapatnam Metropolitan Region',
+    state: 'Andhra Pradesh',
+    pincode: '530002',
+  },
+  items: [
+    { title: 'Idli Batter (1 kg)', quantity: 2, price: 4999 },
+    {
+      title: 'Mango Avakaaya Pickle (500 g)',
+      quantity: 1,
+      price: 8500,
+    },
+    { title: 'Cashews W240 (500 g)', quantity: 3, price: 1200 },
+  ],
+  subtotal: 22098,
+  discount: 2000,
+  shippingFee: 250,
+  tax: {
+    taxableAmount: 17201.69,
+    cgst: 1548.15,
+    sgst: 1548.15,
+    totalTax: 3096.31,
+    grandTotal: 23444,
+  },
+  totalAmount: 23444,
+};
+
+const sampleBalajiOrder = {
+  _id: '68bc449129031022',
+  orderId: '68bc449129031022',
+  invoiceNumber: 'INV-2026-000045',
+  invoice: {
+    number: 'INV-2026-000045',
+    issuedAt: new Date('2026-09-10'),
+  },
+  createdAt: new Date('2026-09-10'),
+  paymentMethod: 'UPI',
+  customer: 'Balaji Atmakuri',
+  shippingAddress: {
+    name: 'Balaji Atmakuri',
+    email: 'sakhisoaps@gmail.com',
+    phone: '9876543210',
+    address: 'Chiheru Khusropur Link Road, Law gate, Phagwara Tahsil, Punjab',
+    pincode: '144411',
+  },
+  store: {
+    displayName: BRAND.name,
+    email: BRAND.email,
+    phone: BRAND.phone,
+    legalCompanyName: BRAND.legalCompanyName || BRAND.name,
+    gstin: BRAND.gstin || '',
+    cin: BRAND.cin || '',
+    addressLine1: BRAND.address || '',
+    city: BRAND.city || '',
+    state: BRAND.state || '',
+    postalCode: BRAND.postalCode || '',
+    country: BRAND.country || 'India',
+  },
+  items: [
+    {
+      title: 'Gongura Pickle (250 g)',
+      quantity: 2,
+      price: 650,
+    },
+  ],
+  subtotal: 1300,
+  shippingFee: 0,
+  tax: {
+    taxableAmount: 1101.69,
+    cgst: 99.15,
+    sgst: 99.15,
+    totalTax: 198.31,
+    grandTotal: 1300,
+    currencySymbol: '₹',
+  },
+  totalAmount: 1300,
+};
+
+const sampleRentalBangleOrder = {
+  _id: '68bc88888888888888',
+  rentalOrderId: 'RNT-2026-000088',
+  orderId: 'RNT-2026-000088',
+  orderType: 'rental',
+  isPureRental: true,
+  productTitle: 'Bangle Ceremony Tray',
+  quantity: 2,
+  durationDays: 5,
+  rentalStartDate: new Date('2026-09-11'),
+  rentalEndDate: new Date('2026-09-16'),
+  rentalRate: {
+    rentalPrice: 799,
+    rentalDurationDays: 5,
+  },
+  rentalCharge: 1598,
+  securityDeposit: 1200,
+  deliveryCharge: 0,
+  tax: 243.76,
+  totalAmount: 1895,
+  paymentMethod: 'UPI',
+  customer: 'Balaji Atmakuri',
+  shippingAddress: {
+    name: 'Balaji Atmakuri',
+    email: 'sakhisoaps@gmail.com',
+    phone: '9876543210',
+    address: 'Chiheru Khusropur Link Road, Law gate, Phagwara Tahsil, Punjab',
+    pincode: '144411',
+  },
+  store: {
+    displayName: BRAND.name,
+    legalCompanyName: BRAND.legalCompanyName || BRAND.name,
+    gstin: BRAND.gstin || '',
+    cin: BRAND.cin || '',
+    addressLine1: BRAND.address || '',
+    city: BRAND.city || '',
+    state: BRAND.state || '',
+    postalCode: BRAND.postalCode || '',
+    country: BRAND.country || 'India',
+  },
+  items: [
+    {
+      title: 'Bangle Ceremony Tray',
+      quantity: 2,
+      price: 1598, // Purchase/retail price passed by backend or order
+      rentalPrice: 799,
+      isRental: true,
+      type: 'rental',
+      rentalDurationDays: 5,
+    },
+  ],
+  taxSnap: {
+    taxableAmount: 1354.24,
+    cgst: 121.88,
+    sgst: 121.88,
+    totalTax: 243.76,
+    grandTotal: 1895,
+    subtotal: 1598,
+    currencySymbol: '₹',
+  },
+};
+
+export default function InvoicePreviewPage() {
+  const [activeTab, setActiveTab] = useState('rental'); // 'rental' | 'balaji' | 'reference' | 'extreme'
+  const [showModal, setShowModal] = useState(false);
+  const currentOrder =
+    activeTab === 'rental'
+      ? sampleRentalBangleOrder
+      : activeTab === 'balaji'
+        ? sampleBalajiOrder
+        : activeTab === 'extreme'
+          ? sampleExtremeOrder
+          : sampleReferenceOrder;
+
+  return (
+    <div className="min-h-screen bg-neutral-100 py-6 px-2 sm:px-4 flex flex-col items-center">
+      {/* Test Controls */}
+      <div className="mb-4 flex items-center gap-3 bg-white p-2.5 rounded-full shadow-sm border border-neutral-200 flex-wrap justify-center">
+        <button
+          id="btn-rental"
+          onClick={() => setActiveTab('rental')}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            activeTab === 'rental' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+          }`}
+        >
+          Rental Bangle Tray
+        </button>
+        <button
+          id="btn-balaji"
+          onClick={() => setActiveTab('balaji')}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            activeTab === 'balaji' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+          }`}
+        >
+          Balaji Order
+        </button>
+        <button
+          id="btn-reference"
+          onClick={() => setActiveTab('reference')}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            activeTab === 'reference' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+          }`}
+        >
+          Reference Order
+        </button>
+        <button
+          id="btn-extreme"
+          onClick={() => setActiveTab('extreme')}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            activeTab === 'extreme' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+          }`}
+        >
+          Extreme Data
+        </button>
+        <button
+          id="btn-modal"
+          onClick={() => setShowModal(!showModal)}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            showModal ? 'bg-emerald-700 text-white' : 'bg-gray-900 text-white'
+          }`}
+        >
+          {showModal ? 'Close Modal View' : 'Preview as Modal'}
+        </button>
+      </div>
+
+      {/* Direct Canvas View */}
+      {!showModal && (
+        <div className="w-full max-w-2xl bg-transparent flex justify-center">
+          <InvoiceTemplate order={currentOrder} onClose={() => {}} />
+        </div>
+      )}
+
+      {/* Modal Dialog Simulation (Matches OrderSuccess, Dashboard, Admin) */}
+      {showModal && (
+        <>
+          <div
+            onClick={() => setShowModal(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] no-print"
+          />
+          <div className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[18px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[18px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:p-0 print:border-none print:shadow-none print:bg-white">
+            <InvoiceTemplate order={currentOrder} onClose={() => setShowModal(false)} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

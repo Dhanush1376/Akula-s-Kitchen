@@ -1,0 +1,137 @@
+import { Link, useParams } from 'react-router-dom';
+import { m as motion } from 'framer-motion';
+import { PolicySidebar, MobilePolicyNav } from '../components/layout/PolicySidebar';
+import { SEO } from '../components/seo/SEO';
+import { Skeleton } from '../components/ui';
+import { useQuery } from '@tanstack/react-query';
+import { policyService } from '../services/domainServices';
+import { createSafeHtml } from '../utils/security/sanitize';
+import { useConfig } from '../context/ConfigContext';
+
+export function GenericPolicyPage({ slug: propSlug, defaultTitle }) {
+  const { storeName } = useConfig();
+  const { slug: paramSlug } = useParams();
+  const slug = propSlug || paramSlug;
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['policy', slug],
+    queryFn: () => policyService.getBySlug(slug),
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!slug,
+  });
+
+  const policy = response?.data || {
+    title: defaultTitle,
+    content: '<p>Policy content is not available.</p>',
+    updatedAt: new Date().toISOString(),
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="bg-surface min-h-screen pt-24 pb-12 font-body text-on-surface selection:bg-primary/20 relative overflow-hidden"
+    >
+      <SEO
+        title={policy.title}
+        description={`Read our ${policy.title} at ${storeName || "Akula's Kitchen"}.`}
+      />
+
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 lg:px-12 relative z-10">
+        {/* Help Center Header */}
+        <div className="mb-12 lg:mb-20 text-center lg:text-left">
+          <nav className="text-[8px] sm:text-[8.5px] uppercase font-medium text-on-surface-variant/60 tracking-[0.12em] mb-2 sm:mb-3 flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 select-none">
+            <Link to="/" className="hover:text-primary transition-colors">
+              Home
+            </Link>
+            <span className="w-0.5 h-0.5 rounded-full bg-outline-variant/50"></span>
+            <span>Help Center</span>
+            <span className="w-0.5 h-0.5 rounded-full bg-outline-variant/50"></span>
+            <span className="text-on-surface/70 truncate max-w-[150px] sm:max-w-none">
+              {defaultTitle || policy?.title || 'Policy'}
+            </span>
+          </nav>
+          <h1 className="text-3xl lg:text-4xl font-serif-heading font-normal text-on-surface mb-3 tracking-tight">
+            {isLoading ? <Skeleton className="h-10 w-64" /> : policy.title}
+          </h1>
+          <div className="text-[12px] text-on-surface-variant uppercase tracking-widest font-medium">
+            {isLoading ? (
+              <Skeleton className="h-4 w-40" />
+            ) : (
+              `Last updated: ${new Date(policy.updatedAt).toLocaleDateString()}`
+            )}
+          </div>
+        </div>
+
+        <MobilePolicyNav />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-24">
+          <PolicySidebar />
+
+          <main className="lg:col-span-8 xl:col-span-7">
+            <div className="prose prose-sm max-w-none prose-headings:font-serif-heading prose-headings:font-medium prose-headings:text-on-surface prose-p:text-on-surface/80 prose-p:leading-relaxed prose-p:font-normal prose-li:text-on-surface/80 prose-li:font-normal prose-li:leading-relaxed space-y-8">
+              {isLoading ? (
+                <div className="space-y-12">
+                  <div className="space-y-4">
+                    <Skeleton className="h-8 w-1/3 mb-6" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-11/12" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                  </div>
+                  <div className="space-y-4">
+                    <Skeleton className="h-8 w-1/4 mb-6" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-10/12" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </div>
+              ) : isError ? (
+                <div className="text-red-500">Failed to load policy. Please try again later.</div>
+              ) : (
+                (() => {
+                  try {
+                    const sets = JSON.parse(policy.content);
+                    if (Array.isArray(sets)) {
+                      return (
+                        <div className="space-y-8">
+                          {sets.map((set, i) => (
+                            <div key={i} className="space-y-3">
+                              {set.heading && (
+                                <h2 className="font-serif-heading font-medium text-base sm:text-[17px] text-on-surface">
+                                  {set.heading}
+                                </h2>
+                              )}
+                              {set.paragraph && (
+                                <p className="text-[13px] text-on-surface/80 leading-relaxed font-normal whitespace-pre-wrap">
+                                  {set.paragraph}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                  } catch (e) {}
+
+                  // Fallback for legacy raw HTML content
+                  return (
+                    <div
+                      className="text-[13px] text-on-surface/80 leading-relaxed font-normal space-y-3 [&_h2]:font-serif-heading [&_h2]:font-medium [&_h2]:text-base [&_h2]:sm:text-[17px] [&_h2]:text-on-surface [&_h2]:mt-8 [&_h2:first-child]:mt-0 [&_h2]:mb-3 [&_p]:mb-4"
+                      dangerouslySetInnerHTML={createSafeHtml(policy.content)}
+                    />
+                  );
+                })()
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
