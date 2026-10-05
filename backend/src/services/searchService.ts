@@ -1,6 +1,4 @@
 import Product from '../models/Product';
-import Event from '../models/Event';
-import Gallery from '../models/Gallery';
 import Category from '../models/Category';
 import { getCachedSeasonalContext, computeSeasonalBoost } from './recommendation/seasonalEngine';
 
@@ -29,18 +27,8 @@ export {
   getTransliterationsAndSynonyms,
   generateFuzzyVariants,
 };
-export {
-  escapeRegex,
-  getMatchingProductCategory,
-  getMatchingEventCategory,
-  getMatchingGalleryCategory,
-} from './search/filteringEngine';
-import {
-  escapeRegex,
-  getMatchingProductCategory,
-  getMatchingEventCategory,
-  getMatchingGalleryCategory,
-} from './search/filteringEngine';
+export { escapeRegex, getMatchingProductCategory } from './search/filteringEngine';
+import { escapeRegex, getMatchingProductCategory } from './search/filteringEngine';
 import { computeSearchScore, getMatchSource } from './search/rankingEngine';
 export { computeSearchScore };
 
@@ -48,7 +36,7 @@ export { computeSearchScore };
 export interface AutocompleteResult {
   id: string;
   title: string;
-  type: 'product' | 'event' | 'gallery' | 'category' | 'suggestion';
+  type: 'product' | 'gallery' | 'category' | 'suggestion';
   category?: string;
   image?: string;
   price?: number;
@@ -344,17 +332,9 @@ export async function searchAll(
     const seasonal = await getCachedSeasonalContext();
 
     // Fetch distinct active categories to match against predicted category
-    const [dbProductCategories, dbEventCategories, dbGalleryCategories] = await Promise.all([
-      Category.distinct('name', { isActive: true })
-        .then((r) => r.map(String))
-        .catch(() => [] as string[]),
-      Category.distinct('name', { isActive: true })
-        .then((r) => r.map(String))
-        .catch(() => [] as string[]),
-      Category.distinct('name', { isActive: true })
-        .then((r) => r.map(String))
-        .catch(() => [] as string[]),
-    ]);
+    const dbProductCategories = await Category.distinct('name', { isActive: true })
+      .then((r) => r.map(String))
+      .catch(() => [] as string[]);
 
     // Apply manual Category filter or predicted intent categories mapped to actual taxonomies
     const hasManualCategory = options.category && options.category !== 'All';
@@ -363,21 +343,9 @@ export async function searchAll(
       : aiAnalysis.category
         ? getMatchingProductCategory(aiAnalysis.category, dbProductCategories)
         : undefined;
-    const activeEventCategory = hasManualCategory
-      ? options.category
-      : aiAnalysis.category
-        ? getMatchingEventCategory(aiAnalysis.category, dbEventCategories)
-        : undefined;
-    const activeGalleryCategory = hasManualCategory
-      ? options.category
-      : aiAnalysis.category
-        ? getMatchingGalleryCategory(aiAnalysis.category, dbGalleryCategories)
-        : undefined;
 
     const items: SearchResult[] = [];
     const searchProducts = !options.type || options.type === 'all' || options.type === 'product';
-    const searchEvents = !options.type || options.type === 'all' || options.type === 'event';
-    const searchGalleries = options.type === 'gallery';
 
     const promises: Promise<void>[] = [];
 
@@ -417,10 +385,8 @@ export async function searchAll(
       return res;
     });
 
-    const entityTypesToSearch: Array<'Product' | 'Event' | 'Gallery'> = [];
+    const entityTypesToSearch: Array<'Product'> = [];
     if (searchProducts) entityTypesToSearch.push('Product');
-    if (searchEvents) entityTypesToSearch.push('Event');
-    if (searchGalleries) entityTypesToSearch.push('Gallery');
 
     const indexResults = await SearchIndex.find({
       isActive: true,
@@ -436,12 +402,6 @@ export async function searchAll(
       ...indexResults.filter((r) => r.entityType === 'Product').map((r) => r.entityId),
       ...pinnedProductIds,
     ];
-    const matchedEventIds = indexResults
-      .filter((r) => r.entityType === 'Event')
-      .map((r) => r.entityId);
-    const matchedGalleryIds = indexResults
-      .filter((r) => r.entityType === 'Gallery')
-      .map((r) => r.entityId);
     const pinnedSet = new Set(pinnedProductIds.map((id) => id.toString()));
 
     if (searchProducts) {
@@ -545,175 +505,6 @@ export async function searchAll(
                   p.tags || [],
                   normalizedQuery,
                   p.teluguTitle,
-                ),
-              });
-            }
-          }),
-      );
-    }
-
-    if (searchEvents) {
-      let activeEventCatId: any = undefined;
-      if (activeEventCategory) {
-        const foundCat = await Category.findOne({
-          $or: [
-            { name: new RegExp(`^${escapeRegex(activeEventCategory)}$`, 'i') },
-            { slug: activeEventCategory.toLowerCase() },
-          ],
-        })
-          .select('_id')
-          .lean();
-        if (foundCat) activeEventCatId = foundCat._id;
-      }
-
-      const eventQuery: any = { isActive: true };
-      if (dbMinPrice !== undefined || dbMaxPrice !== undefined) {
-        eventQuery.basePrice = {};
-        if (dbMinPrice !== undefined) eventQuery.basePrice.$gte = dbMinPrice;
-        if (dbMaxPrice !== undefined) eventQuery.basePrice.$lte = dbMaxPrice;
-      }
-
-      const eventTextOr: any[] = [
-        { title: { $in: searchRegexes } },
-        { description: { $in: searchRegexes } },
-        { features: { $in: searchRegexes } },
-      ];
-      if (matchedEventIds.length > 0) {
-        eventTextOr.push({ _id: { $in: matchedEventIds } });
-      }
-      if (activeEventCatId) {
-        eventTextOr.push({ primaryCategory: activeEventCatId });
-      }
-      eventQuery.$or = eventTextOr;
-
-      promises.push(
-        Event.find(eventQuery)
-          .select('_id title primaryCategory style basePrice features image description')
-          .limit(100)
-          .maxTimeMS(5000)
-          .lean()
-          .then((events) => {
-            for (const e of events) {
-              const searchScore = computeSearchScore(
-                e.title,
-                e.primaryCategory?.toString(),
-                e.features || [],
-                normalizedQuery,
-                undefined,
-                e.description,
-              );
-              const seasonalBoost = computeSeasonalBoost(
-                e.primaryCategory?.toString(),
-                e.style,
-                e.features,
-                seasonal,
-              );
-
-              let aiBoost = 1.0;
-              if (aiAnalysis.style && e.style?.toLowerCase().includes(aiAnalysis.style))
-                aiBoost += 0.3;
-              if (
-                aiAnalysis.tags.some((t) => e.features?.map((ef) => ef.toLowerCase()).includes(t))
-              )
-                aiBoost += 0.25;
-
-              const eventIdStr = (e._id as any).toString();
-              const interactionBoost = interactionBoosts[eventIdStr] || 0;
-
-              items.push({
-                id: eventIdStr,
-                title: e.title,
-                type: 'event',
-                category: e.primaryCategory?.toString(),
-                style: e.style,
-                image: e.image,
-                price: e.basePrice,
-                tags: e.features,
-                score: searchScore * seasonalBoost * aiBoost + interactionBoost,
-                matchSource: getMatchSource(
-                  e.title,
-                  e.primaryCategory?.toString(),
-                  e.features || [],
-                  normalizedQuery,
-                ),
-              });
-            }
-          }),
-      );
-    }
-
-    if (searchGalleries) {
-      let activeGalleryCatId: any = undefined;
-      if (activeGalleryCategory) {
-        const foundCat = await Category.findOne({
-          $or: [
-            { name: new RegExp(`^${escapeRegex(activeGalleryCategory)}$`, 'i') },
-            { slug: activeGalleryCategory.toLowerCase() },
-          ],
-        })
-          .select('_id')
-          .lean();
-        if (foundCat) activeGalleryCatId = foundCat._id;
-      }
-
-      const galleryQuery: any = { isActive: true };
-      const galleryTextOr: any[] = [
-        { title: { $in: searchRegexes } },
-        { teluguTitle: { $in: searchRegexes } },
-        { tags: { $in: searchRegexes } },
-        { description: { $in: searchRegexes } },
-      ];
-      if (matchedGalleryIds.length > 0) {
-        galleryTextOr.push({ _id: { $in: matchedGalleryIds } });
-      }
-      if (activeGalleryCatId) {
-        galleryTextOr.push({ primaryCategory: activeGalleryCatId });
-      }
-      galleryQuery.$or = galleryTextOr;
-
-      promises.push(
-        Gallery.find(galleryQuery)
-          .select('_id title teluguTitle image primaryCategory style tags views likes')
-          .limit(100)
-          .maxTimeMS(5000)
-          .lean()
-          .then((galleries) => {
-            for (const g of galleries) {
-              const searchScore = computeSearchScore(
-                g.title,
-                g.primaryCategory?.toString(),
-                g.tags || [],
-                normalizedQuery,
-                g.teluguTitle,
-                g.description,
-              );
-              const popularityBoost =
-                Math.log2(Math.max(g.views || 1, 1)) * 0.05 + Math.min((g.likes || 0) / 50, 0.1);
-
-              let aiBoost = 1.0;
-              if (aiAnalysis.style && g.style?.toLowerCase().includes(aiAnalysis.style))
-                aiBoost += 0.25;
-              if (aiAnalysis.tags.some((t) => g.tags?.map((gt) => gt.toLowerCase()).includes(t)))
-                aiBoost += 0.25;
-
-              const galleryIdStr = (g._id as any).toString();
-              const interactionBoost = interactionBoosts[galleryIdStr] || 0;
-
-              items.push({
-                id: galleryIdStr,
-                title: g.title,
-                type: 'gallery',
-                category: g.primaryCategory?.toString(),
-                style: g.style,
-                image: g.image,
-                tags: g.tags,
-                score: searchScore * aiBoost + popularityBoost + interactionBoost,
-                matchSource: getMatchSource(
-                  g.title,
-                  g.primaryCategory?.toString(),
-                  g.tags || [],
-                  normalizedQuery,
-                  g.teluguTitle,
                 ),
               });
             }
@@ -970,8 +761,7 @@ export async function getRelatedSearches(
 
   const predicted = predictCategories(normalized);
   for (const cat of predicted.slice(0, 2)) {
-    related.push(`${cat.toLowerCase()} decor`);
-    related.push(`${cat.toLowerCase()} decoration ideas`);
+    related.push(cat.toLowerCase());
   }
 
   return [...new Set(related)].slice(0, limit);

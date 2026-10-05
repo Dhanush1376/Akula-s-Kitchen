@@ -245,7 +245,7 @@ class GoogleAuthService {
       const frontendUrl = getFrontendUrl();
       sendDirectEmail({
         email: createdUser.email,
-        subject: `Welcome to Siri Arts & Crafts, ${createdUser.name}`,
+        subject: `Welcome to Akula's Kitchen, ${createdUser.name}`,
         templateName: 'Welcome Email',
         templateData: {
           name: createdUser.name,

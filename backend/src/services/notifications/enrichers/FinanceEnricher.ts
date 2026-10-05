@@ -42,7 +42,6 @@ export class FinanceEnricher {
         discounts: {
           couponCode: order.couponCode || 'None',
           discountAmount: discount,
-          loyaltyCoinsUsed: order.walletDeduction || 0,
         },
         profitability: {
           estimatedProfit,

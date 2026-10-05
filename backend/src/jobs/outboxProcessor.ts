@@ -4,78 +4,6 @@ import { withCronLock } from '../utils/cronLock';
 import * as Sentry from '@sentry/node';
 import { TransactionalEmailService } from '../services/TransactionalEmailService';
 import Order from '../models/Order';
-import CustomOrder from '../models/CustomOrder';
-import EventJob from '../models/EventJob';
-import ReturnRequest from '../models/ReturnRequest';
-import RentalOrder from '../models/RentalOrder';
-import ShowcaseCollection from '../models/ShowcaseCollection';
-import Event from '../models/Event';
-import Product from '../models/Product';
-
-const resolveBookingImage = async (booking: any): Promise<string | null> => {
-  let img =
-    booking.inspirationImages?.[0] ||
-    (booking.eventPackage as any)?.image ||
-    (booking.eventPackage as any)?.imageSrc ||
-    (booking.eventPackage as any)?.images?.[0];
-
-  if (!img && booking.eventPackage) {
-    try {
-      const pkgId = booking.eventPackage._id || booking.eventPackage;
-      const showcase = await ShowcaseCollection.findById(pkgId).lean();
-      if (showcase) {
-        img = showcase.image || showcase.gallery?.[0];
-      }
-    } catch {
-      // ignore
-    }
-
-    if (!img) {
-      try {
-        const pkgId = booking.eventPackage._id || booking.eventPackage;
-        const ev = await Event.findById(pkgId).lean();
-        if (ev) {
-          img = ev.image || ev.gallery?.[0];
-        }
-      } catch {
-        // ignore
-      }
-    }
-  }
-
-  if (!img && booking.title) {
-    try {
-      const cleanTitle = booking.title
-        .replace(/^rent:\s*/i, '')
-        .replace(/\s*booking$/i, '')
-        .trim();
-      const showcase = await ShowcaseCollection.findOne({
-        title: { $regex: new RegExp(cleanTitle, 'i') },
-      }).lean();
-      if (showcase) {
-        img = showcase.image || showcase.gallery?.[0];
-      } else {
-        const ev = await Event.findOne({
-          title: { $regex: new RegExp(cleanTitle, 'i') },
-        }).lean();
-        if (ev) {
-          img = ev.image;
-        } else {
-          const prod = await Product.findOne({
-            title: { $regex: new RegExp(cleanTitle, 'i') },
-          }).lean();
-          if (prod) {
-            img = prod.imageSrc || prod.images?.[0];
-          }
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  return img || null;
-};
 
 /**
  * OutboxProcessor — Processes ALL outbox event types.
@@ -201,109 +129,6 @@ export async function processEvent(event: any): Promise<void> {
           event._id.toString(),
         );
       }
-    } else if (eventName === 'CUSTOMORDER_CUSTOMORDERSUBMITTED') {
-      const customOrder = await CustomOrder.findById(event.aggregateId);
-      if (customOrder)
-        await TransactionalEmailService.sendCustomOrderSubmissionEmails(
-          customOrder,
-          event._id.toString(),
-        );
-    } else if (eventName === 'CUSTOMORDER_PRODUCTCUSTOMIZATIONSUBMITTED') {
-      const customOrder = await CustomOrder.findById(event.aggregateId);
-      if (customOrder)
-        await TransactionalEmailService.sendCustomOrderSubmissionEmails(
-          customOrder,
-          event._id.toString(),
-        );
-    } else if (eventName === 'EVENTJOB_BOOKINGINQUIRYSUBMITTED') {
-      const booking = await EventJob.findById(event.aggregateId)
-        .populate('user')
-        .populate('eventPackage');
-      if (booking) {
-        await TransactionalEmailService.sendEventBookingSubmissionEmails(
-          booking,
-          (booking as any).user,
-          event._id.toString(),
-        );
-      }
-    } else if (eventName === 'EVENTJOB_BOOKINGCONFIRMED') {
-      const booking = await EventJob.findById(event.aggregateId)
-        .populate('user')
-        .populate('eventPackage');
-      if (booking) {
-        await TransactionalEmailService.sendEventBookingConfirmedEmails(
-          booking,
-          (booking as any).user,
-          event._id.toString(),
-        );
-      }
-    } else if (eventName === 'RETURNREQUEST_RETURNCREATED') {
-      const returnReq = await ReturnRequest.findById(event.aggregateId).populate('userId');
-      if (returnReq) {
-        await TransactionalEmailService.sendReturnSubmittedEmails(
-          returnReq,
-          (returnReq as any).userId,
-          event._id.toString(),
-        );
-      }
-    } else if (eventName === 'RETURNREQUEST_RETURNSTATUSUPDATED') {
-      const returnReq = await ReturnRequest.findById(event.aggregateId).populate('userId');
-      if (returnReq && event.payload) {
-        await TransactionalEmailService.sendReturnStatusUpdateEmails(
-          returnReq,
-          (returnReq as any).userId,
-          event.payload.previousStatus,
-          event.payload.status || event.payload.newStatus,
-          event._id.toString(),
-        );
-      }
-    } else if (eventName === 'RETURNREQUEST_WALLETREFUNDCOMPLETED') {
-      const returnReq = await ReturnRequest.findById(event.aggregateId).populate('userId');
-      if (returnReq) {
-        const {
-          ReturnNotificationService,
-        } = require('../services/returns/ReturnNotificationService');
-        await ReturnNotificationService.notifyCustomerRefundCompleted(returnReq);
-      }
-    } else if (eventName === 'RETURNREQUEST_EXCHANGE_PAYMENT_VERIFIED') {
-      const returnReq = await ReturnRequest.findById(event.aggregateId).populate('userId');
-      if (returnReq) {
-        const user = (returnReq as any).userId;
-        if (user && user.email) {
-          const { sendDirectEmail } = require('../services/notificationService');
-          await sendDirectEmail({
-            email: user.email,
-            subject: `Payment Received for Exchange - ${returnReq.returnId}`,
-            customHtml: `<h1>Payment Received</h1><p>We have successfully received your payment for the exchange price difference. Your replacement order will be processed shortly.</p>`,
-            type: 'order',
-            action: 'exchange_payment_verified',
-          });
-        }
-
-        // Notify Admins that exchange payment was received
-        try {
-          const { getActiveAdminEmailsFromDB } = require('../config/adminConfig');
-          const adminEmails = await getActiveAdminEmailsFromDB();
-          const { sendDirectEmail } = require('../services/notificationService');
-          const { getFrontendUrl } = require('../utils/getFrontendUrl');
-          for (const email of adminEmails) {
-            await sendDirectEmail({
-              email,
-              subject: `[Exchange Paid] Payment Verified for #${returnReq.returnId}`,
-              customHtml: `
-                <h2>Exchange Payment Received</h2>
-                <p>The price difference payment for Exchange <strong>#${returnReq.returnId}</strong> has been successfully received.</p>
-                <p>You can now proceed to approve and dispatch the replacement item in the admin dashboard.</p>
-                <p><a href="${getFrontendUrl()}/admin/returns/exchanges/${returnReq._id}" style="display: inline-block; padding: 10px 20px; background-color: #2A2927; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 12px;">Open Exchange in Admin Portal</a></p>
-              `,
-              type: 'system',
-              action: 'exchange_payment_verified_admin',
-            });
-          }
-        } catch (adminPayErr) {
-          logger.error('Failed to notify admins of exchange payment verified:', adminPayErr);
-        }
-      }
     } else if (eventName === 'ORDER_PAYMENTFAILED') {
       const order = await Order.findById(event.aggregateId).populate('user');
       if (order && event.payload) {
@@ -313,45 +138,6 @@ export async function processEvent(event: any): Promise<void> {
           event.payload.reason || 'Payment processing failed',
           event._id.toString(),
         );
-      }
-    } else if (eventName === 'EVENTJOB_BOOKINGSTATUSUPDATED') {
-      const booking = await EventJob.findById(event.aggregateId).populate('user');
-      if (booking && event.payload) {
-        await TransactionalEmailService.sendEventBookingStatusUpdateEmail(
-          booking,
-          (booking as any).user,
-          event.payload.oldStatus,
-          event.payload.newStatus,
-          event._id.toString(),
-        );
-      }
-    } else if (eventName === 'RENTALORDER_RENTALCREATED') {
-      const rentalOrder = await RentalOrder.findById(event.aggregateId).populate('user');
-      if (rentalOrder) {
-        await TransactionalEmailService.sendRentalOrderPlacedEmails(
-          rentalOrder,
-          (rentalOrder as any).user,
-          event._id.toString(),
-        );
-      }
-    } else if (eventName === 'RENTALORDER_RENTALSTATUSUPDATED') {
-      const rentalOrder = await RentalOrder.findById(event.aggregateId);
-      if (rentalOrder && event.payload) {
-        await TransactionalEmailService.sendRentalStatusUpdate(
-          rentalOrder,
-          event.payload.oldStatus,
-          event.payload.newStatus,
-        );
-      }
-    } else if (eventName === 'RENTALORDER_RENTALDEPOSITREFUNDED') {
-      const rentalOrder = await RentalOrder.findById(event.aggregateId);
-      if (rentalOrder && event.payload) {
-        await TransactionalEmailService.sendRentalDepositRefunded(rentalOrder, event.payload);
-      }
-    } else if (eventName === 'RENTALORDER_RENTALPAYMENTRECEIVED') {
-      const rentalOrder = await RentalOrder.findById(event.aggregateId);
-      if (rentalOrder && event.payload) {
-        await TransactionalEmailService.sendRentalPaymentReceived(rentalOrder, event.payload);
       }
     }
   } catch (emailErr) {
@@ -399,87 +185,6 @@ export async function processEvent(event: any): Promise<void> {
             metadata: { outboxEventId: event._id.toString() },
           });
         }
-      } else if (
-        eventName === 'CUSTOMORDER_CUSTOMORDERSUBMITTED' ||
-        eventName === 'CUSTOMORDER_PRODUCTCUSTOMIZATIONSUBMITTED'
-      ) {
-        const customOrder = await CustomOrder.findById(event.aggregateId);
-        if (customOrder) {
-          await createAdminNotification({
-            title: 'New Custom Order',
-            message: `${customOrder.customerName || 'A customer'} submitted a custom order request.`,
-            type: 'custom_request',
-            actionLink: `/admin/orders/custom`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image:
-                customOrder.referenceImages?.length > 0 ? customOrder.referenceImages[0] : null,
-            },
-          });
-        }
-      } else if (eventName === 'EVENTJOB_BOOKINGINQUIRYSUBMITTED') {
-        const booking = await EventJob.findById(event.aggregateId)
-          .populate('user')
-          .populate('eventPackage');
-        if (booking) {
-          await createAdminNotification({
-            title: 'New Booking Request',
-            message: `${(booking as any).user?.name || 'A customer'} submitted a booking for ${booking.title}.`,
-            type: 'booking',
-            actionLink: `/admin/events/${booking._id}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image: await resolveBookingImage(booking),
-            },
-          });
-        }
-      } else if (eventName === 'EVENTJOB_BOOKINGCONFIRMED') {
-        const booking = await EventJob.findById(event.aggregateId)
-          .populate('user')
-          .populate('eventPackage');
-        if (booking) {
-          await createAdminNotification({
-            title: 'Booking Confirmed',
-            message: `Booking ${booking.bookingId || booking._id} for ${booking.title} has been confirmed.`,
-            type: 'booking',
-            actionLink: `/admin/events/${booking._id}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image: await resolveBookingImage(booking),
-            },
-          });
-        }
-      } else if (eventName === 'RETURNREQUEST_RETURNCREATED') {
-        const returnReq = await ReturnRequest.findById(event.aggregateId).populate('orderId');
-        if (returnReq) {
-          const isEx = returnReq.returnType === 'exchange';
-          await createAdminNotification({
-            title: isEx ? 'New Exchange Request' : 'New Return Request',
-            message: `${isEx ? 'Exchange' : 'Return'} request ${returnReq.returnId || returnReq._id} created for Order ${(returnReq as any).orderId?.orderId || returnReq.orderId}`,
-            type: 'return',
-            actionLink: `/admin/returns/${isEx ? 'exchanges' : 'requests'}/${returnReq._id}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image:
-                returnReq.items && returnReq.items.length > 0 ? returnReq.items[0].imageSrc : null,
-            },
-          });
-        }
-      } else if (eventName === 'RETURNREQUEST_RETURNSTATUSUPDATED') {
-        const returnReq = await ReturnRequest.findById(event.aggregateId);
-        if (returnReq && event.payload) {
-          await createAdminNotification({
-            title: 'Return Status Updated',
-            message: `Return request ${returnReq.returnId || returnReq._id} status changed to ${event.payload.status || event.payload.newStatus}`,
-            type: 'return',
-            actionLink: `/admin/returns/requests/${returnReq._id}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image:
-                returnReq.items && returnReq.items.length > 0 ? returnReq.items[0].imageSrc : null,
-            },
-          });
-        }
       } else if (eventName === 'ORDER_PAYMENTFAILED') {
         const order = await Order.findById(event.aggregateId);
         if (order) {
@@ -510,24 +215,6 @@ export async function processEvent(event: any): Promise<void> {
             },
           });
         }
-      } else if (eventName === 'EVENTJOB_BOOKINGSTATUSUPDATED') {
-        const booking = await EventJob.findById(event.aggregateId).populate('eventPackage');
-        if (booking && event.payload) {
-          await createAdminNotification({
-            title: 'Booking Status Updated',
-            message: `Booking for ${booking.title || 'Event'} is now ${event.payload.status || event.payload.newStatus}`,
-            type: 'booking',
-            actionLink: `/admin/events/${booking._id}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image:
-                (booking as any).eventPackage?.image ||
-                (booking.inspirationImages && booking.inspirationImages.length > 0
-                  ? booking.inspirationImages[0]
-                  : null),
-            },
-          });
-        }
       } else if (eventName === 'ORDER_PAYMENTCAPTURED') {
         const order = await Order.findById(event.aggregateId);
         if (order) {
@@ -538,20 +225,6 @@ export async function processEvent(event: any): Promise<void> {
             type: 'payment',
             actionLink: `/admin/orders/${order._id}`,
             metadata: { outboxEventId: event._id.toString() },
-          });
-        }
-      } else if (eventName === 'RENTALORDER_RENTALCREATED') {
-        const rentalOrder = await RentalOrder.findById(event.aggregateId);
-        if (rentalOrder) {
-          await createAdminNotification({
-            title: 'New Rental Order',
-            message: `${rentalOrder.productTitle || 'Rental Item'} rented (₹${rentalOrder.totalAmount})`,
-            type: 'order',
-            actionLink: '/admin/rentals',
-            metadata: {
-              outboxEventId: event._id.toString(),
-              image: rentalOrder.productImage,
-            },
           });
         }
       }
@@ -618,147 +291,6 @@ export async function processEvent(event: any): Promise<void> {
             },
           };
         }
-      } else if (
-        eventName === 'CUSTOMORDER_CUSTOMORDERSUBMITTED' ||
-        eventName === 'CUSTOMORDER_PRODUCTCUSTOMIZATIONSUBMITTED'
-      ) {
-        const customOrder = await CustomOrder.findById(event.aggregateId);
-        if (customOrder) {
-          targetUserId =
-            (customOrder as any).user?.toString() || (customOrder as any).userId?.toString();
-          if (targetUserId) {
-            customerNotificationPayload = {
-              user: targetUserId,
-              event: 'CUSTOM_ORDER_SUBMITTED',
-              title: 'Custom Order Submitted',
-              message: `Your custom order request has been submitted.`,
-              type: 'order',
-              actionUrl: `/dashboard/custom-orders/${customOrder._id}`,
-              metadata: {
-                outboxEventId: event._id.toString(),
-                customOrderId: customOrder._id.toString(),
-                entityId: customOrder.orderId || customOrder._id.toString(),
-                imageSrc:
-                  (customOrder as any).previewImage ||
-                  customOrder.inspirationImages?.[0] ||
-                  customOrder.referenceImages?.[0],
-              },
-            };
-          }
-        }
-      } else if (eventName === 'EVENTJOB_BOOKINGINQUIRYSUBMITTED') {
-        const booking = await EventJob.findById(event.aggregateId).populate('eventPackage');
-        if (booking) {
-          targetUserId = (booking as any).user?.toString();
-          if (targetUserId) {
-            const bookingImg = await resolveBookingImage(booking);
-            customerNotificationPayload = {
-              user: targetUserId,
-              event: 'BOOKING_CREATED',
-              title: 'Booking Request Received',
-              message: `Your event booking request has been received.`,
-              type: 'booking',
-              actionUrl: `/events/dashboard`,
-              metadata: {
-                outboxEventId: event._id.toString(),
-                bookingId: booking._id.toString(),
-                entityId: booking.bookingId || booking._id.toString(),
-                imageSrc: bookingImg || undefined,
-                image: bookingImg || undefined,
-              },
-            };
-          }
-        }
-      } else if (eventName === 'EVENTJOB_BOOKINGCONFIRMED') {
-        const booking = await EventJob.findById(event.aggregateId).populate('eventPackage');
-        if (booking) {
-          targetUserId = (booking as any).user?.toString();
-          if (targetUserId) {
-            const bookingImg = await resolveBookingImage(booking);
-            customerNotificationPayload = {
-              user: targetUserId,
-              event: 'BOOKING_UPDATED',
-              title: 'Booking Confirmed',
-              message: `Your booking ${booking.bookingId || booking._id} has been confirmed!`,
-              type: 'booking',
-              actionUrl: `/events/dashboard`,
-              metadata: {
-                outboxEventId: event._id.toString(),
-                bookingId: booking._id.toString(),
-                entityId: booking.bookingId || booking._id.toString(),
-                imageSrc: bookingImg || undefined,
-                image: bookingImg || undefined,
-              },
-            };
-          }
-        }
-      } else if (eventName === 'EVENTJOB_BOOKINGSTATUSUPDATED') {
-        const booking = await EventJob.findById(event.aggregateId).populate('eventPackage');
-        if (booking && event.payload) {
-          targetUserId = (booking as any).user?.toString();
-          if (targetUserId) {
-            const bookingImg = await resolveBookingImage(booking);
-            customerNotificationPayload = {
-              user: targetUserId,
-              event: 'BOOKING_UPDATED',
-              title: `${booking.title || 'Event Booking'} Status Update`,
-              message: `Your booking for ${booking.title || 'your event'} is now ${event.payload.newStatus}.`,
-              type: 'booking',
-              actionUrl: `/events/dashboard`,
-              metadata: {
-                outboxEventId: event._id.toString(),
-                bookingId: booking._id.toString(),
-                entityId: booking.bookingId || booking._id.toString(),
-                imageSrc: bookingImg || undefined,
-                image: bookingImg || undefined,
-              },
-            };
-          }
-        }
-      } else if (eventName === 'RETURNREQUEST_RETURNCREATED') {
-        const returnReq = await ReturnRequest.findById(event.aggregateId);
-        if (returnReq) {
-          targetUserId = returnReq.userId.toString();
-          customerNotificationPayload = {
-            user: targetUserId,
-            event: 'ORDER_UPDATED',
-            title:
-              returnReq.returnType === 'exchange'
-                ? 'Exchange Request Submitted'
-                : 'Return Request Submitted',
-            message: `Your ${returnReq.returnType} request has been submitted.`,
-            type: 'order',
-            actionUrl: `/dashboard/orders/${returnReq.orderId}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              returnId: returnReq._id.toString(),
-              entityId: returnReq.returnId,
-              imageSrc: returnReq.items?.[0]?.imageSrc,
-            },
-          };
-        }
-      } else if (eventName === 'RETURNREQUEST_RETURNSTATUSUPDATED') {
-        const returnReq = await ReturnRequest.findById(event.aggregateId);
-        if (returnReq && event.payload) {
-          targetUserId = returnReq.userId.toString();
-          customerNotificationPayload = {
-            user: targetUserId,
-            event: 'ORDER_UPDATED',
-            title:
-              returnReq.returnType === 'exchange'
-                ? 'Exchange Status Update'
-                : 'Return Status Update',
-            message: `Your ${returnReq.returnType} request is now ${(event.payload.status || event.payload.newStatus || '').replace(/_/g, ' ')}.`,
-            type: 'order',
-            actionUrl: `/dashboard/orders/${returnReq.orderId}`,
-            metadata: {
-              outboxEventId: event._id.toString(),
-              returnId: returnReq._id.toString(),
-              entityId: returnReq.returnId,
-              imageSrc: returnReq.items?.[0]?.imageSrc,
-            },
-          };
-        }
       } else if (eventName === 'ORDER_PAYMENTCAPTURED') {
         const order = await Order.findById(event.aggregateId);
         if (order) {
@@ -817,25 +349,6 @@ export async function processEvent(event: any): Promise<void> {
               orderId: order._id.toString(),
               entityId: order.orderUuid || order._id.toString(),
               imageSrc: order.items?.[0]?.imageSrc,
-            },
-          };
-        }
-      } else if (eventName === 'RENTALORDER_RENTALCREATED') {
-        const rentalOrder = await RentalOrder.findById(event.aggregateId);
-        if (rentalOrder) {
-          targetUserId = rentalOrder.user.toString();
-          customerNotificationPayload = {
-            user: targetUserId,
-            event: 'RENTAL_CONFIRMED',
-            title: 'Rental Order Confirmed',
-            message: `Your rental order #${rentalOrder.rentalOrderId || rentalOrder._id} has been confirmed.`,
-            type: 'order',
-            actionUrl: '/dashboard/rentals',
-            metadata: {
-              outboxEventId: event._id.toString(),
-              rentalOrderId: rentalOrder._id.toString(),
-              entityId: rentalOrder.rentalOrderId || rentalOrder._id.toString(),
-              imageSrc: rentalOrder.productImage,
             },
           };
         }

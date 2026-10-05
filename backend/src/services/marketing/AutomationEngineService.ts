@@ -442,7 +442,7 @@ export class AutomationEngineService {
                   id: 'b-txt',
                   type: 'text',
                   content: {
-                    text: 'Hi {{customer.firstName | default: "there"}},<br><br>We noticed you left beautiful artisanal decor in your shopping cart. We have saved your selection so you can pick up right where you left off!',
+                    text: 'Hi {{customer.firstName | default: "there"}},<br><br>We noticed you left some items in your shopping cart. We have saved your selection so you can pick up right where you left off!',
                   },
                 },
                 { id: 'b-cart', type: 'cartSummary', content: {} },
@@ -453,7 +453,7 @@ export class AutomationEngineService {
               stepNumber: 2,
               delayHours: 24,
               subject: 'Still thinking about it? Here is a special surprise',
-              previewText: 'Complete your decor purchase with an exclusive limited-time coupon.',
+              previewText: 'Complete your purchase with an exclusive limited-time offer.',
               discountCode: 'RECOVER10',
               designBlocks: [
                 { id: 'b2-hdr', type: 'header', content: {} },

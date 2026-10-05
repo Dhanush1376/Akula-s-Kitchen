@@ -53,7 +53,7 @@ async function runVerification() {
   // 3. Test updateSection immediate cache refresh
   console.log('\n[3] Testing updateSection cache refresh...');
   const testTagline = 'Handcrafted Heritage & Artistry';
-  const testLegalName = 'Siri Arts and Crafts Private Limited';
+  const testLegalName = "Akula's Kitchen Private Limited";
   const testCin = 'U74999AP2026PTC123456';
   const testRegisteredAddr =
     '#28-1-92, South Street, ONGOLE-523001, Prakasam District, Andhra Pradesh';
@@ -166,7 +166,7 @@ async function runVerification() {
 
   const hasGstin = plainText.includes(updatedSettings.taxes.gstNumber);
   const hasCin = plainText.includes(testCin);
-  const hasStoreName = plainText.includes('Siri Arts');
+  const hasStoreName = plainText.includes("Akula's Kitchen");
   const hasTagline = plainText.includes(testTagline);
   const hasAddress = plainText.includes('South Street');
 

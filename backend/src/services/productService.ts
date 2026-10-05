@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Product, { IProduct } from '../models/Product';
 import { ReferenceIntegrityService } from './ReferenceIntegrityService';
-import Gallery from '../models/Gallery';
 import { getPaginationOptions, formatPaginationResponse } from '../utils/pagination';
 import logger from '../config/logger';
 import { bumpPublicCacheVersion } from '../utils/cache/cacheVersion';
@@ -11,7 +10,6 @@ import { MediaService } from './media/MediaService';
 import { analyzeQueryWithAI, escapeRegex, getMatchingProductCategory } from './searchService';
 import { computeSearchScore } from './search/rankingEngine';
 import Category from '../models/Category';
-import Coupon from '../models/Coupon';
 import { CategoryService } from './CategoryService';
 import ApiError from '../utils/ApiError';
 import { ChangeTracker } from '../utils/ChangeTracker';
@@ -140,7 +138,7 @@ class ProductService {
     const dynamicFilterOrs: any[] = [];
     Object.keys(dynamicFilters).forEach((key) => {
       // Ignore pagination and known sorts and special params
-      if (['page', 'limit', 'skip', 'sort', 'coupon'].includes(key)) return;
+      if (['page', 'limit', 'skip', 'sort'].includes(key)) return;
 
       const values = String(dynamicFilters[key])
         .split(',')
@@ -172,70 +170,6 @@ class ProductService {
     if (dynamicFilterOrs.length > 0) {
       filter.$and = filter.$and || [];
       filter.$and.push(...dynamicFilterOrs);
-    }
-
-    if (dynamicFilters.coupon) {
-      const foundCoupon = await Coupon.findOne({
-        code: String(dynamicFilters.coupon).toUpperCase(),
-        isActive: true,
-      }).lean();
-      if (foundCoupon) {
-        if (foundCoupon.targetType === 'categories' && foundCoupon.targetCategories?.length > 0) {
-          const catConditions: any[] = [
-            {
-              slug: {
-                $in: foundCoupon.targetCategories.map((c: any) => String(c).toLowerCase().trim()),
-              },
-            },
-            {
-              name: {
-                $in: foundCoupon.targetCategories.map(
-                  (c: any) => new RegExp(`^${escapeRegex(String(c).trim())}$`, 'i'),
-                ),
-              },
-            },
-          ];
-          const validObjectIds = foundCoupon.targetCategories
-            .filter((c: any) => mongoose.Types.ObjectId.isValid(c))
-            .map((c: any) => new mongoose.Types.ObjectId(c));
-          if (validObjectIds.length > 0) {
-            catConditions.push({ _id: { $in: validObjectIds } });
-          }
-
-          const matchedCats = await Category.find({ $or: catConditions }).lean();
-          const allCatIds = Array.from(
-            new Set([
-              ...validObjectIds.map((id) => String(id)),
-              ...matchedCats.map((c) => String(c._id)),
-            ]),
-          ).map((id) => new mongoose.Types.ObjectId(id));
-
-          if (allCatIds.length > 0) {
-            filter.$and = filter.$and || [];
-            filter.$and.push({
-              $or: [
-                { primaryCategory: { $in: allCatIds } },
-                { secondaryCategories: { $in: allCatIds } },
-              ],
-            });
-          }
-        } else if (
-          foundCoupon.targetType === 'products' &&
-          foundCoupon.targetProductIds?.length > 0
-        ) {
-          const productIds = foundCoupon.targetProductIds
-            .filter((id: any) => mongoose.Types.ObjectId.isValid(id))
-            .map((id: any) => new mongoose.Types.ObjectId(id));
-          if (productIds.length > 0) {
-            filter._id = { $in: productIds };
-          }
-        }
-
-        if (foundCoupon.minOrderAmount > 0) {
-          filter.price = filter.price || {};
-          filter.price.$gte = Math.max(filter.price.$gte || 0, foundCoupon.minOrderAmount);
-        }
-      }
     }
 
     let correctedQuery: string | undefined;
@@ -610,10 +544,6 @@ class ProductService {
         'create',
       );
 
-      if (saved.showInGallery) {
-        await this.syncToGallery(saved, actor);
-      }
-
       await session.commitTransaction();
 
       try {
@@ -707,12 +637,6 @@ class ProductService {
         await MediaService.syncReferences('Product', product._id, [], 'imageSrc');
       }
 
-      if (product.showInGallery) {
-        await this.syncToGallery(product, actor);
-      } else {
-        await this.removeFromGallery(product._id, actor);
-      }
-
       await session.commitTransaction();
 
       try {
@@ -770,9 +694,6 @@ class ProductService {
       if (!verifiedDelete) {
         throw new Error(`Delete verification failed: Product ${id} was not marked as deleted`);
       }
-
-      // Clean up gallery
-      await this.removeFromGallery(product._id, actor);
 
       // Clean up User wishlist, cart, and recentlyViewed references to prevent orphan/dead links
       const User = require('../models/User').default || require('../models/User');
@@ -843,17 +764,6 @@ class ProductService {
     product.isActive = isActive;
     await product.save();
 
-    // Sync to gallery if needed (gallery item should be deactivated if product is)
-    try {
-      const galleryItem = await Gallery.findOne({ linkedProducts: product._id });
-      if (galleryItem) {
-        galleryItem.isActive = isActive;
-        await galleryItem.save();
-      }
-    } catch (err) {
-      logger.error('Error syncing product status to gallery:', err);
-    }
-
     // Invalidate caches
     logger.info('[CATEGORY CACHE] Purging distinct categories cache due to status update');
     categoryCache.delete('product:distinct_categories');
@@ -917,49 +827,6 @@ class ProductService {
     } catch (err) {
       logger.error(`Error in ProductService.permanentlyDelete for product ${id}:`, err);
       throw err;
-    }
-  }
-
-  static async syncToGallery(product: any, _actor?: any) {
-    try {
-      let galleryItem = await Gallery.findOne({ linkedProducts: product._id });
-      if (galleryItem) {
-        galleryItem.title = product.title;
-        galleryItem.teluguTitle = product.teluguTitle;
-        galleryItem.primaryCategory = product.primaryCategory;
-        galleryItem.secondaryCategories = product.secondaryCategories;
-        galleryItem.image = product.imageSrc;
-        galleryItem.description = product.description;
-        galleryItem.tags = product.tags || [];
-        galleryItem.isActive = product.isActive;
-        await galleryItem.save();
-      } else {
-        galleryItem = new Gallery({
-          title: product.title,
-          teluguTitle: product.teluguTitle,
-          primaryCategory: product.primaryCategory,
-          secondaryCategories: product.secondaryCategories,
-          image: product.imageSrc,
-          description: product.description,
-          tags: product.tags || [],
-          linkedProducts: [product._id],
-          isActive: product.isActive,
-        });
-        await galleryItem.save();
-      }
-    } catch (err) {
-      logger.error('Error syncing product to gallery:', err);
-    }
-  }
-
-  static async removeFromGallery(productId: any, actor?: any) {
-    try {
-      const items = await Gallery.find({ linkedProducts: productId });
-      for (const item of items) {
-        await item.softDelete(actor, 'Cascading soft delete from product');
-      }
-    } catch (err) {
-      logger.error('Error removing product from gallery:', err);
     }
   }
 

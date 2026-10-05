@@ -26,6 +26,11 @@ const checkContentLength = (req: Request, res: Response, next: import('express')
 };
 
 const ALLOWED_UPLOAD_FOLDERS = new Set([
+  'akulas-kitchen/direct-uploads',
+  'akulas-kitchen/identity_docs',
+  'akulas-kitchen/products',
+  'akulas-kitchen/events',
+  'akulas-kitchen/reviews',
   'siri-arts-crafts/direct-uploads',
   'siri-arts-crafts/identity_docs',
   'siri-arts-crafts/products',
@@ -53,7 +58,7 @@ router.get(
       throw new ApiError(500, 'Cloudinary is not configured');
     }
 
-    const folder = String(req.query.folder || 'siri-arts-crafts/direct-uploads');
+    const folder = String(req.query.folder || 'akulas-kitchen/direct-uploads');
     if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
       throw new ApiError(400, 'Invalid upload folder');
     }
@@ -61,6 +66,8 @@ router.get(
     const adminOnlyFolders = new Set([
       'products',
       'events',
+      'akulas-kitchen/products',
+      'akulas-kitchen/events',
       'siri-arts-crafts/products',
       'siri-arts-crafts/events',
       'event_decor_ecommerce/gallery',
@@ -121,20 +128,6 @@ router.post(
   requireAdmin,
   checkContentLength,
   ...uploadProducts.array('images', 4),
-  (req, res) => {
-    const files = req.files as Express.Multer.File[];
-    const imageUrls = files.map((file: any) => file.path);
-    res.status(200).json({ success: true, images: imageUrls });
-  },
-);
-
-router.post(
-  '/gallery',
-  uploadLimiter,
-  requireAuth,
-  requireAdmin,
-  checkContentLength,
-  ...uploadGallery.array('images', 10),
   (req, res) => {
     const files = req.files as Express.Multer.File[];
     const imageUrls = files.map((file: any) => file.path);

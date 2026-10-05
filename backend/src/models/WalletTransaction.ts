@@ -50,7 +50,7 @@ const WalletTransactionSchema: Schema = new Schema(
     description: { type: String, required: true },
     orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
     reviewId: { type: Schema.Types.ObjectId, ref: 'Review' },
-    returnRequestId: { type: Schema.Types.ObjectId, ref: 'ReturnRequest' },
+    returnRequestId: { type: Schema.Types.ObjectId },
     refereeId: { type: Schema.Types.ObjectId, ref: 'User' },
     expiryDate: { type: Date },
     balanceBefore: { type: Number },

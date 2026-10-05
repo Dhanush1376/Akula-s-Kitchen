@@ -3,8 +3,6 @@ import mongoose from 'mongoose';
 import Review from '../../models/Review';
 import Product from '../../models/Product';
 import Order from '../../models/Order';
-import EventJob from '../../models/EventJob';
-import ShowcaseCollection from '../../models/ShowcaseCollection';
 import User from '../../models/User';
 import asyncHandler from '../../utils/asyncHandler';
 import ApiResponse from '../../utils/ApiResponse';
@@ -54,45 +52,6 @@ export const updateProductRating = async (
   }
 };
 
-export const updateShowcaseRating = async (
-  showcaseId: string | mongoose.Types.ObjectId,
-  session?: mongoose.ClientSession,
-) => {
-  if (!showcaseId) return;
-
-  const stats = await Review.aggregate([
-    { $match: { showcase: new mongoose.Types.ObjectId(showcaseId), status: 'approved' } },
-    {
-      $group: {
-        _id: '$showcase',
-        avgRating: { $avg: '$rating' },
-        reviewCount: { $sum: 1 },
-      },
-    },
-  ]);
-
-  if (stats.length > 0) {
-    const { avgRating, reviewCount } = stats[0];
-    await ShowcaseCollection.findByIdAndUpdate(
-      showcaseId,
-      {
-        rating: Math.round(avgRating * 10) / 10,
-        reviewCount: reviewCount,
-      },
-      { session },
-    );
-  } else {
-    await ShowcaseCollection.findByIdAndUpdate(
-      showcaseId,
-      {
-        rating: 0,
-        reviewCount: 0,
-      },
-      { session },
-    );
-  }
-};
-
 export const getProductReviews = asyncHandler(async (req: Request, res: Response) => {
   const { productId } = req.params;
   const { page, limit, skip } = getPaginationOptions(req.query);
@@ -119,108 +78,39 @@ export const getProductReviews = asyncHandler(async (req: Request, res: Response
     );
 });
 
-export const getShowcaseReviews = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, skip } = getPaginationOptions(req.query);
-  const filter: any = {
-    showcase: req.params.showcaseId,
-    status: 'approved',
-    isMock: { $ne: true },
-  };
-
-  const [reviews, totalCount] = await Promise.all([
-    Review.find(filter)
-      .populate('customer', 'name')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Review.countDocuments(filter),
-  ]);
-
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        true,
-        'Reviews fetched',
-        formatPaginationResponse(reviews, totalCount, page, limit),
-      ),
-    );
-});
-
 export const createReview = asyncHandler(async (req: Request, res: Response) => {
-  const {
-    productId,
-    showcaseId,
-    rating,
-    comment,
-    images,
-    reviewImages,
-    location,
-    eventType,
-    favoriteElement,
-    category,
-  } = req.body;
+  const { productId, rating, comment, images, reviewImages, location, category } = req.body;
 
-  if (!productId && !showcaseId) {
-    throw new ApiError(400, 'Either productId or showcaseId is required');
+  if (!productId) {
+    throw new ApiError(400, 'productId is required');
   }
 
-  if (productId) {
-    // Verify product exists
-    const product = await Product.findById(productId).lean();
-    if (!product) throw new ApiError(404, 'Product not found');
+  // Verify product exists
+  const product = await Product.findById(productId).lean();
+  if (!product) throw new ApiError(404, 'Product not found');
 
-    // --- PURCHASER GATE: Only customers who received this product can review ---
-    const purchasedOrder = await Order.findOne({
-      user: req.user!.id,
-      orderStatus: 'Delivered',
-      'items.productId': productId,
-    }).lean();
-    if (!purchasedOrder) {
-      throw new ApiError(403, 'You can only review products you have purchased and received.');
-    }
-
-    // Check if user already reviewed this product
-    const existingReview = await Review.findOne({
-      product: productId,
-      customer: req.user!.id,
-    }).lean();
-    if (existingReview) throw new ApiError(400, 'You have already reviewed this product');
+  // --- PURCHASER GATE: Only customers who received this product can review ---
+  const purchasedOrder = await Order.findOne({
+    user: req.user!.id,
+    orderStatus: 'Delivered',
+    'items.productId': productId,
+  }).lean();
+  if (!purchasedOrder) {
+    throw new ApiError(403, 'You can only review products you have purchased and received.');
   }
 
-  if (showcaseId) {
-    // Verify showcase exists
-    const showcase = await ShowcaseCollection.findById(showcaseId).lean();
-    if (!showcase) throw new ApiError(404, 'Showcase not found');
-
-    // --- PURCHASER GATE: Only customers who completed this showcase booking can review ---
-    const completedBooking = await EventJob.findOne({
-      user: req.user!.id,
-      status: 'completed',
-      eventPackage: showcaseId,
-    }).lean();
-    if (!completedBooking) {
-      throw new ApiError(
-        403,
-        'You can only review showcases for which you have a completed booking.',
-      );
-    }
-
-    // Check if user already reviewed this showcase
-    const existingReview = await Review.findOne({
-      showcase: showcaseId,
-      customer: req.user!.id,
-    }).lean();
-    if (existingReview) throw new ApiError(400, 'You have already reviewed this showcase');
-  }
+  // Check if user already reviewed this product
+  const existingReview = await Review.findOne({
+    product: productId,
+    customer: req.user!.id,
+  }).lean();
+  if (existingReview) throw new ApiError(400, 'You have already reviewed this product');
 
   const user = await User.findById(req.user!.id).lean();
   const reviewerName = user?.name || req.user!.name || req.body.customerName || 'Anonymous';
 
   const review = new Review({
-    product: productId || undefined,
-    showcase: showcaseId || undefined,
+    product: productId,
     customer: req.user!.id,
     customerName: reviewerName,
     rating,
@@ -229,8 +119,6 @@ export const createReview = asyncHandler(async (req: Request, res: Response) => 
     originalImages: images || (reviewImages ? reviewImages.map((img: any) => img.secureUrl) : []),
     reviewImages: reviewImages || undefined,
     location: location || undefined,
-    eventType: eventType || undefined,
-    favoriteElement: favoriteElement || undefined,
     category: category || undefined,
     verified: true, // Always true - derived from backend purchase gate
   });
@@ -246,14 +134,9 @@ export const createReview = asyncHandler(async (req: Request, res: Response) => 
       logger.error(`Failed to sync references for new review images: ${err}`);
     }
   }
-  if (productId) {
-    // Atomically recalculate using MongoDB pipeline
-    await updateProductRating(productId);
-  }
 
-  if (showcaseId) {
-    await updateShowcaseRating(showcaseId);
-  }
+  // Atomically recalculate using MongoDB pipeline
+  await updateProductRating(productId);
 
   try {
     const { emitAdminEvent } = require('../../socket');
@@ -470,9 +353,6 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
   if (review.product) {
     await updateProductRating(review.product);
   }
-  if (review.showcase) {
-    await updateShowcaseRating(review.showcase);
-  }
 
   try {
     const { emitAdminEvent } = require('../../socket');
@@ -510,9 +390,6 @@ export const updateReviewStatus = asyncHandler(async (req: Request, res: Respons
     if (review.product) {
       await updateProductRating(review.product, session);
     }
-    if (review.showcase) {
-      await updateShowcaseRating(review.showcase, session);
-    }
 
     await session.commitTransaction();
   } catch (error) {
@@ -544,7 +421,6 @@ export const bulkUpdateReviewStatus = asyncHandler(async (req: Request, res: Res
 
   const updatedReviews = [];
   const productIds = new Set<string>();
-  const showcaseIds = new Set<string>();
 
   for (const review of reviews) {
     review.status = status;
@@ -556,15 +432,11 @@ export const bulkUpdateReviewStatus = asyncHandler(async (req: Request, res: Res
     updatedReviews.push(review._id);
 
     if (review.product) productIds.add(review.product.toString());
-    if (review.showcase) showcaseIds.add(review.showcase.toString());
   }
 
   // Recalculate ratings
   for (const productId of productIds) {
     await updateProductRating(productId);
-  }
-  for (const showcaseId of showcaseIds) {
-    await updateShowcaseRating(showcaseId);
   }
 
   res.status(200).json(
@@ -646,49 +518,6 @@ export const canReview = asyncHandler(async (req: Request, res: Response) => {
   }).lean();
 
   if (!purchasedOrder) {
-    return res.status(200).json(
-      new ApiResponse(true, 'Review eligibility checked', {
-        canReview: false,
-        alreadyReviewed: false,
-        reason: 'not_purchased',
-      }),
-    );
-  }
-
-  return res.status(200).json(
-    new ApiResponse(true, 'Review eligibility checked', {
-      canReview: true,
-      alreadyReviewed: false,
-      reason: 'eligible',
-    }),
-  );
-});
-
-export const canReviewShowcase = asyncHandler(async (req: Request, res: Response) => {
-  const { showcaseId } = req.params;
-  const userId = req.user!.id;
-
-  const alreadyReviewed = !!(await Review.findOne({
-    showcase: showcaseId,
-    customer: userId,
-  }).lean());
-  if (alreadyReviewed) {
-    return res.status(200).json(
-      new ApiResponse(true, 'Review eligibility checked', {
-        canReview: false,
-        alreadyReviewed: true,
-        reason: 'already_reviewed',
-      }),
-    );
-  }
-
-  const completedBooking = await EventJob.findOne({
-    user: userId,
-    status: 'completed',
-    eventPackage: showcaseId,
-  }).lean();
-
-  if (!completedBooking) {
     return res.status(200).json(
       new ApiResponse(true, 'Review eligibility checked', {
         canReview: false,

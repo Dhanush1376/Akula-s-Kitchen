@@ -171,7 +171,7 @@ export class CampaignExecutionService {
                 action: 'campaign_broadcast',
                 status: 'processing',
                 trackingToken,
-                sender: campaign.senderEmail || 'noreply@siriartsandcrafts.com',
+                sender: campaign.senderEmail || 'noreply@akulas.kitchen',
                 sendTime: new Date(),
               });
               await log.save();

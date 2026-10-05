@@ -1,13 +1,11 @@
 import mongoose from 'mongoose';
 import User from '../../models/User';
 import Order from '../../models/Order';
-import RentalOrder from '../../models/RentalOrder';
 import Review from '../../models/Review';
 import Address from '../../models/Address';
 import AnalyticsEvent from '../../models/AnalyticsEvent';
 import NotificationLog from '../../models/NotificationLog';
 import CustomerNote from '../../models/CustomerNote';
-import EventJob from '../../models/EventJob';
 import Product from '../../models/Product';
 import { analyticsCache } from '../../utils/cache/MemoryCache';
 
@@ -38,12 +36,11 @@ export class CustomerIntelligenceService {
 
         const [
           orders,
-          rentals,
           reviews,
           addresses,
           engagementScore,
           healthScore,
-          revenueAttribution,
+          _revenueAttribution,
           fraudSignals,
           funnelMetrics,
           intents,
@@ -56,7 +53,6 @@ export class CustomerIntelligenceService {
               { 'shippingAddress.email': user.email },
             ],
           }).lean(),
-          RentalOrder.find({ $or: [{ user: targetUId }, { user: targetIdStr }] }).lean(),
           Review.find({ $or: [{ customer: targetUId }, { customer: targetIdStr }] }).lean(),
           Address.find({ $or: [{ user: targetUId }, { user: targetIdStr }] }).lean(),
           this.getEngagementScore(targetUId),
@@ -74,9 +70,8 @@ export class CustomerIntelligenceService {
         const predictions = await this.getPredictions(targetUId, engagementScore.score);
 
         const totalOrders = orders.length;
-        const totalRentals = rentals.length;
 
-        // Sum all valid (non-cancelled, non-failed) purchases and rentals
+        // Sum all valid (non-cancelled, non-failed) purchases
         const validOrders = (orders || []).filter((o: any) => {
           const isCancelled = o.orderStatus === 'Cancelled' || o.orderStatus === 'Refunded';
           const isFailed = o.paymentStatus === 'failed';
@@ -87,22 +82,9 @@ export class CustomerIntelligenceService {
           0,
         );
 
-        const validRentals = (rentals || []).filter((r: any) => {
-          const isCancelled =
-            r.status === 'cancelled' ||
-            r.paymentStatus === 'failed' ||
-            r.paymentStatus === 'refunded';
-          return !isCancelled;
-        });
-        const rentalsTotal = validRentals.reduce(
-          (sum: number, r: any) => sum + (Number(r.totalAmount) || Number(r.grossTotal) || 0),
-          0,
-        );
-
-        const eventRevenue = revenueAttribution.breakdown?.eventBookings || 0;
-        const totalSpent = purchasesTotal + rentalsTotal + eventRevenue;
+        const totalSpent = purchasesTotal;
         const ltv = totalSpent;
-        const allOrdersCount = totalOrders + totalRentals;
+        const allOrdersCount = totalOrders;
         const aov = allOrdersCount > 0 ? Math.round(totalSpent / allOrdersCount) : 0;
 
         const acquisition = {
@@ -125,7 +107,6 @@ export class CustomerIntelligenceService {
             isVerified: user.isVerified,
             loyaltyTier: user.loyaltyTier,
             siriCoins: user.siriCoins,
-            walletBalance: user.walletBalance,
           },
           scores: {
             engagement: engagementScore,
@@ -134,11 +115,8 @@ export class CustomerIntelligenceService {
           },
           overview: {
             totalOrders,
-            totalRentals,
             totalSpent,
             totalRevenue: purchasesTotal,
-            rentalRevenue: rentalsTotal,
-            eventRevenue,
             ltv,
             aov,
             wishlistCount: user.wishlist?.length || 0,
@@ -154,9 +132,7 @@ export class CustomerIntelligenceService {
             total: totalSpent,
             breakdown: {
               purchases: purchasesTotal,
-              rentals: rentalsTotal,
               customOrders: 0,
-              eventBookings: eventRevenue,
             },
           },
           addresses,
@@ -298,14 +274,6 @@ export class CustomerIntelligenceService {
       });
     }
 
-    const firstRental = await RentalOrder.findOne({ user: uId })
-      .sort({ createdAt: 1 })
-      .select('createdAt')
-      .lean();
-    if (firstRental) {
-      milestones.push({ type: 'first_rental', date: firstRental.createdAt, title: 'First Rental' });
-    }
-
     const orderCount = await Order.countDocuments({ user: uId });
     if (orderCount >= 10)
       milestones.push({ type: 'milestone', date: new Date(), title: '10 Orders Reached' });
@@ -329,7 +297,6 @@ export class CustomerIntelligenceService {
     const visitRecencyScore = Math.max(0, 15 - daysSinceLogin * 0.5); // 15 pts max, degrades over 30 days
 
     const orders = await Order.find({ user: uId }).select('createdAt').lean();
-    const rentals = await RentalOrder.countDocuments({ user: uId });
 
     const daysSincePurchase =
       orders.length > 0
@@ -339,8 +306,7 @@ export class CustomerIntelligenceService {
         : 100;
     const purchaseRecencyScore = Math.max(0, 15 - daysSincePurchase * 0.25); // 15 pts max
 
-    const purchaseFrequencyScore = Math.min(20, orders.length * 2); // 20 pts max
-    const rentalActivityScore = Math.min(10, rentals * 3); // 10 pts max
+    const purchaseFrequencyScore = Math.min(25, orders.length * 2.5); // 25 pts max
 
     const wishlistScore = Math.min(5, (user.wishlist?.length || 0) * 0.5); // 5 pts max
 
@@ -357,11 +323,10 @@ export class CustomerIntelligenceService {
       visitRecencyScore +
         purchaseRecencyScore +
         purchaseFrequencyScore +
-        rentalActivityScore +
         wishlistScore +
         searchScore +
         reviewScore +
-        10, // Base points for visit frequency (simplified)
+        15, // Base points for visit frequency (simplified)
     );
 
     const clampedScore = Math.min(100, Math.max(0, totalScore));
@@ -464,38 +429,13 @@ export class CustomerIntelligenceService {
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]);
     const purchases = orders.length > 0 ? orders[0].total : 0;
-
-    const rentalsAgg = await RentalOrder.aggregate([
-      {
-        $match: {
-          $or: [{ user: uId }, { user: userIdStr }],
-          status: { $ne: 'cancelled' },
-          paymentStatus: { $nin: ['failed', 'refunded'] },
-        },
-      },
-      { $group: { _id: null, total: { $sum: { $ifNull: ['$totalAmount', '$grossTotal'] } } } },
-    ]);
-    const rentals = rentalsAgg.length > 0 ? rentalsAgg[0].total : 0;
-
-    const eventBookingsAgg = await EventJob.aggregate([
-      {
-        $match: {
-          $or: [{ user: uId }, { user: userIdStr }],
-          paymentStatus: { $nin: ['failed', 'refunded'] },
-        },
-      },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
-    ]);
-    const eventBookings = eventBookingsAgg.length > 0 ? eventBookingsAgg[0].total : 0;
-    const customOrders = 0; // Custom orders model isn't imported yet, keeping this as 0 for now
+    const customOrders = 0;
 
     return {
-      total: purchases + rentals + customOrders + eventBookings,
+      total: purchases + customOrders,
       breakdown: {
         purchases,
-        rentals,
         customOrders,
-        eventBookings,
       },
     };
   }

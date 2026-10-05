@@ -367,35 +367,6 @@ export class PaymentWebhookService {
                 }
 
                 await refundRecord.save({ session });
-
-                // 3. Auto-transition Return Request
-                if (refundRecord.returnRequestId) {
-                  const { ReturnStateMachine } = require('./returns/ReturnStateMachine');
-                  if (event === 'refund.processed') {
-                    await ReturnStateMachine.transition(
-                      refundRecord.returnRequestId.toString(),
-                      'refund_completed',
-                      'system',
-                      undefined,
-                      session,
-                    );
-                    await ReturnStateMachine.transition(
-                      refundRecord.returnRequestId.toString(),
-                      'completed',
-                      'system',
-                      undefined,
-                      session,
-                    );
-                  } else if (event === 'refund.failed') {
-                    await ReturnStateMachine.transition(
-                      refundRecord.returnRequestId.toString(),
-                      'refund_failed',
-                      'system',
-                      undefined,
-                      session,
-                    );
-                  }
-                }
               }
             }
 

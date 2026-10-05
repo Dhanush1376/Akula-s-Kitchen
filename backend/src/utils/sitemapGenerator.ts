@@ -3,8 +3,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import logger from '../config/logger';
 
-const SITE_URL =
-  process.env.FRONTEND_URLS?.split(',')[0]?.trim() || 'https://siriartsandcrafts.com';
+const SITE_URL = process.env.FRONTEND_URLS?.split(',')[0]?.trim() || 'https://akulas.kitchen';
 
 /**
  * Enterprise dynamic sitemap generator.
@@ -20,19 +19,10 @@ export async function generateSitemap(): Promise<string> {
       { loc: '', changefreq: 'daily', priority: '1.0' },
       { loc: '/collections', changefreq: 'daily', priority: '0.9' },
 
-      { loc: '/wedding-decorations-hyderabad', changefreq: 'monthly', priority: '0.9' },
-      { loc: '/event-decorators-telangana', changefreq: 'monthly', priority: '0.9' },
-      { loc: '/event-decorators-secunderabad', changefreq: 'monthly', priority: '0.9' },
-      { loc: '/event-decorators-ongole', changefreq: 'monthly', priority: '0.9' },
-      { loc: '/about', changefreq: 'monthly', priority: '0.6' },
       { loc: '/contact', changefreq: 'monthly', priority: '0.6' },
-      { loc: '/gallery', changefreq: 'weekly', priority: '0.7' },
-      { loc: '/custom-orders', changefreq: 'monthly', priority: '0.8' },
-      { loc: '/events', changefreq: 'weekly', priority: '0.8' },
-      { loc: '/showcases', changefreq: 'weekly', priority: '0.7' },
+
       { loc: '/policy/shipping-policy', changefreq: 'monthly', priority: '0.4' },
-      { loc: '/policy/return-policy', changefreq: 'monthly', priority: '0.4' },
-      { loc: '/policy/exchange-policy', changefreq: 'monthly', priority: '0.4' },
+
       { loc: '/policy/refund-policy', changefreq: 'monthly', priority: '0.4' },
       { loc: '/policy/cancellation-policy', changefreq: 'monthly', priority: '0.4' },
       { loc: '/policy/privacy-policy', changefreq: 'yearly', priority: '0.3' },
@@ -55,12 +45,10 @@ export async function generateSitemap(): Promise<string> {
 
     // Ensure models are registered by dynamically requiring them first
     require('../models/Product');
-    require('../models/Gallery');
     require('../models/Event');
 
     // Retrieve models dynamically from mongoose to prevent circular imports
     const Product = mongoose.model('Product');
-    const Gallery = mongoose.model('Gallery');
     const Event = mongoose.model('Event');
 
     // 2. Fetch Active Products
@@ -79,37 +67,14 @@ export async function generateSitemap(): Promise<string> {
         if (prod.imageSrc) {
           xml += `    <image:image>\n`;
           xml += `      <image:loc>${prod.imageSrc}</image:loc>\n`;
-          xml += `      <image:title>${escapeXml(prod.title || 'Siri Masterpiece')}</image:title>\n`;
+          xml += `      <image:title>${escapeXml(prod.title || "Akula's Kitchen Masterpiece")}</image:title>\n`;
           xml += `    </image:image>\n`;
         }
         xml += `  </url>\n`;
       }
     }
 
-    // 3. Fetch Active Gallery Items
-    if (Gallery) {
-      const galleries = (await Gallery.find({ isActive: true })
-        .select('_id updatedAt image title')
-        .lean()) as any[];
-
-      for (const item of galleries) {
-        const itemDate = new Date(item.updatedAt || new Date()).toISOString().split('T')[0];
-        xml += `  <url>\n`;
-        xml += `    <loc>${SITE_URL}/gallery/${item._id}</loc>\n`;
-        xml += `    <lastmod>${itemDate}</lastmod>\n`;
-        xml += `    <changefreq>weekly</changefreq>\n`;
-        xml += `    <priority>0.7</priority>\n`;
-        if (item.image) {
-          xml += `    <image:image>\n`;
-          xml += `      <image:loc>${item.image}</image:loc>\n`;
-          xml += `      <image:title>${escapeXml(item.title || 'Siri Gallery Showcase')}</image:title>\n`;
-          xml += `    </image:image>\n`;
-        }
-        xml += `  </url>\n`;
-      }
-    }
-
-    // 4. Fetch Active Events
+    // 3. Fetch Active Events
     if (Event) {
       const events = (await Event.find({ isActive: true })
         .select('_id updatedAt image title')
@@ -125,7 +90,7 @@ export async function generateSitemap(): Promise<string> {
         if (ev.image) {
           xml += `    <image:image>\n`;
           xml += `      <image:loc>${ev.image}</image:loc>\n`;
-          xml += `      <image:title>${escapeXml(ev.title || 'Siri Event Styling')}</image:title>\n`;
+          xml += `      <image:title>${escapeXml(ev.title || "Akula's Kitchen Event")}</image:title>\n`;
           xml += `    </image:image>\n`;
         }
         xml += `  </url>\n`;

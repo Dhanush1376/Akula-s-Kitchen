@@ -1,7 +1,6 @@
 import Order from '../models/Order';
 import Product from '../models/Product';
 import User from '../models/User';
-import Event from '../models/Event';
 import logger from '../config/logger';
 import { analyticsCache, broadcastCacheDelete } from '../utils/cache/MemoryCache';
 import AdminAuditLog from '../models/AdminAuditLog';
@@ -26,7 +25,6 @@ const formatAuditLogAction = (log: any) => {
   if (path.includes('/analytics')) return 'Generated business performance report';
   if (path.includes('/settings')) return 'Adjusted store operational settings';
   if (path.includes('/backup')) return 'Verified backup center integrity';
-  if (path.includes('/events')) return 'Updated event booking catalog';
   if (path.includes('/reviews')) return 'Moderated customer product reviews';
   return `${method} ${path.replace('/api/v1/', '').split('/')[0] || 'System activity'}`;
 };
@@ -35,18 +33,16 @@ const formatUserInteraction = (item: any) => {
   switch (item.eventType) {
     case 'product_view':
     case 'product_click':
-      return item.metadata?.category
-        ? `Browsed ${item.metadata.category}`
-        : 'Viewed a decor product';
+      return item.metadata?.category ? `Browsed ${item.metadata.category}` : 'Viewed a product';
     case 'cart_add':
-      return `Added ${item.metadata?.category || 'decor item'} to cart`;
+      return `Added ${item.metadata?.category || 'an item'} to cart`;
     case 'wishlist_add':
       return 'Saved item to wishlist';
     case 'search':
     case 'search_executed':
-      return `Searched store for "${item.metadata?.searchQuery || 'decor'}"`;
+      return `Searched store for "${item.metadata?.searchQuery || 'products'}"`;
     case 'category_explore':
-      return `Explored ${item.metadata?.category || 'decor'} category`;
+      return `Explored ${item.metadata?.category || 'a'} category`;
     case 'purchase':
       return 'Completed order checkout';
     default:
@@ -76,24 +72,17 @@ class AnalyticsService {
 
     logger.info('Generating fresh analytics dashboard stats from database...');
 
-    const [
-      totalSalesData,
-      totalOrdersCount,
-      pendingOrders,
-      totalCustomers,
-      totalProducts,
-      totalEvents,
-    ] = await Promise.all([
-      Order.aggregate([
-        { $match: { paymentStatus: 'paid' } },
-        { $group: { _id: null, total: { $sum: '$total' } } },
-      ]),
-      Order.countDocuments(),
-      Order.countDocuments({ orderStatus: 'Pending' }),
-      User.countDocuments({ role: { $in: ['customer', 'user'] } }), // Standard and legacy roles for storefront customers
-      Product.countDocuments({ isActive: true }),
-      Event.countDocuments({ isActive: true }),
-    ]);
+    const [totalSalesData, totalOrdersCount, pendingOrders, totalCustomers, totalProducts] =
+      await Promise.all([
+        Order.aggregate([
+          { $match: { paymentStatus: 'paid' } },
+          { $group: { _id: null, total: { $sum: '$total' } } },
+        ]),
+        Order.countDocuments(),
+        Order.countDocuments({ orderStatus: 'Pending' }),
+        User.countDocuments({ role: { $in: ['customer', 'user'] } }), // Standard and legacy roles for storefront customers
+        Product.countDocuments({ isActive: true }),
+      ]);
 
     // Monthly Revenue (Last 12 months)
     const monthlyRevenue = await Order.aggregate([
@@ -191,7 +180,6 @@ class AnalyticsService {
         pendingOrders,
         totalCustomers,
         totalProducts,
-        totalEvents,
       },
       monthlyRevenue: monthlyRevenue.map((item: any) => ({
         month: `${item._id.year}-${item._id.month}`,

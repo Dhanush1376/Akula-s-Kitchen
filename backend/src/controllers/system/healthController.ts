@@ -349,44 +349,44 @@ export class HealthController {
       const { MetricsService } = require('../../services/MetricsService');
       const metrics = await MetricsService.reportHourlyMetrics();
 
-      let prometheusOutput = '# HELP eventdecor_uptime_seconds Server uptime in seconds.\n';
-      prometheusOutput += '# TYPE eventdecor_uptime_seconds gauge\n';
-      prometheusOutput += `eventdecor_uptime_seconds ${Math.floor(process.uptime())}\n\n`;
+      let prometheusOutput = '# HELP akulas_kitchen_uptime_seconds Server uptime in seconds.\n';
+      prometheusOutput += '# TYPE akulas_kitchen_uptime_seconds gauge\n';
+      prometheusOutput += `akulas_kitchen_uptime_seconds ${Math.floor(process.uptime())}\n\n`;
 
       if (metrics) {
         prometheusOutput +=
-          '# HELP eventdecor_orders_total Total orders created in the last hour.\n';
-        prometheusOutput += '# TYPE eventdecor_orders_total gauge\n';
-        prometheusOutput += `eventdecor_orders_total ${metrics.business.newOrders || 0}\n\n`;
+          '# HELP akulas_kitchen_orders_total Total orders created in the last hour.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_orders_total gauge\n';
+        prometheusOutput += `akulas_kitchen_orders_total ${metrics.business.newOrders || 0}\n\n`;
 
         prometheusOutput +=
-          '# HELP eventdecor_orders_failed Total failed orders in the last hour.\n';
-        prometheusOutput += '# TYPE eventdecor_orders_failed gauge\n';
-        prometheusOutput += `eventdecor_orders_failed ${metrics.failures.failedOrders || 0}\n\n`;
+          '# HELP akulas_kitchen_orders_failed Total failed orders in the last hour.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_orders_failed gauge\n';
+        prometheusOutput += `akulas_kitchen_orders_failed ${metrics.failures.failedOrders || 0}\n\n`;
 
         prometheusOutput +=
-          '# HELP eventdecor_payment_failure_rate_percent Order payment failure rate percentage.\n';
-        prometheusOutput += '# TYPE eventdecor_payment_failure_rate_percent gauge\n';
-        prometheusOutput += `eventdecor_payment_failure_rate_percent ${metrics.rates.orderFailureRate || 0}\n\n`;
+          '# HELP akulas_kitchen_payment_failure_rate_percent Order payment failure rate percentage.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_payment_failure_rate_percent gauge\n';
+        prometheusOutput += `akulas_kitchen_payment_failure_rate_percent ${metrics.rates.orderFailureRate || 0}\n\n`;
 
-        prometheusOutput += '# HELP eventdecor_outbox_backlog Current outbox backlog depth.\n';
-        prometheusOutput += '# TYPE eventdecor_outbox_backlog gauge\n';
-        prometheusOutput += `eventdecor_outbox_backlog ${metrics.operations.pendingOutbox || 0}\n\n`;
-
-        prometheusOutput +=
-          '# HELP eventdecor_outbox_oldest_age_minutes Age of oldest pending outbox event.\n';
-        prometheusOutput += '# TYPE eventdecor_outbox_oldest_age_minutes gauge\n';
-        prometheusOutput += `eventdecor_outbox_oldest_age_minutes ${metrics.operations.oldestOutboxAgeMinutes || 0}\n\n`;
+        prometheusOutput += '# HELP akulas_kitchen_outbox_backlog Current outbox backlog depth.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_outbox_backlog gauge\n';
+        prometheusOutput += `akulas_kitchen_outbox_backlog ${metrics.operations.pendingOutbox || 0}\n\n`;
 
         prometheusOutput +=
-          '# HELP eventdecor_webhook_latency_ms Average webhook processing latency.\n';
-        prometheusOutput += '# TYPE eventdecor_webhook_latency_ms gauge\n';
-        prometheusOutput += `eventdecor_webhook_latency_ms ${metrics.operations.avgWebhookLatencyMs || 0}\n\n`;
+          '# HELP akulas_kitchen_outbox_oldest_age_minutes Age of oldest pending outbox event.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_outbox_oldest_age_minutes gauge\n';
+        prometheusOutput += `akulas_kitchen_outbox_oldest_age_minutes ${metrics.operations.oldestOutboxAgeMinutes || 0}\n\n`;
 
         prometheusOutput +=
-          '# HELP eventdecor_inventory_reservation_hit_rate Inventory reservation hit rate.\n';
-        prometheusOutput += '# TYPE eventdecor_inventory_reservation_hit_rate gauge\n';
-        prometheusOutput += `eventdecor_inventory_reservation_hit_rate ${metrics.rates.reservationHitRate || 0}\n\n`;
+          '# HELP akulas_kitchen_webhook_latency_ms Average webhook processing latency.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_webhook_latency_ms gauge\n';
+        prometheusOutput += `akulas_kitchen_webhook_latency_ms ${metrics.operations.avgWebhookLatencyMs || 0}\n\n`;
+
+        prometheusOutput +=
+          '# HELP akulas_kitchen_inventory_reservation_hit_rate Inventory reservation hit rate.\n';
+        prometheusOutput += '# TYPE akulas_kitchen_inventory_reservation_hit_rate gauge\n';
+        prometheusOutput += `akulas_kitchen_inventory_reservation_hit_rate ${metrics.rates.reservationHitRate || 0}\n\n`;
       }
 
       res.set('Content-Type', 'text/plain');
@@ -395,7 +395,7 @@ export class HealthController {
       logger.error('Failed to generate Prometheus metrics:', err);
       res
         .status(500)
-        .send('# HELP eventdecor_error Error generating metrics\neventdecor_error 1\n');
+        .send('# HELP akulas_kitchen_error Error generating metrics\nakulas_kitchen_error 1\n');
     }
   }
 }

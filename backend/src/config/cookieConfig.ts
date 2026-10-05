@@ -76,7 +76,7 @@ export const getCsrfCookieOptions = (): CookieOptions => {
  * Generate production-safe cookie name for CSRF cookie.
  * Uses __Secure- prefix in production.
  */
-export const getCsrfCookieName = (): string => secureCookieName('siri_csrf');
+export const getCsrfCookieName = (): string => secureCookieName('akula_csrf');
 
 /**
  * Tracking cookies should persist cross-origin and be HttpOnly.

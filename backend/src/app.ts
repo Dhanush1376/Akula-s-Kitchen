@@ -123,7 +123,6 @@ app.use((req: Request, res: Response, next) => {
   if (
     req.path.includes('/upload') ||
     req.path.includes('/webhook') ||
-    req.path.includes('/visual-search') ||
     req.path.includes('/ai-autofill') ||
     req.path.includes('/ai-vision-showcase')
   ) {
@@ -199,7 +198,7 @@ app.use((req, res, next) => {
 app.get('/', noCacheMiddleware, (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
-    message: 'Welcome to Siri Arts & Crafts API Gateway. Systems are fully functional.',
+    message: "Welcome to Akula's Kitchen API Gateway. Systems are fully functional.",
     timestamp: new Date().toISOString(),
   });
 });

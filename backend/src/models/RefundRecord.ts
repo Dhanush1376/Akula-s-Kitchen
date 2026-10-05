@@ -55,7 +55,7 @@ const RefundRecordSchema: Schema = new Schema(
     isPartial: { type: Boolean, default: false },
     reason: { type: String },
 
-    returnRequestId: { type: Schema.Types.ObjectId, ref: 'ReturnRequest' },
+    returnRequestId: { type: Schema.Types.ObjectId },
     refundMethod: { type: String, enum: ['gateway', 'wallet', 'store_credit'], default: 'gateway' },
     processingFee: { type: Number, default: 0 },
     shippingRefund: { type: Number, default: 0 },

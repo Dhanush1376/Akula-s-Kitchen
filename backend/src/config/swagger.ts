@@ -4,9 +4,9 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'EventDecor API Documentation',
+      title: "Akula's Kitchen API Documentation",
       version: '1.0.0',
-      description: 'API documentation for the EventDecor enterprise platform.',
+      description: "API documentation for the Akula's Kitchen enterprise platform.",
     },
     servers: [
       {

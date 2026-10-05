@@ -11,7 +11,7 @@ import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
 
 const router = Router();
 
-// User Wallet & Loyalty Dashboard
+// Loyalty Dashboard
 router.get('/tiers', getLoyaltyTiers);
 router.get('/dashboard', requireAuth, getLoyaltyDashboard);
 

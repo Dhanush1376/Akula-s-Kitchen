@@ -144,7 +144,7 @@ const productionLogLevel = process.env.LOG_LEVEL || 'warn';
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === 'development' ? 'debug' : productionLogLevel,
   format: logFormat,
-  defaultMeta: { service: 'siri-arts-crafts-backend' },
+  defaultMeta: { service: 'akulas-kitchen-backend' },
   transports: [
     new winston.transports.File({
       filename: 'logs/error.log',
@@ -202,7 +202,7 @@ if (process.env.PAPERTRAIL_URL && process.env.PAPERTRAIL_PORT) {
     new Syslog({
       host: process.env.PAPERTRAIL_URL,
       port: parseInt(process.env.PAPERTRAIL_PORT, 10),
-      app_name: 'siri-arts-backend',
+      app_name: 'akulas-kitchen-backend',
       localhost: 'production-env',
       format: winston.format.combine(
         requestContextFormat(),

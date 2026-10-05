@@ -63,7 +63,7 @@ const handleAnomaly = async (message: string) => {
     try {
       await sendDirectEmail({
         email: alertEmail,
-        subject: 'URGENT: Database Integrity Alert - Siri Arts & Crafts',
+        subject: "URGENT: Database Integrity Alert - Akula's Kitchen",
         customHtml: getOtpEmailTemplate(
           `The health monitor has detected anomalous database activity:\n\n${message}\n\nAn emergency backup has been triggered. Please review the system immediately.`,
         ),

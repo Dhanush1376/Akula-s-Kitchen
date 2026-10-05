@@ -1,6 +1,4 @@
 import Product from '../../models/Product';
-import Event from '../../models/Event';
-import ShowcaseCollection from '../../models/ShowcaseCollection';
 import UserInteraction from '../../models/UserInteraction';
 import { RecommendationCache } from './recommendationCache';
 import { escapeRegex } from '../../services/searchService';
@@ -17,18 +15,7 @@ export interface SimilarItem {
  * Complementary category mapping — for "Complete the Setup" recommendations.
  * When a user views item in category A, suggest items from category B.
  */
-const COMPLEMENTARY_CATEGORIES: Record<string, string[]> = {
-  wedding: ['floral', 'lighting', 'mandap', 'stage', 'pooja'],
-  mandap: ['floral', 'lighting', 'wedding', 'stage'],
-  floral: ['lighting', 'pooja', 'wedding', 'engagement'],
-  lighting: ['floral', 'mandap', 'stage', 'wedding'],
-  stage: ['lighting', 'floral', 'mandap', 'wedding'],
-  birthday: ['balloons', 'party', 'lighting', 'celebration'],
-  engagement: ['floral', 'lighting', 'premium', 'luxury'],
-  pooja: ['traditional', 'rangoli', 'floral', 'heritage'],
-  traditional: ['pooja', 'heritage', 'rangoli', 'floral'],
-  rangoli: ['pooja', 'traditional', 'diwali', 'lighting'],
-};
+const COMPLEMENTARY_CATEGORIES: Record<string, string[]> = {};
 
 /**
  * Compute Jaccard similarity between two tag/keyword arrays.
@@ -139,85 +126,6 @@ export async function findSimilarProducts(
     logger.error(
       `[SIMILARITY ENGINE] Error finding similar products for ${productId}: ${err.message}`,
     );
-    return [];
-  }
-}
-
-/**
- * Find similar events for a given event.
- */
-export async function findSimilarEvents(
-  eventId: string,
-  options: { limit?: number } = {},
-): Promise<SimilarItem[]> {
-  const limit = options.limit || 8;
-
-  try {
-    const cached = await RecommendationCache.getSimilar(`event:${eventId}`);
-    if (cached) return cached;
-
-    const sourceEvent = await Event.findById(eventId)
-      .select('primaryCategory style features colorPalette basePrice')
-      .lean();
-
-    if (!sourceEvent) return [];
-
-    const candidates = await Event.find({
-      _id: { $ne: eventId },
-      isActive: true,
-    })
-      .select('_id primaryCategory style features colorPalette basePrice')
-      .limit(50)
-      .lean();
-
-    const scored: SimilarItem[] = candidates.map((candidate) => {
-      const matchedSignals: string[] = [];
-      let score = 0;
-
-      // Same category
-      if (candidate.primaryCategory?.toString() === sourceEvent.primaryCategory?.toString()) {
-        score += 0.3;
-        matchedSignals.push('category');
-      }
-
-      // Same style
-      if (candidate.style?.toLowerCase() === sourceEvent.style?.toLowerCase()) {
-        score += 0.2;
-        matchedSignals.push('style');
-      }
-
-      // Feature overlap
-      const featureSim = jaccardSimilarity(sourceEvent.features || [], candidate.features || []);
-      score += featureSim * 0.25;
-      if (featureSim > 0) matchedSignals.push('features');
-
-      // Color palette overlap
-      const colorSim = jaccardSimilarity(
-        sourceEvent.colorPalette || [],
-        candidate.colorPalette || [],
-      );
-      score += colorSim * 0.1;
-      if (colorSim > 0) matchedSignals.push('colors');
-
-      // Price proximity
-      const priceSim = priceProximity(sourceEvent.basePrice || 0, candidate.basePrice || 0);
-      score += priceSim * 0.15;
-      if (priceSim > 0) matchedSignals.push('price');
-
-      return {
-        targetId: (candidate._id as any).toString(),
-        targetType: 'event' as const,
-        similarityScore: Math.round(score * 100) / 100,
-        matchedSignals,
-      };
-    });
-
-    const sorted = scored.sort((a, b) => b.similarityScore - a.similarityScore).slice(0, limit);
-
-    await RecommendationCache.setSimilar(`event:${eventId}`, sorted);
-    return sorted;
-  } catch (err: any) {
-    logger.error(`[SIMILARITY ENGINE] Error finding similar events for ${eventId}: ${err.message}`);
     return [];
   }
 }
@@ -365,34 +273,7 @@ export async function getFastFallbackSimilar(
         rating: p.rating,
         reviews: p.reviews,
         slug: p.slug,
-        rentalEnabled: p.rentalEnabled,
         availabilityMode: p.availabilityMode,
-        rentalPricing: p.rentalPricing,
-        securityDeposit: p.securityDeposit,
-        isDepositRefundable: p.isDepositRefundable,
-      }));
-    } else if (targetType === 'event') {
-      const event = await Event.findById(targetId).select('primaryCategory').lean();
-      if (!event) return [];
-
-      const events = await Event.find({
-        primaryCategory: event.primaryCategory,
-        _id: { $ne: targetId },
-        isActive: true,
-      })
-        .select('_id title image gallery primaryCategory style basePrice')
-        .limit(limit)
-        .lean();
-
-      return events.map((e) => ({
-        _id: (e._id as any).toString(),
-        targetType: 'event',
-        title: e.title,
-        image: e.image,
-        gallery: e.gallery,
-        category: e.primaryCategory,
-        style: e.style,
-        basePrice: e.basePrice,
       }));
     }
     return [];
@@ -410,38 +291,8 @@ export async function getFastFallbackCompleteSetup(
   try {
     if (targetType === 'product') {
       return getFastFallbackSimilar(targetType, targetId, limit);
-    } else {
-      let eventCategory: string | undefined;
-      const event = await Event.findById(targetId).select('primaryCategory').lean();
-      if (event) {
-        eventCategory = event.primaryCategory?.toString();
-      } else {
-        const showcase = await ShowcaseCollection.findById(targetId).select('category').lean();
-        if (showcase) eventCategory = showcase.category;
-      }
-
-      if (!eventCategory) return [];
-
-      const fallbackEvents = await Event.find({
-        category: eventCategory as any as any,
-        _id: { $ne: targetId },
-        isActive: true,
-      })
-        .select('_id title image gallery primaryCategory style basePrice')
-        .limit(limit)
-        .lean();
-
-      return fallbackEvents.map((e) => ({
-        _id: (e._id as any).toString(),
-        targetType: 'event',
-        title: e.title,
-        image: e.image,
-        gallery: e.gallery,
-        category: e.primaryCategory,
-        style: e.style,
-        basePrice: e.basePrice,
-      }));
     }
+    return [];
   } catch (err: any) {
     logger.error(`[SIMILARITY ENGINE] Error in fast fallback setup: ${err.message}`);
     return [];

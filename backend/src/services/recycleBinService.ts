@@ -14,17 +14,12 @@ const ENTITY_MODEL_MAP: Record<string, string> = {
   Category: 'Category',
   Review: 'Review',
   Order: 'Order',
-  Gallery: 'Gallery',
   Event: 'Event',
   Media: 'Media',
   User: 'User',
   ShowcaseCollection: 'ShowcaseCollection',
-  CustomOrder: 'CustomOrder',
-  ExchangeRequest: 'ExchangeRequest',
-  ReturnRequest: 'ReturnRequest',
   InventoryLedger: 'InventoryLedger',
   InventoryReservation: 'InventoryReservation',
-  Coupon: 'Coupon',
   Blog: 'Blog',
   ContentSection: 'ContentSection',
   InAppNotification: 'InAppNotification',
@@ -42,17 +37,12 @@ const ENTITY_DISPLAY_NAMES: Record<string, string> = {
   Category: 'Category',
   Review: 'Review',
   Order: 'Order',
-  Gallery: 'Gallery Item',
   Event: 'Event',
   Media: 'Media Asset',
   User: 'Customer',
   ShowcaseCollection: 'Showcase Collection',
-  CustomOrder: 'Custom Order',
   RentalOrder: 'Rental Order',
-  ReturnRequest: 'Return Request',
-  ExchangeRequest: 'Exchange Request',
   EventJob: 'Event Booking',
-  Coupon: 'Coupon',
   Blog: 'Blog Post',
   ContentSection: 'Content Section',
   InAppNotification: 'Notification',
@@ -66,10 +56,8 @@ const ENTITY_DISPLAY_NAMES: Record<string, string> = {
 const UNIQUE_FIELDS: Record<string, string[]> = {
   Product: ['slug', 'sku', 'barcode'],
   Category: ['slug'],
-  Coupon: ['code'],
   Blog: ['slug', 'id'],
   ShowcaseCollection: [],
-  Gallery: [],
 };
 
 interface RecycleBinListParams {
@@ -670,31 +658,6 @@ export class RecycleBinService {
             status: 'success',
             count: userResult.modifiedCount,
           });
-        }
-
-        // Clean gallery
-        const Gallery = mongoose.models.Gallery;
-        if (Gallery) {
-          const galleryResult = await Gallery.deleteMany(
-            { linkedProducts: entry.entityId },
-            { session, bypassDestructionGuard: true },
-          );
-          report.push({
-            step: 'Gallery Items Deleted',
-            status: 'success',
-            count: galleryResult.deletedCount,
-          });
-        }
-
-        // Clean coupon references
-        const Coupon = mongoose.models.Coupon;
-        if (Coupon) {
-          await Coupon.updateMany(
-            { targetProductIds: entry.entityId },
-            { $pull: { targetProductIds: entry.entityId } },
-            { session },
-          );
-          report.push({ step: 'Coupon References Removed', status: 'success' });
         }
       }
 

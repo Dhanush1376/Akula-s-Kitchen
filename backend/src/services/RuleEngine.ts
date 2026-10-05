@@ -6,8 +6,6 @@ import RewardRule, {
   IRuleOutcome,
 } from '../models/RewardRule';
 import User from '../models/User';
-import WalletTransaction from '../models/WalletTransaction';
-import Coupon from '../models/Coupon';
 import logger from '../config/logger';
 
 export interface RuleContext {
@@ -153,56 +151,12 @@ export class RuleEngine {
     for (const outcome of outcomes) {
       switch (outcome.type) {
         case 'credit_wallet': {
-          const amount = Number(outcome.value.amount);
-          if (amount > 0) {
-            const user = await User.findById(userId).session(session);
-            if (user) {
-              const balanceBefore = user.walletBalance || 0;
-              const balanceAfter = balanceBefore + amount;
-
-              await User.findByIdAndUpdate(userId, { walletBalance: balanceAfter }, { session });
-
-              await WalletTransaction.create(
-                [
-                  {
-                    userId,
-                    type: 'credit',
-                    amount,
-                    source: 'admin_adjustment', // Generic source for dynamic campaigns
-                    description: `Campaign Reward: ${rule.name}`,
-                    balanceBefore,
-                    balanceAfter,
-                    status: 'active',
-                  },
-                ],
-                { session },
-              );
-            }
-          }
+          // Wallet feature has been retired
           break;
         }
 
         case 'issue_coupon': {
-          const crypto = require('crypto');
-          const code = `CMP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-          await Coupon.create(
-            [
-              {
-                code,
-                discountType: outcome.value.discountType || 'percentage',
-                discountValue: outcome.value.discountValue || 10,
-                minOrderAmount: outcome.value.minOrderAmount || 0,
-                maxDiscount: outcome.value.maxDiscount || 0,
-                startDate: new Date(),
-                expiryDate: new Date(
-                  Date.now() + (outcome.value.expiryDays || 30) * 24 * 60 * 60 * 1000,
-                ),
-                usageLimit: 1,
-                isActive: true,
-              },
-            ],
-            { session },
-          );
+          // Coupons are discontinued
           break;
         }
 

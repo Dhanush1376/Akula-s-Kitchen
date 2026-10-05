@@ -262,8 +262,6 @@ export class UserService {
         freeShippingThreshold: settings.shipping.freeShippingThreshold,
         deliveryCharge: settings.shipping.deliveryCharge,
         platformFee: settings.orders.platformFee || 0,
-        useWallet: false,
-        walletBalance: 0,
       });
 
       return {
@@ -357,7 +355,7 @@ export class UserService {
 
     await sendDirectEmail({
       email: cleanEmail,
-      subject: 'Invitation to join Siri Arts & Crafts Team',
+      subject: "Invitation to join Akula's Kitchen Team",
       customHtml: emailHtml,
       type: 'security',
       action: 'team_invite',

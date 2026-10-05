@@ -9,7 +9,10 @@ export const cacheResponse = (_durationSeconds: number) => {
 
     try {
       const version = await getPublicCacheVersion();
-      const isAuthRequest = req.headers.authorization || req.cookies?.siri_refresh_token;
+      const isAuthRequest =
+        req.headers.authorization ||
+        req.cookies?.akula_refresh_token ||
+        req.cookies?.siri_refresh_token;
 
       res.setHeader('ETag', `"api-v${version}"`);
       res.setHeader('Vary', 'Authorization, Cookie');

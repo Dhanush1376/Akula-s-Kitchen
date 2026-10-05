@@ -6,10 +6,7 @@ import { LifecycleConfig } from '../config/lifecycleConfig';
 
 export const SNAPSHOT_MODELS = new Set([
   'Order',
-  'ExchangeRequest',
-  'ReturnRequest',
   'RentalOrder',
-  'CustomOrder',
   'InventoryLedger',
   'AdminAuditLog',
   'VersionHistory',

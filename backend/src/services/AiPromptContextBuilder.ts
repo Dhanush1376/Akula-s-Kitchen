@@ -5,7 +5,7 @@ export class AiPromptContextBuilder {
   /**
    * Build a dynamic, focused context for AI prompt generation.
    * Only sends relevant approved attributes to reduce AI hallucinations.
-   * Optionally takes a category array (e.g., ["Ring Tray", "Wedding"]) to apply business rules.
+   * Optionally takes a category array (e.g., ["Pickles", "Namkeen"]) to apply business rules.
    */
   static async buildContext(_categories: string[] = []): Promise<{
     allowedColors: string[];

@@ -60,7 +60,7 @@ export class PrivacyService {
       throw new ApiError(400, 'Confirmation does not match account credentials');
     }
 
-    const anonymizedEmail = `deleted+${userId}@anonymized.siriarts.local`;
+    const anonymizedEmail = `deleted+${userId}@anonymized.akulaskitchen.local`;
 
     await Order.updateMany(
       { user: userId },

@@ -202,7 +202,7 @@ export class OrderFulfillmentService {
         ) {
           triggerReversalRewards = true;
 
-          // Use centralized rollback service (handles inventory + coupon + wallet with audit trail)
+          // Use centralized rollback service (handles inventory + coupon with audit trail)
           const isStockConfirmed = oldStatus !== 'Pending'; // If order was beyond Pending, stock was deducted
           await OrderRollbackService.rollbackAll(order, isStockConfirmed, session);
 

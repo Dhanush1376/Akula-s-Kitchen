@@ -12,7 +12,7 @@ export interface TaxEngineConfig {
 export interface TaxCalculationParams {
   /** Taxable subtotal (for purchase: product subtotal; for rental: rentalCharge) */
   subtotal: number;
-  /** Applied coupon or item discount */
+  /** @deprecated Retained for backwards compatibility; always treated as 0 */
   discount?: number;
   /** Store registered state (e.g. 'Andhra Pradesh', 'AP') */
   storeState?: string | null;
@@ -53,7 +53,7 @@ export class TaxEngine {
    * - Enforces exact paise-reconciliation: cgst + sgst === taxAmount.
    */
   public static calculateTax(params: TaxCalculationParams): TaxCalculationResult {
-    const { subtotal = 0, discount = 0, storeState, customerState } = params;
+    const { subtotal = 0, storeState, customerState } = params;
     const config = params.taxConfig || params.taxSettings || {};
 
     // Validate customer destination state
@@ -75,8 +75,8 @@ export class TaxEngine {
     const cgstRate = Math.max(0, Number(config.cgstRate ?? gstRate / 2));
     const sgstRate = Math.max(0, Number(config.sgstRate ?? gstRate / 2));
 
-    // Taxable base is strictly (subtotal - discount), never negative
-    const taxableBase = Math.max(0, Number((subtotal - (discount || 0)).toFixed(2)));
+    // Taxable base is strictly subtotal, never negative
+    const taxableBase = Math.max(0, Number(subtotal.toFixed(2)));
 
     if (!gstEnabled || gstRate <= 0 || taxableBase === 0) {
       return {

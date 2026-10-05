@@ -10,7 +10,7 @@ export const uploadOnCloudinary = async (localFilePath: string) => {
     const response = await cloudinaryCircuitBreaker.execute(async () => {
       return await cloudinary.uploader.upload(localFilePath, {
         resource_type: 'auto',
-        folder: 'siri-arts-crafts',
+        folder: 'akulas-kitchen',
         transformation: [{ fetch_format: 'auto', quality: 'auto' }],
       });
     });

@@ -2,8 +2,10 @@ import { CookieOptions, Response } from 'express';
 import SessionAuthService from '../../services/SessionAuthService';
 import { getAuthCookieOptions, getAuthCookieName } from '../../config/cookieConfig';
 
-export const CUSTOMER_REFRESH_COOKIE = getAuthCookieName('siri_refresh_token');
-export const ADMIN_REFRESH_COOKIE = getAuthCookieName('siri_admin_refresh_token');
+export const CUSTOMER_REFRESH_COOKIE = getAuthCookieName('akula_refresh_token');
+export const ADMIN_REFRESH_COOKIE = getAuthCookieName('akula_admin_refresh_token');
+export const LEGACY_CUSTOMER_REFRESH_COOKIE = getAuthCookieName('siri_refresh_token');
+export const LEGACY_ADMIN_REFRESH_COOKIE = getAuthCookieName('siri_admin_refresh_token');
 
 /**
  * Cookie options for refresh tokens.
@@ -19,6 +21,7 @@ export const setCustomerRefreshCookie = (res: Response, refreshToken: string) =>
 
 export const clearCustomerRefreshCookie = (res: Response) => {
   res.clearCookie(CUSTOMER_REFRESH_COOKIE, getRefreshCookieOptions());
+  res.clearCookie(LEGACY_CUSTOMER_REFRESH_COOKIE, getRefreshCookieOptions());
 };
 
 export const getAdminRefreshCookieOptions = (): CookieOptions => {
@@ -31,4 +34,5 @@ export const setAdminRefreshCookie = (res: Response, refreshToken: string) => {
 
 export const clearAdminRefreshCookie = (res: Response) => {
   res.clearCookie(ADMIN_REFRESH_COOKIE, getAdminRefreshCookieOptions());
+  res.clearCookie(LEGACY_ADMIN_REFRESH_COOKIE, getAdminRefreshCookieOptions());
 };

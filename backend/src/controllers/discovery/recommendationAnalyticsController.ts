@@ -109,7 +109,7 @@ export const getCTR = async (req: Request, res: Response) => {
 
     // Weight multiplier by algorithm
     const algorithmWeights: Record<string, number> = {
-      trending: 1.15, // Trending decor has high click-through
+      trending: 1.15, // Trending items have high click-through
       similar: 1.05, // Similar products have high context relevance
       feed: 0.95, // Personalized feed
       seasonal: 0.85, // Seasonal curations
@@ -543,7 +543,7 @@ function humanizeWebActivity(
     return {
       userName,
       userRole,
-      actionText: 'Reviewed saved favorite decor items',
+      actionText: 'Reviewed saved favorite items',
       detailText: 'Saved Wishlist',
       icon: 'favorite',
       badgeColor: '#ec4899',
@@ -558,8 +558,8 @@ function humanizeWebActivity(
     return {
       userName,
       userRole,
-      actionText: name ? `Viewed decor item: "${name}"` : 'Viewed decor product details',
-      detailText: name ? `Product: ${name}` : 'Decor Product',
+      actionText: name ? `Viewed item: "${name}"` : 'Viewed product details',
+      detailText: name ? `Product: ${name}` : 'Product',
       icon: 'visibility',
       badgeColor: '#3b82f6',
       type: 'views',
@@ -571,7 +571,7 @@ function humanizeWebActivity(
     return {
       userName,
       userRole,
-      actionText: 'Browsed store catalog & decor collections',
+      actionText: 'Browsed store catalog & collections',
       detailText: 'Catalog Browsing',
       icon: 'storefront',
       badgeColor: '#3b82f6',
@@ -597,7 +597,7 @@ function humanizeWebActivity(
     return {
       userName,
       userRole,
-      actionText: 'Explored event decoration packages & themes',
+      actionText: 'Visited legacy events page',
       detailText: 'Event Themes',
       icon: 'celebration',
       badgeColor: '#f59e0b',
@@ -605,22 +605,9 @@ function humanizeWebActivity(
     };
   }
 
-  // Custom Orders
-  if (p.includes('/custom-order')) {
-    return {
-      userName,
-      userRole,
-      actionText: 'Requested custom event decor design',
-      detailText: 'Custom Event Design',
-      icon: 'design_services',
-      badgeColor: '#8b5cf6',
-      type: 'cart',
-    };
-  }
-
   // Searches
   if (ev.eventType?.includes('search') || ev.metadata?.searchQuery) {
-    const query = ev.metadata?.searchQuery || 'decorations';
+    const query = ev.metadata?.searchQuery || 'products';
     return {
       userName,
       userRole,
@@ -657,20 +644,6 @@ function humanizeWebActivity(
       type: 'views',
     };
   }
-
-  // About
-  if (p.includes('/about')) {
-    return {
-      userName,
-      userRole,
-      actionText: 'Read about the decor studio & services',
-      detailText: 'About Studio',
-      icon: 'info',
-      badgeColor: '#64748b',
-      type: 'views',
-    };
-  }
-
   // Other admin actions
   if (p.startsWith('/admin')) {
     const adminSection = cleanSlug(p.replace('/admin', '')) || 'Settings';
@@ -920,10 +893,8 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
       switch (item.eventType) {
         case 'product_view':
         case 'product_click':
-          actionText = cleanCat
-            ? `Viewed decor product in ${cleanCat}`
-            : 'Viewed decor product details';
-          detailText = cleanCat ? `Category: ${cleanCat}` : 'Decor Product';
+          actionText = cleanCat ? `Viewed product in ${cleanCat}` : 'Viewed product details';
+          detailText = cleanCat ? `Category: ${cleanCat}` : 'Product';
           type = 'views';
           icon = 'visibility';
           badgeColor = '#3b82f6';
@@ -931,16 +902,14 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
         case 'cart_add':
           actionText = cleanCat
             ? `Added ${cleanCat} item to shopping cart`
-            : 'Added decor item to shopping cart';
+            : 'Added item to shopping cart';
           detailText = cleanCat ? `Cart: ${cleanCat}` : 'Shopping Cart';
           type = 'cart';
           icon = 'shopping_cart';
           badgeColor = '#8b5cf6';
           break;
         case 'wishlist_add':
-          actionText = cleanCat
-            ? `Saved ${cleanCat} item to favorites`
-            : 'Saved decor item to wishlist';
+          actionText = cleanCat ? `Saved ${cleanCat} item to favorites` : 'Saved item to wishlist';
           detailText = cleanCat ? `Wishlist: ${cleanCat}` : 'Saved Favorite';
           type = 'cart';
           icon = 'favorite';
@@ -948,7 +917,7 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
           break;
         case 'search':
         case 'search_executed': {
-          const query = item.metadata?.searchQuery || 'decorations';
+          const query = item.metadata?.searchQuery || 'products';
           actionText = `Searched for "${query}"`;
           detailText = `Search: "${query}"`;
           type = 'searches';
@@ -957,8 +926,8 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
           break;
         }
         case 'category_explore':
-          actionText = `Explored ${cleanCat || 'Event Decor'} collection`;
-          detailText = `Collection: ${cleanCat || 'Decor'}`;
+          actionText = `Explored ${cleanCat || 'store'} collection`;
+          detailText = `Collection: ${cleanCat || 'All Products'}`;
           type = 'views';
           icon = 'category';
           badgeColor = '#06b6d4';
@@ -981,23 +950,9 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
       const isEventDomain =
         item.targetType === 'event' ||
         item.targetType === 'gallery' ||
-        item.targetType === 'showcase' ||
-        [
-          'south indian wedding',
-          'traditional indian festival',
-          'wedding',
-          'festival',
-          'engagement',
-          'sankranthi',
-          'ganesh pooja',
-          'haldi',
-          'mehendi',
-          'baby shower',
-          'birthday',
-          'reception',
-        ].some((k) => cleanCat.toLowerCase().includes(k));
+        item.targetType === 'showcase';
       const logDomain = isEventDomain ? 'event' : 'product';
-      const logCategory = cleanCat || (logDomain === 'event' ? 'Event Themes' : 'Decor Products');
+      const logCategory = cleanCat || (logDomain === 'event' ? 'Event Themes' : 'Products');
 
       formattedLogs.push({
         id: `ui_${item._id}`,
@@ -1045,8 +1000,7 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
       if (
         pagePath.includes('/events') ||
         pagePath.includes('/event/') ||
-        pagePath.includes('/gallery') ||
-        pagePath.includes('/custom-order')
+        pagePath.includes('/gallery')
       ) {
         domain = 'event';
         eventCat = pagePath.includes('/events') ? 'Event Packages' : 'Event Showcase';
@@ -1058,7 +1012,7 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
         pagePath.includes('/orders')
       ) {
         domain = 'product';
-        eventCat = 'Decor Products';
+        eventCat = 'Products';
       }
 
       formattedLogs.push({
@@ -1144,7 +1098,7 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
     // 5. Staff Administrative & Audit Actions
     recentAuditLogs.forEach((al: any) => {
       const actorUser = al.actorId as any;
-      const staffEmail = al.actorEmail || actorUser?.email || 'staff@eventdecor.com';
+      const staffEmail = al.actorEmail || actorUser?.email || 'staff@akulas.kitchen';
       const staffName =
         actorUser?.name || (staffEmail.includes('@') ? staffEmail.split('@')[0] : 'Store Staff');
       const staffRole = al.actorRole || actorUser?.role || 'admin';

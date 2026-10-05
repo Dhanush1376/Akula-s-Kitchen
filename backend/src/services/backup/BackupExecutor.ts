@@ -192,7 +192,7 @@ export class BackupExecutor {
     // For this implementation plan, we'll just mock the file creation
     await fs.promises.writeFile(
       path.join(configDir, 'package.json.snapshot'),
-      JSON.stringify({ name: 'eventdecor-snapshot' }),
+      JSON.stringify({ name: 'akulas-kitchen-snapshot' }),
     );
   }
 }

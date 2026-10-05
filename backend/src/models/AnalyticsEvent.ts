@@ -73,7 +73,6 @@ const AnalyticsEventSchema: Schema = new Schema(
         'login',
         'logout',
         'ai_search_used',
-        'visual_search_used',
         'recommendation_shown',
         'recommendation_clicked',
         'recommendation_carted',

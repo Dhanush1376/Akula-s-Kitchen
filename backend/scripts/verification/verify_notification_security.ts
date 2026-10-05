@@ -36,21 +36,21 @@ async function verifyNotificationSecurity() {
     console.log('[DB] Connected to MongoDB');
 
     // 1. Create two test users
-    let userA = await User.findOne({ email: 'customerA@eventdecor.com' });
+    let userA = await User.findOne({ email: 'customerA@akulas.kitchen' });
     if (!userA) {
       userA = await User.create({
         name: 'Customer A',
-        email: 'customerA@eventdecor.com',
+        email: 'customerA@akulas.kitchen',
         password: 'password',
         role: 'user',
         isVerified: true,
       } as any);
     }
-    let userB = await User.findOne({ email: 'customerB@eventdecor.com' });
+    let userB = await User.findOne({ email: 'customerB@akulas.kitchen' });
     if (!userB) {
       userB = await User.create({
         name: 'Customer B',
-        email: 'customerB@eventdecor.com',
+        email: 'customerB@akulas.kitchen',
         password: 'password',
         role: 'user',
         isVerified: true,

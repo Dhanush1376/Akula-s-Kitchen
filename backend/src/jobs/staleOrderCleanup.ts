@@ -8,7 +8,7 @@ import * as Sentry from '@sentry/node';
 
 const BATCH_SIZE = 50;
 const STALE_NOTE =
-  'Order cancelled due to payment timeout - stock, coupon, and wallet reservations released';
+  'Order cancelled due to payment timeout - stock and coupon reservations released';
 
 type StaleOrderRow = {
   _id: Types.ObjectId;
@@ -47,13 +47,10 @@ const staleOrderFilter = () => {
  *
  * Each order is claimed and reversed inside a MongoDB transaction. That avoids
  * stock leaks where inventory is restored but the order is not actually marked
- * cancelled, or the reverse: order cancelled without stock/coupon/wallet repair.
+ * cancelled, or the reverse: order cancelled without stock/coupon repair.
  */
 export const releaseStalePendingOrders = async (): Promise<number> => {
-  const cursor = Order.find(staleOrderFilter())
-    .select('_id items user couponCode walletDeduction')
-    .lean()
-    .cursor();
+  const cursor = Order.find(staleOrderFilter()).select('_id items user couponCode').lean().cursor();
   let processed = 0;
   let batch: StaleOrderRow[] = [];
 

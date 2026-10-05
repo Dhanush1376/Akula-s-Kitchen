@@ -70,15 +70,15 @@ describe('TaxEngine - Unit Calculations', () => {
   it('calculates zero tax when GST is disabled', () => {
     const result = TaxEngine.calculateTax({
       subtotal: 1000,
-      discount: 100,
+      discount: 0,
       taxSettings: { ...defaultTaxSettings, gstEnabled: false },
       customerState: 'AP',
       storeState: 'AP',
     });
 
     expect(result.isGstEnabled).toBe(false);
-    expect(result.taxableBase).toBe(900);
-    expect(result.taxableAmount).toBe(900);
+    expect(result.taxableBase).toBe(1000);
+    expect(result.taxableAmount).toBe(1000);
     expect(result.taxAmount).toBe(0);
     expect(result.cgst).toBe(0);
     expect(result.sgst).toBe(0);
@@ -161,22 +161,6 @@ describe('TaxEngine - Unit Calculations', () => {
     expect(result.igst).toBe(180);
   });
 
-  it('applies discount strictly to the taxable base before tax calculation', () => {
-    const result = TaxEngine.calculateTax({
-      subtotal: 1000,
-      discount: 200,
-      taxSettings: { ...defaultTaxSettings, taxInclusive: false },
-      customerState: 'AP',
-      storeState: 'AP',
-    });
-
-    expect(result.taxableBase).toBe(800);
-    expect(result.taxableAmount).toBe(800);
-    expect(result.taxAmount).toBe(144);
-    expect(result.cgst).toBe(72);
-    expect(result.sgst).toBe(72);
-  });
-
   it('enforces exact paise rounding invariant cgst + sgst === taxAmount for awkward numbers', () => {
     const awkwardValues = [1001.37, 333.33, 777.77, 49.99, 123.45, 9999.99];
 
@@ -217,47 +201,47 @@ describe('Order Totals Math Integration', () => {
   it('adds tax to preliminary total when tax is exclusive', () => {
     const totals = computeOrderTotals({
       subtotal: 1000,
-      discount: 100,
+      discount: 0,
       depositTotal: 0,
       isCod: false,
       codFee: 0,
       freeShippingThreshold: 500,
       deliveryCharge: 50,
       platformFee: 10,
-      taxAmount: 162, // 18% of (1000 - 100)
+      taxAmount: 180, // 18% of 1000
       isTaxInclusive: false,
       useWallet: false,
       walletBalance: 0,
     });
 
-    // 1000 - 100 (discount) + 0 (shipping free >= 500) + 10 (platform) + 162 (exclusive tax) = 1072
-    expect(totals.taxAmount).toBe(162);
+    // 1000 + 0 (shipping free >= 500) + 10 (platform) + 180 (exclusive tax) = 1190
+    expect(totals.taxAmount).toBe(180);
     expect(totals.isTaxInclusive).toBe(false);
-    expect(totals.preliminaryTotal).toBe(1072);
-    expect(totals.total).toBe(1072);
+    expect(totals.preliminaryTotal).toBe(1190);
+    expect(totals.total).toBe(1190);
   });
 
   it('does NOT add tax on top when tax is inclusive', () => {
     const totals = computeOrderTotals({
       subtotal: 1000,
-      discount: 100,
+      discount: 0,
       depositTotal: 0,
       isCod: false,
       codFee: 0,
       freeShippingThreshold: 500,
       deliveryCharge: 50,
       platformFee: 10,
-      taxAmount: 137.29,
+      taxAmount: 152.54, // GST already included in 1000 at 18%
       isTaxInclusive: true,
       useWallet: false,
       walletBalance: 0,
     });
 
-    // 1000 - 100 (discount) + 0 (shipping free) + 10 (platform) = 910
-    expect(totals.taxAmount).toBe(137.29);
+    // 1000 + 0 (shipping free) + 10 (platform) = 1010 — inclusive tax is not added on top
+    expect(totals.taxAmount).toBe(152.54);
     expect(totals.isTaxInclusive).toBe(true);
-    expect(totals.preliminaryTotal).toBe(910);
-    expect(totals.total).toBe(910);
+    expect(totals.preliminaryTotal).toBe(1010);
+    expect(totals.total).toBe(1010);
   });
 
   it('applies wallet deduction without mutating tax values', () => {
@@ -277,11 +261,11 @@ describe('Order Totals Math Integration', () => {
     });
 
     // Gross = 1000 + 50 + 10 + 180 = 1240
-    // Wallet deduction = 300
-    // Net payable = 940
+    // Wallet deduction = 0 (wallet redemption retired)
+    // Net payable = 1240
     expect(totals.taxAmount).toBe(180);
-    expect(totals.walletDeduction).toBe(300);
-    expect(totals.total).toBe(940);
+    expect(totals.walletDeduction).toBe(0);
+    expect(totals.total).toBe(1240);
   });
 });
 
@@ -317,8 +301,8 @@ describe('Settings Drift Immutability & Invoice Snapshot', () => {
     };
 
     const mockStoreSettings = {
-      general: { storeName: 'Siri Crafts' },
-      legal: { companyName: 'Siri Crafts Pvt Ltd', cin: 'U12345' },
+      general: { storeName: "Akula's Kitchen" },
+      legal: { companyName: "Akula's Kitchen Pvt Ltd", cin: 'U12345' },
       taxes: {
         gstEnabled: true,
         taxInclusive: true,

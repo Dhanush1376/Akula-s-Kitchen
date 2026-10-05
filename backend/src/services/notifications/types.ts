@@ -53,13 +53,6 @@ export enum NotificationEvent {
   SUPPORT_TICKET_REPLIED = 'SUPPORT_TICKET_REPLIED',
   SUPPORT_TICKET_CLOSED = 'SUPPORT_TICKET_CLOSED',
 
-  // Custom Orders
-  CUSTOM_ORDER_SUBMITTED = 'CUSTOM_ORDER_SUBMITTED',
-  QUOTATION_SENT = 'QUOTATION_SENT',
-  QUOTATION_APPROVED = 'QUOTATION_APPROVED',
-  QUOTATION_REJECTED = 'QUOTATION_REJECTED',
-  CUSTOM_ORDER_CHAT_UPDATE = 'CUSTOM_ORDER_CHAT_UPDATE',
-
   // Admin & System Events
   VENDOR_REGISTERED = 'VENDOR_REGISTERED',
   INVENTORY_LOW = 'INVENTORY_LOW',
@@ -135,7 +128,6 @@ export interface EventRegistryConfig {
     | 'rental'
     | 'engagement'
     | 'support'
-    | 'custom_order'
     | 'admin'
     | 'system';
   recipients: RecipientConfig[];

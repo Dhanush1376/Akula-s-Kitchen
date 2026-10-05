@@ -11,7 +11,6 @@ import AnalyticsSnapshot from '../../models/AnalyticsSnapshot';
 import AnalyticsEvent from '../../models/AnalyticsEvent';
 import User from '../../models/User';
 import Order from '../../models/Order';
-import RentalOrder from '../../models/RentalOrder';
 import logger from '../../config/logger';
 
 /**
@@ -241,32 +240,19 @@ async function computeCustomerSpendFallback(userId: any) {
   try {
     const uId = userId;
     const uIdStr = userId.toString();
-    const [orders, rentals] = await Promise.all([
-      Order.find({
-        $or: [{ user: uId }, { user: uIdStr }],
-        orderStatus: { $nin: ['Cancelled', 'Refunded'] },
-        paymentStatus: { $ne: 'failed' },
-      })
-        .select('total')
-        .lean(),
-      RentalOrder.find({
-        $or: [{ user: uId }, { user: uIdStr }],
-        status: { $ne: 'cancelled' },
-        paymentStatus: { $nin: ['failed', 'refunded'] },
-      })
-        .select('totalAmount grossTotal')
-        .lean(),
-    ]);
+    const orders = await Order.find({
+      $or: [{ user: uId }, { user: uIdStr }],
+      orderStatus: { $nin: ['Cancelled', 'Refunded'] },
+      paymentStatus: { $ne: 'failed' },
+    })
+      .select('total')
+      .lean();
 
     const ordersSpent = orders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0);
-    const rentalsSpent = rentals.reduce(
-      (sum: number, r: any) => sum + (Number(r.totalAmount) || Number(r.grossTotal) || 0),
-      0,
-    );
 
     return {
-      totalSpent: ordersSpent + rentalsSpent,
-      totalOrders: orders.length + rentals.length,
+      totalSpent: ordersSpent,
+      totalOrders: orders.length,
     };
   } catch (_e) {
     return { totalSpent: 0, totalOrders: 0 };
@@ -304,9 +290,7 @@ export const getCustomerList = async (req: Request, res: Response) => {
     sortOptions[sortField] = sortOrder;
 
     const customers = await User.find(query)
-      .select(
-        'name email phone loyaltyTier createdAt isVerified walletBalance siriCoins addresses cart wishlist',
-      )
+      .select('name email phone loyaltyTier createdAt isVerified siriCoins addresses cart wishlist')
       .sort(sortOptions)
       .skip((page - 1) * limit)
       .limit(limit)
@@ -419,9 +403,7 @@ export const exportCustomers = async (req: Request, res: Response) => {
     }
 
     const customers = await User.find(query)
-      .select(
-        'name email phone loyaltyTier createdAt isVerified walletBalance siriCoins cart wishlist',
-      )
+      .select('name email phone loyaltyTier createdAt isVerified siriCoins cart wishlist')
       .sort({ createdAt: -1 })
       .lean();
 

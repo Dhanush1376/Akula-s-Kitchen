@@ -2,8 +2,6 @@ import mongoose from 'mongoose';
 import logger from '../config/logger';
 import Media from '../models/Media';
 import Product from '../models/Product';
-import Gallery from '../models/Gallery';
-import ShowcaseCollection from '../models/ShowcaseCollection';
 import WebsiteContent from '../models/WebsiteContent';
 import User from '../models/User';
 import Review from '../models/Review';
@@ -37,21 +35,6 @@ export const runMediaIntegrityCheck = async () => {
     if (p.imageSrc) processEntity(String(p._id), 'Product', [p.imageSrc], 'imageSrc');
     if (p.images && Array.isArray(p.images))
       processEntity(String(p._id), 'Product', p.images as string[], 'images');
-  });
-
-  // 2. Scan Gallery
-  const galleries = await Gallery.find({}).select('image video').lean();
-  galleries.forEach((g) => {
-    if (g.image) processEntity(String(g._id), 'Gallery', [g.image], 'image');
-    if (g.video) processEntity(String(g._id), 'Gallery', [g.video], 'video');
-  });
-
-  // 3. Scan Showcases
-  const showcases = await ShowcaseCollection.find({}).select('image gallery').lean();
-  showcases.forEach((s) => {
-    if (s.image) processEntity(String(s._id), 'ShowcaseCollection', [s.image], 'image');
-    if (s.gallery && Array.isArray(s.gallery))
-      processEntity(String(s._id), 'ShowcaseCollection', s.gallery as string[], 'gallery');
   });
 
   // 4. Scan Users

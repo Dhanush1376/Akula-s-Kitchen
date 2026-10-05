@@ -2,32 +2,22 @@ import mongoose, { ClientSession } from 'mongoose';
 import User from '../../models/User';
 import ApiError from '../../utils/ApiError';
 
-/** Atomic wallet debit — returns updated user or null if insufficient balance. */
+/** @deprecated Wallet feature has been retired. */
 export const debitWalletBalance = async (
-  userId: mongoose.Types.ObjectId | string,
-  amount: number,
-  session?: ClientSession,
+  _userId: mongoose.Types.ObjectId | string,
+  _amount: number,
+  _session?: ClientSession,
 ) => {
-  if (amount <= 0) return User.findById(userId).session(session || null);
-  return User.findOneAndUpdate(
-    { _id: userId, walletBalance: { $gte: amount } },
-    { $inc: { walletBalance: -amount } },
-    { returnDocument: 'after', session },
-  );
+  return null;
 };
 
-/** Atomic wallet credit. */
+/** @deprecated Wallet feature has been retired. */
 export const creditWalletBalance = async (
-  userId: mongoose.Types.ObjectId | string,
-  amount: number,
-  session?: ClientSession,
+  _userId: mongoose.Types.ObjectId | string,
+  _amount: number,
+  _session?: ClientSession,
 ) => {
-  if (amount <= 0) return User.findById(userId).session(session || null);
-  return User.findByIdAndUpdate(
-    userId,
-    { $inc: { walletBalance: amount } },
-    { returnDocument: 'after', session },
-  );
+  return null;
 };
 
 /** Atomic siriCoins credit. */
@@ -57,7 +47,7 @@ export const debitSiriCoins = async (
     { returnDocument: 'after', session },
   );
   if (!updated) {
-    throw new ApiError(400, 'Insufficient Siri Coins balance');
+    throw new ApiError(400, 'Insufficient reward coins balance');
   }
   return updated;
 };

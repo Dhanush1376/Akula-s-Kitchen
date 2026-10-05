@@ -1,6 +1,4 @@
 import Order from '../models/Order';
-import EventJob from '../models/EventJob';
-import RentalOrder from '../models/RentalOrder';
 import logger from '../config/logger';
 import * as Sentry from '@sentry/node';
 
@@ -170,104 +168,6 @@ export class PaymentReconciliationService {
       });
     }
 
-    // --- RENTAL ORDER RECONCILIATION ---
-    const paidMissingPaymentIdRentals = await RentalOrder.find({
-      paymentStatus: 'paid',
-      paymentMethod: /razorpay/i,
-      $or: [
-        { razorpayPaymentId: { $exists: false } },
-        { razorpayPaymentId: null },
-        { razorpayPaymentId: '' },
-      ],
-    })
-      .select('_id paymentStatus status razorpayOrderId razorpayPaymentId totalAmount createdAt')
-      .limit(200)
-      .lean();
-
-    for (const r of paidMissingPaymentIdRentals) {
-      discrepancies.push({
-        orderId: String(r._id),
-        issue: 'rental_paid_without_razorpay_payment_id',
-        paymentStatus: r.paymentStatus,
-        orderStatus: r.status,
-        razorpayOrderId: r.razorpayOrderId,
-        razorpayPaymentId: r.razorpayPaymentId,
-        total: r.totalAmount,
-        createdAt: r.createdAt as Date,
-      });
-    }
-
-    const pendingWithRazorpayStaleRentals = await RentalOrder.find({
-      paymentStatus: 'pending',
-      razorpayOrderId: { $exists: true, $ne: '' },
-      createdAt: { $lt: oneHourAgo },
-      status: 'pending',
-    })
-      .select('_id paymentStatus status razorpayOrderId razorpayPaymentId totalAmount createdAt')
-      .limit(200)
-      .lean();
-
-    for (const r of pendingWithRazorpayStaleRentals) {
-      discrepancies.push({
-        orderId: String(r._id),
-        issue: 'rental_stale_pending_with_razorpay_order',
-        paymentStatus: r.paymentStatus,
-        orderStatus: r.status,
-        razorpayOrderId: r.razorpayOrderId,
-        razorpayPaymentId: r.razorpayPaymentId,
-        total: r.totalAmount,
-        createdAt: r.createdAt as Date,
-      });
-    }
-
-    // --- EVENT BOOKING RECONCILIATION ---
-    const paidMissingPaymentIdBookings = await EventJob.find({
-      'pricing.paymentStatus': { $in: ['partial', 'paid'] },
-      $or: [
-        { razorpayPaymentId: { $exists: false } },
-        { razorpayPaymentId: null },
-        { razorpayPaymentId: '' },
-      ],
-    })
-      .select('_id pricing status razorpayOrderId razorpayPaymentId createdAt')
-      .limit(200)
-      .lean();
-
-    for (const b of paidMissingPaymentIdBookings) {
-      discrepancies.push({
-        orderId: String(b._id),
-        issue: 'booking_paid_without_razorpay_payment_id',
-        paymentStatus: b.pricing?.paymentStatus || 'unpaid',
-        orderStatus: b.status,
-        razorpayOrderId: b.razorpayOrderId,
-        razorpayPaymentId: b.razorpayPaymentId,
-        total: b.pricing?.totalPrice || 0,
-        createdAt: b.createdAt as Date,
-      });
-    }
-
-    const pendingWithRazorpayStaleBookings = await EventJob.find({
-      status: { $in: ['pending_payment', 'payment_processing'] },
-      razorpayOrderId: { $exists: true, $ne: '' },
-      createdAt: { $lt: oneHourAgo },
-    })
-      .select('_id pricing status razorpayOrderId razorpayPaymentId createdAt')
-      .limit(200)
-      .lean();
-
-    for (const b of pendingWithRazorpayStaleBookings) {
-      discrepancies.push({
-        orderId: String(b._id),
-        issue: 'booking_stale_pending_with_razorpay_order',
-        paymentStatus: b.pricing?.paymentStatus || 'unpaid',
-        orderStatus: b.status,
-        razorpayOrderId: b.razorpayOrderId,
-        razorpayPaymentId: b.razorpayPaymentId,
-        total: b.pricing?.totalPrice || 0,
-        createdAt: b.createdAt as Date,
-      });
-    }
-
     if (discrepancies.length > 0) {
       logger.warn(`[PAYMENT RECONCILE] Found ${discrepancies.length} discrepancy(ies)`);
       if (process.env.SENTRY_DSN) {
@@ -344,7 +244,7 @@ export class PaymentReconciliationService {
 
   /**
    * Automatically cancels orders that have been stuck in 'pending' with a razorpay_order_id for > 2 hours.
-   * This releases locked stock and wallet balance, improving inventory utilization.
+   * This releases locked stock, improving inventory utilization.
    */
   static async autoCancelAbandonedOrders(): Promise<number> {
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
@@ -442,61 +342,6 @@ export class PaymentReconciliationService {
           'Cancelled',
           `Auto-cancelled due to payment abandonment timeout (> 2 hours). Razorpay Status: ${status}`,
         );
-      });
-    }
-
-    // Rental Orders
-    const abandonedRentals = await RentalOrder.find({
-      paymentStatus: 'pending',
-      razorpayOrderId: { $exists: true, $ne: '' },
-      createdAt: { $lt: twoHoursAgo },
-      status: 'pending',
-    })
-      .select('_id razorpayOrderId')
-      .lean();
-
-    for (const rental of abandonedRentals) {
-      await processAbandoned(rental, 'RentalOrder', async (id, status) => {
-        const r = await RentalOrder.findById(id);
-        if (r) {
-          r.status = 'cancelled';
-          r.paymentStatus = 'failed';
-          r.statusHistory.push({
-            status: 'cancelled',
-            note: `Auto-cancelled due to payment abandonment timeout (> 2 hours). Razorpay Status: ${status}`,
-            performedBy: 'system',
-          } as any);
-          await r.save();
-          // Release calendar
-          const { RentalAvailabilityService } = require('./rentals/RentalAvailabilityService');
-          await RentalAvailabilityService.releaseDates(r._id.toString());
-        }
-      });
-    }
-
-    // Event Bookings
-    const abandonedBookings = await EventJob.find({
-      status: { $in: ['pending_payment', 'payment_processing'] },
-      razorpayOrderId: { $exists: true, $ne: '' },
-      createdAt: { $lt: twoHoursAgo },
-    })
-      .select('_id razorpayOrderId')
-      .lean();
-
-    for (const booking of abandonedBookings) {
-      await processAbandoned(booking, 'EventJob', async (id, status) => {
-        const b = await EventJob.findById(id);
-        if (b) {
-          const { EventJobStateMachine } = require('./eventBooking/EventJobStateMachine');
-          EventJobStateMachine.transition(
-            b,
-            'cancelled',
-            `Auto-cancelled due to payment abandonment timeout (> 2 hours). Razorpay Status: ${status}`,
-            'system',
-          );
-          b.cancellationReason = 'payment_abandoned';
-          await b.save();
-        }
       });
     }
 

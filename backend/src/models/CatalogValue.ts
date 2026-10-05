@@ -2,8 +2,8 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface ICatalogValue extends Document {
   attributeSlug: string; // "color", "material", "size", "tag"
-  value: string; // "Gold", "Emerald Green", "Wedding Decor"
-  slug: string; // "gold", "emerald-green", "wedding-decor"
+  value: string; // "Gold", "Emerald Green", "Pickles"
+  slug: string; // "gold", "emerald-green", "pickles"
 
   // Hierarchy
   parentId?: Types.ObjectId; // Emerald Green -> parent is Green

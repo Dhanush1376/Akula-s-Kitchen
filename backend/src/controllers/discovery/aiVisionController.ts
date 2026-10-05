@@ -13,12 +13,12 @@ export const analyzeShowcaseImage = asyncHandler(async (req: Request, res: Respo
     throw new ApiError(400, 'Image URL is required for AI Vision analysis');
   }
 
-  const systemPrompt = `You are an expert luxury event and wedding decorator for "Siri Arts & Crafts". 
-Analyze the provided image of an event decor setup (like a mandap, ring tray, or stage) and output ONLY a valid, raw JSON object (without markdown code blocks) representing the setup.
+  const systemPrompt = `You are an expert culinary catalog specialist for "Akula's Kitchen". 
+Analyze the provided image of a dish, presentation, or culinary item and output ONLY a valid, raw JSON object (without markdown code blocks) representing the setup.
 The JSON must have the following keys:
 - "title": A luxurious, catchy title (e.g. "Lotus Gifting Crate").
 - "subtitle": Descriptive context (e.g. "Carved coconuts with jasmine garlands").
-- "category": A suggested theme/category name (e.g. "South Indian Wedding", "Engagement Gifts", "Telugu Heritage"). Use Title Case.
+- "category": A suggested theme/category name (e.g. "Pickles", "Podis & Masalas", "Namkeen"). Use Title Case.
 - "description": A beautiful, atmospheric narrative description (2-3 sentences).
 - "inclusionsText": Comma-separated list of items and props seen in the image.
 - "colorPalette": Comma-separated list of hex codes or color names (e.g. "#8B0000, #FFD700").
@@ -130,7 +130,7 @@ export const refineShowcaseImage = asyncHandler(async (req: Request, res: Respon
     throw new ApiError(400, 'Previous data and prompt are required');
   }
 
-  const systemPrompt = `You are an expert luxury event and wedding decorator for "Siri Arts & Crafts". 
+  const systemPrompt = `You are an expert culinary catalog specialist for "Akula's Kitchen". 
 You previously generated the following JSON data for an event showcase:
 ${JSON.stringify(previousData)}
 

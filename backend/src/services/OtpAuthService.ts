@@ -137,7 +137,7 @@ class OtpAuthService {
     try {
       await sendDirectEmailProcessor({
         email: cleanEmail,
-        subject: `${otp} is your Siri Arts & Crafts verification code`,
+        subject: `${otp} is your Akula's Kitchen verification code`,
         customHtml: getOtpEmailTemplate(otp, expiryMinutes),
         type: 'security',
         action: 'otp_auth',
@@ -455,7 +455,7 @@ class OtpAuthService {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 1500);
                 const res = await fetch(`https://www.gravatar.com/${hash}.json`, {
-                  headers: { 'User-Agent': 'SiriArtsApp/1.0' },
+                  headers: { 'User-Agent': 'AkulasKitchenApp/1.0' },
                   signal: controller.signal,
                 })
                   .then((r: any) => {
@@ -518,7 +518,7 @@ class OtpAuthService {
         const frontendUrl = getFrontendUrl();
         sendDirectEmail({
           email: user.email,
-          subject: `Welcome to Siri Arts & Crafts, ${user.name}`,
+          subject: `Welcome to Akula's Kitchen, ${user.name}`,
           templateName: 'Welcome Email',
           templateData: { name: user.name, frontend_url: frontendUrl },
           type: 'marketing',

@@ -130,28 +130,6 @@ export class PaymentRefundService {
       );
       logger.info(`[REFUND] Successfully processed refund ${refundRecord._id} via Razorpay`);
 
-      // Auto-transition Return Request if applicable
-      if (refundRecord.returnRequestId) {
-        const { ReturnStateMachine } = require('./returns/ReturnStateMachine');
-        try {
-          await ReturnStateMachine.transition(
-            refundRecord.returnRequestId.toString(),
-            'refund_completed',
-            'system',
-          );
-          await ReturnStateMachine.transition(
-            refundRecord.returnRequestId.toString(),
-            'completed',
-            'system',
-          );
-        } catch (err) {
-          logger.error(
-            `[REFUND] Error transitioning return ${refundRecord.returnRequestId} after refund completion:`,
-            err,
-          );
-        }
-      }
-
       // Update Order payment status if applicable
       if (refundRecord.entityType === 'Order') {
         const Order = require('../models/Order').default;
@@ -333,32 +311,6 @@ export class PaymentRefundService {
         await refundRecord.save({ session });
         logger.info(`[REFUND WEBHOOK] Refund ${refundRecord._id} marked as completed`);
 
-        // Auto-transition Return Request
-        if (refundRecord.returnRequestId) {
-          const { ReturnStateMachine } = require('./returns/ReturnStateMachine');
-          try {
-            await ReturnStateMachine.transition(
-              refundRecord.returnRequestId.toString(),
-              'refund_completed',
-              'system',
-              undefined,
-              session,
-            );
-            await ReturnStateMachine.transition(
-              refundRecord.returnRequestId.toString(),
-              'completed',
-              'system',
-              undefined,
-              session,
-            );
-          } catch (err) {
-            logger.error(
-              `[REFUND WEBHOOK] Error transitioning return ${refundRecord.returnRequestId}:`,
-              err,
-            );
-          }
-        }
-
         if (refundRecord.entityType === 'Order') {
           const Order = require('../models/Order').default;
           const newStatus = refundRecord.isPartial ? 'partially_refunded' : 'refunded';
@@ -386,25 +338,6 @@ export class PaymentRefundService {
         refundRecord.status = 'failed';
         refundRecord.errorDetails = 'Failed via Razorpay webhook';
         await refundRecord.save({ session });
-
-        // Auto-transition Return Request
-        if (refundRecord.returnRequestId) {
-          const { ReturnStateMachine } = require('./returns/ReturnStateMachine');
-          try {
-            await ReturnStateMachine.transition(
-              refundRecord.returnRequestId.toString(),
-              'refund_failed',
-              'system',
-              undefined,
-              session,
-            );
-          } catch (err) {
-            logger.error(
-              `[REFUND WEBHOOK] Error transitioning return ${refundRecord.returnRequestId} to failed:`,
-              err,
-            );
-          }
-        }
 
         await OutboxEvent.create(
           [

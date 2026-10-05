@@ -32,7 +32,7 @@ const envSchema = z
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_FROM_EMAIL: z.string().email('Invalid SMTP_FROM_EMAIL format'),
-    SMTP_FROM_NAME: z.string().default('Siri Arts & Crafts'),
+    SMTP_FROM_NAME: z.string().default("Akula's Kitchen"),
 
     // Payments
     RAZORPAY_KEY_ID: z.string().min(1, 'RAZORPAY_KEY_ID is required'),

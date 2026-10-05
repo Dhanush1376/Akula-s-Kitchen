@@ -12,7 +12,7 @@ export const exportMyData = asyncHandler(async (req: Request, res: Response) => 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="siri-arts-data-export-${userId}.json"`,
+    `attachment; filename="akulas-kitchen-data-export-${userId}.json"`,
   );
   res.status(200).json(new ApiResponse(true, 'Personal data export', data));
 });

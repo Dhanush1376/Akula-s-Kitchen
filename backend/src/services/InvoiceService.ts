@@ -25,7 +25,7 @@ export class InvoiceService {
       discount: number;
       shippingFee: number;
       codFee: number;
-      walletDeduction: number;
+      walletDeduction?: number;
       total: number;
     },
     taxData?:

@@ -1,12 +1,8 @@
 /**
  * providerFactory.ts — Universal Vision AI Provider Factory
  *
- * Replaces the 4 hardcoded provider classes (GroqVisionProvider, OpenAIVisionProvider,
- * GeminiVisionProvider, CustomVisionProvider) with a single data-driven implementation
- * that uses the providerRegistry configuration map.
- *
- * Preserves the existing IVisualAIProvider interface contract used by
- * visualSearchService.ts so no downstream changes are needed.
+ * Universal data-driven vision AI provider implementation that uses
+ * the providerRegistry configuration map.
  */
 
 import logger from '../../config/logger';
@@ -30,38 +26,36 @@ export interface IVisualAIProvider {
 
 // ── Shared Prompt ──────────────────────────────────────────────────────────
 
-const ANALYSIS_PROMPT = `You are a visual product recognition AI for "Siri Arts & Crafts", an Indian event decoration e-commerce store.
-Analyze the uploaded image and identify the EXACT product/object with maximum specificity. Output ONLY a valid raw JSON object (no markdown) with these keys:
+const ANALYSIS_PROMPT = `You are a visual product recognition AI for "Akula's Kitchen", a homemade food products store (batters, chutneys, pickles, podis & masalas, namkeen and cashews).
+Analyze the uploaded image and identify the EXACT product with maximum specificity. Output ONLY a valid raw JSON object (no markdown) with these keys:
 
-- "productName": Your best guess at the exact product name (e.g. "Sacred Pellikuthuru Lotus Gifting Crate", "Golden Coconut Decoration Tray", "Ganesh Chaturthi Pooja Plate Set"). Be as specific as possible — include material, color, shape, and purpose in the name.
-- "labels": Array of 10-15 HIGHLY SPECIFIC identifying phrases. Each label should be 2-4 words and describe a UNIQUE visual characteristic. DO NOT use generic single words like "decoration", "beautiful", "traditional", "handmade", "Indian". Instead use specific multi-word phrases like:
-  - "lotus shaped brass tray" (not just "tray")
-  - "red velvet fabric lining" (not just "red")
-  - "hexagonal gift crate" (not just "gift box")
-  - "coconut shell with gold paint" (not just "coconut")
-  - "kundan stone border" (not just "stones")
-  Include the object's specific shape, form factor, construction method, distinct visual elements, and the exact items visible in the image.
-- "category": The best matching product category (e.g. "Wedding Decor", "Pooja Items", "Engagement Trays", "Floral Arrangements", "Birthday Decorations", "Traditional Decorations", "Gift Hampers", "Coconut Decorations", "Bangle Trays", "Harathi Plates", "Pellikuthuru Items", "Seemantham Decor", "Mehendi Plates", "Saree Packing Trays"). Use Title Case.
+- "productName": Your best guess at the exact product name (e.g. "Mango Avakaaya Pickle 500g Jar", "Idli Batter 1kg Pack", "Curry Leaf Murukulu"). Be as specific as possible — include variety, pack size and packaging where visible.
+- "labels": Array of 10-15 HIGHLY SPECIFIC identifying phrases. Each label should be 2-4 words and describe a UNIQUE visual characteristic. DO NOT use generic single words like "food", "tasty", "homemade", "Indian". Instead use specific multi-word phrases like:
+  - "red chilli oil layer" (not just "red")
+  - "glass jar with metal lid" (not just "jar")
+  - "coarse ground podi" (not just "powder")
+  Include the product's packaging, texture, visible ingredients and distinct visual elements.
+- "category": The best matching product category (e.g. "Batters", "Chutneys", "Pickles", "Podis & Masalas", "Namkeen", "Cashews"). Use Title Case.
 - "attributes": Object with detected visual attributes:
-  - "primaryColor": Dominant color name (be specific: "maroon" not "red", "gold metallic" not "yellow")
+  - "primaryColor": Dominant color name
   - "secondaryColor": Secondary color if any
-  - "material": Detected material (e.g. "brass", "wooden mdf", "silk fabric", "artificial flowers", "real flowers", "cardboard", "velvet", "jute")
-  - "style": Style (e.g. "traditional south indian", "modern minimalist", "royal luxury", "rustic ethnic")
-  - "occasion": Event type (e.g. "pellikuthuru", "seemantham", "engagement", "wedding", "pooja", "birthday", "naming ceremony", "housewarming")
-  - "size": Estimated size (e.g. "small", "medium", "large")
-  - "shape": Shape of the object (e.g. "round", "rectangular", "lotus shaped", "hexagonal", "octagonal", "basket shaped")
-  - "distinctFeatures": Comma-separated list of the most unique visual features that distinguish this from similar items (e.g. "mirror work border, peacock motif center, beaded handle")
+  - "material": Packaging material (e.g. "glass jar", "plastic tub", "pouch", "cardboard box")
+  - "style": Style (e.g. "traditional andhra", "south indian", "modern packaging")
+  - "occasion": Typical use (e.g. "breakfast", "snack", "festive", "everyday meals")
+  - "size": Estimated pack size (e.g. "small", "medium", "large")
+  - "shape": Shape of the pack (e.g. "round jar", "rectangular box", "stand-up pouch")
+  - "distinctFeatures": Comma-separated list of the most unique visual features
 - "confidence": Your confidence in the analysis (0.0 to 1.0)
 
-CRITICAL: Be extremely specific. Two similar-looking trays should get DIFFERENT labels based on their unique details (shape, border style, center motif, handle type, etc.). Generic labels make it impossible to distinguish between products.`;
+CRITICAL: Be extremely specific. Two similar-looking products should get DIFFERENT labels based on their unique details. Generic labels make it impossible to distinguish between products.`;
 
-const SHORT_PROMPT = `Analyze this product image for an Indian event decoration store. Output ONLY valid JSON with:
+const SHORT_PROMPT = `Analyze this product image for an Indian homemade food products store. Output ONLY valid JSON with:
 - "productName": exact product name guess (be very specific)
-- "labels": array of 10-15 SPECIFIC multi-word phrases describing unique visual features (NOT generic words like "decoration" or "beautiful")
+- "labels": array of 10-15 SPECIFIC multi-word phrases describing unique visual features (NOT generic words like "food" or "tasty")
 - "category": product category in Title Case
 - "attributes": object with primaryColor, secondaryColor, material, style, occasion, size, shape, distinctFeatures
 - "confidence": 0.0-1.0
-Be extremely specific — "lotus shaped brass tray with kundan border" NOT "golden tray".`;
+Be extremely specific — "mango pickle in glass jar with red oil layer" NOT "pickle".`;
 
 // ── Response Parser ────────────────────────────────────────────────────────
 
@@ -475,9 +469,6 @@ class CustomEndpointProvider implements IVisualAIProvider {
 
 /**
  * Create a vision AI provider instance from config.
- *
- * This is the single entry point. It replaces the old switch/case factory
- * in visualSearchService.ts.
  *
  * @param providerName - Provider key (e.g. 'groq', 'openai', 'gemini', 'custom')
  * @param apiKey - The API key for the provider

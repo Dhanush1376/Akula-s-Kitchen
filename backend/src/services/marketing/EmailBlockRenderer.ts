@@ -125,7 +125,7 @@ export class EmailBlockRenderer {
       case 'header': {
         const logoUrl = content.logoUrl || storeSettings?.general?.logo;
         const storeName =
-          content.storeName || storeSettings?.general?.storeName || 'Siri Arts & Crafts';
+          content.storeName || storeSettings?.general?.storeName || "Akula's Kitchen";
         return `
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding-bottom: 24px; border-bottom: 1px solid #f3f4f6; margin-bottom: 24px;">
             <tr>
@@ -241,7 +241,7 @@ export class EmailBlockRenderer {
           gridHtml += `
             <td width="48%" valign="top" style="background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; text-align: center;">
               ${prod.imageSrc ? `<img src="${prod.imageSrc}" alt="${prod.title || ''}" width="200" height="160" style="width: 100%; max-height: 160px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 12px; border: 1px solid #e5e7eb;" />` : ''}
-              <div style="font-family: ${DEFAULT_EMAIL_FONT}; font-size: 13px; font-weight: 600; color: #111827; height: 36px; overflow: hidden; margin-bottom: 6px;">${prod.title || 'Handcrafted Art'}</div>
+              <div style="font-family: ${DEFAULT_EMAIL_FONT}; font-size: 13px; font-weight: 600; color: #111827; height: 36px; overflow: hidden; margin-bottom: 6px;">${prod.title || 'Product'}</div>
               <div style="font-family: ${MONO_FONT}; font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 12px;">₹${price.toLocaleString('en-IN')}</div>
               <a href="${pUrl}" target="_blank" style="display: inline-block; background-color: #111827; color: #ffffff !important; padding: 8px 16px; font-size: 12px; font-weight: 500; text-decoration: none; border-radius: 6px; font-family: ${DEFAULT_EMAIL_FONT};">View Details</a>
             </td>
@@ -264,7 +264,7 @@ export class EmailBlockRenderer {
           ? cartItems
           : [
               {
-                title: 'Example Decor Piece (Preview)',
+                title: 'Example Product (Preview)',
                 price: 1499,
                 quantity: 1,
                 variant: 'Standard Gold',
@@ -376,8 +376,8 @@ export class EmailBlockRenderer {
       }
 
       case 'footer': {
-        const storeName = storeSettings?.general?.storeName || 'Siri Arts & Crafts';
-        const supportEmail = storeSettings?.general?.supportEmail || 'support@siriarts.in';
+        const storeName = storeSettings?.general?.storeName || "Akula's Kitchen";
+        const supportEmail = storeSettings?.general?.supportEmail || 'support@akulas.kitchen';
         const backendUrl = getBackendUrl();
         const recipientEmail = context.customer?.email || '';
         const unsubscribeUrl = `${backendUrl}/api/v1/notifications/unsubscribe?email=${encodeURIComponent(recipientEmail)}`;

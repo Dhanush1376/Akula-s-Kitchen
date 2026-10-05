@@ -14,7 +14,7 @@ async function seedNotifications() {
   if (!user) {
     user = await User.create({
       name: 'Test Customer',
-      email: 'customer@eventdecor.com',
+      email: 'customer@akulas.kitchen',
       password: 'password123',
       role: 'user',
       isVerified: true,

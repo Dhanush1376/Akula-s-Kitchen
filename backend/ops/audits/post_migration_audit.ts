@@ -5,7 +5,6 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 import Product from '../../src/models/Product';
-import Gallery from '../../src/models/Gallery';
 import Category from '../../src/models/Category';
 
 async function runPostMigrationAudit() {
@@ -14,12 +13,10 @@ async function runPostMigrationAudit() {
 
   const models = [
     { name: 'Product', model: Product as any, imageFields: ['imageSrc', 'images'] },
-    { name: 'Gallery', model: Gallery as any, imageFields: ['image'] },
     { name: 'Category', model: Category as any, imageFields: ['image', 'bannerImage'] },
   ];
 
   let totalProduct = 0;
-  let totalGallery = 0;
   let totalCategory = 0;
 
   let allImages = 0;
@@ -39,7 +36,6 @@ async function runPostMigrationAudit() {
         const processUrl = (url: string) => {
           allImages++;
           if (name === 'Product') totalProduct++;
-          if (name === 'Gallery') totalGallery++;
           if (name === 'Category') totalCategory++;
 
           if (url.includes('res.cloudinary.com')) {
@@ -63,8 +59,7 @@ async function runPostMigrationAudit() {
 
   console.log('\n--- Post-Migration Audit Report ---');
   console.log(`1. Product Images: ${totalProduct}`);
-  console.log(`2. Gallery Images: ${totalGallery}`);
-  console.log(`3. Category Images: ${totalCategory}`);
+  console.log(`2. Category Images: ${totalCategory}`);
   console.log(`Total Images Analyzed: ${allImages}`);
   console.log(
     `4. Cloudinary Hosted: ${cloudinaryImages} (${Math.round((cloudinaryImages / allImages) * 100)}%)`,

@@ -98,7 +98,7 @@ const NotificationLogSchema: Schema = new Schema(
         clickedAt: { type: Date, default: Date.now },
       },
     ],
-    sender: { type: String, default: 'system@siriarts.in' },
+    sender: { type: String, default: 'system@akulas.kitchen' },
     templateName: { type: String },
     bounce: { type: Boolean, default: false },
     bouncedAt: { type: Date },

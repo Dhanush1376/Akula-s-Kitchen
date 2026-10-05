@@ -10,12 +10,6 @@ export class SearchIntelligenceService {
     const lowerQuery = query.toLowerCase().trim();
 
     // Quick exact matches
-    if (
-      lowerQuery.includes('wedding') ||
-      lowerQuery.includes('mandap') ||
-      lowerQuery.includes('pelli')
-    )
-      return 'wedding_decor';
     if (lowerQuery.includes('birthday') || lowerQuery.includes('bday')) return 'birthday';
     if (lowerQuery.includes('rent') || lowerQuery.includes('hire')) return 'rental';
     if (lowerQuery.includes('premium') || lowerQuery.includes('luxury')) return 'premium';
@@ -32,7 +26,6 @@ export class SearchIntelligenceService {
     // Synonym map checking
     for (const [canonical, variants] of Object.entries(SYNONYM_MAP)) {
       if (lowerQuery === canonical || variants.includes(lowerQuery)) {
-        if (canonical === 'wedding') return 'wedding_decor';
         if (canonical === 'birthday') return 'birthday';
         // Add more canonical mappings if needed
       }

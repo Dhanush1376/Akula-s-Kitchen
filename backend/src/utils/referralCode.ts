@@ -9,13 +9,13 @@ const MAX_REFERRAL_SAVE_ATTEMPTS = 3;
  * Generates a unique, elegant referral code for a new customer
  */
 export const generateReferralCode = (name: string): string => {
-  const prefix = 'SIRI';
+  const prefix = 'AKULA';
   const sanitized = name
     .toUpperCase()
     .replace(/[^A-Z]/g, '')
     .slice(0, 3);
   const rand = Math.floor(1000 + Math.random() * 9000);
-  return `${prefix}-${sanitized || 'ART'}-${rand}`;
+  return `${prefix}-${sanitized || 'KIT'}-${rand}`;
 };
 
 /** Persist a unique referral code with retry on MongoDB duplicate key (E11000). */

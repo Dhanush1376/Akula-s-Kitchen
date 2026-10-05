@@ -58,7 +58,7 @@ export class EmailAdapter {
           auth: { user: testAccount.user, pass: testAccount.pass },
         });
         const info = await transporter.sendMail({
-          from: `"Siri Arts & Crafts" <${testAccount.user}>`,
+          from: `"Akula's Kitchen" <${testAccount.user}>`,
           to: options.to,
           subject: options.subject,
           html: options.html,

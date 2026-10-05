@@ -17,8 +17,6 @@ const EXCLUDED_PREFIXES = [
   '/api/v1/uploads',
   '/api/gallery',
   '/api/v1/gallery',
-  '/api/v1/visual-search',
-  '/api/visual-search',
 ];
 
 export const requestTimeout = (timeoutMs = 15000) => {

@@ -1,6 +1,6 @@
 /**
- * Siri Arts & Crafts - Premium Heritage-style Transactional Email Templates
- * Fully responsive, warm luxury theme matching the website's handcrafted aesthetic.
+ * Akula's Kitchen - Premium Transactional Email Templates
+ * Fully responsive, warm luxury theme matching the website's aesthetic.
  * Featuring dark/light mode support, elegant serif typography, and clear layouts.
  */
 
@@ -66,7 +66,7 @@ export const dataTable = (rows: { label: string; value: string }[]) => {
 import { getStoreConfigSync } from '../../config/storeConfig';
 
 /**
- * Reusable heritage HTML wrapper featuring a warm luxury card layout, CSS resets,
+ * Reusable HTML wrapper featuring a warm luxury card layout, CSS resets,
  * elegant serif branding typography, dark mode rendering, and brand alignment.
  */
 export const getLuxuryEmailWrapper = (
@@ -332,7 +332,7 @@ export const getWelcomeEmailTemplate = (name: string, frontendUrl: string): stri
     <h2>Welcome to ${store.name}</h2>
     <p>Hello ${name},</p>
     <p>
-      Thank you for joining our community. We invite you to explore our curated collections and use our digital studio to plan your event decor.
+      Thank you for joining our community. We invite you to explore our fresh batters, pickles, podis, namkeen and more.
     </p>
     <div class="button-wrapper">
       <a href="${frontendUrl}" class="cta-button" target="_blank">Explore Studio</a>

@@ -25,6 +25,8 @@ import {
   clearCustomerRefreshCookie,
   CUSTOMER_REFRESH_COOKIE,
   ADMIN_REFRESH_COOKIE,
+  LEGACY_CUSTOMER_REFRESH_COOKIE,
+  LEGACY_ADMIN_REFRESH_COOKIE,
   clearAdminRefreshCookie,
   setAdminRefreshCookie,
 } from '../../utils/security/authCookies';
@@ -155,7 +157,11 @@ export const refreshSession = asyncHandler(async (req: Request, res: Response) =
   // detection when a stale localStorage fallback is sent alongside a fresh
   // cookie, which would otherwise revoke the whole session family.
   const cookieToken = String(
-    req.cookies?.[CUSTOMER_REFRESH_COOKIE] || req.cookies?.[ADMIN_REFRESH_COOKIE] || '',
+    req.cookies?.[CUSTOMER_REFRESH_COOKIE] ||
+      req.cookies?.[ADMIN_REFRESH_COOKIE] ||
+      req.cookies?.[LEGACY_CUSTOMER_REFRESH_COOKIE] ||
+      req.cookies?.[LEGACY_ADMIN_REFRESH_COOKIE] ||
+      '',
   ).trim();
   const bodyToken = String(req.body?.refreshToken || req.headers['x-refresh-token'] || '').trim();
 
@@ -195,6 +201,8 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = String(
     req.cookies?.[CUSTOMER_REFRESH_COOKIE] ||
       req.cookies?.[ADMIN_REFRESH_COOKIE] ||
+      req.cookies?.[LEGACY_CUSTOMER_REFRESH_COOKIE] ||
+      req.cookies?.[LEGACY_ADMIN_REFRESH_COOKIE] ||
       req.body?.refreshToken ||
       req.headers['x-refresh-token'] ||
       '',

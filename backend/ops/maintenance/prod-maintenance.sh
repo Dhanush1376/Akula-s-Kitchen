@@ -1,5 +1,5 @@
 #!/bin/bash
-# Siri Arts & Crafts Production Maintenance Script
+# Akula's Kitchen Production Maintenance Script
 # This script should be run periodically (e.g., via cron) to maintain the production environment.
 
 echo "Starting Production Maintenance..."

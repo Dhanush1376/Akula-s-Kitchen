@@ -52,8 +52,8 @@ function createOverlaySvg(title: string, price: number, siteName: string) {
       <g transform="translate(980, 40)" filter="url(#shadow)">
         <circle cx="90" cy="90" r="80" fill="#ffffff" />
         <circle cx="90" cy="90" r="76" fill="none" stroke="#D0C5AF" stroke-width="2" />
-        <text x="90" y="85" font-family="sans-serif" font-size="28" font-weight="bold" fill="#1a1a1a" text-anchor="middle" dominant-baseline="middle">Siri Arts</text>
-        <text x="90" y="115" font-family="sans-serif" font-size="20" font-weight="normal" fill="#666666" text-anchor="middle" dominant-baseline="middle">&amp; Crafts</text>
+        <text x="90" y="85" font-family="sans-serif" font-size="24" font-weight="bold" fill="#1a1a1a" text-anchor="middle" dominant-baseline="middle">Akula's</text>
+        <text x="90" y="115" font-family="sans-serif" font-size="22" font-weight="bold" fill="#D4A41C" text-anchor="middle" dominant-baseline="middle">Kitchen</text>
       </g>
       
       <!-- Product Title -->
@@ -115,7 +115,7 @@ export const generateOgImage = async (req: Request, res: Response) => {
       .toBuffer();
 
     // 4. Generate the overlay text and layout SVG
-    const siteName = process.env.VITE_SITE_NAME || 'Siri Arts & Crafts';
+    const siteName = process.env.VITE_SITE_NAME || "Akula's Kitchen";
     const svgOverlay = Buffer.from(createOverlaySvg(product.title, product.price, siteName));
 
     // 5. Composite everything together
@@ -153,11 +153,11 @@ export const generateSocialPreviewHtml = async (req: Request, res: Response) => 
 
     // Ensure we use the storefront domain for canonical URLs, not the api proxy domain
     let siteUrl =
-      process.env.STOREFRONT_URL || process.env.VITE_SITE_URL || 'https://siriartsandcrafts.com';
+      process.env.STOREFRONT_URL || process.env.VITE_SITE_URL || 'https://akulas.kitchen';
     // Remove trailing slash if present
     siteUrl = siteUrl.replace(/\/$/, '');
 
-    const siteName = process.env.VITE_SITE_NAME || 'Siri Arts & Crafts';
+    const siteName = process.env.VITE_SITE_NAME || "Akula's Kitchen";
     const productUrl = `${siteUrl}/product/${product.slug || product._id}`;
 
     const escapeHtml = (unsafe: string) => {

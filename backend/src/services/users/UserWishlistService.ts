@@ -40,7 +40,7 @@ export class UserWishlistService {
       itemMap.set(p._id.toString(), {
         ...p,
         itemType: 'product',
-        category: p.primaryCategory?.name || 'Event Decor',
+        category: p.primaryCategory?.name || 'General',
       });
     });
     showcases.forEach((s: any) => {

@@ -355,7 +355,7 @@ describe('Customer Account Reuse & Duplicate Prevention Specification', () => {
         phone: adminPhone,
         role: 'admin',
         name: 'System Admin',
-        email: 'admin@siriarts.com',
+        email: 'admin@akulas.kitchen',
         isVerified: true,
       });
 
@@ -375,7 +375,7 @@ describe('Customer Account Reuse & Duplicate Prevention Specification', () => {
     });
 
     it('Customer email login matching an admin/staff record rejects with 403', async () => {
-      const adminEmail = 'owner@siriarts.com';
+      const adminEmail = 'owner@akulas.kitchen';
       await User.create({
         email: adminEmail,
         role: 'owner',

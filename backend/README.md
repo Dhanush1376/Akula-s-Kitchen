@@ -1,6 +1,6 @@
-# 🎨 Siri Arts & Crafts — Production Backend
+# 🍽️ Akula's Kitchen — Production Backend
 
-A high-performance, scalable Node.js + Express + TypeScript backend for the Siri Arts & Crafts e-commerce platform.
+A high-performance, scalable Node.js + Express + TypeScript backend for the Akula's Kitchen e-commerce platform.
 
 ---
 
@@ -44,7 +44,7 @@ To prevent Railway sleeping and monitor health:
 
 1. Go to **[UptimeRobot](https://uptimerobot.com/)** or **[BetterStack](https://betterstack.com/)**.
 2. Create a new "HTTP(S)" Monitor.
-3. URL: `https://api.siriartsandcrafts.com/api/health`
+3. URL: `https://api.akulas.kitchen/api/health`
 4. Interval: Every **14 minutes**.
 
 ---
@@ -64,10 +64,9 @@ To prevent Railway sleeping and monitor health:
 - `POST /api/auth/send-otp` - Trigger email OTP verification
 - `POST /api/auth/verify-otp` - Verify email OTP and authenticate
 
-### Products & Events
+### Products
 
 - `GET /api/products` - Filterable product list
-- `GET /api/events` - Ceremonial decoration catalog
 
 ### Orders & CMS
 

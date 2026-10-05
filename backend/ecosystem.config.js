@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'siri-arts-backend',
+      name: 'akulas-kitchen-backend',
       script: './dist/server.js',
       instances: 1, // Set to 1 in container environments to prevent OOM thrashing
       exec_mode: 'cluster',

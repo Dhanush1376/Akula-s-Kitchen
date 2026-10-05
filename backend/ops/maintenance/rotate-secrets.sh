@@ -2,7 +2,7 @@
 # Script to assist with generating new secrets for rotation
 
 echo "========================================================="
-echo "   🔐 EventDecor Secrets Rotation Assistant 🔐"
+echo "   🔐 Akula's Kitchen Secrets Rotation Assistant 🔐"
 echo "========================================================="
 echo ""
 echo "This script helps generate new cryptographically secure secrets."

@@ -40,7 +40,6 @@ export class PolicyAiService {
 
       PAYMENTS:
       COD Enabled: ${settings.payments.enableCOD} (Fee: ₹${settings.payments.codFee})
-      Wallet Enabled: ${settings.payments.enableWallet}
 
       RETURNS & CANCELLATIONS:
       Returns Enabled: ${settings.returnsExchanges.enableReturns}

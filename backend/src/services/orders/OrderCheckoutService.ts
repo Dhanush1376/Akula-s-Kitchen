@@ -3,12 +3,9 @@ import { RazorpayGateway } from '../../utils/payment/RazorpayGateway';
 import Order from '../../models/Order';
 import Product from '../../models/Product';
 import User from '../../models/User';
-import Coupon from '../../models/Coupon';
 import ApiError from '../../utils/ApiError';
 import logger from '../../config/logger';
 import storeSettingsService from '../../services/StoreSettingsService';
-import WalletTransaction from '../../models/WalletTransaction';
-import { debitWalletBalance } from '../../utils/payment/walletMutations';
 import PaymentAttempt from '../../models/PaymentAttempt';
 import { OrderIdempotencyManager } from './OrderIdempotencyManager';
 import OutboxEvent from '../../models/OutboxEvent';
@@ -22,11 +19,10 @@ export class OrderCheckoutService {
     const {
       items,
       shippingAddress,
-      couponCode,
+
       notes,
       needByDate,
       paymentMethod,
-      useWallet,
       idempotencyKey,
       isCustomOrder,
       customOrderId,
@@ -76,156 +72,66 @@ export class OrderCheckoutService {
     const pendingOrderId = new mongoose.Types.ObjectId();
 
     try {
-      if (isCustomOrder && customOrderId) {
-        // --- CUSTOM ORDER PATH ---
-        const CustomOrder = require('../../models/CustomOrder').default;
-        const customOrderObj = await CustomOrder.findById(customOrderId).session(session);
-        if (!customOrderObj || customOrderObj.status !== 'Approved') {
-          throw new ApiError(400, 'Invalid or unapproved custom order');
-        }
+      // --- STANDARD E-COMMERCE PATH ---
+      const productIds = [
+        ...new Set(items.map((item: any) => String(item.productId)).filter(Boolean)),
+      ] as any[];
+      const products = await Product.find({ _id: { $in: productIds } })
+        .select('title price stock reservedStock isActive imageSrc category isNonRefundable')
+        .session(session);
+      const productsById = new Map<string, any>(products.map((p: any) => [p._id.toString(), p]));
 
-        subtotal = customOrderObj.quotation.total || 0;
-
-        // Push a single mock item into orderItems for the custom order
-        orderItems.push({
-          title: `Custom Design: ${customOrderObj.occasion || customOrderObj.productType || 'Decor'}`,
-          price: subtotal,
-          quantity: 1,
-          variant: 'Custom',
-          imageSrc:
-            customOrderObj.inspirationImages?.[0] ||
-            'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
-          category: 'CustomOrder',
-          isNonRefundable: true,
-          type: 'purchase',
-          deposit: 0,
-        });
-      } else {
-        // --- STANDARD E-COMMERCE PATH ---
-        const productIds = [
-          ...new Set(items.map((item: any) => String(item.productId)).filter(Boolean)),
-        ] as any[];
-        const products = await Product.find({ _id: { $in: productIds } })
-          .select('title price stock reservedStock isActive imageSrc category isNonRefundable')
-          .session(session);
-        const productsById = new Map<string, any>(products.map((p: any) => [p._id.toString(), p]));
-
-        for (const item of items) {
-          if (item.type === 'rental') {
-            throw new ApiError(
-              400,
-              `Rental items cannot be purchased through the standard checkout. Please use the dedicated Rental Wizard for ${item.title || 'this item'}.`,
-            );
-          }
-          const product = productsById.get(String(item.productId));
-          if (!product) throw new ApiError(404, `Product ${item.productId} not found`);
-          if (!product.isActive)
-            throw new ApiError(400, `Product is no longer active: ${product.title}`);
-          const availableStock = product.stock - (product.reservedStock || 0);
-          if (availableStock < item.quantity) {
-            throw new ApiError(400, `Insufficient stock for product: ${product.title}`);
-          }
-        }
-
-        for (const item of items) {
-          const product = productsById.get(String(item.productId))!;
-
-          // Use InventoryService for TTL-based reservations (ATOMIC $inc)
-          const reservation = await InventoryService.reserveInventory(
-            item.productId,
-            item.quantity,
-            userId,
-            15,
-            session,
+      for (const item of items) {
+        if (item.type === 'rental') {
+          throw new ApiError(
+            400,
+            `Rental items cannot be purchased through the standard checkout. Please use the dedicated Rental Wizard for ${item.title || 'this item'}.`,
           );
-          reservationIds.push(reservation._id);
-
-          const itemPrice = product.price;
-          const itemType = item.type || 'purchase';
-          const itemTotal = itemPrice * item.quantity;
-          subtotal += itemTotal;
-
-          orderItems.push({
-            productId: product._id,
-            title: product.title,
-            price: itemPrice,
-            quantity: item.quantity,
-            variant: item.variant || 'Default',
-            imageSrc: product.imageSrc,
-            category: product.category,
-            isNonRefundable: product.isNonRefundable || false,
-            type: itemType,
-            deposit: 0,
-            customizationNote: item.customizationNote,
-          });
+        }
+        const product = productsById.get(String(item.productId));
+        if (!product) throw new ApiError(404, `Product ${item.productId} not found`);
+        if (!product.isActive)
+          throw new ApiError(400, `Product is no longer active: ${product.title}`);
+        const availableStock = product.stock - (product.reservedStock || 0);
+        if (availableStock < item.quantity) {
+          throw new ApiError(400, `Insufficient stock for product: ${product.title}`);
         }
       }
 
-      let walletDeducted = false;
-      let walletDeduction = 0;
+      for (const item of items) {
+        const product = productsById.get(String(item.productId))!;
+
+        // Use InventoryService for TTL-based reservations (ATOMIC $inc)
+        const reservation = await InventoryService.reserveInventory(
+          item.productId,
+          item.quantity,
+          userId,
+          15,
+          session,
+        );
+        reservationIds.push(reservation._id);
+
+        const itemPrice = product.price;
+        const itemType = item.type || 'purchase';
+        const itemTotal = itemPrice * item.quantity;
+        subtotal += itemTotal;
+
+        orderItems.push({
+          productId: product._id,
+          title: product.title,
+          price: itemPrice,
+          quantity: item.quantity,
+          variant: item.variant || 'Default',
+          imageSrc: product.imageSrc,
+          category: product.category,
+          isNonRefundable: product.isNonRefundable || false,
+          type: itemType,
+          deposit: 0,
+          customizationNote: item.customizationNote,
+        });
+      }
       let order: any;
-
-      let discount = 0;
-      let couponValid = false;
-
-      // Only VALIDATE the coupon here, DO NOT increment usedCount yet (unless COD)
-      let couponDoc: any = null;
-      if (couponCode) {
-        couponDoc = await Coupon.findOne({
-          code: couponCode.toUpperCase().trim(),
-          isActive: true,
-        }).session(session);
-
-        if (
-          couponDoc &&
-          new Date() <= couponDoc.expiryDate &&
-          subtotal >= couponDoc.minOrderAmount &&
-          (!couponDoc.usageLimit || couponDoc.usedCount < couponDoc.usageLimit)
-        ) {
-          couponValid = true;
-          let applicableAmount = subtotal;
-
-          if (
-            couponDoc.targetType === 'products' &&
-            couponDoc.targetProductIds &&
-            couponDoc.targetProductIds.length > 0
-          ) {
-            const productIdsStr = couponDoc.targetProductIds.map((id: any) => id.toString());
-            applicableAmount = orderItems
-              .filter((item) => productIdsStr.includes(item.productId.toString()))
-              .reduce((sum, item) => sum + item.price * item.quantity, 0);
-          } else if (
-            couponDoc.targetType === 'categories' &&
-            couponDoc.targetCategories &&
-            couponDoc.targetCategories.length > 0
-          ) {
-            const targetCatsLower = couponDoc.targetCategories.map((c: any) =>
-              (c || '').toLowerCase().trim(),
-            );
-            applicableAmount = orderItems
-              .filter((item) =>
-                targetCatsLower.includes((item.category || '').toLowerCase().trim()),
-              )
-              .reduce((sum, item) => sum + item.price * item.quantity, 0);
-          }
-
-          if (applicableAmount > 0) {
-            if (couponDoc.discountType === 'percentage') {
-              discount = (applicableAmount * couponDoc.discountValue) / 100;
-              if (couponDoc.maxDiscount && discount > couponDoc.maxDiscount) {
-                discount = couponDoc.maxDiscount;
-              }
-            } else {
-              discount = Math.min(applicableAmount, couponDoc.discountValue);
-            }
-            discount = Math.round(discount);
-          } else {
-            throw new ApiError(400, 'Coupon is not applicable to the items in your cart');
-          }
-        } else {
-          throw new ApiError(400, 'Coupon is invalid, expired, or usage limit reached');
-        }
-      }
+      const discount = 0;
 
       if (!shippingAddress?.state) {
         throw new ApiError(400, 'Destination state is required for delivery and tax compliance.');
@@ -262,8 +168,6 @@ export class OrderCheckoutService {
         platformFee: settings.orders.platformFee || 0,
         taxAmount: taxResult.taxAmount,
         isTaxInclusive: taxResult.taxInclusive,
-        useWallet: Boolean(useWallet && user && settings.loyalty.walletEnabled),
-        walletBalance: user?.walletBalance || 0,
       });
 
       const { shippingFee, platformFee, codFee, total } = totals;
@@ -380,13 +284,9 @@ export class OrderCheckoutService {
           throw new ApiError(400, 'Online payments are currently disabled.');
         }
       }
-
-      walletDeduction = totals.walletDeduction;
-      if (walletDeduction > 0) walletDeducted = true;
-
       // Generate immutable invoice snapshots (sequential number, store identity, self-contained tax breakdown)
       const invoiceSnapshots = await InvoiceService.generateOrderSnapshots(
-        { subtotal, discount, shippingFee, codFee, walletDeduction, total },
+        { subtotal, discount, shippingFee, codFee, walletDeduction: 0, total },
         taxResult,
         {
           hsnCode: settings.taxes?.hsnCode,
@@ -403,40 +303,9 @@ export class OrderCheckoutService {
 
       const requiresApproval = false;
 
-      const _isInstantWallet = isZeroTotalOrder && walletDeduction > 0;
-      const isInstantCheckout = (isCod && !isZeroTotalOrder) || isZeroTotalOrder;
+      const isInstantCheckout = isCod;
 
       if (isInstantCheckout) {
-        // FOR COD: Perform all actual database mutations (Coupon, Wallet, Order)
-        if (couponValid && couponDoc) {
-          await Coupon.findByIdAndUpdate(
-            couponDoc._id,
-            {
-              $inc: { usedCount: 1 },
-              $push: { usedBy: { userId, orderId: pendingOrderId } },
-            },
-            { session },
-          );
-        }
-
-        if (walletDeducted && walletDeduction > 0) {
-          const updatedUser = await debitWalletBalance(userId, walletDeduction, session);
-          if (!updatedUser) throw new ApiError(400, 'Insufficient wallet balance.');
-          await WalletTransaction.create(
-            [
-              {
-                userId: userId,
-                type: 'debit',
-                amount: walletDeduction,
-                source: 'checkout_redeem',
-                description: `Redeemed Siri Cash at checkout`,
-                status: 'active',
-              },
-            ],
-            { session },
-          );
-        }
-
         if (shippingAddress?.name && typeof shippingAddress.name === 'string') {
           const trimmedName = shippingAddress.name.trim();
           if (trimmedName && trimmedName.toLowerCase() !== 'customer') {
@@ -461,39 +330,28 @@ export class OrderCheckoutService {
           customerEmail: user?.email || shippingAddress?.email || '',
           customerPhone: user?.phone || normalizedShippingPhone,
           shippingPhone: normalizedShippingPhone,
-          codPhoneVerified: isCod && !isZeroTotalOrder,
-          codVerifiedAt: isCod && !isZeroTotalOrder ? new Date() : undefined,
+          codPhoneVerified: isCod,
+          codVerifiedAt: isCod ? new Date() : undefined,
           orderType: 'purchase',
           depositTotal,
           subtotal,
           shippingFee,
           platformFee,
-          discount,
+          discount: 0,
           codFee,
-          walletDeduction,
+          walletDeduction: 0,
           total,
-          couponCode: couponValid ? couponCode.toUpperCase() : undefined,
-          paymentMethod: isZeroTotalOrder
-            ? walletDeduction > 0
-              ? 'wallet'
-              : 'coupon'
-            : isCod
-              ? 'cod'
-              : 'razorpay',
-          paymentStatus: isZeroTotalOrder ? 'paid' : isCod ? 'Pending COD' : 'paid',
+          paymentMethod: isCod ? 'cod' : 'razorpay',
+          paymentStatus: isCod ? 'Pending COD' : 'paid',
           orderStatus: requiresApproval ? 'Pending Approval' : 'Confirmed',
           statusHistory: [
             {
               status: requiresApproval ? 'Pending Approval' : 'Confirmed',
               note: requiresApproval
                 ? 'Order requires manual approval based on business rules'
-                : isZeroTotalOrder
-                  ? walletDeduction > 0
-                    ? 'Order successfully placed and fully paid using wallet balance'
-                    : 'Order successfully placed (100% discount applied)'
-                  : isCod
-                    ? 'Cash on Delivery order successfully placed'
-                    : 'Order successfully placed',
+                : isCod
+                  ? 'Cash on Delivery order successfully placed'
+                  : 'Order successfully placed',
             },
           ],
           reservationIds,
@@ -517,37 +375,23 @@ export class OrderCheckoutService {
 
         await order.save({ session });
 
-        // Increment sold count (ONLY for standard items)
-        if (!isCustomOrder) {
-          for (const item of orderItems) {
-            if (item.productId) {
-              await Product.findByIdAndUpdate(
-                item.productId,
-                { $inc: { sold: item.quantity || 1 } },
-                { session },
-              );
-            }
+        // Increment sold count
+        for (const item of orderItems) {
+          if (item.productId) {
+            await Product.findByIdAndUpdate(
+              item.productId,
+              { $inc: { sold: item.quantity || 1 } },
+              { session },
+            );
           }
-
-          const orderedProductIds = order.items.map((item: any) => item.productId);
-          await User.findByIdAndUpdate(
-            userId,
-            { $pull: { cart: { product: { $in: orderedProductIds } } } },
-            { session },
-          );
-        } else {
-          // Convert CustomOrder
-          const CustomOrder = require('../../models/CustomOrder').default;
-          await CustomOrder.findByIdAndUpdate(
-            customOrderId,
-            {
-              convertedToOrder: true,
-              convertedOrderId: order._id,
-              status: isCod ? 'In Progress' : 'Payment Received',
-            },
-            { session },
-          );
         }
+
+        const orderedProductIds = order.items.map((item: any) => item.productId);
+        await User.findByIdAndUpdate(
+          userId,
+          { $pull: { cart: { product: { $in: orderedProductIds } } } },
+          { session },
+        );
 
         // Confirm inventory reservations via InventoryService (unified path for COD + online)
         for (const resId of reservationIds) {
@@ -563,7 +407,7 @@ export class OrderCheckoutService {
               payload: {
                 orderId: order._id.toString(),
                 userId: userId,
-                type: isZeroTotalOrder ? 'wallet' : isCod ? 'cod' : 'razorpay',
+                type: isZeroTotalOrder ? 'free' : isCod ? 'cod' : 'razorpay',
               },
             },
           ],
@@ -589,7 +433,7 @@ export class OrderCheckoutService {
 
         const resultInstant = {
           order,
-          type: isZeroTotalOrder ? 'wallet' : isCod ? 'cod' : 'razorpay',
+          type: isZeroTotalOrder ? 'free' : isCod ? 'cod' : 'razorpay',
           isInstantCheckout: true,
         };
         await OrderIdempotencyManager.cacheResponseAndReleaseLock(
@@ -609,7 +453,7 @@ export class OrderCheckoutService {
 
         return resultInstant;
       } else {
-        // FOR RAZORPAY: Do NOT save the Order, do NOT increment coupon usage, do NOT deduct wallet.
+        // FOR RAZORPAY: Do NOT save the Order, do NOT deduct wallet.
         // We only reserve the inventory (already done above with TTL) and create a PaymentAttempt.
         await session.commitTransaction(); // Commit the inventory reservations so the TTL applies
 
@@ -652,11 +496,10 @@ export class OrderCheckoutService {
           depositTotal,
           subtotal,
           shippingFee,
-          discount,
+          discount: 0,
           codFee: 0,
-          walletDeduction,
+          walletDeduction: 0,
           total,
-          couponCode: couponValid ? couponCode.toUpperCase() : undefined,
           paymentMethod: 'razorpay',
           reservationIds,
           invoiceNumber,

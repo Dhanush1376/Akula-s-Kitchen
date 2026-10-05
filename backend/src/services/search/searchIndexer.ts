@@ -1,7 +1,5 @@
 import SearchIndex from '../../models/SearchIndex';
 import Product from '../../models/Product';
-import Event from '../../models/Event';
-import Gallery from '../../models/Gallery';
 import logger from '../../config/logger';
 import { getTransliterationsAndSynonyms } from './queryParser';
 import { getSingularForm } from './queryParser';
@@ -51,7 +49,7 @@ export function tokenizeText(text?: string): string[] {
 /**
  * Analyzes an entity and extracts all search tokens
  */
-export function extractEntityTokens(entity: any, _type: 'Product' | 'Event' | 'Gallery') {
+export function extractEntityTokens(entity: any, _type: 'Product' | 'Event') {
   const titleTokens = new Set<string>();
   const categoryTokens = new Set<string>();
   const tagTokens = new Set<string>();
@@ -154,59 +152,6 @@ export async function indexProduct(product: any): Promise<void> {
 }
 
 /**
- * Indexes or updates a specific event in SearchIndex
- */
-export async function indexEvent(event: any): Promise<void> {
-  const ngrams = buildNgrams(event.title);
-  const extracted = extractEntityTokens(event, 'Event');
-
-  await SearchIndex.findOneAndUpdate(
-    { entityId: event._id },
-    {
-      entityType: 'Event',
-      title: event.title,
-      slug: event.slug,
-      image: event.image || (event.images && event.images[0]),
-      price: event.basePrice,
-
-      ngrams,
-      ...extracted,
-
-      popularity: 0,
-      isActive: event.isActive !== false && !event.deletedAt,
-    },
-    { upsert: true, new: true },
-  );
-}
-
-/**
- * Indexes or updates a specific gallery item in SearchIndex
- */
-export async function indexGallery(gallery: any): Promise<void> {
-  const ngrams = buildNgrams(gallery.title + ' ' + (gallery.teluguTitle || ''));
-  const extracted = extractEntityTokens(gallery, 'Gallery');
-
-  const popularity = (gallery.views || 0) + (gallery.likes || 0) * 5;
-
-  await SearchIndex.findOneAndUpdate(
-    { entityId: gallery._id },
-    {
-      entityType: 'Gallery',
-      title: gallery.title,
-      slug: gallery.slug, // Gallery might not have slug, but safe
-      image: gallery.image || (gallery.images && gallery.images[0]),
-
-      ngrams,
-      ...extracted,
-
-      popularity,
-      isActive: gallery.isActive !== false && !gallery.deletedAt,
-    },
-    { upsert: true, new: true },
-  );
-}
-
-/**
  * Full database re-index
  */
 export async function reindexAll(): Promise<void> {
@@ -220,20 +165,6 @@ export async function reindexAll(): Promise<void> {
   logger.info(`[Search Indexer] Indexing ${products.length} products...`);
   for (const p of products) {
     await indexProduct(p);
-  }
-
-  // Reindex Events
-  const events = await Event.find({ deletedAt: null }).lean();
-  logger.info(`[Search Indexer] Indexing ${events.length} events...`);
-  for (const e of events) {
-    await indexEvent(e);
-  }
-
-  // Reindex Galleries
-  const galleries = await Gallery.find({ deletedAt: null }).lean();
-  logger.info(`[Search Indexer] Indexing ${galleries.length} gallery items...`);
-  for (const g of galleries) {
-    await indexGallery(g);
   }
 
   logger.info('[Search Indexer] Reindex complete!');

@@ -12,14 +12,14 @@ export const seedDefaultEmailTemplates = async (): Promise<void> => {
     const defaultTemplates = [
       {
         name: 'Welcome Email',
-        subjectLine: 'Welcome to Siri Arts & Crafts, {{name}} — Discover Timeless Decor',
+        subjectLine: "Welcome to Akula's Kitchen, {{name}} — Discover Authentic Flavors",
         htmlContent: getWelcomeEmailTemplate('{{name}}', '{{frontend_url}}'),
         type: 'marketing',
         isActive: true,
       },
       {
         name: 'Suspicious Login Alert',
-        subjectLine: 'Security Alert: New Login Detected — Siri Arts & Crafts',
+        subjectLine: "Security Alert: New Login Detected — Akula's Kitchen",
         htmlContent: getSuspiciousLoginEmailTemplate('{{name}}', '{{loginTime}}', '{{deviceInfo}}'),
         type: 'system',
         isActive: true,
@@ -54,7 +54,6 @@ export const ensureIndexes = async (): Promise<void> => {
     '../models/Order',
     '../models/EventJob',
     '../models/Event',
-    '../models/Gallery',
     '../models/ContentSection',
     '../models/Review',
     '../models/Coupon',
@@ -66,7 +65,6 @@ export const ensureIndexes = async (): Promise<void> => {
     '../models/UserInteraction',
     '../models/UserPreferenceProfile',
     '../models/TrendingSnapshot',
-    '../models/CustomOrder',
     '../models/PaymentWebhookEvent',
     '../models/RefundRecord',
     '../models/InventoryReservation',

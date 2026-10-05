@@ -160,13 +160,12 @@ export async function getTrendingFeeds(seasonalContext?: string): Promise<Trendi
     const cached = await RecommendationCache.getTrending('all');
     if (cached) return cached;
 
-    const [products, events, galleries] = await Promise.all([
+    const [products, events] = await Promise.all([
       calculateTrending('product', { limit: 15, seasonalContext }),
       calculateTrending('event', { limit: 10, seasonalContext }),
-      calculateTrending('gallery', { limit: 10, seasonalContext }),
     ]);
 
-    const allItems = [...products, ...events, ...galleries];
+    const allItems = [...products, ...events];
 
     // Sort by different criteria for different feeds
     const trendingNow = [...allItems].sort((a, b) => b.velocity - a.velocity).slice(0, 12);

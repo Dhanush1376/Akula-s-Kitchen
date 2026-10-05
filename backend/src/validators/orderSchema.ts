@@ -43,7 +43,7 @@ export const createOrderSchema = z.object({
       couponCode: z.string().trim().max(50).optional().or(z.literal('')),
 
       needByDate: z.string().trim().max(50).optional().or(z.literal('')),
-      paymentMethod: z.enum(['razorpay', 'cod', 'wallet']).default('razorpay'),
+      paymentMethod: z.enum(['razorpay', 'cod']).default('razorpay'),
       useWallet: z.boolean().optional(),
       idempotencyKey: z.string().trim().max(120).optional(),
       orderType: z.string().optional(),

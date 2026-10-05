@@ -327,31 +327,26 @@ export function analyzeQueryLocally(query: string): AIAnalysisResult {
 
   // Detect tags
   const potentialTags = [
-    'balloons',
-    'balloon',
-    'flowers',
-    'flower',
-    'marigold',
-    'jasmine',
-    'rose',
-    'garland',
-    'backdrop',
-    'stage',
-    'entrance',
-    'welcome board',
-    'coconut',
-    'tray',
-    'thali',
-    'diyas',
-    'lamps',
-    'lights',
-    'lighting',
-    'candles',
-    'leaves',
-    'banana',
+    'batter',
+    'idli',
+    'dosa',
+    'vada',
+    'appam',
+    'chutney',
+    'pickle',
+    'avakaya',
+    'avakaaya',
+    'gongura',
     'mango',
-    'curtain',
-    'drapes',
+    'lemon',
+    'amla',
+    'podi',
+    'masala',
+    'sambar',
+    'rasam',
+    'murukulu',
+    'namkeen',
+    'cashew',
   ];
   const tags = potentialTags.filter((t) => normalized.includes(t));
 
@@ -369,7 +364,7 @@ export function analyzeQueryLocally(query: string): AIAnalysisResult {
   // Construct dynamic expertResponse and intentSummary local fallbacks
   let intentSummary = 'Custom Search';
   let expertResponse =
-    "I've searched our collection for traditional Indian crafts and decor matching your request. Here are my top recommendations.";
+    "I've searched our collection for products matching your request. Here are my top recommendations.";
 
   const categoryLabel = category ? category : tags[0] ? tags[0] : '';
   const styleLabel = style ? `${style.charAt(0).toUpperCase()}${style.slice(1)}` : '';
@@ -377,13 +372,13 @@ export function analyzeQueryLocally(query: string): AIAnalysisResult {
 
   if (categoryLabel && budgetLabel) {
     intentSummary = `${styleLabel ? styleLabel + ' ' : ''}${categoryLabel} ${budgetLabel}`;
-    expertResponse = `I've put together some beautiful ${styleLabel ? styleLabel.toLowerCase() + ' ' : ''}${categoryLabel.toLowerCase()} selections ${budgetLabel} that fit your budget perfectly. Let me know if you would like to customize these!`;
+    expertResponse = `I've put together some beautiful ${styleLabel ? styleLabel.toLowerCase() + ' ' : ''}${categoryLabel.toLowerCase()} selections ${budgetLabel} that fit your budget perfectly.`;
   } else if (categoryLabel) {
     intentSummary = `${styleLabel ? styleLabel + ' ' : ''}${categoryLabel} Ideas`;
-    expertResponse = `Here are some stunning ${styleLabel ? styleLabel.toLowerCase() + ' ' : ''}${categoryLabel.toLowerCase()} decoration ideas for your ceremony. You can filter them by budget using the price controls.`;
+    expertResponse = `Here are some stunning ${styleLabel ? styleLabel.toLowerCase() + ' ' : ''}${categoryLabel.toLowerCase()} picks for you. You can filter them by budget using the price controls.`;
   } else if (budgetLabel) {
-    intentSummary = `Decorations ${budgetLabel}`;
-    expertResponse = `I found some lovely handcrafted props and setups ${budgetLabel}. Check out these budget-friendly recommendations.`;
+    intentSummary = `Products ${budgetLabel}`;
+    expertResponse = `I found some great products ${budgetLabel}. Check out these budget-friendly recommendations.`;
   }
 
   const spellCheck = getSpellCorrectedQuery(cleanedQuery);
@@ -437,8 +432,8 @@ export async function analyzeQueryWithAI(query: string): Promise<AIAnalysisResul
   try {
     // Use sanitized input in prompt — never embed raw user input
     const prompt = `
-    You are an advanced search query analyzer and NLP engine for "Siri Arts & Crafts" (an Indian wedding, festival, and event decoration platform).
-    You are designed as a Telugu-first semantic AI search analyzer. The majority of customers search using Telugu, transliterated Telugu (English letters), mixed Telugu-English, or local event terminology.
+    You are an advanced search query analyzer and NLP engine for "Akula's Kitchen", a homemade food products store selling batters, chutneys, pickles, podis & masalas, namkeen and cashews.
+    Many customers search using Telugu, transliterated Telugu (English letters), or mixed Telugu-English.
     Analyze the following user search query and output a structured JSON response.
 
     Query: "${safeQuery}"
@@ -446,30 +441,29 @@ export async function analyzeQueryWithAI(query: string): Promise<AIAnalysisResul
     Linguistic Guidelines:
     1. DETECT LANGUAGE: Identify the language (english, telugu, hinglish, mixed).
     2. TELUGU-FIRST SEMANTIC MAPPING:
-       - If the user uses Telugu script (e.g. "పెళ్లి", "శీమంతం"), translate/map to English equivalents ("wedding", "baby shower").
-       - If the user uses transliterated Telugu/Hinglish (e.g., "pelli", "seemantham", "pendli", "gruhapravesam", "gruhapravesh", "kobbari bondam", "kumkuma", "pasupu", "satyanarayana vratam", "aksharabhyasam", "langa voni", "thambulam"), map to proper English terms (e.g., pelli/pendli -> wedding, seemantham -> baby shower, gruhapravesam -> housewarming, kobbari bondam -> coconut, pasupu -> haldi/turmeric, thambulam -> return gift/tray).
+       - If the user uses Telugu script (e.g. "ఆవకాయ", "గోంగూర"), translate/map to English equivalents ("mango pickle", "gongura pickle").
+       - If the user uses transliterated Telugu/Hinglish (e.g., "avakaya", "pachadi", "karam podi", "murukulu", "jeedipappu"), map to proper English terms (e.g., avakaya -> mango pickle, pachadi -> chutney/pickle, karam podi -> spice powder, murukulu -> murukku namkeen, jeedipappu -> cashews).
     3. NO EMPTY EXPANDED TERMS:
-       - For Telugu or transliterated queries, NEVER return empty expandedTerms. Always suggest at least 5 related English product keywords and synonyms (e.g., for "pelli" -> ["wedding", "stage decor", "mandap", "garland", "coconut decor", "welcome board", "thambulam"]).
-       - If the query matches an event (like Housewarming/Gruhapravesam), expand with related pooja items, torans, mango leaves, and welcome signboards.
+       - For Telugu or transliterated queries, NEVER return empty expandedTerms. Always suggest at least 5 related English product keywords and synonyms (e.g., for "avakaya" -> ["mango pickle", "avakaaya", "andhra pickle", "spicy pickle", "pickles"]).
 
     Extraction Guidelines:
     1. category: Map to one of the following exact categories if matching or relevant:
-       "Wedding", "Birthday", "Pooja", "Engagement", "Floral", "Traditional", "Modern", "Lighting", "Stage", "Diwali", "Housewarming", "BabyShower", "Anniversary", "Corporate", "NamingCeremony", "HalfSareeFunction", "Haldi", "Mehendi", "Sangeet".
+       "Batters", "Chutneys", "Pickles", "Podis & Masalas", "Namkeen", "Cashews".
     2. style: (traditional, modern, luxury, minimalist, simple).
-    3. colors: Array of color words if mentioned (e.g. red, yellow, gold, white, pink, rose, orange, green, blue).
-    4. tags: List of keyword tags (e.g. balloons, flowers, backdrop, garlands, diyas, coconut, tray, welcome board).
-    5. priceMax: Extracted budget limit. If query is "under 50k" or "under 50000" or "below 20000", parse the budget (e.g. 50000). Otherwise null.
+    3. colors: Array of color words if mentioned (e.g. red, yellow, green).
+    4. tags: List of keyword tags (e.g. idli, dosa, mango, gongura, podi, murukulu, cashew).
+    5. priceMax: Extracted budget limit. If query is "under 500" or "below 1000", parse the budget (e.g. 500). Otherwise null.
     6. priceMin: Extracted min budget limit. Otherwise null.
     7. correctedQuery: The corrected version of the query in clean English/Telugu.
-    8. expandedTerms: Array of related terms, synonyms, and transliterations (e.g. ["wedding", "stage decor", "mandap", "garland", "coconut", "thambulam"]).
-    9. expertResponse: A warm, helpful 1-2 sentence response from an event planner expert explaining what we found based on their query details. For example: "I found some lovely traditional coconut decor designs under ₹1000. These are very affordable options that look beautiful for wedding or housewarming ceremonies!"
-    10. intentSummary: A short title summarizing the query (e.g., "Coconut decor under ₹1000", "Traditional Telugu pelli decoration", "Simple birthday setup under ₹5000").
+    8. expandedTerms: Array of related terms, synonyms, and transliterations (e.g. ["mango pickle", "avakaya", "pickles"]).
+    9. expertResponse: A warm, helpful 1-2 sentence response explaining what we found based on their query details. For example: "Here are our homemade mango pickles under ₹500 — made with traditional Andhra recipes."
+    10. intentSummary: A short title summarizing the query (e.g., "Mango pickles under ₹500", "Idli & dosa batter", "Spicy podis").
 
     Your output MUST be a valid JSON object only (do not wrap in markdown code blocks, do not write anything else), matching the format:
     {
       "detectedLanguage": "english | telugu | hinglish | mixed",
       "correctedQuery": "clean corrected query",
-      "category": "Wedding" | "Birthday" | "Pooja" | "Engagement" | "Festival" | "Housewarming" | "BabyShower" | null,
+      "category": "Batters" | "Chutneys" | "Pickles" | "Podis & Masalas" | "Namkeen" | "Cashews" | null,
       "style": "traditional" | "modern" | "luxury" | "minimalist" | null,
       "colors": ["color1", "color2"],
       "tags": ["tag1", "tag2"],

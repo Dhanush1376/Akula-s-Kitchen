@@ -1,14 +1,7 @@
 import { z } from 'zod';
 
 export const createReviewSchema = z.object({
-  productId: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID format')
-    .optional(),
-  showcaseId: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid showcase ID format')
-    .optional(),
+  productId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID format'),
   customerName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100).optional(),
   rating: z.number().min(1, 'Rating must be at least 1').max(5, 'Rating cannot exceed 5'),
   comment: z
@@ -35,9 +28,7 @@ export const createReviewSchema = z.object({
     .max(5, 'Maximum 5 images allowed')
     .optional(),
   location: z.string().trim().max(100).optional(),
-  eventType: z.string().trim().max(100).optional(),
-  favoriteElement: z.string().trim().max(100).optional(),
-  category: z.enum(['showcase', 'event', 'product']).optional(),
+  category: z.enum(['product']).optional(),
 });
 
 export const updateReviewSchema = z.object({

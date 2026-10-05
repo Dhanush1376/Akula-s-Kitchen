@@ -88,8 +88,8 @@ export const VISION_PROVIDER_CONFIG: Record<string, VisionProviderConfig> = {
     headerKey: 'Authorization',
     headerPrefix: 'Bearer ',
     extraHeaders: {
-      'HTTP-Referer': 'https://eventdecor.app',
-      'X-Title': 'EventDecor Visual Search',
+      'HTTP-Referer': 'https://akulas.kitchen',
+      'X-Title': "Akula's Kitchen",
     },
     apiFormat: 'openai',
     supportsVision: true,

@@ -1,6 +1,6 @@
 # Backend Scripts Catalog
 
-This directory contains operational, verification, diagnostic, and data migration utilities for the Siri Arts & Crafts backend.
+This directory contains operational, verification, diagnostic, and data migration utilities for the Akula's Kitchen backend.
 
 ## Directory Structure
 

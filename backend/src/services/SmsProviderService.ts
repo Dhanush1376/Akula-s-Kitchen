@@ -61,7 +61,7 @@ export class Fast2SmsProvider implements SmsProvider {
     }
 
     try {
-      const message = `Your OTP for Siri Arts & Crafts is ${otp}. Valid for 5 minutes. Please do not share this code.`;
+      const message = `Your OTP for Akula's Kitchen is ${otp}. Valid for 5 minutes. Please do not share this code.`;
       const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
         method: 'POST',
         headers: {

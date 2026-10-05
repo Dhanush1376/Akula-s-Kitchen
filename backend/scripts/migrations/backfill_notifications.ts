@@ -1,8 +1,6 @@
 // @ts-nocheck
 import mongoose from 'mongoose';
 import InAppNotification from './src/models/InAppNotification';
-import ReturnRequest from './src/models/ReturnRequest';
-import ExchangeRequest from './src/models/ExchangeRequest';
 import Order from './src/models/Order';
 import './src/models/Product';
 import dotenv from 'dotenv';
@@ -36,13 +34,7 @@ async function backfillNotifications() {
       let finalEntityId = entityId;
 
       try {
-        if (entityId && entityId.startsWith('RET-')) {
-          const rr = await ReturnRequest.findOne({ returnId: entityId });
-          if (rr && rr.items && rr.items.length > 0) imageSrc = rr.items[0].imageSrc;
-        } else if (entityId && entityId.startsWith('EXC-')) {
-          const ex = await ExchangeRequest.findOne({ exchangeId: entityId });
-          if (ex && ex.items && ex.items.length > 0) imageSrc = ex.items[0].imageSrc;
-        } else if (orderId) {
+        if (orderId) {
           const ord = await Order.findById(orderId).populate('items.productId');
           if (ord) {
             if (ord.items && ord.items.length > 0) {

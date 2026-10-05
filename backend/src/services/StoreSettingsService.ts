@@ -122,9 +122,6 @@ class StoreSettingsService {
         welcomeBonus: settings.loyalty.welcomeBonus,
         pointsPerRupee: settings.loyalty.pointsPerRupee,
         coinsPerRupee: settings.loyalty.coinsPerRupee,
-        welcomeCouponDiscount: settings.loyalty.welcomeCouponDiscount,
-        welcomeCouponMinOrder: settings.loyalty.welcomeCouponMinOrder,
-        welcomeCouponMaxDiscount: settings.loyalty.welcomeCouponMaxDiscount,
         tiers: settings.loyalty.tiers,
       },
       orders: {

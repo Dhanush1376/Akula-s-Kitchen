@@ -104,23 +104,6 @@ export class AIInsightsEngine {
           });
         }
       }
-
-      // 6. Search Intent Shifts
-      const curWedding = this.getSearchIntent(currentSnapshot.metrics.topSearches, 'wedding_decor');
-      const prevWedding = this.getSearchIntent(
-        previousSnapshot.metrics.topSearches,
-        'wedding_decor',
-      );
-      const weddingDemandChange = this.calcPercentChange(prevWedding, curWedding);
-      if (weddingDemandChange > 20) {
-        insights.push({
-          category: 'demand',
-          message: `Wedding decor demand increased by ${weddingDemandChange.toFixed(1)}% — consider restocking inventory.`,
-          severity: 'info',
-          metric: 'weddingDemand',
-          change: weddingDemandChange,
-        });
-      }
     } catch (error) {
       logger.error('Error generating AI insights', error);
     }

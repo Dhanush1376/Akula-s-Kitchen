@@ -1,7 +1,5 @@
 import Product from '../../models/Product';
 import '../../models/Category';
-import Event from '../../models/Event';
-import Gallery from '../../models/Gallery';
 import { getTrendingFeeds } from './trendingEngine';
 import { getCachedSeasonalContext, computeSeasonalBoost } from './seasonalEngine';
 import { RecommendationCache } from './recommendationCache';
@@ -23,11 +21,7 @@ export interface ColdStartRecommendation {
   primaryCategory?: string;
   price?: number;
   oldPrice?: number;
-  rentalEnabled?: boolean;
   availabilityMode?: string;
-  rentalPricing?: any;
-  securityDeposit?: number;
-  isDepositRefundable?: boolean;
 }
 
 /**
@@ -57,28 +51,14 @@ export async function getColdStartFeed(
     );
 
     // 2. Featured/popular products from DB
-    const [featuredProducts, popularEvents, topGallery] = await Promise.all([
-      Product.find({ isActive: true, featured: true })
-        .select(
-          '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating tags rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
-        )
-        .populate('primaryCategory', 'name')
-        .sort({ rating: -1, reviews: -1 })
-        .limit(12)
-        .lean(),
-
-      Event.find({ isActive: true })
-        .select('_id title image primaryCategory style basePrice features')
-        .sort({ basePrice: -1 })
-        .limit(8)
-        .lean(),
-
-      Gallery.find({ isActive: true })
-        .select('_id title image primaryCategory style tags views likes')
-        .sort({ views: -1, likes: -1 })
-        .limit(8)
-        .lean(),
-    ]);
+    const featuredProducts = await Product.find({ isActive: true, featured: true })
+      .select(
+        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating tags availabilityMode',
+      )
+      .populate('primaryCategory', 'name')
+      .sort({ rating: -1, reviews: -1 })
+      .limit(12)
+      .lean();
 
     // Score and add featured products
     for (const product of featuredProducts) {
@@ -113,59 +93,7 @@ export async function getColdStartFeed(
           (product as any).strikingPrice ||
           (product as any).mrp ||
           (product as any).originalPrice,
-        rentalEnabled: product.rentalEnabled,
         availabilityMode: product.availabilityMode,
-        rentalPricing: product.rentalPricing,
-        securityDeposit: product.securityDeposit,
-        isDepositRefundable: product.isDepositRefundable,
-      });
-    }
-
-    // Score and add popular events
-    for (const event of popularEvents) {
-      const seasonalBoost = computeSeasonalBoost(
-        event.primaryCategory?.toString(),
-        event.style,
-        event.features,
-        seasonalContext,
-      );
-
-      const baseScore = 4; // Events are inherently high-value
-      const finalScore = baseScore * seasonalBoost;
-
-      feed.push({
-        targetId: (event._id as any).toString(),
-        targetType: 'event',
-        score: Math.round(finalScore * 100) / 100,
-        source: 'popular',
-        title: event.title,
-        image: event.image,
-        primaryCategory: event.primaryCategory?.toString(),
-        price: event.basePrice,
-      });
-    }
-
-    // Score and add top gallery items
-    for (const gallery of topGallery) {
-      const seasonalBoost = computeSeasonalBoost(
-        gallery.primaryCategory?.toString(),
-        gallery.style,
-        gallery.tags,
-        seasonalContext,
-      );
-
-      const popularityScore =
-        Math.log2(Math.max(gallery.views || 1, 1)) + (gallery.likes || 0) * 0.5;
-      const finalScore = popularityScore * seasonalBoost;
-
-      feed.push({
-        targetId: (gallery._id as any).toString(),
-        targetType: 'gallery',
-        score: Math.round(finalScore * 100) / 100,
-        source: 'popular-gallery',
-        title: gallery.title,
-        image: gallery.image,
-        primaryCategory: gallery.primaryCategory?.toString(),
       });
     }
 

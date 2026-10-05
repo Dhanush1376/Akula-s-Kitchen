@@ -94,7 +94,7 @@ router.get(
             signal: controller.signal,
             headers: {
               'User-Agent':
-                'SiriArtsAndCrafts/1.0 (https://siriartsandcrafts.com; contact: info@siriartsandcrafts.com)',
+                'AkulasKitchen/1.0 (https://akulas.kitchen; contact: info@akulas.kitchen)',
               Accept: 'application/json',
               'Accept-Language': 'en',
             },
@@ -460,7 +460,7 @@ router.get(
             signal: controller.signal,
             headers: {
               'User-Agent':
-                'SiriArtsAndCrafts/1.0 (https://siriartsandcrafts.com; contact: info@siriartsandcrafts.com)',
+                'AkulasKitchen/1.0 (https://akulas.kitchen; contact: info@akulas.kitchen)',
               Accept: 'application/json',
               'Accept-Language': 'en',
             },

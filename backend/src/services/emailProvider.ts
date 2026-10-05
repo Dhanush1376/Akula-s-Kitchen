@@ -13,7 +13,7 @@
  * 2. Go to Account → SMTP & API → API Keys → Create new API Key
  * 3. Set environment variable: BREVO_API_KEY=your_key_here
  * 4. Go to Senders & IPs → Senders → Add your Gmail as a verified sender
- * 5. Set SMTP_FROM="Siri Arts & Crafts <your-gmail@gmail.com>"
+ * 5. Set SMTP_FROM="Akula's Kitchen <your-gmail@gmail.com>"
  *
  * OPTIONAL - Keep SMTP as fallback for local dev:
  * SMTP_USER=your-gmail@gmail.com
@@ -50,9 +50,8 @@ export const sendViaBrevo = async (payload: EmailPayload): Promise<{ messageId: 
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) throw new Error('BREVO_API_KEY missing');
 
-  const senderEmail =
-    payload.from || process.env.BREVO_SENDER_EMAIL || 'noreply@siriartsandcrafts.com';
-  const senderName = payload.fromName || getStoreConfigSync().name || 'Siri Arts & Crafts';
+  const senderEmail = payload.from || process.env.BREVO_SENDER_EMAIL || 'noreply@akulas.kitchen';
+  const senderName = payload.fromName || getStoreConfigSync().name || "Akula's Kitchen";
 
   const body: any = {
     sender: { name: senderName, email: senderEmail },
@@ -120,8 +119,8 @@ export const sendViaSMTP = async (payload: EmailPayload): Promise<{ messageId: s
 
   const transporter = cachedTransporter;
 
-  const senderEmail = payload.from || process.env.SMTP_USER || 'noreply@siriartsandcrafts.com';
-  const senderName = payload.fromName || getStoreConfigSync().name || 'Siri Arts & Crafts';
+  const senderEmail = payload.from || process.env.SMTP_USER || 'noreply@akulas.kitchen';
+  const senderName = payload.fromName || getStoreConfigSync().name || "Akula's Kitchen";
 
   const info = await transporter.sendMail({
     from: `"${senderName}" <${senderEmail}>`,
@@ -257,7 +256,7 @@ export const sendEmail = async (
       auth: { user: testAccount.user, pass: testAccount.pass },
     });
     const info = await transporter.sendMail({
-      from: `"Siri Arts & Crafts" <noreply@siriartsandcrafts.com>`,
+      from: `"Akula's Kitchen" <noreply@akulas.kitchen>`,
       to: payload.to,
       subject: payload.subject,
       html: payload.html,

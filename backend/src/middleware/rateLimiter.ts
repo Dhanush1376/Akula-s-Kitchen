@@ -232,27 +232,12 @@ export const signedUrlLimiter = createRateLimiter('signedUrlLimiter', {
   keyGenerator: accountKeyGenerator,
 });
 
-// Custom Order Submission Limiter: 5 requests per hour per IP/User
-export const customOrderSubmissionLimiter = createRateLimiter('customOrderSubmissionLimiter', {
-  windowMs: 60 * 60 * 1000,
-  limit: 5,
-  message: 'You have submitted too many custom order requests. Please try again in an hour.',
-  keyGenerator: accountKeyGenerator,
-});
-
 // Chat Message Limiter: 20 messages per 5 minutes per IP/User
 export const chatMessageLimiter = createRateLimiter('chatMessageLimiter', {
   windowMs: 5 * 60 * 1000,
   limit: 20,
   message: 'You are sending messages too quickly. Please slow down and try again in a few minutes.',
   keyGenerator: accountKeyGenerator,
-});
-
-// Visual Search Limiter: 10 image analyses per 5 minutes per IP (AI API calls are expensive)
-export const visualSearchLimiter = createRateLimiter('visualSearchLimiter', {
-  windowMs: 5 * 60 * 1000,
-  limit: 10,
-  message: 'Too many visual search requests. Please try again after 5 minutes.',
 });
 
 // Maintenance Gateway Limiter: 3 requests per 15 minutes per IP

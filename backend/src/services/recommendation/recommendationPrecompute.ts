@@ -1,13 +1,7 @@
 import Product from '../../models/Product';
-import Event from '../../models/Event';
 import UserInteraction from '../../models/UserInteraction';
 import { getCachedSeasonalContext } from './seasonalEngine';
-import {
-  findSimilarProducts,
-  findSimilarEvents,
-  getUsersAlsoViewed,
-  getComplementaryItems,
-} from './similarityEngine';
+import { findSimilarProducts, getUsersAlsoViewed, getComplementaryItems } from './similarityEngine';
 import { getColdStartFeed } from './coldStartHandler';
 import { RecommendationCache } from './recommendationCache';
 import logger from '../../config/logger';
@@ -19,11 +13,8 @@ import { getPersonalizedRecommendations, enrichScoredItems } from './recommendat
 export async function precomputeCatalogRecommendations(): Promise<void> {
   try {
     const products = await Product.find({ isActive: true }).select('_id primaryCategory').lean();
-    const events = await Event.find({ isActive: true }).select('_id style').lean();
 
-    logger.info(
-      `[RECO ENGINE] Starting precomputation for ${products.length} products and ${events.length} events...`,
-    );
+    logger.info(`[RECO ENGINE] Starting precomputation for ${products.length} products...`);
 
     let count = 0;
 
@@ -43,7 +34,7 @@ export async function precomputeCatalogRecommendations(): Promise<void> {
       const productIds = compItems.map((i) => i.targetId);
       const fullProducts = await Product.find({ _id: { $in: productIds }, isActive: true })
         .select(
-          '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
+          '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews slug availabilityMode',
         )
         .populate('primaryCategory', 'name')
         .lean();
@@ -64,11 +55,7 @@ export async function precomputeCatalogRecommendations(): Promise<void> {
                 rating: full.rating,
                 reviews: full.reviews,
                 slug: full.slug,
-                rentalEnabled: full.rentalEnabled,
                 availabilityMode: full.availabilityMode,
-                rentalPricing: full.rentalPricing,
-                securityDeposit: full.securityDeposit,
-                isDepositRefundable: full.isDepositRefundable,
               }
             : null;
         })
@@ -86,24 +73,6 @@ export async function precomputeCatalogRecommendations(): Promise<void> {
         })),
       );
       await RecommendationCache.setAlsoViewed(productId, enrichedAlsoViewed);
-
-      count++;
-    }
-
-    // 2. Similar Events
-    for (const e of events) {
-      const eventId = (e._id as any).toString();
-      await findSimilarEvents(eventId, { limit: 8 });
-
-      const alsoViewed = await getUsersAlsoViewed(eventId, 'event', { limit: 8 });
-      const enrichedAlsoViewed = await enrichScoredItems(
-        alsoViewed.map((i) => ({
-          targetId: i.targetId,
-          targetType: i.targetType,
-          score: i.similarityScore,
-        })),
-      );
-      await RecommendationCache.setAlsoViewed(eventId, enrichedAlsoViewed);
 
       count++;
     }

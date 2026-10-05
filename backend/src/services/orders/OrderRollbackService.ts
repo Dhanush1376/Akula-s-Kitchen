@@ -1,7 +1,4 @@
 import mongoose from 'mongoose';
-import Coupon from '../../models/Coupon';
-import WalletTransaction from '../../models/WalletTransaction';
-import { creditWalletBalance } from '../../utils/payment/walletMutations';
 import { InventoryService } from '../InventoryService';
 import logger from '../../config/logger';
 
@@ -78,68 +75,19 @@ export class OrderRollbackService {
   }
 
   /**
-   * Rolls back coupon usage for the given order.
+   * Rolls back coupon usage for the given order (no-op since coupons are removed).
    */
-  static async rollbackCoupon(order: any, session: mongoose.ClientSession): Promise<void> {
-    if (!order.couponCode) return;
-
-    await Coupon.findOneAndUpdate(
-      {
-        code: order.couponCode.toUpperCase(),
-        'usedBy.orderId': order._id,
-        usedCount: { $gt: 0 },
-      },
-      {
-        $inc: { usedCount: -1 },
-        $pull: { usedBy: { orderId: order._id } },
-      },
-      { session },
-    );
-
-    logger.info(`[ROLLBACK] Coupon usage reversed for order ${order._id}: ${order.couponCode}`);
+  static async rollbackCoupon(_order: any, _session?: mongoose.ClientSession): Promise<void> {
+    // No-op: Coupons have been removed from the platform
   }
 
   /**
    * Refunds wallet deduction for the given order.
    * Includes idempotency check to prevent double refunds.
    */
-  static async rollbackWallet(order: any, session: mongoose.ClientSession): Promise<void> {
-    if (!order.walletDeduction || order.walletDeduction <= 0) return;
-    if (order.walletRefunded) {
-      logger.info(`[ROLLBACK] Wallet already refunded for order ${order._id}, skipping`);
-      return;
-    }
-
-    // Idempotency check — prevent double wallet refunds
-    const existingRefund = await WalletTransaction.findOne({
-      orderId: order._id,
-      source: 'refund',
-    }).session(session);
-
-    if (existingRefund) {
-      logger.info(`[ROLLBACK] Wallet refund already exists for order ${order._id}, skipping`);
-      order.walletRefunded = true;
-      return;
-    }
-
-    await creditWalletBalance(order.user, order.walletDeduction, session);
-    await WalletTransaction.create(
-      [
-        {
-          userId: order.user,
-          type: 'credit',
-          amount: order.walletDeduction,
-          source: 'refund',
-          description: `Refund of spent wallet credits for order #${order.invoiceNumber || order._id}`,
-          orderId: order._id,
-          status: 'active',
-        },
-      ],
-      { session },
-    );
-
-    order.walletRefunded = true;
-    logger.info(`[ROLLBACK] Wallet ₹${order.walletDeduction} refunded for order ${order._id}`);
+  static async rollbackWallet(_order: any, _session: mongoose.ClientSession): Promise<void> {
+    // Wallet feature has been removed
+    return;
   }
 
   /**

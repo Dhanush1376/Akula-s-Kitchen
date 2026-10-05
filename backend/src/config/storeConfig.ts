@@ -59,7 +59,7 @@ export function resolveStoreIdentity(settings?: any): StoreIdentity {
   const envEmail = process.env.SUPPORT_EMAIL || process.env.VITE_SUPPORT_EMAIL;
   const envPhone = process.env.CONTACT_PHONE || process.env.VITE_CONTACT_PHONE;
 
-  const name = dbGeneral?.storeName?.trim() || envName?.trim() || 'Store';
+  const name = dbGeneral?.storeName?.trim() || envName?.trim() || "Akula's Kitchen";
   const logo = dbGeneral?.logo?.trim() || '';
   const websiteUrl = envUrl?.trim() || 'https://example.com';
   const websiteDomain = extractDomain(websiteUrl);

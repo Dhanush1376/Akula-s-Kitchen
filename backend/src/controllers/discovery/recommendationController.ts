@@ -12,7 +12,6 @@ import {
   getFastFallbackCompleteSetup,
 } from '../../services/recommendation/similarityEngine';
 import Product from '../../models/Product';
-import Event from '../../models/Event';
 import logger from '../../config/logger';
 import { escapeRegex } from '../../services/searchService';
 import { sanitizeOutputStrings } from '../../utils/security/aiSanitizer';
@@ -20,7 +19,7 @@ import mongoose from 'mongoose';
 import { recommendationQueue, isQueuesReady } from '../../jobs/queues';
 
 // Whitelist of valid target types for parameter validation
-const VALID_TARGET_TYPES = new Set(['product', 'event', 'gallery', 'showcase']);
+const VALID_TARGET_TYPES = new Set(['product', 'gallery']);
 
 /**
  * GET /recommendations/feed — Personalized homepage feed.
@@ -488,28 +487,19 @@ async function enrichTrendingItems(items: any[]): Promise<any[]> {
   if (items.length === 0) return [];
 
   const productIds = items.filter((i) => i.targetType === 'product').map((i) => i.targetId);
-  const eventIds = items.filter((i) => i.targetType === 'event').map((i) => i.targetId);
 
-  const [products, events] = await Promise.all([
+  const products =
     productIds.length > 0
-      ? Product.find({ _id: { $in: productIds }, isActive: true })
+      ? await Product.find({ _id: { $in: productIds }, isActive: true })
           .select(
-            '_id title imageSrc images primaryCategory price oldPrice rating reviews tags slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
+            '_id title imageSrc images primaryCategory price oldPrice rating reviews tags slug availabilityMode',
           )
           .populate('primaryCategory', 'name')
           .lean()
-      : Promise.resolve([]),
-    eventIds.length > 0
-      ? Event.find({ _id: { $in: eventIds }, isActive: true })
-          .select('_id title image gallery primaryCategory style basePrice')
-          .populate('primaryCategory', 'name')
-          .lean()
-      : Promise.resolve([]),
-  ]);
+      : [];
 
   const dataMap = new Map<string, any>();
   products.forEach((p) => dataMap.set((p._id as any).toString(), { ...p, targetType: 'product' }));
-  events.forEach((e) => dataMap.set((e._id as any).toString(), { ...e, targetType: 'event' }));
 
   return items
     .map((item) => {
@@ -523,24 +513,16 @@ async function enrichTrendingItems(items: any[]): Promise<any[]> {
         source: 'trending',
         title: full.title,
         imageSrc: full.imageSrc,
-        image: full.image,
         images: full.images,
-        gallery: full.gallery,
         category: full.primaryCategory?.name || undefined,
         primaryCategory: full.primaryCategory || full.category,
-        style: full.style,
         price: full.price,
         oldPrice: full.oldPrice,
-        basePrice: full.basePrice,
         rating: full.rating,
         reviews: full.reviews,
         tags: full.tags,
         slug: full.slug,
-        rentalEnabled: full.rentalEnabled,
         availabilityMode: full.availabilityMode,
-        rentalPricing: full.rentalPricing,
-        securityDeposit: full.securityDeposit,
-        isDepositRefundable: full.isDepositRefundable,
       };
     })
     .filter(Boolean);

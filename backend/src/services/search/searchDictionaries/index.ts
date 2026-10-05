@@ -2,8 +2,8 @@
 // Telugu-First AI Search Dictionaries
 // ══════════════════════════════════════════════════════════════════════
 // This is the linguistic brain of the search engine.
-// Every Telugu word, transliteration, synonym, and event relationship
-// is defined here so the search works like a Telugu-speaking consultant.
+// Telugu transliterations, synonyms and concept relationships used by
+// the search engine are defined here.
 //
 // The dictionaries were split into one file per concern for maintainability.
 // This barrel preserves the original `searchDictionaries` public API so all

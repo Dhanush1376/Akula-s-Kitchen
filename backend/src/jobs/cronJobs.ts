@@ -4,7 +4,6 @@ import ContentSection from '../models/ContentSection';
 import { FailedEmailRetryService } from '../services/failedEmailRetryService';
 import { withCronLock } from '../utils/cronLock';
 import { releaseStalePendingOrders } from './staleOrderCleanup';
-import { releaseStalePendingRentals } from './rentalCronJobs';
 import { PaymentReconciliationService } from '../services/paymentReconciliationService';
 import { checkCloudinaryCdn } from '../utils/cdnHealth';
 import { getAdminEmails } from '../config/adminConfig';
@@ -112,7 +111,7 @@ export const initJobs = () => {
     await sweepPendingDeletes();
   });
 
-  // 2. Release stock for stale pending orders and rentals (every 15 minutes)
+  // 2. Release stock for stale pending orders (every 15 minutes)
   cron.schedule('*/15 * * * *', async () => {
     await withCronLock(
       'stale-order-stock-release',
@@ -121,13 +120,6 @@ export const initJobs = () => {
         const count = await releaseStalePendingOrders();
         if (count > 0) {
           logger.info(`[CRON] Released stock for ${count} stale pending order(s)`);
-        }
-
-        const rentalResult = await releaseStalePendingRentals();
-        if (rentalResult.processed > 0) {
-          logger.info(
-            `[CRON] Released stock for ${rentalResult.processed} stale pending rental(s)`,
-          );
         }
       },
       15 * 60,
@@ -310,7 +302,7 @@ export const initJobs = () => {
         for (const email of recipients) {
           await sendDirectEmail({
             email,
-            subject: `[Siri Arts] Weekly database backup check — ${usesAtlas ? 'Atlas' : 'non-Atlas'}`,
+            subject: `[Akula's Kitchen] Weekly database backup check — ${usesAtlas ? 'Atlas' : 'non-Atlas'}`,
             customHtml: `<p>${message}</p><p>Timestamp: ${new Date().toISOString()}</p>`,
             type: 'system',
             action: 'backup_weekly_reminder',
@@ -465,14 +457,6 @@ export const initJobs = () => {
     await withCronLock('analytics-daily-snapshot', 3600, async () => {
       const { generateDailyAnalyticsSnapshot } = require('./analyticsSnapshotJob');
       await generateDailyAnalyticsSnapshot();
-    });
-  });
-
-  // 22. Return & Exchange Reconciliation (Every 6 hours)
-  cron.schedule('0 */6 * * *', async () => {
-    await withCronLock('return-reconciliation', 55 * 60, async () => {
-      const { ReturnReconciliationJob } = require('./ReturnReconciliationJob');
-      await ReturnReconciliationJob.run();
     });
   });
 

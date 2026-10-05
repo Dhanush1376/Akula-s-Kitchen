@@ -1,7 +1,6 @@
 import Category from '../../models/Category';
 import UserInteraction from '../../models/UserInteraction';
 import Product from '../../models/Product';
-import Event from '../../models/Event';
 import logger from '../../config/logger';
 import { getSearchCache, setSearchCache } from './searchCache';
 import { SYNONYM_MAP, TRANSLITERATION_MAP } from './searchDictionaries';
@@ -143,27 +142,6 @@ export async function getTrendingSearches(
       }
     }
 
-    // 3. High-demand signature event & decor terms fallback
-    if (trending.length < limit) {
-      const signatureTerms = [
-        'Coconut Decorations',
-        'Jewellery Trays',
-        'Bangle Trays',
-        'Harathi Plates',
-        'Return Gift Hampers',
-        'Haldi Ceremony Decor',
-        'Dry Fruit Trays',
-        'Pooja Setup',
-        'Engagement Ring Trays',
-        'Welcome Board',
-      ];
-
-      for (const term of signatureTerms) {
-        if (trending.length >= limit) break;
-        addTerm(term, 1);
-      }
-    }
-
     // 4. Product title fallback if still below limit
     if (trending.length < limit) {
       const fallbackProducts = await Product.find({ isActive: true })
@@ -217,8 +195,7 @@ export async function getRelatedSearches(
 
   const predicted = predictCategories(normalized);
   for (const cat of predicted.slice(0, 2)) {
-    related.push(`${cat.toLowerCase()} decor`);
-    related.push(`${cat.toLowerCase()} decoration ideas`);
+    related.push(cat.toLowerCase());
   }
 
   return [...new Set(related)].slice(0, limit);
@@ -346,55 +323,10 @@ export async function getNewArrivals(limit: number = 8) {
 }
 
 /**
- * Normalizes category names to avoid duplicates like "Engagement decoration" and "Engagement".
+ * Normalizes category name casing.
  */
 function _normalizeCategoryName(name: string): string {
   const clean = name.trim();
-  const lower = clean.toLowerCase();
-
-  if (
-    lower.includes('baby') ||
-    lower.includes('seemantham') ||
-    lower.includes('srimantham') ||
-    lower.includes('shower')
-  )
-    return 'Baby Shower';
-  if (
-    lower.includes('house') ||
-    lower.includes('gruhapravesam') ||
-    lower.includes('gruhapravesh') ||
-    lower.includes('griha')
-  )
-    return 'Housewarming';
-  if (
-    lower.includes('wedding') ||
-    lower.includes('pelli') ||
-    lower.includes('kalyanam') ||
-    lower.includes('marriage')
-  )
-    return 'Wedding';
-  if (lower.includes('engagement') || lower.includes('nischay') || lower.includes('nischitartham'))
-    return 'Engagement';
-  if (lower.includes('birthday') || lower.includes('bday')) return 'Birthday';
-  if (
-    lower.includes('pooja') ||
-    lower.includes('puja') ||
-    lower.includes('varalakshmi') ||
-    lower.includes('satyanarayana')
-  )
-    return 'Pooja';
-  if (lower.includes('haldi')) return 'Haldi';
-  if (lower.includes('mehendi') || lower.includes('mehndi')) return 'Mehendi';
-  if (lower.includes('sangeet')) return 'Sangeet';
-  if (lower.includes('reception')) return 'Reception';
-  if (lower.includes('corporate') || lower.includes('office')) return 'Corporate';
-  if (
-    lower.includes('festival') ||
-    lower.includes('diwali') ||
-    lower.includes('dussehra') ||
-    lower.includes('sankranti')
-  )
-    return 'Festival';
 
   return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
@@ -404,21 +336,9 @@ function _normalizeCategoryName(name: string): string {
  */
 function getCategoryIcon(category: string): string {
   const lower = category.toLowerCase();
-  if (lower.includes('wedding')) return 'favorite';
-  if (lower.includes('birthday')) return 'cake';
-  if (lower.includes('engagement') || lower.includes('jewellery') || lower.includes('jewelry'))
-    return 'diamond';
-  if (lower.includes('pooja') || lower.includes('puja')) return 'self_improvement';
-  if (lower.includes('baby')) return 'child_care';
-  if (lower.includes('house')) return 'home';
-  if (lower.includes('reception') || lower.includes('sangeet')) return 'celebration';
-  if (lower.includes('haldi')) return 'local_florist';
-  if (lower.includes('mehendi') || lower.includes('mehndi')) return 'front_hand';
-  if (lower.includes('coconut')) return 'eco';
-  if (lower.includes('bangle')) return 'workspace_premium';
+  if (lower.includes('pickle')) return 'kitchen';
+  if (lower.includes('cashew')) return 'eco';
   if (lower.includes('gift') || lower.includes('hamper')) return 'redeem';
-  if (lower.includes('tray')) return 'layers';
-  if (lower.includes('corporate')) return 'business_center';
   if (lower.includes('festival')) return 'festival';
   return 'category';
 }
@@ -432,28 +352,13 @@ export async function getEventCollections(limit: number = 8) {
   if (cached) return cached;
 
   try {
-    const [productCategories, eventCategories] = await Promise.all([
-      Product.distinct('category', { isActive: true }),
-      Event.distinct('category', { isActive: true }),
-    ]);
+    const productCategories = await Product.distinct('category', { isActive: true });
 
     // Use only actual categories in the database
-    const combined = Array.from(new Set([...productCategories, ...eventCategories])).filter(
-      Boolean,
-    );
+    const combined = Array.from(new Set(productCategories)).filter(Boolean);
 
     // Prioritize key categories based on keyword presence
-    const priorityKeywords = [
-      'wedding',
-      'birthday',
-      'engagement',
-      'pooja',
-      'baby',
-      'house',
-      'haldi',
-      'mehendi',
-      'reception',
-    ];
+    const priorityKeywords: string[] = [];
 
     combined.sort((a: any, b: any) => {
       const idxA = priorityKeywords.findIndex((k) => String(a).toLowerCase().includes(k));

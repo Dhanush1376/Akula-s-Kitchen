@@ -226,7 +226,7 @@ describe('Marketing Campaigns & Lifecycle Automation System', () => {
     });
 
     it('wraps links with UTM tracking parameters and redirect gateway', () => {
-      const rawUrl = 'https://siriarts.in/products/brass-diya';
+      const rawUrl = 'https://akulas.kitchen/products/brass-diya';
       const wrapped = EmailBlockRenderer.wrapUrl(
         rawUrl,
         {
@@ -247,7 +247,7 @@ describe('Marketing Campaigns & Lifecycle Automation System', () => {
           {
             id: 'b-hdr',
             type: 'header',
-            content: { storeName: 'Siri Arts' },
+            content: { storeName: "Akula's Kitchen" },
           },
           {
             id: 'b-txt',
@@ -322,7 +322,7 @@ describe('Marketing Campaigns & Lifecycle Automation System', () => {
         trackingToken: 'unique-token-test-123',
         clicks: [
           {
-            url: 'https://siriarts.in/products',
+            url: 'https://akulas.kitchen/products',
             clickedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
           },
         ],

@@ -13,16 +13,7 @@ import User from '../models/User';
 import AnalyticsService from './analyticsService';
 import PaymentAttempt from '../models/PaymentAttempt';
 import PaymentEvent from '../models/PaymentEvent';
-import Coupon from '../models/Coupon';
 import { generateUuid } from '../shared/utils/uuidGenerator';
-import WalletTransaction from '../models/WalletTransaction';
-import { debitWalletBalance } from '../utils/payment/walletMutations';
-import RentalOrder from '../models/RentalOrder';
-import { RentalAvailabilityService } from './rentals/RentalAvailabilityService';
-import EventJob from '../models/EventJob';
-import { EventResourcePlanningService } from './eventBooking/EventResourcePlanningService';
-import BookingMessage from '../models/BookingMessage';
-import { PaymentRefundService } from './PaymentRefundService';
 import { TransactionalEmailService } from './TransactionalEmailService';
 
 export class PaymentVerificationService {
@@ -109,14 +100,6 @@ export class PaymentVerificationService {
           let existingDoc;
           if (existingAttempt.type === 'purchase') {
             existingDoc = await Order.findById(existingAttempt.orderData.pendingOrderId).session(
-              session,
-            );
-          } else if (existingAttempt.type === 'rental') {
-            existingDoc = await RentalOrder.findById(
-              existingAttempt.orderData.pendingOrderId,
-            ).session(session);
-          } else if (existingAttempt.type === 'event_booking') {
-            existingDoc = await EventJob.findById(existingAttempt.orderData.pendingOrderId).session(
               session,
             );
           }
@@ -235,12 +218,7 @@ export class PaymentVerificationService {
 
           await OutboxEvent.create({
             aggregateId: attempt.orderData.pendingOrderId.toString(),
-            aggregateType:
-              attempt.type === 'purchase'
-                ? 'Order'
-                : attempt.type === 'rental'
-                  ? 'RentalOrder'
-                  : 'EventJob',
+            aggregateType: 'Order',
             eventType: 'PaymentFailed',
             payload: {
               razorpayPaymentId: razorpay_payment_id,
@@ -258,12 +236,7 @@ export class PaymentVerificationService {
           try {
             await OutboxEvent.create({
               aggregateId: attempt.orderData.pendingOrderId.toString(),
-              aggregateType:
-                attempt.type === 'purchase'
-                  ? 'Order'
-                  : attempt.type === 'rental'
-                    ? 'RentalOrder'
-                    : 'EventJob',
+              aggregateType: 'Order',
               eventType: 'RefundRequested',
               payload: {
                 razorpayPaymentId: razorpay_payment_id,
@@ -328,42 +301,6 @@ export class PaymentVerificationService {
 
       if (attempt.type === 'purchase') {
         // --- PURCHASE VERIFICATION ---
-        if (orderData.couponCode) {
-          const couponDoc = await Coupon.findOneAndUpdate(
-            { code: orderData.couponCode, isActive: true },
-            {
-              $inc: { usedCount: 1 },
-              $push: { usedBy: { userId, orderId: orderData.pendingOrderId } },
-            },
-            { session, returnDocument: 'after' },
-          );
-          if (!couponDoc) {
-            logger.warn(
-              `Coupon ${orderData.couponCode} became invalid during processing, but order is paid. Continuing.`,
-            );
-          }
-        }
-
-        if (orderData.walletDeduction > 0) {
-          const user = await User.findById(userId).session(session);
-          if (user && user.walletBalance >= orderData.walletDeduction) {
-            await debitWalletBalance(userId, orderData.walletDeduction, session);
-            await WalletTransaction.create(
-              [
-                {
-                  userId,
-                  type: 'debit',
-                  amount: orderData.walletDeduction,
-                  source: 'checkout_redeem',
-                  description: `Redeemed Siri Cash at checkout`,
-                  status: 'active',
-                },
-              ],
-              { session },
-            );
-          }
-        }
-
         for (const item of orderData.orderItems) {
           if (item.productId) {
             await Product.findByIdAndUpdate(
@@ -391,19 +328,6 @@ export class PaymentVerificationService {
           }
         }
 
-        if (orderData.isCustomOrder && orderData.customOrderId) {
-          const CustomOrder = require('../models/CustomOrder').default;
-          await CustomOrder.findByIdAndUpdate(
-            orderData.customOrderId,
-            {
-              convertedToOrder: true,
-              convertedOrderId: orderData.pendingOrderId,
-              status: 'Payment Received',
-            },
-            { session },
-          );
-        }
-
         finalOrder = await Order.create(
           [
             {
@@ -425,11 +349,10 @@ export class PaymentVerificationService {
               },
               subtotal: orderData.subtotal,
               shippingFee: orderData.shippingFee,
-              discount: orderData.discount,
+              discount: orderData.discount || 0,
               codFee: orderData.codFee,
               walletDeduction: orderData.walletDeduction,
               total: orderData.total,
-              couponCode: orderData.couponCode,
               paymentMethod: orderData.paymentMethod,
               paymentStatus: 'paid',
               orderStatus: initialStatus as any,
@@ -474,193 +397,6 @@ export class PaymentVerificationService {
                 type: 'online',
                 amount: finalOrder.total,
               },
-            },
-          ],
-          { session },
-        );
-      } else if (attempt.type === 'rental') {
-        // --- RENTAL VERIFICATION ---
-        await RentalAvailabilityService.confirmDates(orderData.pendingOrderId.toString(), session);
-
-        const initialStatus = 'confirmed';
-        const initialNote = 'Payment verified and rental order confirmed';
-
-        if (orderData.walletDeduction && orderData.walletDeduction > 0) {
-          const user = await User.findById(userId).session(session);
-          if (user && user.walletBalance >= orderData.walletDeduction) {
-            await debitWalletBalance(userId, orderData.walletDeduction, session);
-            await WalletTransaction.create(
-              [
-                {
-                  userId,
-                  type: 'debit',
-                  amount: orderData.walletDeduction,
-                  source: 'checkout_redeem',
-                  description: 'Redeemed Siri Cash at rental checkout',
-                  status: 'active',
-                },
-              ],
-              { session },
-            );
-          }
-        }
-
-        finalOrder = await RentalOrder.create(
-          [
-            {
-              _id: orderData.pendingOrderId,
-              user: userId,
-              product: orderData.product,
-              quantity: orderData.quantity || 1,
-              productTitle: orderData.productTitle,
-              productImage: orderData.productImage,
-              rentalStartDate: orderData.rentalStartDate,
-              rentalEndDate: orderData.rentalEndDate,
-              durationDays: orderData.durationDays,
-              rentalRate: orderData.rentalRate,
-              rentalCharge: orderData.rentalCharge,
-              securityDeposit: orderData.securityDeposit,
-              deliveryCharge: orderData.deliveryCharge,
-              tax: orderData.tax,
-              walletDeduction: orderData.walletDeduction || 0,
-              totalAmount: orderData.totalAmount,
-              paymentMethod: 'razorpay',
-              paymentStatus: 'paid',
-              shippingAddress: orderData.shippingAddress,
-              identityDocuments: orderData.identityDocuments,
-              agreementAcceptedAt: orderData.agreementAcceptedAt,
-              razorpayOrderId: razorpay_order_id,
-              razorpayPaymentId: razorpay_payment_id,
-              razorpaySignature: razorpay_signature,
-              status: initialStatus as any,
-              statusHistory: [
-                {
-                  status: initialStatus as any,
-                  note: initialNote,
-                },
-              ],
-            },
-          ],
-          { session },
-        ).then((res: any) => res[0]);
-
-        await OutboxEvent.create(
-          [
-            {
-              aggregateId: finalOrder._id.toString(),
-              aggregateType: 'RentalOrder',
-              eventType: 'RentalCreated',
-              payload: { orderId: finalOrder._id.toString(), userId, type: 'online' },
-            },
-          ],
-          { session },
-        );
-      } else if (attempt.type === 'event_booking') {
-        // --- EVENT BOOKING VERIFICATION ---
-        try {
-          await EventResourcePlanningService.claimSlotAtomically(
-            new Date(orderData.date),
-            orderData.pendingOrderId.toString(),
-            session,
-          );
-        } catch (err: any) {
-          if (err.statusCode === 409) {
-            // Initiate refund since date is now full
-            await PaymentRefundService.initiateAsyncRefund({
-              amount: orderData.depositAmount,
-              currency: 'INR',
-              originalTransactionId: razorpay_payment_id,
-              entityType: 'EventJob',
-              entityId: orderData.pendingOrderId,
-            }).catch((refundErr: any) =>
-              logger.error(
-                `[CRITICAL] Failed to enqueue refund for event booking overlap:`,
-                refundErr,
-              ),
-            );
-            throw new ApiError(
-              409,
-              'Payment was successful, but the date was just fully booked by others. A full refund will be processed within 5-7 business days.',
-            );
-          }
-          throw err;
-        }
-
-        finalOrder = await EventJob.create(
-          [
-            {
-              _id: orderData.pendingOrderId,
-              bookingId: orderData.bookingId || orderData.pendingOrderId.toString(),
-              user: userId,
-              eventPackage: orderData.eventPackage,
-              title: orderData.title,
-              eventType: orderData.eventType,
-              date: orderData.date,
-              rentalDurationDays: orderData.rentalDurationDays,
-              timing: orderData.timing,
-
-              venue: orderData.venue,
-              customization: orderData.customization,
-              selectedAddons: orderData.selectedAddons,
-              inspirationImages: orderData.inspirationImages,
-              pricing: {
-                rentalFee: orderData.basePrice,
-                setupCharges: 0,
-                transportationCost: 0,
-                addOnCharges: orderData.addOnCharges,
-                depositAmount: orderData.depositAmount,
-                totalPrice: orderData.totalPrice,
-                pendingBalance: orderData.totalPrice - orderData.depositAmount,
-                paymentStatus: 'partial',
-              },
-              payments: [
-                {
-                  amount: orderData.depositAmount,
-                  date: new Date(),
-                  transactionId: razorpay_payment_id,
-                  status: 'success',
-                  note: 'Initial 50% deposit via Razorpay',
-                },
-              ],
-              status: 'confirmed',
-              statusHistory: [
-                {
-                  status: 'confirmed',
-                  timestamp: new Date(),
-                  note: 'Payment verified and booking confirmed',
-                  updatedBy: userId,
-                },
-              ],
-              clientApproved: true,
-              idempotencyKey: orderData.idempotencyKey,
-              razorpayOrderId: razorpay_order_id,
-              razorpayPaymentId: razorpay_payment_id,
-              razorpaySignature: razorpay_signature,
-            },
-          ],
-          { session },
-        ).then((res: any) => res[0]);
-
-        await BookingMessage.create(
-          [
-            {
-              bookingId: finalOrder._id,
-              sender: 'admin',
-              message:
-                'Payment verified! Your luxury event design is now CONFIRMED. Our artisans will review your floorplans.',
-              timestamp: new Date(),
-            },
-          ],
-          { session },
-        );
-
-        await OutboxEvent.create(
-          [
-            {
-              aggregateId: finalOrder._id.toString(),
-              aggregateType: 'EventJob',
-              eventType: 'BookingConfirmed',
-              payload: { bookingId: finalOrder._id.toString(), userId },
             },
           ],
           { session },

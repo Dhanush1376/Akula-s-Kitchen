@@ -13,6 +13,7 @@ import {
 import User from '../../models/User';
 import {
   ADMIN_REFRESH_COOKIE,
+  LEGACY_ADMIN_REFRESH_COOKIE,
   setAdminRefreshCookie,
   clearAdminRefreshCookie,
 } from '../../utils/security/authCookies';
@@ -157,7 +158,9 @@ export const adminVerifyTwoFactor = asyncHandler(async (req: Request, res: Respo
 });
 
 export const adminLogout = asyncHandler(async (req: Request, res: Response) => {
-  const refreshToken = String(req.cookies?.[ADMIN_REFRESH_COOKIE] || '').trim();
+  const refreshToken = String(
+    req.cookies?.[ADMIN_REFRESH_COOKIE] || req.cookies?.[LEGACY_ADMIN_REFRESH_COOKIE] || '',
+  ).trim();
 
   logger.info('[ADMIN AUTH] Admin manual logout requested');
   if (refreshToken) {

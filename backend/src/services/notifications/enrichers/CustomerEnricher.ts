@@ -41,7 +41,6 @@ export class CustomerEnricher {
           isVerified: user.isVerified,
           loyaltyTier: user.loyaltyTier,
           siriCoins: user.siriCoins,
-          walletBalance: user.walletBalance,
         },
         customerStats: {
           lifetimeSpend: Math.round(stats.lifetimeSpend * 100) / 100,

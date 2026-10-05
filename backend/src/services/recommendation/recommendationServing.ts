@@ -1,12 +1,10 @@
 import Product from '../../models/Product';
-import Event from '../../models/Event';
-import Gallery from '../../models/Gallery';
 import UserPreferenceProfile from '../../models/UserPreferenceProfile';
 import UserInteraction from '../../models/UserInteraction';
 import { scoreItemsForUser, scoreItemsForSession, ScoredItem } from './scoringEngine';
 import { getTrendingFeeds } from './trendingEngine';
 import { getCachedSeasonalContext, computeSeasonalBoost, SeasonalContext } from './seasonalEngine';
-import { findSimilarProducts, findSimilarEvents } from './similarityEngine';
+import { findSimilarProducts } from './similarityEngine';
 import { getColdStartFeed, ColdStartRecommendation } from './coldStartHandler';
 import { explorationEngine } from './explorationEngine';
 import { escapeRegex } from '../../services/searchService';
@@ -72,10 +70,7 @@ export async function getPersonalizedRecommendations(
     // Circuit breaker: if too many consecutive failures, short-circuit to cold start
     if (Date.now() < circuitOpenUntil) {
       logger.warn('[RECO ENGINE] Circuit breaker OPEN — serving cold-start fallback');
-      let coldItems = await getColdStartFeed({ limit: limit + 15, targetType: ctx.targetType });
-      if (ctx.page === 'homepage') {
-        coldItems = coldItems.filter((item) => item.targetType !== 'gallery');
-      }
+      const coldItems = await getColdStartFeed({ limit: limit + 15, targetType: ctx.targetType });
       const enriched = await enrichItems(coldItems.slice(0, limit));
       return { items: enriched, source: 'circuit-breaker-fallback', seasonal: null };
     }
@@ -92,13 +87,10 @@ export async function getPersonalizedRecommendations(
 
     if (isColdStart && !ctx.currentItemId) {
       // Full cold start — use cold start handler
-      let coldItems = await getColdStartFeed({
+      const coldItems = await getColdStartFeed({
         limit: limit + offset + 15,
         targetType: ctx.targetType,
       });
-      if (ctx.page === 'homepage') {
-        coldItems = coldItems.filter((item) => item.targetType !== 'gallery');
-      }
       const enriched = await enrichItems(coldItems.slice(offset, offset + limit));
       const seasonal = await getCachedSeasonalContext();
       return { items: enriched, source: 'cold-start', seasonal };
@@ -112,13 +104,10 @@ export async function getPersonalizedRecommendations(
 
     if (candidates.length === 0) {
       // Fallback to cold start
-      let coldItems = await getColdStartFeed({
+      const coldItems = await getColdStartFeed({
         limit: limit + offset + 15,
         targetType: ctx.targetType,
       });
-      if (ctx.page === 'homepage') {
-        coldItems = coldItems.filter((item) => item.targetType !== 'gallery');
-      }
       const enriched = await enrichItems(coldItems.slice(offset, offset + limit));
       return { items: enriched, source: 'cold-start-fallback', seasonal };
     }
@@ -326,10 +315,7 @@ export async function getPersonalizedRecommendations(
 
     logger.error(`[RECO ENGINE] Error generating recommendations: ${err.message}`);
     // Graceful fallback
-    let coldItems = await getColdStartFeed({ limit: limit + 15, targetType: ctx.targetType });
-    if (ctx.page === 'homepage') {
-      coldItems = coldItems.filter((item) => item.targetType !== 'gallery');
-    }
+    const coldItems = await getColdStartFeed({ limit: limit + 15, targetType: ctx.targetType });
     const enriched = await enrichItems(coldItems.slice(0, limit));
     return { items: enriched, source: 'error-fallback', seasonal: null };
   }
@@ -344,55 +330,17 @@ async function getCandidateItems(ctx: RecommendationContext, userProfile: any): 
   const candidates: any[] = [];
 
   try {
-    if (ctx.targetType === 'event' || ctx.page === 'events') {
-      const events = await Event.find({ isActive: true })
-        .select('_id title image primaryCategory style basePrice features colorPalette createdAt')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .maxTimeMS(3000)
-        .lean();
-      events.forEach((e) => ((e as any).__targetType = 'event'));
-      candidates.push(...events);
-    } else if (ctx.targetType === 'gallery' || ctx.page === 'gallery') {
-      const galleries = await Gallery.find({ isActive: true })
-        .select('_id title image primaryCategory style tags views likes createdAt')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .maxTimeMS(3000)
-        .lean();
-      galleries.forEach((g) => ((g as any).__targetType = 'gallery'));
-      candidates.push(...galleries);
-    } else {
-      // Default: mix of products, events, and galleries (exclude galleries on homepage per request)
-      const [products, events, galleries] = await Promise.all([
-        Product.find({ isActive: true })
-          .select(
-            '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug featured createdAt rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
-          )
-          .populate('primaryCategory', 'name')
-          .sort({ createdAt: -1 })
-          .limit(Math.floor(limit * 0.6))
-          .lean(),
-        Event.find({ isActive: true })
-          .select('_id title image primaryCategory style basePrice features createdAt')
-          .sort({ createdAt: -1 })
-          .limit(Math.floor(limit * 0.4))
-          .lean(),
-        ctx.page !== 'homepage'
-          ? Gallery.find({ isActive: true })
-              .select('_id title image primaryCategory style tags views likes createdAt')
-              .sort({ views: -1 })
-              .limit(Math.floor(limit * 0.25))
-              .lean()
-          : Promise.resolve([]),
-      ]);
+    const products = await Product.find({ isActive: true })
+      .select(
+        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug featured createdAt availabilityMode',
+      )
+      .populate('primaryCategory', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
 
-      products.forEach((p) => ((p as any).__targetType = 'product'));
-      events.forEach((e) => ((e as any).__targetType = 'event'));
-      galleries.forEach((g) => ((g as any).__targetType = 'gallery'));
-
-      candidates.push(...products, ...events, ...galleries);
-    }
+    products.forEach((p) => ((p as any).__targetType = 'product'));
+    candidates.push(...products);
 
     // If user has preference profile, prioritize fetching items from their top categories
     if (userProfile && userProfile.topCategories?.length > 0) {
@@ -458,11 +406,7 @@ async function enrichItems(items: ColdStartRecommendation[]): Promise<Recommende
     image: item.image,
     primaryCategory: item.primaryCategory,
     price: item.price,
-    rentalEnabled: item.rentalEnabled,
     availabilityMode: item.availabilityMode,
-    rentalPricing: item.rentalPricing,
-    securityDeposit: item.securityDeposit,
-    isDepositRefundable: item.isDepositRefundable,
   }));
 }
 
@@ -477,32 +421,20 @@ export async function getSimilarRecommendations(
   const limit = options.limit || 8;
 
   try {
-    let similarItems;
-
-    if (targetType === 'product') {
-      similarItems = await findSimilarProducts(targetId, { limit });
-    } else if (targetType === 'event') {
-      similarItems = await findSimilarEvents(targetId, { limit });
-    } else {
+    if (targetType !== 'product') {
       return [];
     }
 
+    const similarItems = await findSimilarProducts(targetId, { limit });
+
     // Enrich with full data
     const ids = similarItems.map((s) => s.targetId);
-    let fullItems: any[] = [];
-
-    if (targetType === 'product') {
-      fullItems = await Product.find({ _id: { $in: ids }, isActive: true })
-        .select(
-          '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
-        )
-        .populate('primaryCategory', 'name')
-        .lean();
-    } else if (targetType === 'event') {
-      fullItems = await Event.find({ _id: { $in: ids }, isActive: true })
-        .select('_id title image primaryCategory style basePrice')
-        .lean();
-    }
+    const fullItems = await Product.find({ _id: { $in: ids }, isActive: true })
+      .select(
+        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug availabilityMode',
+      )
+      .populate('primaryCategory', 'name')
+      .lean();
 
     const fullMap = new Map(fullItems.map((f) => [(f._id as any).toString(), f]));
 
@@ -517,20 +449,13 @@ export async function getSimilarRecommendations(
           source: `similar:${s.matchedSignals.join(',')}`,
           title: full.title,
           imageSrc: full.imageSrc,
-          image: full.image,
           primaryCategory: full.primaryCategory,
-          style: full.style,
           price: full.price,
-          basePrice: full.basePrice,
           rating: full.rating,
           reviews: full.reviews,
           tags: full.tags,
           slug: full.slug,
-          rentalEnabled: full.rentalEnabled,
           availabilityMode: full.availabilityMode,
-          rentalPricing: full.rentalPricing,
-          securityDeposit: full.securityDeposit,
-          isDepositRefundable: full.isDepositRefundable,
         };
       });
   } catch (err: any) {
@@ -548,27 +473,19 @@ export async function enrichScoredItems(
   if (items.length === 0) return [];
 
   const productIds = items.filter((i) => i.targetType === 'product').map((i) => i.targetId);
-  const eventIds = items.filter((i) => i.targetType === 'event').map((i) => i.targetId);
 
-  const [products, events] = await Promise.all([
+  const products =
     productIds.length > 0
-      ? Product.find({ _id: { $in: productIds }, isActive: true })
+      ? await Product.find({ _id: { $in: productIds }, isActive: true })
           .select(
-            '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
+            '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug availabilityMode',
           )
           .populate('primaryCategory', 'name')
           .lean()
-      : Promise.resolve([]),
-    eventIds.length > 0
-      ? Event.find({ _id: { $in: eventIds }, isActive: true })
-          .select('_id title image primaryCategory style basePrice')
-          .lean()
-      : Promise.resolve([]),
-  ]);
+      : [];
 
   const dataMap = new Map<string, any>();
   products.forEach((p) => dataMap.set((p._id as any).toString(), { ...p, targetType: 'product' }));
-  events.forEach((e) => dataMap.set((e._id as any).toString(), { ...e, targetType: 'event' }));
 
   return items
     .map((item) => {
@@ -581,20 +498,13 @@ export async function enrichScoredItems(
         source: item.source || 'recommendation',
         title: full.title,
         imageSrc: full.imageSrc,
-        image: full.image,
         primaryCategory: full.primaryCategory,
-        style: full.style,
         price: full.price,
-        basePrice: full.basePrice,
         rating: full.rating,
         reviews: full.reviews,
         tags: full.tags,
         slug: full.slug,
-        rentalEnabled: full.rentalEnabled,
         availabilityMode: full.availabilityMode,
-        rentalPricing: full.rentalPricing,
-        securityDeposit: full.securityDeposit,
-        isDepositRefundable: full.isDepositRefundable,
       };
     })
     .filter(Boolean);

@@ -41,7 +41,6 @@ export const validateTotalsValidator = [
   body('items.*.quantity')
     .isInt({ min: 1, max: 99 })
     .withMessage('Quantity must be between 1 and 99'),
-  body('couponCode').optional({ values: 'falsy' }).trim().isLength({ max: 50 }),
 ];
 
 export const codOtpEmailValidator = [

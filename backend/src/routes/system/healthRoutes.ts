@@ -16,7 +16,7 @@ router.get('/metrics', HealthController.metrics);
 
 // Sentry Debug
 router.get('/sentry-debug', requireAuth, requireAdmin, (_req, _res) => {
-  throw new Error('Sentry Debug Exception from EventDecor Backend');
+  throw new Error("Sentry Debug Exception from Akula's Kitchen Backend");
 });
 
 export default router;

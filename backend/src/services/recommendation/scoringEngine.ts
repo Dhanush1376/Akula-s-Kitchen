@@ -134,7 +134,7 @@ export async function scoreItemsForSession(
   candidateIds: string[],
   options: { lookbackMinutes?: number; limit?: number } = {},
 ): Promise<ScoredItem[]> {
-  const lookbackMinutes = options.lookbackMinutes || 180; // 3 hours — event decor users browse extensively
+  const lookbackMinutes = options.lookbackMinutes || 180; // 3 hours
   const limit = options.limit || 50;
   const cutoff = new Date(Date.now() - lookbackMinutes * 60 * 1000);
 

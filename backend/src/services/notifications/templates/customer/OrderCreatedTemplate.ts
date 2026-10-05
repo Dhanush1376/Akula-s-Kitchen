@@ -53,7 +53,7 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
     ])}
 
 
-    ${Footer('Siri Arts & Crafts', 'support@siriarts.com', '')}
+    ${Footer("Akula's Kitchen", 'support@akulas.kitchen', '')}
   `;
 
   return {

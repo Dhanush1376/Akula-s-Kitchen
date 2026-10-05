@@ -227,20 +227,12 @@ export function validateAIResponse(data: any): {
 
   // Validate category against known whitelist
   const VALID_CATEGORIES = new Set([
-    'Wedding',
-    'Birthday',
-    'Pooja',
-    'Engagement',
-    'Festival',
-    'Floral',
-    'Traditional',
-    'Modern',
-    'Lighting',
-    'Stage',
-    'Diwali',
-    'Mehendi',
-    'Haldi',
-    'Sangeet',
+    'Batters',
+    'Chutneys',
+    'Pickles',
+    'Podis & Masalas',
+    'Namkeen',
+    'Cashews',
   ]);
   const category =
     typeof data.category === 'string' && VALID_CATEGORIES.has(data.category) ? data.category : null;

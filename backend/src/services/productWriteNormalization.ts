@@ -46,8 +46,6 @@ export function enforceSmartPricing(data: Partial<IProduct>, existingProduct?: I
       depositRate = 0.3;
     } else if (category.includes('electronic')) {
       depositRate = 0.5;
-    } else if (category.includes('wedding decoration') || category.includes('wedding')) {
-      depositRate = 0.4;
     } else if (category.includes('camera')) {
       depositRate = 0.6;
     } else {

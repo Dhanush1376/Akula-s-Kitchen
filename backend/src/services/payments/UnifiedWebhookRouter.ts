@@ -1,9 +1,5 @@
 import Order from '../../models/Order';
-import EventJob from '../../models/EventJob';
-import RentalOrder from '../../models/RentalOrder';
 import logger from '../../config/logger';
-import { EventJobWebhookHandler } from './EventJobWebhookHandler';
-import { RentalWebhookHandler } from './RentalWebhookHandler';
 
 import PaymentWebhookEvent from '../../models/PaymentWebhookEvent';
 
@@ -18,24 +14,14 @@ export const setOrderWebhookHandler = (handler: typeof processOrderWebhookHandle
 };
 
 /**
- * UnifiedWebhookRouter â€” Routes Razorpay webhook events to the correct entity handler.
- *
- * PROBLEM SOLVED: Previously, PaymentWebhookService only handled Order entities.
- * EventJob and RentalOrder payments that arrived via webhook (browser close,
- * delayed capture, etc.) were silently ignored, causing revenue loss.
- *
- * FLOW:
- * 1. Extract razorpay_order_id from webhook payload
- * 2. Look up which collection owns that razorpay_order_id
- * 3. Route to the correct handler: Order, EventJob, or RentalOrder
+ * UnifiedWebhookRouter — Routes Razorpay webhook events to the correct entity handler.
  */
 export class UnifiedWebhookRouter {
   /**
    * Identifies the entity type that owns a given razorpay_order_id.
-   * Uses indexed lookups on all three collections.
    */
   static async identifyEntity(razorpayOrderId: string): Promise<{
-    entityType: 'Order' | 'EventJob' | 'RentalOrder' | 'PaymentAttempt' | 'ExchangeRequest' | null;
+    entityType: 'Order' | 'PaymentAttempt' | null;
     entityId: string | null;
   }> {
     // Check PaymentAttempt first (for new uncreated orders)
@@ -44,31 +30,10 @@ export class UnifiedWebhookRouter {
     if (attempt) {
       return { entityType: 'PaymentAttempt', entityId: attempt._id.toString() };
     }
-    // Check Order first (most common)
+    // Check Order
     const order = await Order.findOne({ razorpayOrderId }).select('_id').lean();
     if (order) {
       return { entityType: 'Order', entityId: order._id.toString() };
-    }
-
-    // Check EventJob
-    const booking = await EventJob.findOne({ razorpayOrderId }).select('_id').lean();
-    if (booking) {
-      return { entityType: 'EventJob', entityId: booking._id.toString() };
-    }
-
-    // Check RentalOrder
-    const rental = await RentalOrder.findOne({ razorpayOrderId }).select('_id').lean();
-    if (rental) {
-      return { entityType: 'RentalOrder', entityId: rental._id.toString() };
-    }
-
-    // Check ExchangeRequest
-    const ExchangeRequest = require('../../models/ExchangeRequest').default;
-    const exchange = await ExchangeRequest.findOne({ additionalPaymentId: razorpayOrderId })
-      .select('_id')
-      .lean();
-    if (exchange) {
-      return { entityType: 'ExchangeRequest', entityId: exchange._id.toString() };
     }
 
     return { entityType: null, entityId: null };
@@ -147,35 +112,6 @@ export class UnifiedWebhookRouter {
         case 'Order':
           result = await processOrderWebhookHandler(event, body, signature, eventId);
           break;
-        case 'EventJob':
-          result = await EventJobWebhookHandler.handleWebhookEvent(
-            event,
-            body,
-            signature,
-            eventId,
-            entityId!,
-          );
-          break;
-        case 'RentalOrder':
-          result = await RentalWebhookHandler.handleWebhookEvent(
-            event,
-            body,
-            signature,
-            eventId,
-            entityId!,
-          );
-          break;
-        case 'ExchangeRequest': {
-          const { ExchangeWebhookHandler } = require('../returns/ExchangeWebhookHandler');
-          result = await ExchangeWebhookHandler.handleWebhookEvent(
-            event,
-            body,
-            signature,
-            eventId,
-            entityId!,
-          );
-          break;
-        }
         default:
           logger.error(`[UNIFIED WEBHOOK] Unknown entity type: ${entityType}`);
           result = { status: 200, message: 'Unknown entity type' };

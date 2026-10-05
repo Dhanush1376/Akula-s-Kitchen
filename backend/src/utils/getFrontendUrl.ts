@@ -30,7 +30,7 @@ export const getFrontendUrl = (): string => {
     logger.warn(
       '[URL RESOLUTION] Missing FRONTEND_URL or FRONTEND_URLS in production. Using hardcoded fallback.',
     );
-    return 'https://siriartsandcrafts.com';
+    return 'https://akulas.kitchen';
   }
 
   // 5. Local development fallback

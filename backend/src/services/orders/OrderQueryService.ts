@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import Order from '../../models/Order';
 import ApiError from '../../utils/ApiError';
 import { getPaginationOptions, formatPaginationResponse } from '../../utils/pagination';
-import { OrderCardStateService } from './OrderCardStateService';
 
 export class OrderQueryService {
   /**
@@ -54,7 +53,6 @@ export class OrderQueryService {
     const [orders, total] = await Promise.all([
       Order.find(filter)
         .populate('user', 'name email phone')
-        .populate('customOrderId')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -62,35 +60,10 @@ export class OrderQueryService {
       Order.countDocuments(filter),
     ]);
 
-    const ReturnRequest = require('../../models/ReturnRequest').default;
-    const ExchangeRequest = require('../../models/ExchangeRequest').default;
-
-    const populatedOrders = await Promise.all(
-      orders.map(async (order: any) => {
-        order.cardState = await OrderCardStateService.getCardState(order._id);
-        order.returns = await ReturnRequest.find({
-          orderId: order._id,
-          returnType: 'return',
-        }).lean();
-
-        const exchanges = await ReturnRequest.find({
-          orderId: order._id,
-          returnType: 'exchange',
-        }).lean();
-        const exchangeIds = exchanges.map((e: any) => e._id);
-        const exchangeDetails = await ExchangeRequest.find({
-          returnRequestId: { $in: exchangeIds },
-        }).lean();
-
-        order.exchanges = exchanges.map((ex: any) => {
-          const detail = exchangeDetails.find(
-            (d: any) => d.returnRequestId.toString() === ex._id.toString(),
-          );
-          return { ...ex, exchangeDetail: detail };
-        });
-        return order;
-      }),
-    );
+    const populatedOrders = orders.map((order: any) => ({
+      ...order,
+      cardState: 'normal',
+    }));
 
     return formatPaginationResponse(populatedOrders, total, page, limit);
   }
@@ -99,10 +72,7 @@ export class OrderQueryService {
    * Fetch a specific order by ID (Customer/Admin).
    */
   static async getOrderById(id: string, userId: string, role: string) {
-    const order: any = await Order.findById(id)
-      .populate('user', 'name email phone')
-      .populate('customOrderId')
-      .lean();
+    const order: any = await Order.findById(id).populate('user', 'name email phone').lean();
     if (!order) {
       throw new ApiError(404, 'Order not found');
     }
@@ -112,7 +82,7 @@ export class OrderQueryService {
     }
 
     // Attach card state dynamically
-    order.cardState = await OrderCardStateService.getCardState(order._id);
+    order.cardState = 'normal';
     return order;
   }
 
@@ -131,7 +101,6 @@ export class OrderQueryService {
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
-        .populate('customOrderId', 'productSnapshot inspirationImages referenceImages files')
         .populate({
           path: 'items.productId',
           select: 'primaryCategory',
@@ -144,38 +113,10 @@ export class OrderQueryService {
       Order.countDocuments(filter),
     ]);
 
-    const ReturnRequest = require('../../models/ReturnRequest').default;
-    const ExchangeRequest = require('../../models/ExchangeRequest').default;
-
-    // Attach card state to each order
-    const ordersWithCardState = await Promise.all(
-      orders.map(async (order: any) => {
-        order.cardState = await OrderCardStateService.getCardState(order._id);
-
-        order.returns = await ReturnRequest.find({
-          orderId: order._id,
-          returnType: 'return',
-        }).lean();
-
-        const exchanges = await ReturnRequest.find({
-          orderId: order._id,
-          returnType: 'exchange',
-        }).lean();
-        const exchangeIds = exchanges.map((e: any) => e._id);
-        const exchangeDetails = await ExchangeRequest.find({
-          returnRequestId: { $in: exchangeIds },
-        }).lean();
-
-        order.exchanges = exchanges.map((ex: any) => {
-          const detail = exchangeDetails.find(
-            (d: any) => d.returnRequestId.toString() === ex._id.toString(),
-          );
-          return { ...ex, exchangeDetail: detail };
-        });
-
-        return order;
-      }),
-    );
+    const ordersWithCardState = orders.map((order: any) => ({
+      ...order,
+      cardState: 'normal',
+    }));
 
     return formatPaginationResponse(ordersWithCardState, total, page, limit);
   }

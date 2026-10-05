@@ -51,7 +51,7 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const [usersRaw, totalCount] = await Promise.all([
     User.find(filter)
-      .select('name email phone role loyaltyTier walletBalance createdAt updatedAt isVerified')
+      .select('name email phone role loyaltyTier createdAt updatedAt isVerified')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)

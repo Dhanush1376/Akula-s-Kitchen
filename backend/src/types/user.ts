@@ -71,7 +71,7 @@ export interface IUser extends ISoftDeleted {
   failedLoginAttempts?: number;
   isLocked?: boolean;
   lockUntil?: Date;
-  walletBalance: number;
+  walletBalance?: number;
   siriCoins: number;
   loyaltyTier: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
   referralCode?: string;

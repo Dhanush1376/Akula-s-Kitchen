@@ -215,7 +215,7 @@ export const unsubscribeRecipient = asyncHandler(async (req: Request, res: Respo
     <div style="background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 50px auto; padding: 40px; border: 1px solid #e5e7eb; border-radius: 12px; text-align: center; color: #111827;">
       <h2 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0 0 12px 0;">Unsubscribed</h2>
       <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 24px 0;">
-        Your preference has been logged successfully. You have been removed from our marketing newsletter list and will no longer receive marketing emails from Siri Arts & Crafts.
+        Your preference has been logged successfully. You have been removed from our marketing newsletter list and will no longer receive marketing emails from Akula's Kitchen.
       </p>
       <div>
         <a href="${getFrontendUrl()}" style="display: inline-block; background-color: #111827; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 13px; font-weight: 500;">Return to Storefront</a>
@@ -341,12 +341,12 @@ export const testSmtpLive = asyncHandler(async (req: Request, res: Response) => 
   try {
     const adapter = new EmailAdapter();
     const payload = {
-      subject: 'SMTP Diagnostic Test - Siri Arts & Crafts',
+      subject: "SMTP Diagnostic Test - Akula's Kitchen",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
           <h2 style="color: #0f172a; margin-top: 0;">System Diagnostic Alert</h2>
           <p style="color: #334155; line-height: 1.6;">
-            This is an automated test message from the Siri Arts & Crafts administration panel.
+            This is an automated test message from the Akula's Kitchen administration panel.
           </p>
           <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin: 20px 0;">
             <p style="margin: 0; color: #475569; font-size: 14px;">
@@ -360,7 +360,7 @@ export const testSmtpLive = asyncHandler(async (req: Request, res: Response) => 
           </p>
         </div>
       `,
-      from: `"System Admin" <${process.env.SMTP_FROM || 'admin@siriartsandcrafts.com'}>`,
+      from: `"System Admin" <${process.env.SMTP_FROM || 'admin@akulas.kitchen'}>`,
     };
 
     const result = await adapter.send({ email: toEmail }, payload, 'high');

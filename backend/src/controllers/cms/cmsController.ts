@@ -27,10 +27,10 @@ export const aiGenerateContent = asyncHandler(async (req: Request, res: Response
   }
 
   const stylePrompts: Record<string, string> = {
-    heritage: `Rewrite the following text in a rich South Indian heritage and cultural artisan style for a premium Telugu wedding decor ecommerce brand called "Siri Arts & Crafts". Maintain elegance and authenticity. Keep it concise (1-2 sentences max).`,
+    heritage: `Rewrite the following text in an authentic culinary artisan style for a premium food and dining brand called "Akula's Kitchen". Maintain elegance and authenticity. Keep it concise (1-2 sentences max).`,
     luxury: `Rewrite the following text in an ultra-premium luxury brand copywriting style. Think Cartier/Hermès level elegance. Keep it concise (1-2 sentences max).`,
     traditional: `Rewrite the following text with authentic Telugu traditional and ceremonial cultural context. Reference real Telugu customs and festivals where relevant. Keep it concise (1-2 sentences max).`,
-    seo: `Rewrite the following text as an SEO-optimized snippet for an Ongole-based Indian wedding decorations ecommerce store. Include relevant local keywords naturally. Keep it concise (1-2 sentences max).`,
+    seo: `Rewrite the following text as an SEO-optimized snippet for Akula's Kitchen, an Indian homemade food products ecommerce store. Include relevant local keywords naturally. Keep it concise (1-2 sentences max).`,
     translate: `Translate the following English text into natural, fluent Telugu script (తెలుగు). Only output the Telugu translation, nothing else.`,
   };
 

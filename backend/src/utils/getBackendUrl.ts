@@ -12,7 +12,7 @@ export const getBackendUrl = (): string => {
   // 2. Production hardcoded fallback
   if (process.env.NODE_ENV === 'production') {
     logger.warn('[URL RESOLUTION] Missing BACKEND_URL in production. Using hardcoded fallback.');
-    return 'https://api.siriartsandcrafts.com';
+    return 'https://api.akulas.kitchen';
   }
 
   // 3. Local development fallback

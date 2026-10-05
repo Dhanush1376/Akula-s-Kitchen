@@ -3,7 +3,6 @@ import { computeOrderTotals, OrderTotalsInput } from '../orderTotals';
 
 const base: OrderTotalsInput = {
   subtotal: 1000,
-  discount: 0,
   depositTotal: 0,
   isCod: false,
   codFee: 90,
@@ -63,114 +62,25 @@ describe('computeOrderTotals', () => {
     );
   });
 
-  it('subtracts the discount from the total', () => {
-    const t = computeOrderTotals({ ...base, subtotal: 1000, discount: 250 });
-    expect(t.total).toBe(1000 + 100 - 250);
-  });
-
-  it('never lets the total go below zero even with an oversized discount', () => {
-    const t = computeOrderTotals({ ...base, subtotal: 500, discount: 100000 });
-    expect(t.preliminaryTotal).toBe(0);
-    expect(t.total).toBe(0);
-  });
-
   it('includes refundable deposits in the payable amount', () => {
     const t = computeOrderTotals({ ...base, subtotal: 1000, depositTotal: 500 });
     expect(t.total).toBe(1000 + 100 + 500);
   });
 
-  it('redeems wallet balance but never more than the payable amount', () => {
-    // Balance exceeds the bill → capped at the bill (total goes to 0).
-    const capped = computeOrderTotals({
-      ...base,
-      subtotal: 1000,
-      useWallet: true,
-      walletBalance: 5000,
-    });
-    expect(capped.walletDeduction).toBe(1100); // 1000 + 100 shipping
-    expect(capped.total).toBe(0);
-
-    // Partial redemption.
-    const partial = computeOrderTotals({
-      ...base,
-      subtotal: 1000,
-      useWallet: true,
-      walletBalance: 300,
-    });
-    expect(partial.walletDeduction).toBe(300);
-    expect(partial.total).toBe(800); // 1100 - 300
-  });
-
-  it('does not redeem wallet when useWallet is false', () => {
+  it('always returns walletDeduction as 0 since wallet feature is retired', () => {
     const t = computeOrderTotals({
       ...base,
       subtotal: 1000,
-      useWallet: false,
+      useWallet: true,
       walletBalance: 5000,
     });
     expect(t.walletDeduction).toBe(0);
-    expect(t.total).toBe(1100);
+    expect(t.total).toBe(1100); // 1000 + 100 shipping
   });
 
-  it('composes discount + COD + shipping + deposit + wallet correctly', () => {
+  it('composes platformFee with COD, shipping, and deposit correctly', () => {
     const t = computeOrderTotals({
       subtotal: 1500,
-      discount: 200,
-      depositTotal: 300,
-      isCod: true,
-      codFee: 90,
-      freeShippingThreshold: 2000,
-      deliveryCharge: 100,
-      useWallet: true,
-      walletBalance: 500,
-    });
-    // preliminary = 1500 + 100 shipping + 90 cod + 300 deposit - 200 discount = 1790
-    expect(t.preliminaryTotal).toBe(1790);
-    expect(t.walletDeduction).toBe(500);
-    expect(t.total).toBe(1290);
-  });
-
-  it('waives COD fee when order is fully covered by wallet balance', () => {
-    const t = computeOrderTotals({
-      subtotal: 3698,
-      discount: 0,
-      depositTotal: 0,
-      isCod: true,
-      codFee: 30,
-      freeShippingThreshold: 500,
-      deliveryCharge: 100,
-      useWallet: true,
-      walletBalance: 4872,
-    });
-    // preliminary = 3698 + 0 shipping - 0 discount = 3698 (no COD fee because no cash collected)
-    expect(t.shippingFee).toBe(0);
-    expect(t.codFee).toBe(0);
-    expect(t.preliminaryTotal).toBe(3698);
-    expect(t.walletDeduction).toBe(3698);
-    expect(t.total).toBe(0);
-  });
-
-  it('waives COD fee when 100% discount coupon reduces payable to zero', () => {
-    const t = computeOrderTotals({
-      subtotal: 1000,
-      discount: 1000,
-      depositTotal: 0,
-      isCod: true,
-      codFee: 50,
-      freeShippingThreshold: 2000,
-      deliveryCharge: 0,
-      useWallet: false,
-      walletBalance: 0,
-    });
-    expect(t.codFee).toBe(0);
-    expect(t.preliminaryTotal).toBe(0);
-    expect(t.total).toBe(0);
-  });
-
-  it('composes platformFee with discount, COD, shipping, deposit, and wallet correctly', () => {
-    const t = computeOrderTotals({
-      subtotal: 1500,
-      discount: 200,
       depositTotal: 300,
       isCod: true,
       codFee: 90,
@@ -180,10 +90,10 @@ describe('computeOrderTotals', () => {
       useWallet: true,
       walletBalance: 500,
     });
-    // preliminary = 1500 + 100(shipping) + 49(platformFee) + 90(cod) + 300(deposit) - 200(discount) = 1839
+    // preliminary = 1500 + 100(shipping) + 49(platformFee) + 90(cod) + 300(deposit) = 2039
     expect(t.platformFee).toBe(49);
-    expect(t.preliminaryTotal).toBe(1839);
-    expect(t.walletDeduction).toBe(500);
-    expect(t.total).toBe(1339);
+    expect(t.preliminaryTotal).toBe(2039);
+    expect(t.walletDeduction).toBe(0);
+    expect(t.total).toBe(2039);
   });
 });

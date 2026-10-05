@@ -3,12 +3,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import mongoose from 'mongoose';
 import User from '../../../src/models/User';
 import Order from '../../../src/models/Order';
-import ReturnRequest from '../../../src/models/ReturnRequest';
 import InAppNotification from '../../../src/models/InAppNotification';
 import Product from '../../../src/models/Product';
 import Category from '../../../src/models/Category';
 import { getOrderById } from '../../../src/controllers/commerce/orderController';
-import { getReturnById } from '../../../src/controllers/returns/returnController';
 import { markAsRead } from '../../../src/controllers/notifications/notificationCenterController';
 import { requireAdmin } from '../../../src/middleware/authMiddleware';
 import { UserService } from '../../../src/services/users/userService';
@@ -258,54 +256,6 @@ describe('Authorization & IDOR Security Integration Suite', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data._id.toString()).toBe(orderA._id.toString());
-    });
-  });
-
-  describe('2. Return Request Ownership & IDOR Protection', () => {
-    it('Customer B cannot access Customer A return request (returns 404 Not Found)', async () => {
-      const dummyOrderId = new mongoose.Types.ObjectId();
-      const returnRequestA = await ReturnRequest.create({
-        userId: userA._id,
-        orderId: dummyOrderId,
-        returnId: `RET-${Date.now()}`,
-        returnType: 'return',
-        items: [
-          {
-            productId: product._id,
-            title: product.title,
-            orderedQuantity: 1,
-            returnQuantity: 1,
-            unitPrice: 2500,
-            reason: 'Item defective',
-          },
-        ],
-        refundMethod: 'original',
-        pickupAddress: {
-          name: 'Customer A',
-          addressLine1: '123 Main St',
-          city: 'Hyderabad',
-          state: 'Telangana',
-          pincode: '500001',
-          phone: '9876543210',
-        },
-        status: 'submitted',
-      } as any);
-
-      // Customer B attempts to fetch Customer A's return request by ID
-      const req = makeReq({
-        params: { id: returnRequestA._id.toString() },
-        user: { id: userB._id.toString(), role: 'user', email: userB.email },
-      });
-      const res = makeRes();
-      const next = vi.fn();
-
-      await executeHandler(getReturnById, req, res, next);
-
-      expect(next).toHaveBeenCalled();
-      const err = next.mock.calls[0][0];
-      expect(err).toBeInstanceOf(ApiError);
-      expect(err.statusCode).toBe(404);
-      expect(err.message).toMatch(/return request not found/i);
     });
   });
 

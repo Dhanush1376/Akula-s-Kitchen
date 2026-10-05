@@ -1,7 +1,5 @@
 import logger from '../config/logger';
 import Order from '../models/Order';
-import EventJob from '../models/EventJob';
-import RentalOrder from '../models/RentalOrder';
 import * as Sentry from '@sentry/node';
 
 /**
@@ -24,31 +22,6 @@ export class MetricsService {
         paymentStatus: 'failed',
       });
       const orderFailureRate = newOrders > 0 ? (failedOrders / newOrders) * 100 : 0;
-
-      // Bookings
-      const newBookings = await EventJob.countDocuments({ createdAt: { $gte: oneHourAgo } });
-      const failedBookings = await EventJob.countDocuments({
-        createdAt: { $gte: oneHourAgo },
-        status: 'failed',
-      });
-      const bookingFailureRate = newBookings > 0 ? (failedBookings / newBookings) * 100 : 0;
-
-      const bookingConflicts = await EventJob.countDocuments({
-        createdAt: { $gte: oneHourAgo },
-        'statusHistory.note': { $regex: /date fully booked/i },
-      });
-
-      // Rentals
-      const newRentals = await RentalOrder.countDocuments({ createdAt: { $gte: oneHourAgo } });
-      const failedRentals = await RentalOrder.countDocuments({
-        createdAt: { $gte: oneHourAgo },
-        paymentStatus: 'failed',
-      });
-      const lateRentals = await RentalOrder.countDocuments({
-        status: 'active_rental',
-        rentalEndDate: { $lt: new Date() },
-      });
-      const rentalFailureRate = newRentals > 0 ? (failedRentals / newRentals) * 100 : 0;
 
       // Refunds
       const RefundRecord = require('../models/RefundRecord').default;
@@ -114,31 +87,26 @@ export class MetricsService {
 
       const metrics = {
         timestamp: new Date().toISOString(),
-        business: { newOrders, newBookings, newRentals, newRefunds },
+        business: { newOrders, newRefunds },
         failures: {
           failedOrders,
-          failedBookings,
-          failedRentals,
           failedRefunds,
           failedNotifs,
-          bookingConflicts,
         },
         rates: {
           orderFailureRate,
-          bookingFailureRate,
-          rentalFailureRate,
           refundFailureRate,
           notifFailureRate,
           reservationHitRate,
         },
-        operations: { lateRentals, pendingOutbox, oldestOutboxAgeMinutes, avgWebhookLatencyMs },
+        operations: { pendingOutbox, oldestOutboxAgeMinutes, avgWebhookLatencyMs },
       };
 
       logger.info(`[METRICS] Hourly Report: ${JSON.stringify(metrics)}`);
 
       // Alerting Thresholds
       if (process.env.SENTRY_DSN) {
-        if (orderFailureRate > 15 || bookingFailureRate > 15 || rentalFailureRate > 15) {
+        if (orderFailureRate > 15) {
           Sentry.captureMessage(`High Payment Failure Rate Detected`, {
             level: 'warning',
             tags: { critical: 'metrics' },
@@ -150,13 +118,6 @@ export class MetricsService {
             level: 'error',
             tags: { critical: 'metrics_refunds' },
             extra: metrics.rates,
-          });
-        }
-        if (bookingConflicts > 0) {
-          Sentry.captureMessage(`Booking Conflicts Detected`, {
-            level: 'warning',
-            tags: { critical: 'metrics_conflicts' },
-            extra: { bookingConflicts },
           });
         }
         if (notifFailureRate > 10) {

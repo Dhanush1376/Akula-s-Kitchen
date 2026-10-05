@@ -6,7 +6,6 @@ import mongoose from 'mongoose';
 import Review from '../../models/Review';
 import Order from '../../models/Order';
 import User from '../../models/User';
-import WalletTransaction from '../../models/WalletTransaction';
 import { LoyaltyService } from '../../services/loyaltyService';
 import { getPaginationOptions, formatPaginationResponse } from '../../utils/pagination';
 import { updateProductRating } from '../products/reviewController';
@@ -24,11 +23,7 @@ export const getLoyaltyDashboard = asyncHandler(async (req: Request, res: Respon
   res
     .status(200)
     .json(
-      new ApiResponse(
-        true,
-        'Loyalty wallet and rewards dashboard loaded successfully',
-        dashboardData,
-      ),
+      new ApiResponse(true, 'Loyalty and rewards dashboard loaded successfully', dashboardData),
     );
 });
 
@@ -42,19 +37,7 @@ export const applyReferralCode = asyncHandler(async (req: Request, res: Response
 
   const result = await LoyaltyService.applyReferralCode(userId, referralCode);
 
-  const settings = await storeSettingsService.getSettings();
-  const refereeBonus = settings.loyalty.referralBonusReferee;
-  const referrerBonus = settings.loyalty.referralBonusReferrer;
-
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        true,
-        `Referral code successfully registered! Welcomed with ₹${refereeBonus} wallet cash. Referrer will receive ₹${referrerBonus} upon your first purchase.`,
-        result,
-      ),
-    );
+  res.status(200).json(new ApiResponse(true, 'Referral code successfully registered!', result));
 });
 
 // Admin Review Moderation with Payout Rewards
@@ -70,7 +53,7 @@ export const getAdminReviews = asyncHandler(async (req: Request, res: Response) 
     Review.find(filter)
       .populate('product', 'title imageSrc images')
       .populate('showcase', 'title image coverImage')
-      .populate('customer', 'name email walletBalance')
+      .populate('customer', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -105,26 +88,8 @@ export const getAdminReviews = asyncHandler(async (req: Request, res: Response) 
     }
   });
 
-  // Calculate previously disbursed rewards for each review from WalletTransaction & review.rewardPaid
-  const reviewIds = reviews.map((r: any) => new mongoose.Types.ObjectId(r._id));
-  const rewardTransactions = await WalletTransaction.find({
-    reviewId: { $in: reviewIds },
-    source: 'review_reward',
-    status: 'active',
-  }).lean();
-
-  const rewardPaidMap = new Map<string, number>();
-  rewardTransactions.forEach((tx: any) => {
-    if (tx.reviewId) {
-      const key = tx.reviewId.toString();
-      rewardPaidMap.set(key, (rewardPaidMap.get(key) || 0) + (tx.amount || 0));
-    }
-  });
-
   reviews.forEach((r: any) => {
-    const txTotal = rewardPaidMap.get(r._id.toString()) || 0;
-    const resolved = Math.max(r.rewardPaid || 0, txTotal);
-    r.rewardPaid = resolved > 0 ? resolved : r.status === 'approved' ? 20 : 0;
+    r.rewardPaid = r.rewardPaid || 0;
   });
 
   res
@@ -177,7 +142,7 @@ export const updateReviewImages = asyncHandler(async (req: Request, res: Respons
 });
 
 export const moderateReview = asyncHandler(async (req: Request, res: Response) => {
-  const { reviewId, action, customRewardAmount, approvedImages } = req.body; // action: 'approve' | 'reject' | 'undo'
+  const { reviewId, action, customRewardAmount: _customRewardAmount, approvedImages } = req.body; // action: 'approve' | 'reject' | 'undo'
 
   if (!reviewId || !['approve', 'reject', 'undo'].includes(action)) {
     throw new ApiError(400, 'Review ID and valid action are required');
@@ -239,45 +204,15 @@ export const moderateReview = asyncHandler(async (req: Request, res: Response) =
       await updateProductRating(review.product);
     }
 
-    let message = 'Review successfully approved!';
+    const message = 'Review successfully approved!';
 
-    if (customRewardAmount && typeof customRewardAmount === 'number' && customRewardAmount > 0) {
-      const user = await User.findById(review.customer);
-      if (user) {
-        const balanceBefore = user.walletBalance || 0;
-        const balanceAfter = balanceBefore + customRewardAmount;
-        user.walletBalance = balanceAfter;
-        await user.save();
+    const { RuleEngine } = require('../../services/RuleEngine');
+    const userForRule = await User.findById(review.customer).lean();
 
-        await WalletTransaction.create([
-          {
-            userId: user._id,
-            type: 'credit',
-            amount: customRewardAmount,
-            source: 'review_reward',
-            description: 'Reward for approved product review (Manual)',
-            status: 'active',
-            reviewId: review._id,
-            adminId: new mongoose.Types.ObjectId((req as any).user.id),
-            balanceBefore,
-            balanceAfter,
-          },
-        ]);
-        review.rewardPaid = (review.rewardPaid || 0) + customRewardAmount;
-        await review.save();
-        message = `Review successfully approved! ₹${customRewardAmount} credited manually.`;
-      }
-    } else if (customRewardAmount === 0 || (review.rewardPaid && review.rewardPaid > 0)) {
-      message = 'Review successfully approved without additional reward payout.';
-    } else {
-      const { RuleEngine } = require('../../services/RuleEngine');
-      const userForRule = await User.findById(review.customer).lean();
-
-      try {
-        await RuleEngine.evaluateTrigger('on_review', { user: userForRule, review });
-      } catch (ruleErr) {
-        require('../../config/logger').default.error('Failed to evaluate review rules:', ruleErr);
-      }
+    try {
+      await RuleEngine.evaluateTrigger('on_review', { user: userForRule, review });
+    } catch (ruleErr) {
+      require('../../config/logger').default.error('Failed to evaluate review rules:', ruleErr);
     }
 
     res.status(200).json(
@@ -302,31 +237,6 @@ export const moderateReview = asyncHandler(async (req: Request, res: Response) =
   }
 });
 
-export const adjustWalletBalance = asyncHandler(async (req: Request, res: Response) => {
-  const adminId = (req as any).user.id;
-  const { userId, type, amount, description } = req.body;
-  const ipAddress = req.ip || req.socket.remoteAddress || '';
-
-  if (!userId || !type || !amount || !description) {
-    throw new ApiError(400, 'userId, type (credit/debit), amount, and description are required');
-  }
-
-  const transaction = await LoyaltyService.adjustWalletBalance(
-    adminId,
-    userId,
-    type,
-    Number(amount),
-    description,
-    ipAddress,
-  );
-
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        true,
-        `Successfully ${type === 'credit' ? 'credited' : 'debited'} wallet`,
-        transaction,
-      ),
-    );
+export const adjustWalletBalance = asyncHandler(async (_req: Request, _res: Response) => {
+  throw new ApiError(400, 'Wallet feature has been retired');
 });

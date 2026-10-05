@@ -23,8 +23,8 @@ async function verify() {
   await storeSettingsService.updateSection(
     'storefront',
     {
-      seoTitle: 'Siri Arts and Crafts',
-      seoDescription: 'Premium Handicrafts and Luxury Event Decor',
+      seoTitle: "Akula's Kitchen",
+      seoDescription: 'Fresh, tasty and healthy homemade foods',
       customerAuthMethod: 'phone_only',
     },
     adminId,
@@ -48,8 +48,8 @@ async function verify() {
   await storeSettingsService.updateSection(
     'storefront',
     {
-      seoTitle: 'Siri Arts and Crafts',
-      seoDescription: 'Premium Handicrafts and Luxury Event Decor',
+      seoTitle: "Akula's Kitchen",
+      seoDescription: 'Fresh, tasty and healthy homemade foods',
       customerAuthMethod: 'email_only',
     },
     adminId,
@@ -73,8 +73,8 @@ async function verify() {
   await storeSettingsService.updateSection(
     'storefront',
     {
-      seoTitle: 'Siri Arts and Crafts',
-      seoDescription: 'Premium Handicrafts and Luxury Event Decor',
+      seoTitle: "Akula's Kitchen",
+      seoDescription: 'Fresh, tasty and healthy homemade foods',
       customerAuthMethod: 'both',
     },
     adminId,

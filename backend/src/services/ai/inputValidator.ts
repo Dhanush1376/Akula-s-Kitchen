@@ -4,7 +4,7 @@
  * Validates user-submitted API keys, provider names, and endpoint URLs
  * before they reach the database or external APIs.
  *
- * Uses Event Decor's existing ssrfProtection utility for URL validation.
+ * Uses the existing ssrfProtection utility for URL validation.
  */
 
 import { isKnownProvider } from './providerRegistry';

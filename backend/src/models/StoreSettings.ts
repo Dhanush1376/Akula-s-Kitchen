@@ -185,7 +185,7 @@ const StoreSettingsSchema: Schema = new Schema(
       maxShippingDistance: { type: Number, default: 0 },
       enableLocalDelivery: { type: Boolean, default: false },
       // Warehouse dispatch origin — used as the source pincode for delivery
-      // estimation. Defaults to the store's registered Ongole location.
+      // estimation. Set from the store's registered location.
       originPincode: { type: String, default: '' },
       defaultCourierPartner: { type: String, default: '' },
     },
