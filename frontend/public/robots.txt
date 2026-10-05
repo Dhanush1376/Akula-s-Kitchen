@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /wishlist/
+Disallow: /track/
+Disallow: /accept-invite/
+Sitemap: https://akulas.kitchen/sitemap.xml
