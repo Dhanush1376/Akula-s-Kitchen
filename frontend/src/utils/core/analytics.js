@@ -1,5 +1,5 @@
 /**
- * Siri Arts & Crafts — Production Analytics & Tracking Module
+ * Akula's Kitchen — Production Analytics & Tracking Module
  *
  * Privacy-safe, consent-aware analytics with support for:
  * - Google Analytics 4
@@ -17,7 +17,7 @@ import { safeLocalStorage } from '../storage/storage';
 // ─── Consent Check ───
 export function hasAnalyticsConsent() {
   try {
-    const consent = safeLocalStorage.getItem('siri_arts_consent_logged');
+    const consent = safeLocalStorage.getItem('akula_consent_logged');
     if (!consent) return false;
     const parsed = JSON.parse(consent);
     return parsed.personalizedRecommendations === true || parsed.marketingEmails === true;

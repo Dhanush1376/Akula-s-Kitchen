@@ -1,4 +1,3 @@
-import api from '../../services/api';
 import { productService, orderService, userService } from '../../services/domainServices';
 import logger from '../core/logger';
 import { getOptimizedUrl } from '../media/imageUtils';
@@ -50,15 +49,7 @@ class PrefetchManager {
     try {
       await this.prefetchRouteModule(route, opts);
 
-      if (route === '/gallery') {
-        await this.queryClient.prefetchInfiniteQuery({
-          queryKey: ['gallery', 'all', 'All', 'All', 'All', ''],
-          queryFn: async ({ pageParam = 1 }) => {
-            const res = await api.get('/gallery', { params: { page: pageParam, limit: 20 } });
-            return res.data.data;
-          },
-        });
-      } else if (route === '/wishlist') {
+      if (route === '/wishlist') {
         if (hasSessionMarker()) {
           await this.queryClient.prefetchQuery({
             queryKey: ['wishlist'],
@@ -69,12 +60,6 @@ class PrefetchManager {
             staleTime: 1000 * 60 * 2,
           });
         }
-      } else if (route === '/events' || route.startsWith('/events?')) {
-        await this.queryClient.prefetchQuery({
-          queryKey: ['events', 'list'],
-          queryFn: async () => api.get('/events').then((res) => res.data.data),
-          staleTime: 1000 * 60 * 5,
-        });
       } else if (route.startsWith('/product/') || kind === 'product') {
         const id = productId || route.split('/')[2];
         if (id && id !== ':id') {
@@ -131,8 +116,6 @@ class PrefetchManager {
     if (route.startsWith('/product/')) return '/product/:id';
     if (route.startsWith('/dashboard')) return '/dashboard';
     if (route.startsWith('/collections')) return '/collections';
-    if (route.startsWith('/events')) return '/events';
-    if (route.startsWith('/gallery')) return '/gallery';
     return route.split('?')[0];
   }
 
@@ -147,10 +130,7 @@ class PrefetchManager {
       '/checkout': () => import('../../pages/Checkout'),
       '/dashboard': () => import('../../pages/Dashboard'),
       '/product/:id': () => import('../../pages/ProductDetails'),
-      '/gallery': () => import('../../pages/Gallery'),
       '/wishlist': () => import('../../pages/Wishlist'),
-      '/events': () => import('../../pages/EventCollections'),
-      '/about': () => import('../../pages/About'),
       '/contact': () => import('../../pages/Contact'),
     };
 
@@ -189,7 +169,7 @@ class PrefetchManager {
     this.routeVisitCounts.set(key, next);
     try {
       const serializable = Array.from(this.routeVisitCounts.entries());
-      localStorage.setItem('siri_route_visit_counts', JSON.stringify(serializable));
+      localStorage.setItem('akula_route_visit_counts', JSON.stringify(serializable));
     } catch {
       // Ignore storage failures.
     }
@@ -197,7 +177,7 @@ class PrefetchManager {
 
   hydrateRouteVisitsFromStorage() {
     try {
-      const raw = localStorage.getItem('siri_route_visit_counts');
+      const raw = localStorage.getItem('akula_route_visit_counts');
       if (!raw) return;
       const entries = JSON.parse(raw);
       if (!Array.isArray(entries)) return;
@@ -251,22 +231,6 @@ class PrefetchManager {
       const img = new Image();
       img.src = optimizedUrl;
     }
-  }
-
-  /**
-   * Preload critical gallery images to prevent visual jumps
-   */
-  preloadGalleryImages(images = []) {
-    // Only preload up to 4 images to avoid bandwidth explosion
-    const toPreload = images.slice(0, 4);
-    toPreload.forEach((img) => {
-      if (img && typeof img === 'object') {
-        const url = img.image || img.imageSrc;
-        if (url) this.preloadImage(url);
-      } else if (typeof img === 'string') {
-        this.preloadImage(img);
-      }
-    });
   }
 }
 

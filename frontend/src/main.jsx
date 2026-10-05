@@ -59,10 +59,10 @@ window.addEventListener(
 
     if (isChunkError) {
       logger.warn('[Observability] Detected chunk loading error. Attempting automatic reload...');
-      const lastReload = sessionStorage.getItem('siri_chunk_reload_time');
+      const lastReload = sessionStorage.getItem('akula_chunk_reload_time');
       const now = Date.now();
       if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
-        sessionStorage.setItem('siri_chunk_reload_time', String(now));
+        sessionStorage.setItem('akula_chunk_reload_time', String(now));
 
         // Unregister service workers first to bypass PWA cache
         if ('serviceWorker' in navigator) {

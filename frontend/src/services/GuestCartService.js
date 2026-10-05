@@ -1,7 +1,7 @@
 import { persistentStorage } from '../utils/storage/persistentStorage';
-import { calculateCartSummary, cleanRentalInfo } from '../utils/ecommerce/cartCalculations';
+import { calculateCartSummary } from '../utils/ecommerce/cartCalculations';
 
-const GUEST_CART_KEY = 'siri_guest_cart';
+const GUEST_CART_KEY = 'akula_guest_cart';
 const TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const defaultCart = {
@@ -9,15 +9,11 @@ const defaultCart = {
     items: [],
     summary: { subtotal: 0, depositTotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
   },
-  rentalCart: {
-    items: [],
-    summary: { subtotal: 0, depositTotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
-  },
 };
 
 const getMaxQtyPerItem = () => {
   try {
-    const val = localStorage.getItem('siri_orders_max_qty');
+    const val = localStorage.getItem('akula_orders_max_qty');
     return val ? Math.max(1, Number(val)) : 50;
   } catch {
     return 50;
@@ -26,7 +22,7 @@ const getMaxQtyPerItem = () => {
 
 const getMaxItemsPerOrder = () => {
   try {
-    const val = localStorage.getItem('siri_orders_max_items');
+    const val = localStorage.getItem('akula_orders_max_items');
     return val ? Math.max(1, Number(val)) : 20;
   } catch {
     return 20;
@@ -35,7 +31,7 @@ const getMaxItemsPerOrder = () => {
 
 const getPlatformFee = () => {
   try {
-    const val = localStorage.getItem('siri_orders_platform_fee');
+    const val = localStorage.getItem('akula_orders_platform_fee');
     return val !== null && val !== undefined ? Math.max(0, Number(val)) : 0;
   } catch {
     return 0;
@@ -57,8 +53,6 @@ export const GuestCartService = {
     // Ensure structure
     if (!cart.purchaseCart)
       cart.purchaseCart = { items: [], summary: { ...defaultCart.purchaseCart.summary } };
-    if (!cart.rentalCart)
-      cart.rentalCart = { items: [], summary: { ...defaultCart.rentalCart.summary } };
 
     return cart;
   },
@@ -81,9 +75,9 @@ export const GuestCartService = {
   /**
    * Add or update item in guest cart
    */
-  addToCart(product, quantity = 1, type = 'purchase', rentalInfo) {
+  addToCart(product, quantity = 1, type = 'purchase') {
     const cart = this.getCart();
-    const targetCartKey = type === 'purchase' ? 'purchaseCart' : 'rentalCart';
+    const targetCartKey = 'purchaseCart';
     const items = cart[targetCartKey].items || [];
 
     const maxQty = getMaxQtyPerItem();
@@ -117,8 +111,7 @@ export const GuestCartService = {
           quantity: Math.min(maxQty, quantity),
           type,
           product,
-          rentalInfo: cleanRentalInfo(rentalInfo || product.rentalInfo),
-          deposit: product.deposit || product.securityDeposit || 0,
+          deposit: 0,
         },
       ];
     }
@@ -143,9 +136,9 @@ export const GuestCartService = {
     return this.saveCart(cart);
   },
 
-  removeFromCart(productId, type) {
+  removeFromCart(productId, type = 'purchase') {
     const cart = this.getCart();
-    const targetCartKey = type === 'purchase' ? 'purchaseCart' : 'rentalCart';
+    const targetCartKey = 'purchaseCart';
     const items = cart[targetCartKey].items || [];
 
     const updatedItems = items.filter(
@@ -172,9 +165,9 @@ export const GuestCartService = {
     return this.saveCart(cart);
   },
 
-  updateQuantity(productId, quantity, type) {
+  updateQuantity(productId, quantity, type = 'purchase') {
     const cart = this.getCart();
-    const targetCartKey = type === 'purchase' ? 'purchaseCart' : 'rentalCart';
+    const targetCartKey = 'purchaseCart';
     const items = cart[targetCartKey].items || [];
 
     const maxQty = getMaxQtyPerItem();
@@ -217,14 +210,13 @@ export const GuestCartService = {
    */
   getCartItemsForSync() {
     const cart = this.getCart();
-    const allItems = [...(cart.purchaseCart?.items || []), ...(cart.rentalCart?.items || [])];
+    const allItems = [...(cart.purchaseCart?.items || [])];
 
     return allItems.map((item) => ({
       product: item.product?._id || item.product?.id || item._id || item.id,
       quantity: item.quantity,
       type: item.type || 'purchase',
-      rentalInfo: cleanRentalInfo(item.rentalInfo),
-      deposit: item.deposit,
+      deposit: 0,
     }));
   },
 

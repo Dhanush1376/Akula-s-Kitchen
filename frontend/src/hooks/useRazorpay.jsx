@@ -133,10 +133,7 @@ export const useRazorpay = () => {
           return finalize();
         }
         if (response.data.isInstantCheckout) {
-          showPremiumToast(
-            'Order successfully placed and fully paid using wallet balance!',
-            'success',
-          );
+          showPremiumToast('Order successfully placed!', 'success');
           onSuccess(response.data.order);
           return finalize();
         }
@@ -150,11 +147,9 @@ export const useRazorpay = () => {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
-          name: storeName || 'Siri Arts & Crafts',
-          description: `${storeName || 'Siri Arts & Crafts'} Order`,
-          image:
-            import.meta.env.VITE_LOGO_URL ||
-            'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
+          name: storeName || "Akula's Kitchen",
+          description: `${storeName || "Akula's Kitchen"} Order`,
+          image: import.meta.env.VITE_LOGO_URL || '/akulas-kitchen-logo.png',
           order_id: razorpayOrder.id,
           handler: async (response) => {
             try {
@@ -191,7 +186,7 @@ export const useRazorpay = () => {
             contact: orderData.shippingAddress.phone,
           },
           theme: {
-            color: '#d4af37',
+            color: '#f7bb0e',
           },
         };
 
@@ -252,11 +247,9 @@ export const useRazorpay = () => {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: Math.round(order.total * 100),
           currency: 'INR',
-          name: storeName || 'Siri Arts & Crafts',
-          description: `Complete Payment for ${storeName || 'Siri Arts & Crafts'} Order`,
-          image:
-            import.meta.env.VITE_LOGO_URL ||
-            'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
+          name: storeName || "Akula's Kitchen",
+          description: `Complete Payment for ${storeName || "Akula's Kitchen"} Order`,
+          image: import.meta.env.VITE_LOGO_URL || '/akulas-kitchen-logo.png',
           order_id: order.razorpayOrderId,
           handler: async (response) => {
             try {
@@ -293,7 +286,7 @@ export const useRazorpay = () => {
             contact: order.shippingAddress?.phone || '',
           },
           theme: {
-            color: '#d4af37',
+            color: '#f7bb0e',
           },
         };
 

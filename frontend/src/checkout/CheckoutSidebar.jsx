@@ -1,9 +1,7 @@
 import { motion } from 'framer-motion';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import Check from 'lucide-react/dist/esm/icons/check';
-import { Banknote } from 'lucide-react';
+import { Banknote, ShieldCheck, Truck, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import React from 'react';
 import { useCheckout } from './CheckoutProvider';
-import { useActiveCoupons } from '../hooks/useActiveCoupons';
 import { useConfig } from '../context/ConfigContext';
 
 export default function CheckoutSidebar() {
@@ -13,17 +11,6 @@ export default function CheckoutSidebar() {
     backendTotals,
     isTotalsLoading,
     totalsError,
-    useWallet,
-    setUseWallet,
-    appliedCoupon,
-    couponValid,
-    couponInput,
-    setCouponInput,
-    handleApplyCoupon,
-    handleRemoveCoupon,
-    couponMessage,
-    availableCoupons,
-    _loadingCoupons,
     activeStep,
     paymentOption,
     activeItems,
@@ -37,274 +24,52 @@ export default function CheckoutSidebar() {
     checkoutSteps,
   } = useCheckout();
 
-  const { data: activeCoupons = [] } = useActiveCoupons();
-  const checkoutCoupons = activeCoupons.filter((c) => c.displayLocations?.includes('checkout'));
-
   const grossRentalAmount = rentalCostBreakdown?.totalAmount || 0;
-  const availableWalletBalance = (backendTotals?.walletBalance ?? user?.walletBalance) || 0;
-  const rentalWalletDeduction =
-    useWallet && availableWalletBalance > 0
-      ? Math.min(grossRentalAmount, availableWalletBalance)
-      : 0;
-  const netRentalPayable = Math.max(0, grossRentalAmount - rentalWalletDeduction);
+  const netRentalPayable = grossRentalAmount;
 
   const activeTotal = orderType === 'rental' ? netRentalPayable : backendTotals?.total || 0;
-
-  const currentWalletDeduction =
-    orderType === 'rental' ? rentalWalletDeduction : backendTotals?.walletDeduction || 0;
-
   const totalItemUnits = activeItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
   return (
     <>
-      {/* Right Column: PRICE DETAILS & promo code side card */}
+      {/* Right Column: PRICE DETAILS */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="lg:col-span-5 xl:col-span-4 space-y-4"
+        className="space-y-4"
       >
-        {/* Wallet Balance Card */}
-        {user &&
-          (user.walletBalance > 0 || (backendTotals && backendTotals.walletBalance > 0)) &&
-          checkoutSteps[activeStep] !== 'ADDRESS' && (
-            <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="checkout-use-wallet-checkbox"
-                    checked={useWallet}
-                    onChange={(e) => setUseWallet(e.target.checked)}
-                    className="mt-1 rounded text-primary focus:ring-0 cursor-pointer h-4 w-4"
-                  />
-                  <label
-                    htmlFor="checkout-use-wallet-checkbox"
-                    className="cursor-pointer select-none"
-                  >
-                    <span className="text-xs font-bold text-on-surface block uppercase tracking-wider">
-                      Use Siri Pay Wallet
-                    </span>
-                    <span className="text-[10px] text-secondary font-light">
-                      Available Balance:{' '}
-                      <strong className="text-on-surface font-semibold">
-                        ₹
-                        {(
-                          (backendTotals?.walletBalance ?? user?.walletBalance) ||
-                          0
-                        ).toLocaleString('en-IN')}
-                      </strong>
-                    </span>
-                  </label>
-                </div>
-                <span className="material-symbols-outlined text-primary text-sm">stars</span>
-              </div>
-
-              {useWallet && currentWalletDeduction > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-3 pt-3 border-t border-outline-variant/30 text-[11px] text-primary font-bold flex justify-between"
-                >
-                  <span>Wallet Deducted:</span>
-                  <span>− ₹{currentWalletDeduction.toLocaleString('en-IN')}</span>
-                </motion.div>
-              )}
-            </div>
-          )}
-
-        {/* Promo Coupon Card */}
-        {orderType !== 'rental' &&
-          checkoutSteps[activeStep] !== 'PAYMENT' &&
-          checkoutSteps[activeStep] !== 'ADDRESS' && (
-            <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs relative">
-              <h4 className="text-[10px] font-label font-bold text-on-surface uppercase tracking-widest pb-2 border-b border-outline-variant/40 mb-3 flex items-center justify-between">
-                <span>Apply Promo Coupon</span>
-                <span className="material-symbols-outlined text-[15px] text-primary">sell</span>
-              </h4>
-
-              {!appliedCoupon || !couponValid ? (
-                <>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="COUPON CODE"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      className="flex-1 bg-white border border-outline-variant/30 rounded-lg px-3 py-1.5 text-xs outline-none uppercase font-bold focus:border-primary transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      className="btn-primary rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-wider px-4 py-1.5 transition-colors cursor-pointer shadow-md"
-                    >
-                      Apply
-                    </button>
-                  </div>
-
-                  {/* Coupon Choice Tray */}
-                  {checkoutCoupons.length > 0 && (!appliedCoupon || !couponValid) && (
-                    <div className="mt-4 pt-3 border-t border-outline-variant/30">
-                      <h5 className="text-[9px] uppercase tracking-widest font-bold text-secondary mb-2">
-                        Available Coupons
-                      </h5>
-                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
-                        {checkoutCoupons.map((coupon) => (
-                          <div
-                            key={coupon.code}
-                            onClick={() => {
-                              setCouponInput(coupon.code);
-                              fetchBackendTotals(coupon.code, true);
-                            }}
-                            className="snap-start shrink-0 w-[180px] p-2.5 rounded-lg border border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
-                          >
-                            <div className="flex justify-between items-center mb-0.5">
-                              <span className="font-mono text-[11px] font-bold text-on-surface bg-white/60 px-1 rounded shadow-sm">
-                                {coupon.code}
-                              </span>
-                              <span className="text-[9px] font-bold text-primary">Tap to use</span>
-                            </div>
-                            <p className="text-[10px] text-secondary leading-tight">
-                              {coupon.discountType === 'percentage'
-                                ? `${coupon.discountValue}% OFF`
-                                : `₹${coupon.discountValue} OFF`}
-                              {coupon.minOrderAmount > 0 && ` on ₹${coupon.minOrderAmount}+`}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg flex items-center justify-between text-xs text-primary">
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-primary">
-                      check_circle
-                    </span>
-                    <span>
-                      Applied{' '}
-                      <strong className="font-mono text-primary font-bold">{appliedCoupon}</strong>{' '}
-                      successfully!
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveCoupon}
-                    className="text-red-600 font-extrabold hover:text-red-800 transition-colors uppercase text-[9px] tracking-wider cursor-pointer"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-
-              {couponMessage && (!appliedCoupon || !couponValid) && (
-                <div
-                  className={`mt-2 text-[11px] font-semibold ${couponValid ? 'text-primary' : 'text-red-600'}`}
-                >
-                  {couponValid ? (
-                    <Check className="w-3.5 h-3.5 inline-block -mt-0.5" />
-                  ) : (
-                    <AlertTriangle
-                      className="w-3.5 h-3.5 inline-block -mt-0.5"
-                      aria-hidden="true"
-                    />
-                  )}{' '}
-                  {couponMessage}
-                </div>
-              )}
-
-              {/* Dynamic Available Store Coupons List */}
-              {availableCoupons.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-outline-variant/35 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-secondary/70 block flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[11px]">local_activity</span>
-                    Available Offers ({availableCoupons.length})
-                  </span>
-
-                  <div className="max-h-[160px] overflow-y-auto space-y-2 pr-1 no-scrollbar">
-                    {availableCoupons.map((c) => {
-                      const isCurrent = appliedCoupon === c.code;
-                      return (
-                        <div
-                          key={c._id || c.id}
-                          className={`p-2.5 rounded-lg border text-xs flex justify-between items-center transition-all ${
-                            isCurrent
-                              ? 'bg-primary/5 border-primary/30'
-                              : 'bg-surface-bright border-outline-variant/30 hover:border-primary/20'
-                          }`}
-                        >
-                          <div className="min-w-0 pr-2">
-                            <span className="font-mono font-bold text-on-surface text-[10px] bg-surface px-1.5 py-0.5 rounded border border-outline-variant/30 tracking-wider">
-                              {c.code}
-                            </span>
-                            <p className="text-[10px] text-on-surface font-semibold mt-1">
-                              {c.discountType === 'percentage'
-                                ? `${c.discountValue}% Off`
-                                : `Flat ₹${c.discountValue} Off`}
-                              {c.maxDiscount ? ` up to ₹${c.maxDiscount}` : ''}
-                            </p>
-                            <p className="text-[9px] text-outline mt-0.5 font-light">
-                              Min purchase: ₹{c.minOrderAmount || 0}
-                            </p>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (isCurrent) {
-                                handleRemoveCoupon();
-                              } else {
-                                setCouponInput(c.code);
-                                fetchBackendTotals(c.code);
-                              }
-                            }}
-                            className={`text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1.5 rounded-full transition-colors cursor-pointer shrink-0 shadow-sm ${
-                              isCurrent
-                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                                : 'btn-primary'
-                            }`}
-                          >
-                            {isCurrent ? 'Remove' : 'Apply'}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
         {/* Price Details Card */}
-        <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs sticky top-28 relative overflow-hidden">
-          <div className="pb-3 border-b border-outline-variant/40 mb-4 relative z-10 flex items-center justify-between">
-            <h3 className="text-[10px] font-label font-bold text-on-surface uppercase tracking-widest">
-              {orderType === 'rental' ? 'Rental Order' : 'Purchase Summary'} ({totalItemUnits}{' '}
-              {totalItemUnits === 1 ? 'Item' : 'Items'})
-            </h3>
-            {orderType === 'rental' && (
-              <span className="bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider flex items-center gap-1">
-                <span className="material-symbols-outlined text-[10px]">local_offer</span>
-                Rental
-              </span>
-            )}
+        <div className="bg-white border border-neutral-200 rounded-lg p-5 sm:p-6 shadow-sm sticky top-24 relative overflow-hidden">
+          {/* Header */}
+          <div className="pb-3.5 border-b border-neutral-200 mb-4 relative z-10 flex items-center justify-between">
+            <span
+              className="text-[12.5px] font-semibold text-neutral-800 uppercase tracking-wider font-sans"
+              style={{ fontStretch: 'normal' }}
+            >
+              {orderType === 'rental' ? 'Rental Order' : 'Order Bill Details'}
+            </span>
+            <span className="text-[10.5px] font-extrabold text-neutral-400">
+              {totalItemUnits} {totalItemUnits === 1 ? 'ITEM' : 'ITEMS'}
+            </span>
           </div>
 
-          <div className="space-y-3 text-xs text-on-surface">
+          <div className="space-y-3 text-[13px] text-neutral-700">
             {orderType === 'rental' && rentalCostBreakdown ? (
               <>
                 <div className="flex justify-between">
-                  <span>
+                  <span className="text-neutral-500">
                     Rental Fee ({totalItemUnits} {totalItemUnits === 1 ? 'item' : 'items'})
                   </span>
-                  <span>₹{rentalCostBreakdown?.rentalCharge?.toLocaleString() || 0}</span>
+                  <span className="font-bold text-neutral-950">
+                    ₹{rentalCostBreakdown?.rentalCharge?.toLocaleString() || 0}
+                  </span>
                 </div>
 
                 {rentalStartDate && rentalEndDate && (
                   <div className="flex justify-between">
-                    <span>Rental Duration</span>
-                    <span className="font-medium text-secondary">
+                    <span className="text-neutral-500">Rental Duration</span>
+                    <span className="font-bold text-neutral-900">
                       {Math.max(
                         1,
                         Math.ceil(
@@ -317,68 +82,40 @@ export default function CheckoutSidebar() {
                   </div>
                 )}
 
-                <div className="flex justify-between">
-                  <span>Delivery Fee ({estimatedDeliveryDays || '5-7'} days)</span>
-                  <span className="text-primary font-bold uppercase tracking-wider text-[12px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-500">Delivery Fee</span>
+                  <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-extrabold text-[10.5px] px-2 py-0.5 rounded-md">
                     {rentalCostBreakdown?.deliveryCharge === 0
-                      ? 'Free'
+                      ? 'FREE'
                       : `₹${rentalCostBreakdown?.deliveryCharge || 0}`}
                   </span>
                 </div>
 
-                {rentalCostBreakdown?.taxInclusive ? (
-                  <div className="flex justify-between">
-                    <span>Tax (GST)</span>
-                    <span className="text-secondary font-medium">
-                      Included{' '}
-                      {rentalCostBreakdown?.tax > 0
-                        ? `(₹${rentalCostBreakdown?.tax?.toLocaleString()})`
-                        : ''}
-                    </span>
-                  </div>
-                ) : rentalCostBreakdown?.tax > 0 ? (
-                  <div className="flex justify-between">
-                    <span>Tax (GST)</span>
-                    <span className="font-medium">
-                      ₹{rentalCostBreakdown?.tax?.toLocaleString() || 0}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex justify-between">
-                    <span>Tax</span>
-                    <span className="text-secondary font-medium">Included</span>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Taxes</span>
+                  <span className="font-bold text-neutral-900">Included</span>
+                </div>
 
                 {rentalCostBreakdown.securityDeposit > 0 && (
                   <div className="flex justify-between">
-                    <span className="flex items-center gap-1">
+                    <span className="text-neutral-500">
                       Security Deposit{' '}
-                      <span className="text-[9px] text-green-600 font-bold">(Refundable)</span>
+                      <span className="text-[10px] text-emerald-700 font-bold">(Refundable)</span>
                     </span>
-                    <span className="font-medium">
+                    <span className="font-bold text-neutral-950">
                       ₹{rentalCostBreakdown?.securityDeposit?.toLocaleString() || 0}
                     </span>
                   </div>
                 )}
 
-                {useWallet && rentalWalletDeduction > 0 && (
-                  <div className="flex justify-between items-center bg-primary/10 text-primary rounded-lg px-3 py-2 border border-primary/20 font-semibold">
-                    <span className="flex items-center gap-1 font-medium text-[11px]">
-                      <span className="material-symbols-outlined text-[14px] text-primary">
-                        stars
-                      </span>
-                      Siri Pay Wallet applied
-                    </span>
-                    <span>− ₹{rentalWalletDeduction.toLocaleString()}</span>
-                  </div>
-                )}
+                <div className="h-[1px] bg-neutral-200 my-3.5" />
 
-                <div className="h-[1px] bg-outline-variant/40 my-3" />
-
-                <div className="flex justify-between items-baseline font-bold text-sm">
-                  <span>Total to Pay Now</span>
-                  <span className="text-base text-on-surface font-extrabold">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] font-extrabold text-neutral-950">Total Payable</span>
+                  <span
+                    className="text-[19px] sm:text-[21px] text-neutral-950 font-black leading-none tracking-tight"
+                    style={{ fontFamily: 'var(--font-display, "Playfair Display", serif)' }}
+                  >
                     ₹{netRentalPayable.toLocaleString()}
                   </span>
                 </div>
@@ -386,16 +123,16 @@ export default function CheckoutSidebar() {
             ) : totalsError ? (
               <div className="p-3.5 bg-red-50 text-red-700 rounded-lg text-xs font-semibold border border-red-200 flex flex-col gap-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-red-700">error</span>
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                   <span>Pricing details couldn't be loaded</span>
                 </div>
-                <p className="text-[10px] font-normal leading-normal text-secondary/80">
+                <p className="text-[11px] font-normal leading-normal text-red-600/80">
                   {totalsError}
                 </p>
                 <button
                   type="button"
-                  onClick={() => fetchBackendTotals(appliedCoupon)}
-                  className="btn-primary py-1 px-3 rounded-full text-[9px] uppercase tracking-wider w-fit self-end font-bold shadow-xs cursor-pointer"
+                  onClick={() => fetchBackendTotals()}
+                  className="bg-neutral-900 text-white py-1 px-3 rounded-md text-[10px] uppercase tracking-wider w-fit self-end font-bold shadow-2xs cursor-pointer"
                 >
                   Retry
                 </button>
@@ -403,173 +140,113 @@ export default function CheckoutSidebar() {
             ) : isTotalsLoading ? (
               <div className="space-y-3.5 animate-pulse py-1">
                 <div className="flex justify-between">
-                  <div className="h-3 bg-outline-variant/20 rounded w-1/3"></div>
-                  <div className="h-3 bg-outline-variant/20 rounded w-1/6"></div>
+                  <div className="h-3.5 bg-neutral-200 rounded w-1/3" />
+                  <div className="h-3.5 bg-neutral-200 rounded w-1/6" />
                 </div>
                 <div className="flex justify-between">
-                  <div className="h-3 bg-outline-variant/20 rounded w-1/4"></div>
-                  <div className="h-3 bg-outline-variant/20 rounded w-1/6"></div>
+                  <div className="h-3.5 bg-neutral-200 rounded w-1/4" />
+                  <div className="h-3.5 bg-neutral-200 rounded w-1/6" />
                 </div>
                 <div className="flex justify-between">
-                  <div className="h-3 bg-outline-variant/20 rounded w-1/3"></div>
-                  <div className="h-3 bg-outline-variant/20 rounded w-1/12"></div>
+                  <div className="h-3.5 bg-neutral-200 rounded w-1/3" />
+                  <div className="h-3.5 bg-neutral-200 rounded w-1/12" />
                 </div>
-                <div className="h-[1px] bg-outline-variant/30 my-3" />
+                <div className="h-[1px] bg-neutral-200 my-3" />
                 <div className="flex justify-between items-center">
-                  <div className="h-4 bg-outline-variant/20 rounded w-1/5"></div>
-                  <div className="h-5 bg-outline-variant/20 rounded w-1/4"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-1/4" />
+                  <div className="h-5 bg-neutral-200 rounded w-1/3" />
                 </div>
               </div>
             ) : (
               <>
                 <div className="flex justify-between">
-                  <span>Product Cost ({activeItems.length} items)</span>
-                  <span>₹{backendTotals?.subtotal?.toLocaleString() || 0}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Promo Discount</span>
-                  <span className="text-primary font-medium">
-                    − ₹{backendTotals?.discount?.toLocaleString() || 0}
+                  <span className="text-neutral-500">Items Total ({activeItems.length} items)</span>
+                  <span className="font-bold text-neutral-950">
+                    ₹{backendTotals?.subtotal?.toLocaleString() || 0}
                   </span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span>Delivery Fee ({estimatedDeliveryDays || '5-7'} days)</span>
-                  <span className="text-primary font-bold uppercase tracking-wider text-[12px]">
-                    {backendTotals?.shippingFee === 0
-                      ? 'Free'
-                      : `₹${backendTotals?.shippingFee || 0}`}
-                  </span>
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-500">Delivery Fee</span>
+                  {backendTotals?.shippingFee === 0 ? (
+                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-extrabold text-[10.5px] px-2 py-0.5 rounded-md">
+                      FREE
+                    </span>
+                  ) : (
+                    <span className="font-bold text-neutral-950">
+                      ₹{backendTotals?.shippingFee || 0}
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex justify-between">
-                  <span>Tax</span>
-                  <span className="text-secondary font-medium">Included</span>
+                  <span className="text-neutral-500">GST & Kitchen Taxes</span>
+                  <span className="font-bold text-neutral-900">Included</span>
                 </div>
 
                 {backendTotals?.platformFee > 0 && (
                   <div className="flex justify-between">
-                    <span>Platform Fee</span>
-                    <span className="font-medium">
+                    <span className="text-neutral-500">Packaging & Platform</span>
+                    <span className="font-bold text-neutral-950">
                       ₹{backendTotals.platformFee.toLocaleString()}
                     </span>
                   </div>
                 )}
 
                 {paymentOption === 'cod' && backendTotals?.codFee > 0 && (
-                  <div className="flex justify-between items-center bg-amber-50/50 text-amber-800 rounded px-2 py-1.5 border border-amber-100/50">
-                    <span className="flex items-center gap-1 font-medium">
-                      <span className="material-symbols-outlined text-[14px]">
-                        account_balance_wallet
-                      </span>
-                      COD Handling Fee
+                  <div className="flex justify-between items-center bg-[#fef9e7] text-neutral-950 rounded-lg p-2.5 border border-[#fae182]">
+                    <span className="flex items-center gap-1.5 font-bold text-[12px]">
+                      <span>COD Handling Fee</span>
                     </span>
-                    <span className="font-bold">
+                    <span className="font-black text-[12.5px]">
                       ₹{backendTotals?.codFee?.toLocaleString() || 0}
                     </span>
                   </div>
                 )}
 
-                {useWallet && backendTotals?.walletDeduction > 0 && (
-                  <div className="flex justify-between items-center bg-primary/10 text-primary rounded-lg px-3 py-2 border border-primary/20 font-semibold">
-                    <span className="flex items-center gap-1 font-medium text-[11px]">
-                      <span className="material-symbols-outlined text-[14px] text-primary">
-                        stars
-                      </span>
-                      Siri Pay Wallet applied
-                    </span>
-                    <span>− ₹{backendTotals?.walletDeduction?.toLocaleString() || 0}</span>
-                  </div>
-                )}
+                <div className="h-[1px] bg-neutral-200 my-3.5" />
 
-                <div className="h-[1px] bg-outline-variant/40 my-3" />
-
-                <div className="flex justify-between items-baseline font-bold text-sm">
-                  <span>Total</span>
-                  <span className="text-base text-on-surface font-extrabold">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] font-bold text-neutral-900">
+                    Total Payable Amount
+                  </span>
+                  <span className="text-[18px] sm:text-[19px] text-neutral-950 font-bold leading-none">
                     ₹{backendTotals?.total?.toLocaleString() || 0}
                   </span>
                 </div>
               </>
             )}
 
-            {/* Gamified Cashback Incentive Banner */}
+            {/* Loyalty / Savings Strip */}
             {activeTotal > 0 && (
-              <div className="bg-primary/10 text-primary rounded-lg p-3 text-[10px] sm:text-[11px] border border-primary/20 flex items-center justify-between shadow-2xs mt-3">
-                <div className="flex items-center gap-2">
-                  <Banknote className="w-3.5 h-3.5 text-primary shrink-0" strokeWidth={1.8} />
-                  <span className="font-semibold text-primary">
-                    Earn cashback after placing this order
-                  </span>
-                </div>
+              <div className="bg-[#fef9e7] text-neutral-900 rounded-lg p-3 text-[11px] border border-[#fae182] flex items-center gap-2 shadow-2xs mt-3">
+                <Banknote className="w-4 h-4 text-neutral-950 shrink-0" strokeWidth={2} />
+                <span className="font-bold">
+                  Guaranteed fresh preparation right before dispatch
+                </span>
               </div>
             )}
           </div>
 
-          {orderType === 'rental' ? (
-            checkoutSteps[activeStep] !== 'PAYMENT' && (
-              <div className="mt-4 pt-3 border-t border-surface-container-low text-[11px] text-primary space-y-1.5">
-                <p className="flex items-center gap-1.5 font-medium">
-                  <span className="material-symbols-outlined text-sm">fact_check</span>
-                  ID Verification Required
-                </p>
-                <p className="flex items-center gap-1.5 font-medium">
-                  <span className="material-symbols-outlined text-sm">currency_rupee</span>
-                  Refundable Security Deposit
-                </p>
-                <p className="flex items-center gap-1.5 font-medium">
-                  <span className="material-symbols-outlined text-sm">event_available</span>
-                  Return on Due Date
-                </p>
-              </div>
-            )
-          ) : (
-            <div className="mt-4 pt-3 border-t border-surface-container-low text-[11px] text-secondary grid grid-cols-2 gap-x-3 gap-y-2">
-              <p className="flex items-center gap-1.5 font-medium truncate">
-                <span className="material-symbols-outlined text-sm text-primary shrink-0">
-                  verified
-                </span>
-                <span className="truncate">Secure delivery</span>
-              </p>
-              {activeItems.some((item) =>
-                Boolean(
-                  item.isNonRefundable ||
-                  item.product?.isNonRefundable ||
-                  item.product?.returnSettings?.isReturnable === false ||
-                  item.itemType === 'event' ||
-                  item.type === 'custom' ||
-                  orderType === 'rental',
-                ),
-              ) ? (
-                <p className="flex items-center gap-1.5 font-medium text-[#d97706] truncate">
-                  <span className="material-symbols-outlined text-sm text-[#d97706] shrink-0">
-                    block
-                  </span>
-                  <span className="truncate">Non-refundable</span>
-                </p>
-              ) : (
-                <p className="flex items-center gap-1.5 font-medium truncate">
-                  <span className="material-symbols-outlined text-sm text-primary shrink-0">
-                    change_circle
-                  </span>
-                  <span className="truncate">Easy returns</span>
-                </p>
-              )}
-              <p className="flex items-center gap-1.5 font-medium truncate">
-                <span className="material-symbols-outlined text-sm text-primary shrink-0">
-                  brush
-                </span>
-                <span className="truncate">Handcrafted quality</span>
-              </p>
-              <p className="flex items-center gap-1.5 font-medium truncate">
-                <span className="material-symbols-outlined text-sm text-primary shrink-0">
-                  lock
-                </span>
-                <span className="truncate">Secure payments</span>
-              </p>
+          {/* Trust Badges */}
+          <div className="mt-4 pt-3.5 border-t border-neutral-200 grid grid-cols-2 gap-2 text-[11px] text-neutral-600">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">100% Authentic Quality</span>
             </div>
-          )}
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+              <span className="truncate">Secure Payments</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+              <span className="truncate">Safe Kitchen Delivery</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">Fresh Ingredients</span>
+            </div>
+          </div>
         </div>
       </motion.div>
     </>

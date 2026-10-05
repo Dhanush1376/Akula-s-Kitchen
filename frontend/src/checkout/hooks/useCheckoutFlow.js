@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { persistentStorage } from '../../utils/storage/persistentStorage';
 import { orderService } from '../../services/domainServices';
-import rentalService from '../../services/api/rentalService';
 import toast from 'react-hot-toast';
 import logger from '../../utils/core/logger';
-import { EXTERNAL_URLS } from '../../config/constants';
-import { BRAND } from '../../config/brand';
 
 const createIdempotencyKey = () => {
   if (window.crypto?.randomUUID) return window.crypto.randomUUID();
@@ -18,13 +15,11 @@ export function useCheckoutFlow({
   activeItems,
   orderType,
   checkoutMode,
-  customOrder,
   removeItem,
   clearCart,
   navigate,
   processPayment,
   shipping,
-  rentals,
   totals,
   activeStep,
   setActiveStep,
@@ -37,10 +32,10 @@ export function useCheckoutFlow({
   const orderCompleteRef = useRef(false);
 
   const getInitialStep = () =>
-    persistentStorage.getItem('siri_checkout_step', { session: true, fallback: 1 });
+    persistentStorage.getItem('akula_checkout_step', { session: true, fallback: 1 });
 
   useEffect(() => {
-    persistentStorage.setItem('siri_checkout_step', activeStep, { session: true });
+    persistentStorage.setItem('akula_checkout_step', activeStep, { session: true });
   }, [activeStep]);
 
   const hasCustomizableItems = useMemo(() => {
@@ -50,40 +45,31 @@ export function useCheckoutFlow({
   }, [activeItems]);
 
   const checkoutSteps = useMemo(() => {
-    const steps =
-      orderType === 'rental'
-        ? ['BAG', 'DURATION', 'ADDRESS', 'VERIFY', 'PAYMENT']
-        : ['BAG', 'ADDRESS', 'PAYMENT'];
-
-    if (hasCustomizableItems) {
-      const paymentIndex = steps.indexOf('PAYMENT');
-      steps.splice(paymentIndex, 0, 'CUSTOMIZATION');
-    }
-    return steps;
-  }, [orderType, hasCustomizableItems]);
+    return ['BAG', 'ADDRESS', 'PAYMENT'];
+  }, []);
 
   const [customizationNotes, setCustomizationNotes] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_customization_notes', {
+    return persistentStorage.getItem('akula_checkout_customization_notes', {
       session: true,
       fallback: {},
     });
   });
 
   useEffect(() => {
-    persistentStorage.setItem('siri_checkout_customization_notes', customizationNotes, {
+    persistentStorage.setItem('akula_checkout_customization_notes', customizationNotes, {
       session: true,
     });
   }, [customizationNotes]);
 
   // Payment Options
   const [sendUpdatesToWhatsApp, setSendUpdatesToWhatsApp] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_whatsapp_updates', {
+    return persistentStorage.getItem('akula_checkout_whatsapp_updates', {
       session: true,
       fallback: true,
     });
   });
   const [needByDate, setNeedByDate] = useState(() => {
-    const raw = persistentStorage.getItem('siri_checkout_need_by_date', {
+    const raw = persistentStorage.getItem('akula_checkout_need_by_date', {
       session: true,
       fallback: '',
     });
@@ -93,10 +79,10 @@ export function useCheckoutFlow({
   });
 
   useEffect(() => {
-    persistentStorage.setItem('siri_checkout_whatsapp_updates', sendUpdatesToWhatsApp, {
+    persistentStorage.setItem('akula_checkout_whatsapp_updates', sendUpdatesToWhatsApp, {
       session: true,
     });
-    persistentStorage.setItem('siri_checkout_need_by_date', needByDate || '', { session: true });
+    persistentStorage.setItem('akula_checkout_need_by_date', needByDate || '', { session: true });
   }, [sendUpdatesToWhatsApp, needByDate]);
 
   const [upiId, setUpiId] = useState('');
@@ -268,210 +254,17 @@ export function useCheckoutFlow({
   };
 
   const clearCheckoutSessionStorage = useCallback(() => {
-    persistentStorage.removeItem('siri_checkout_step', { session: true });
-    persistentStorage.removeItem('siri_checkout_new_address', { session: true });
-    persistentStorage.removeItem('siri_checkout_payment_option', { session: true });
-    persistentStorage.removeItem('siri_checkout_need_by_date', { session: true });
-    persistentStorage.removeItem('siri_checkout_whatsapp_updates', { session: true });
-    persistentStorage.removeItem('siri_checkout_use_wallet', { session: true });
-    persistentStorage.removeItem('siri_checkout_selected_address_id', { session: true });
-    persistentStorage.removeItem('siri_checkout_is_adding_address', { session: true });
-    persistentStorage.removeItem('siri_checkout_coupon_input', { session: true });
-    persistentStorage.removeItem('siri_checkout_applied_coupon', { session: true });
-    persistentStorage.removeItem('siri_checkout_rental_start', { session: true });
-    persistentStorage.removeItem('siri_checkout_rental_end', { session: true });
-    persistentStorage.removeItem('siri_checkout_customization_notes', { session: true });
+    persistentStorage.removeItem('akula_checkout_step', { session: true });
+    persistentStorage.removeItem('akula_checkout_new_address', { session: true });
+    persistentStorage.removeItem('akula_checkout_payment_option', { session: true });
+    persistentStorage.removeItem('akula_checkout_need_by_date', { session: true });
+    persistentStorage.removeItem('akula_checkout_whatsapp_updates', { session: true });
+    persistentStorage.removeItem('akula_checkout_selected_address_id', { session: true });
+    persistentStorage.removeItem('akula_checkout_is_adding_address', { session: true });
+    persistentStorage.removeItem('akula_checkout_customization_notes', { session: true });
   }, []);
 
-  const handleConfirmRentalOrder = async () => {
-    if (isProcessing) return;
-    if (!shipping.activeSelectedAddress) {
-      toast.error('Please select a delivery address');
-      setActiveStep(2);
-      return;
-    }
-    if (!rentals.rentalStartDate || !rentals.rentalEndDate) {
-      toast.error('Please select rental dates');
-      setActiveStep(1);
-      return;
-    }
-    if (!rentals.agreementAccepted) {
-      toast.error('Please accept the rental agreement to proceed');
-      return;
-    }
-    const grossRentalAmount = rentals.rentalCostBreakdown?.totalAmount || 0;
-    const availableWalletBalance =
-      (totals.backendTotals?.walletBalance ?? user?.walletBalance) || 0;
-    const rentalWalletDeduction =
-      totals.useWallet && availableWalletBalance > 0
-        ? Math.min(grossRentalAmount, availableWalletBalance)
-        : 0;
-    const netRentalPayable = Math.max(0, grossRentalAmount - rentalWalletDeduction);
-    const isRentalFullyPaid = netRentalPayable === 0;
-
-    if (!isRentalFullyPaid && paymentOption === 'cod') {
-      const codMinOrder = settings?.payments?.codMinOrder ?? 500;
-      const codMaxOrder = settings?.payments?.codMaxOrder ?? 50000;
-      const isCodEnabled = settings?.payments?.enableCOD ?? true;
-
-      if (!isCodEnabled) {
-        toast.error('Cash on Delivery is currently disabled.');
-        return;
-      }
-      if (netRentalPayable < codMinOrder || netRentalPayable > codMaxOrder) {
-        toast.error(
-          `Cash on Delivery (COD) is only serviceable for order totals between ₹${codMinOrder} and ₹${codMaxOrder}.`,
-        );
-        return;
-      }
-      if (!codConfirmed) {
-        toast.error('Please confirm Cash on Delivery');
-        return;
-      }
-      if (!codVerified) {
-        toast.error('Please verify your mobile number with OTP to place a Cash on Delivery order.');
-        return;
-      }
-    }
-
-    const rentalItem = activeItems.find((item) => item.type === 'rental');
-    if (!rentalItem) {
-      toast.error('No rental items found in checkout');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const rentalPayload = {
-        productId: rentalItem.id || rentalItem._id,
-        quantity: rentalItem.quantity || 1,
-        rentalStartDate: rentals.rentalStartDate,
-        rentalEndDate: rentals.rentalEndDate,
-        shippingAddress: buildShippingAddress(),
-        identityDocuments: rentals.identityDocuments.length > 0 ? rentals.identityDocuments : [],
-        aadhaarNumber: rentals.aadhaarNumber,
-        agreementAccepted: true,
-        paymentMethod: isRentalFullyPaid
-          ? 'wallet'
-          : paymentOption === 'razorpay'
-            ? 'razorpay'
-            : 'cod',
-        useWallet: Boolean(totals.useWallet),
-        customizationNote:
-          customizationNotes[
-            `${rentalItem.id || rentalItem._id}-${rentalItem.variant || 'default'}`
-          ] || undefined,
-      };
-
-      const createRes = await rentalService.createOrder(rentalPayload);
-
-      if (!createRes.success) {
-        toast.error(createRes.message || 'Failed to create rental order');
-        setIsProcessing(false);
-        return;
-      }
-
-      const { rentalOrder, razorpayOrderId, razorpayKeyId, amount } = createRes.data;
-
-      if (isRentalFullyPaid || paymentOption === 'cod' || !razorpayOrderId) {
-        toast.success(
-          isRentalFullyPaid
-            ? 'Rental order placed successfully with wallet payment!'
-            : paymentOption === 'cod'
-              ? 'Rental Cash on Delivery order placed successfully!'
-              : 'Rental order placed successfully!',
-        );
-        orderCompleteRef.current = true;
-        activeItems
-          .filter((i) => i.type === 'rental')
-          .forEach((item) => removeItem(item.id || item._id, item.variant));
-        clearCheckoutSessionStorage();
-        setIsProcessing(false);
-        navigate('/order-success', { state: { orderDetails: rentalOrder }, replace: true });
-        return;
-      }
-
-      const scriptLoaded = await new Promise((resolve) => {
-        if (window.Razorpay) return resolve(true);
-        const script = document.createElement('script');
-        script.src = EXTERNAL_URLS.RAZORPAY_CHECKOUT;
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.body.appendChild(script);
-      });
-
-      if (!scriptLoaded) {
-        toast.error('Razorpay SDK failed to load. Are you online?');
-        setIsProcessing(false);
-        return;
-      }
-
-      const options = {
-        key: razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: amount,
-        currency: 'INR',
-        name: settings?.general?.storeName || BRAND.name || 'Siri Arts & Crafts',
-        description: `Rental: ${rentalOrder.productTitle}`,
-        image:
-          import.meta.env.VITE_LOGO_URL ||
-          'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
-        order_id: razorpayOrderId,
-        handler: async (response) => {
-          try {
-            const verifyRes = await rentalService.verifyPayment({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
-
-            if (verifyRes.success) {
-              toast.success('Rental payment successful!');
-              orderCompleteRef.current = true;
-              activeItems
-                .filter((i) => i.type === 'rental')
-                .forEach((item) => removeItem(item.id || item._id, item.variant));
-              clearCheckoutSessionStorage();
-              navigate('/order-success', {
-                state: { orderDetails: verifyRes.data },
-                replace: true,
-              });
-            } else {
-              toast.error('Rental payment verification failed');
-            }
-          } catch (err) {
-            logger.error('Rental payment verification error:', err);
-            toast.error(err.response?.data?.message || 'Error verifying rental payment');
-          } finally {
-            setIsProcessing(false);
-          }
-        },
-        modal: { ondismiss: () => setIsProcessing(false) },
-        prefill: {
-          name: shipping.activeSelectedAddress.name,
-          contact: shipping.activeSelectedAddress.phone,
-        },
-        theme: { color: '#d4af37' },
-      };
-
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.on('payment.failed', (response) => {
-        logger.error('Rental payment failed:', response.error);
-        setIsProcessing(false);
-      });
-      paymentObject.open();
-    } catch (err) {
-      logger.error('Rental order creation failed:', err);
-      let msg = err.response?.data?.message || err.message || 'Failed to create rental order';
-      if (err.message === 'Network Error') {
-        msg =
-          'Network Error: Please check your connection. If on iPhone/Safari, disable Tracking Protection/Adblockers.';
-      }
-      toast.error(msg);
-      setIsProcessing(false);
-    }
-  };
-
-  const handleConfirmPurchaseOrder = async () => {
+  const handleConfirmOrder = async () => {
     if (isProcessing) return;
 
     if (!shipping.activeSelectedAddress) {
@@ -509,11 +302,7 @@ export function useCheckoutFlow({
 
     setIsProcessing(true);
 
-    const effectivePaymentMethod = isFullyPaid
-      ? 'wallet'
-      : paymentOption === 'razorpay'
-        ? 'razorpay'
-        : 'cod';
+    const effectivePaymentMethod = paymentOption === 'cod' ? 'cod' : 'razorpay';
 
     const orderData = {
       items: activeItems.map((item) => {
@@ -526,16 +315,9 @@ export function useCheckoutFlow({
         };
       }),
       shippingAddress: buildShippingAddress(),
-      couponCode: totals.appliedCoupon || undefined,
       paymentMethod: effectivePaymentMethod,
-      useWallet: totals.useWallet,
       needByDate: needByDate || undefined,
       idempotencyKey: createIdempotencyKey(),
-      isCustomOrder: checkoutMode === 'custom',
-      customOrderId:
-        checkoutMode === 'custom'
-          ? customOrder?._id || activeItems[0]?.id || activeItems[0]?._id
-          : undefined,
       codVerificationToken:
         !isFullyPaid && paymentOption === 'cod' ? codVerificationToken : undefined,
     };
@@ -550,11 +332,7 @@ export function useCheckoutFlow({
           const orderObj = response.data?.order || response.data || response;
           activeItems.forEach((item) => removeItem(item.id || item._id, item.variant));
           clearCheckoutSessionStorage();
-          toast.success(
-            totals.useWallet
-              ? 'Order successfully placed and fully paid using wallet balance!'
-              : 'Order successfully placed!',
-          );
+          toast.success('Order successfully placed!');
           navigate('/order-success', { state: { orderDetails: orderObj }, replace: true });
         } else {
           toast.error(response?.message || 'Failed to place order');
@@ -601,13 +379,6 @@ export function useCheckoutFlow({
         setIsProcessing(false);
       }
     }
-  };
-
-  const handleConfirmOrder = async () => {
-    if (orderType === 'rental') {
-      return handleConfirmRentalOrder();
-    }
-    return handleConfirmPurchaseOrder();
   };
 
   return {

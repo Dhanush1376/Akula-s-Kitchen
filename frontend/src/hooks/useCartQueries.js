@@ -4,7 +4,7 @@ import { hasSessionMarker } from '../utils/auth/authStorage';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../utils/core/errorHelpers';
 import { useAuth } from '../context/AuthContext';
-import { cleanRentalInfo, calculateCartSummary } from '../utils/ecommerce/cartCalculations';
+import { calculateCartSummary } from '../utils/ecommerce/cartCalculations';
 import { logCartTrace, forensicHashId } from '../utils/forensic/cartTrace';
 import { useEffect, useRef } from 'react';
 const checkAuthLocal = () => hasSessionMarker();
@@ -13,7 +13,7 @@ const emptyCart = {
   items: [],
   summary: { subtotal: 0, depositTotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
 };
-const defaultCart = { purchaseCart: emptyCart, rentalCart: emptyCart };
+const defaultCart = { purchaseCart: emptyCart };
 
 export function useCartQuery() {
   const { user } = useAuth();
@@ -73,8 +73,8 @@ export function useCartMutations() {
   const cartKey = isAuth ? user?._id || user?.id || 'authenticated' : 'guest';
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity, type, rentalInfo }) => {
-      const res = await userService.addToCart(productId, quantity, type, rentalInfo);
+    mutationFn: async ({ productId, quantity, type }) => {
+      const res = await userService.addToCart(productId, quantity, type || 'purchase');
       logCartTrace('POST_RESPONSE', {
         cartKey,
         cartData: res.success ? res.data : res,
@@ -82,19 +82,14 @@ export function useCartMutations() {
       });
       return res.success ? res.data : res;
     },
-    onMutate: async ({ product, quantity, type, rentalInfo }) => {
+    onMutate: async ({ product, quantity }) => {
       logCartTrace('ON_MUTATE_START', { cartKey, source: 'addToCartMutation.onMutate' });
       await queryClient.cancelQueries({ queryKey: ['cart', cartKey] });
       const previousCart = queryClient.getQueryData(['cart', cartKey]);
 
       if (previousCart && product) {
-        const itemType = type || 'purchase';
-        const targetCartKey =
-          itemType === 'purchase'
-            ? 'purchaseCart'
-            : itemType === 'rental'
-              ? 'rentalCart'
-              : 'customCart';
+        const itemType = 'purchase';
+        const targetCartKey = 'purchaseCart';
 
         const prevItems = previousCart[targetCartKey]?.items || [];
         const itemKey = product._id || product.id;
@@ -119,13 +114,11 @@ export function useCartMutations() {
               quantity: quantity || 1,
               type: itemType,
               product: product,
-              rentalInfo: cleanRentalInfo(rentalInfo || product.rentalInfo),
-              deposit: product.deposit || 0,
             },
           ];
         }
 
-        const { subtotal, depositTotal, total } = calculateCartSummary(
+        const { subtotal, total } = calculateCartSummary(
           updatedItems,
           itemType,
           previousCart[targetCartKey]?.summary?.shippingFee || 0,
@@ -139,7 +132,6 @@ export function useCartMutations() {
             summary: {
               ...(previousCart[targetCartKey]?.summary || emptyCart.summary),
               subtotal,
-              depositTotal,
               total,
             },
           },
@@ -161,7 +153,7 @@ export function useCartMutations() {
         cartData: data,
         source: 'addToCartMutation.onSuccess',
       });
-      if (data && (data.purchaseCart || data.rentalCart)) {
+      if (data && data.purchaseCart) {
         queryClient.setQueryData(['cart', cartKey], data);
       }
     },
@@ -191,22 +183,21 @@ export function useCartMutations() {
       const res = await userService.removeFromCart(productId);
       return res.success ? res.data : res;
     },
-    onMutate: async ({ productId, type }) => {
+    onMutate: async ({ productId }) => {
       await queryClient.cancelQueries({ queryKey: ['cart', cartKey] });
       const previousCart = queryClient.getQueryData(['cart', cartKey]);
 
-      if (previousCart && type) {
-        const targetCartKey =
-          type === 'purchase' ? 'purchaseCart' : type === 'rental' ? 'rentalCart' : 'customCart';
+      if (previousCart) {
+        const targetCartKey = 'purchaseCart';
 
         const prevItems = previousCart[targetCartKey]?.items || [];
         const updatedItems = prevItems.filter(
           (item) => (item.product?._id || item.product?.id || item._id || item.id) !== productId,
         );
 
-        const { subtotal, depositTotal, total } = calculateCartSummary(
+        const { subtotal, total } = calculateCartSummary(
           updatedItems,
-          type,
+          'purchase',
           previousCart[targetCartKey]?.summary?.shippingFee || 0,
         );
 
@@ -218,7 +209,6 @@ export function useCartMutations() {
             summary: {
               ...(previousCart[targetCartKey]?.summary || emptyCart.summary),
               subtotal,
-              depositTotal,
               total,
             },
           },

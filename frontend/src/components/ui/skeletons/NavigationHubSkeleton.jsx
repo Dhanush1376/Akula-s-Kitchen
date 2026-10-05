@@ -3,7 +3,7 @@ import { Skeleton } from '../SkeletonBase';
 
 export function NavigationHubSkeleton() {
   return (
-    <section className="pt-2 pb-10 lg:py-36 bg-[#FDFBF7] relative overflow-hidden">
+    <section className="pt-2 pb-10 lg:py-36 bg-[#FFFFFF] relative overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12 lg:px-16">
         {/* Header */}
         <div className="text-center max-w-4xl mx-auto mb-8 lg:mb-28 relative z-10">

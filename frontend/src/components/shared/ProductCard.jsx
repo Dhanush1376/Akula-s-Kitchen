@@ -1,4 +1,4 @@
-import { CalendarCheck, Calendar, Check, ImageOff } from 'lucide-react';
+import { Calendar, Check, ImageOff, Heart, Plus, Ban } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
@@ -28,7 +28,7 @@ const resolveCategoryName = (primaryCat, cat) => {
     !res ||
     (typeof res === 'string' && (res.toLowerCase() === 'category' || /^[a-fA-F0-9]{24}$/.test(res)))
   ) {
-    return 'General Decor';
+    return 'General';
   }
   return typeof res === 'string' ? res.replace(/-/g, ' ') : res;
 };
@@ -272,73 +272,63 @@ export const ProductCard = React.memo(function ProductCard({
         // Prevent native context menu on touch devices during long press
         if (window.innerWidth < 1024) e.preventDefault();
       }}
-      className={`group relative flex flex-col cursor-pointer focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-surface z-10 hover:z-40 focus-within:z-40 select-none touch-pan-y ${isRectangular ? 'rounded-md' : 'rounded-2xl'}`}
+      className={`group relative flex flex-col cursor-pointer focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-surface z-10 hover:z-40 focus-within:z-40 select-none touch-pan-y ${isRectangular ? 'rounded-md' : 'rounded-[12px]'}`}
       style={{ WebkitTouchCallout: 'none' }}
     >
       {/* 1. VISUAL CANVAS */}
-      <div
-        className={`relative aspect-[4/5] overflow-hidden bg-[#fafafa] border border-black/5 transition-all duration-500 ease-out group-hover:shadow-[0_16px_36px_-12px_rgba(0,0,0,0.12)] group-hover:border-black/10 group/canvas ${isRectangular ? 'rounded-md' : 'rounded-2xl'}`}
-      >
+      <div className="relative">
         <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+          className={`relative aspect-[4/5] overflow-hidden bg-[#f7f7f7] border border-black/[0.08] hover:border-black/[0.16] shadow-xs lg:group-hover:shadow-md transition-all duration-300 ease-out group/canvas ${isRectangular ? 'rounded-md' : 'rounded-[14px]'}`}
         >
-          {availableImages.length > 0 ? (
-            availableImages.map((img, idx) => (
-              <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                <Link
-                  to={getProductRoute(itemType, productId)}
-                  className="block h-full w-full"
-                  draggable="false"
-                >
-                  <CloudinaryImage
-                    src={img}
-                    alt={`${title || 'Product'} - view ${idx + 1}`}
-                    className="transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 will-change-transform transform-gpu [backface-visibility:hidden] object-cover w-full h-full"
-                    loading={eager && idx === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={eager && idx === 0 ? 'high' : 'auto'}
-                    width={800}
-                    height={1000}
-                    sizes={sizes}
-                    quality="original"
-                  />
-                </Link>
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+          >
+            {availableImages.length > 0 ? (
+              availableImages.map((img, idx) => (
+                <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                  <Link
+                    to={getProductRoute(itemType, productId)}
+                    className="block h-full w-full"
+                    draggable="false"
+                  >
+                    <CloudinaryImage
+                      src={img}
+                      alt={`${title || 'Product'} - view ${idx + 1}`}
+                      className="transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 will-change-transform transform-gpu [backface-visibility:hidden] object-cover w-full h-full"
+                      loading={eager && idx === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={eager && idx === 0 ? 'high' : 'auto'}
+                      width={800}
+                      height={1000}
+                      sizes={sizes}
+                      quality="original"
+                    />
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-[#f7f7f7] dark:bg-[#000000] text-[#737373] dark:text-[#8a8a8a] gap-1.5 select-none p-4">
+                <div className="w-10 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center mb-0.5">
+                  <ImageOff className="w-5 h-5 opacity-70" strokeWidth={1.75} />
+                </div>
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider font-label opacity-80">
+                  Image Unavailable
+                </span>
               </div>
-            ))
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-[#f7f6f2] dark:bg-[#1a1917] text-[#8a877f] dark:text-[#9e9b93] gap-1.5 select-none p-4">
-              <div className="w-10 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center mb-0.5">
-                <ImageOff className="w-5 h-5 opacity-70" strokeWidth={1.75} />
-              </div>
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider font-label opacity-80">
-                Image Unavailable
-              </span>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {availableImages.length > 1 && (
-          <>
-            {/* Dots Indicator */}
-            <div className="absolute bottom-3 left-3 lg:bottom-4 lg:left-4 flex items-center gap-1.5 z-20 bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-sm pointer-events-auto">
-              {availableImages.map((_, i) => (
-                <div
-                  key={i}
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (scrollContainerRef.current) {
-                      scrollContainerRef.current.scrollTo({
-                        left: i * scrollContainerRef.current.clientWidth,
-                        behavior: 'smooth',
-                      });
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+          {availableImages.length > 1 && (
+            <>
+              {/* Dots Indicator */}
+              <div className="absolute bottom-3 left-3 lg:bottom-4 lg:left-4 flex items-center gap-1.5 z-20 bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-sm pointer-events-auto">
+                {availableImages.map((_, i) => (
+                  <div
+                    key={i}
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       if (scrollContainerRef.current) {
@@ -347,309 +337,212 @@ export const ProductCard = React.memo(function ProductCard({
                           behavior: 'smooth',
                         });
                       }
-                    }
-                  }}
-                  className={`transition-all duration-300 rounded-full shadow-md border border-black/10 outline-none cursor-pointer hover:scale-125 flex-shrink-0 p-0 m-0 ${
-                    i === activeIndex
-                      ? 'w-2 h-2 lg:w-2.5 lg:h-2.5 bg-white'
-                      : 'w-1.5 h-1.5 lg:w-2 lg:h-2 bg-white/60 hover:bg-white/80'
-                  }`}
-                  style={{ minHeight: 'auto', minWidth: 'auto' }}
-                  aria-label={`Go to image ${i + 1}`}
-                />
-              ))}
-            </div>
-          </>
-        )}
-        {/* Floating Utility Actions */}
-        {!selectionMode && (
-          <div className="absolute top-2 right-3 lg:top-3 lg:right-4 z-20 flex flex-col gap-2">
-            <button
-              onClick={handleWishlist}
-              className={`${compact ? 'w-7 h-7 lg:w-7 lg:h-7' : 'w-8 h-8 lg:w-8 lg:h-8'} relative min-h-0 shrink-0 aspect-square p-0 bg-white/90 backdrop-blur-xl rounded-full flex items-center justify-center shadow-sm border border-black/5 transition-transform duration-300 ease-out hover:scale-110 active:scale-95 cursor-pointer overflow-hidden transform-gpu`}
-              aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <AnimatePresence>
-                {isRippling && (
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0.5 }}
-                    animate={{ scale: 2.5, opacity: 0 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                    className={`absolute inset-0 rounded-full origin-center pointer-events-none ${wishlisted ? 'bg-black/10' : 'bg-[#ff2d55]/20'}`}
-                  />
-                )}
-              </AnimatePresence>
-              <motion.span
-                animate={{
-                  scale: wishlisted ? [1, 1.4, 1] : 1,
-                  color: wishlisted ? '#ff2d55' : '#1a1817',
-                  fontVariationSettings: wishlisted
-                    ? "'FILL' 1, 'wght' 300"
-                    : "'FILL' 0, 'wght' 300",
-                }}
-                whileTap={{ scale: 0.8 }}
-                transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-                className={`material-symbols-outlined ${compact ? 'text-[11px]' : 'text-[13px] lg:text-[14px]'}`}
-              >
-                favorite
-              </motion.span>
-            </button>
-          </div>
-        )}
-        {/* Badges */}
-        <div className="absolute top-2 left-2 lg:top-3 lg:left-3 z-20 pointer-events-none group/badges">
-          <div className="flex flex-row -space-x-3 lg:-space-x-4 py-1 px-1 pointer-events-auto hover:space-x-1.5 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]">
-            {itemType === 'event' ? (
-              <>
-                {setupTimeHours ? (
-                  <div className="relative z-[30] w-8 h-8 lg:w-10 lg:h-10 shrink-0 bg-primary text-white rounded-full flex flex-col items-center justify-center font-label text-[8px] lg:text-[10px] uppercase font-bold shadow-lg border-2 border-white hover:scale-110 transition-transform duration-300 ease-out will-change-transform transform-gpu select-none">
-                    <span className="leading-none">{setupTimeHours}H</span>
-                    <span className="text-[5px] lg:text-[7px] tracking-tight opacity-90 uppercase mt-0.5">
-                      Setup
-                    </span>
-                  </div>
-                ) : null}
-                {inclusions && inclusions.length > 0 && (
-                  <div className="relative z-[20] w-8 h-8 lg:w-10 lg:h-10 shrink-0 bg-white/95 backdrop-blur-md text-[#1a1817] rounded-full flex flex-col items-center justify-center font-label uppercase font-bold shadow-md border-2 border-white hover:scale-110 transition-transform duration-300 ease-out will-change-transform transform-gpu select-none">
-                    <span className="leading-none text-[8px] lg:text-[10px]">
-                      {inclusions.length}
-                    </span>
-                    <span className="text-[5px] lg:text-[6px] tracking-tight opacity-80 uppercase mt-0.5">
-                      Props
-                    </span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {canRent && resolvedCartType === 'rental' && (
-                  <div className="relative z-[40] w-8 h-8 lg:w-10 lg:h-10 shrink-0 bg-[#8c7335] text-white rounded-full flex flex-col items-center justify-center font-label uppercase font-bold shadow-lg border-2 border-white hover:scale-110 transition-transform duration-300 ease-out will-change-transform transform-gpu select-none">
-                    <CalendarCheck
-                      className="text-[10px] lg:text-[12px] leading-none mb-[1px]"
-                      strokeWidth={1.5}
-                    />
-                    <span className="leading-none text-[6px] lg:text-[8px] tracking-tight">
-                      RENT
-                    </span>
-                  </div>
-                )}
-                {discount && (canPurchase || itemType === 'event') && (
-                  <div className="relative z-[30] w-8 h-8 lg:w-10 lg:h-10 shrink-0 bg-[#7a5e00] text-white rounded-full flex flex-col items-center justify-center font-label uppercase font-bold shadow-lg border-2 border-white hover:scale-110 transition-transform duration-300 ease-out will-change-transform transform-gpu select-none">
-                    <span className="leading-none text-[8px] lg:text-[10px]">{discount}%</span>
-                    <span className="text-[5px] lg:text-[6px] tracking-tight opacity-90 uppercase mt-0.5">
-                      OFF
-                    </span>
-                  </div>
-                )}
-                {badges.map((badge, idx) => {
-                  const rawBadgeText =
-                    typeof badge === 'object' && badge !== null ? badge.text : badge;
-                  const badgeIcon = typeof badge === 'object' && badge !== null ? badge.icon : null;
-
-                  if (!rawBadgeText && !badgeIcon) return null;
-
-                  const couponMatch = rawBadgeText
-                    ? String(rawBadgeText).match(/:([A-Za-z0-9_-]+)/)
-                    : null;
-                  const couponCode = couponMatch ? couponMatch[1] : null;
-                  let badgeText = couponMatch
-                    ? String(rawBadgeText).replace(couponMatch[0], '').trim()
-                    : rawBadgeText;
-
-                  // If the badge ONLY contained the coupon code (e.g. ":siri40"),
-                  // badgeText would be empty. Fall back to showing the code itself.
-                  if (couponCode && !badgeText) {
-                    badgeText = couponCode;
-                  }
-
-                  const words = String(badgeText || '')
-                    .trim()
-                    .split(/\s+/);
-                  const displayContent =
-                    words.length > 1 ? (
-                      <>
-                        {badgeIcon && (
-                          <span className="material-symbols-outlined text-[8px] lg:text-[10px] mb-[1px]">
-                            {badgeIcon}
-                          </span>
-                        )}
-                        <span className="leading-none text-[6px] lg:text-[8px]">{words[0]}</span>
-                        <span className="text-[5px] lg:text-[6px] tracking-tight opacity-80 uppercase mt-0.5">
-                          {words.slice(1).join(' ')}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        {badgeIcon && (
-                          <span className="material-symbols-outlined text-[8px] lg:text-[10px] mb-[1px]">
-                            {badgeIcon}
-                          </span>
-                        )}
-                        {badgeText && (
-                          <span className="leading-none text-[6px] lg:text-[8px] truncate max-w-full px-1">
-                            {badgeText}
-                          </span>
-                        )}
-                      </>
-                    );
-
-                  const Component = couponCode ? 'button' : 'div';
-                  const extraProps = couponCode
-                    ? {
-                        onClick: (e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate(`/collections?coupon=${couponCode}`);
-                        },
-                        title: `Click to view all products for coupon ${couponCode}`,
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (scrollContainerRef.current) {
+                          scrollContainerRef.current.scrollTo({
+                            left: i * scrollContainerRef.current.clientWidth,
+                            behavior: 'smooth',
+                          });
+                        }
                       }
-                    : {};
+                    }}
+                    className={`transition-all duration-300 rounded-full shadow-md border border-black/10 outline-none cursor-pointer hover:scale-125 flex-shrink-0 p-0 m-0 ${
+                      i === activeIndex
+                        ? 'w-2 h-2 lg:w-2.5 lg:h-2.5 bg-white'
+                        : 'w-1.5 h-1.5 lg:w-2 lg:h-2 bg-white/60 hover:bg-white/80'
+                    }`}
+                    style={{ minHeight: 'auto', minWidth: 'auto' }}
+                    aria-label={`Go to image ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+          {/* Top Header Row: Badges on left, Wishlist on right */}
+          <div className="absolute top-2 left-2 right-2 sm:top-2.5 sm:left-2.5 sm:right-2.5 z-20 flex items-start justify-end gap-1.5 pointer-events-none">
+            {/* Wishlist Button */}
 
-                  return (
-                    <Component
-                      key={`badge-${idx}`}
-                      {...extraProps}
-                      className={`relative w-8 h-8 lg:w-10 lg:h-10 shrink-0 bg-white/95 backdrop-blur-md text-black/80 rounded-full flex flex-col items-center justify-center font-label uppercase font-bold shadow-md border-2 border-white transition-all duration-300 ease-out select-none will-change-transform transform-gpu ${couponCode ? 'hover:scale-110 cursor-pointer hover:bg-stone-800 hover:text-white active:scale-95 z-50' : 'hover:scale-110 z-[20]'}`}
-                      style={{ zIndex: 20 - idx }}
-                    >
-                      {displayContent}
-                    </Component>
-                  );
-                })}
-              </>
+            {/* Floating Utility Actions: Wishlist */}
+            {!selectionMode && (
+              <div className="shrink-0 pointer-events-auto">
+                <button
+                  onClick={handleWishlist}
+                  className="w-7 h-7 sm:w-8 sm:h-8 relative min-h-0 shrink-0 aspect-square p-0 bg-white/95 backdrop-blur-xs rounded-full flex items-center justify-center border border-[#ede8e1] shadow-xs transition-transform duration-200 hover:scale-110 active:scale-95 cursor-pointer overflow-hidden"
+                  aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <AnimatePresence>
+                    {isRippling && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0.5 }}
+                        animate={{ scale: 2.5, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                        className={`absolute inset-0 rounded-full origin-center pointer-events-none ${wishlisted ? 'bg-black/10' : 'bg-[#ff2d55]/20'}`}
+                      />
+                    )}
+                  </AnimatePresence>
+                  <motion.span
+                    animate={{
+                      scale: wishlisted ? [1, 1.4, 1] : 1,
+                      color: wishlisted ? '#ff2d55' : '#000000',
+                    }}
+                    whileTap={{ scale: 0.8 }}
+                    transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
+                    className="inline-flex items-center justify-center"
+                  >
+                    <Heart
+                      size={compact ? 14 : 17}
+                      strokeWidth={2.25}
+                      fill={wishlisted ? 'currentColor' : 'none'}
+                    />
+                  </motion.span>
+                </button>
+              </div>
             )}
           </div>
-        </div>
-        {/* Immersive Hover Actions (Desktop Only) */}
-        {!selectionMode && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 ease-out flex flex-col justify-end p-6 pointer-events-none lg:group-hover:pointer-events-auto">
-            <div className="space-y-2 transform translate-y-2 lg:group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]">
-              {itemType === 'event' ? (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigate(getProductRoute('event', productId));
-                    }}
-                    className="w-full py-3 bg-[#e0d6b8] hover:bg-white text-[#1a1c1a] rounded-full font-label text-[10px] uppercase tracking-[0.2em] font-bold shadow-xl transition-all duration-200 ease-out hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
-                  >
-                    <Calendar className="text-[14px]" strokeWidth={1.5} />
-                    Book Setup
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      handleQuickViewAction(e, {
-                        id,
-                        _id,
-                        title,
-                        teluguTitle,
-                        nameTE,
-                        teluguName,
-                        price,
-                        rentalPrice,
-                        oldPrice,
-                        rating,
-                        imageSrc,
-                        hoverImage,
-                        category: resolveCategoryName(primaryCategory, category),
-                        primaryCategory,
-                        secondaryCategories,
-                        badges,
-                        itemType,
-                        setupTimeHours,
-                        inclusions,
-                      });
-                    }}
-                    className="w-full bg-white/10 backdrop-blur-md text-white py-3 rounded-full font-label text-[10px] uppercase tracking-[0.2em] font-bold border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
-                  >
-                    Quick View
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={isOutOfStock || added ? undefined : handleAddToCart}
-                    disabled={isOutOfStock || added}
-                    className={`w-full py-3 rounded-full font-label text-[10px] uppercase tracking-[0.2em] font-bold shadow-xl transition-all duration-500 cursor-pointer flex items-center justify-center ${
-                      isOutOfStock
-                        ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-                        : added
-                          ? 'bg-[#e0d6b8] text-[#1a1c1a]'
-                          : 'bg-white text-black hover:bg-stone-800 hover:text-white'
-                    }`}
-                  >
-                    <AnimatePresence mode="wait">
-                      {added ? (
-                        <motion.span
-                          key="added"
-                          initial={{ opacity: 0, scale: 0.85 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.85 }}
-                          transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                          className="flex items-center justify-center gap-1.5"
-                        >
+          {/* Immersive Hover Actions (Desktop Only) */}
+          {!selectionMode && (
+            <div className="absolute inset-0 bg-black/25 opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 ease-out flex flex-col justify-end p-6 pointer-events-none lg:group-hover:pointer-events-auto">
+              <div className="space-y-2 transform translate-y-2 lg:group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                {itemType === 'event' ? (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(getProductRoute('event', productId));
+                      }}
+                      className="w-full py-3 bg-[#fef3cc] hover:bg-white text-[#000000] rounded-full font-label text-[10px] uppercase tracking-[0.2em] font-bold shadow-xl transition-all duration-200 ease-out hover:scale-[1.02] cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
+                    >
+                      <Calendar className="text-[14px]" strokeWidth={1.5} />
+                      Book Setup
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        handleQuickViewAction(e, {
+                          id,
+                          _id,
+                          title,
+                          teluguTitle,
+                          nameTE,
+                          teluguName,
+                          price,
+                          rentalPrice,
+                          oldPrice,
+                          rating,
+                          imageSrc,
+                          hoverImage,
+                          category: resolveCategoryName(primaryCategory, category),
+                          primaryCategory,
+                          secondaryCategories,
+                          badges,
+                          itemType,
+                          setupTimeHours,
+                          inclusions,
+                        });
+                      }}
+                      className="w-full bg-white/10 backdrop-blur-md text-white py-3 rounded-full font-label text-[10px] uppercase tracking-[0.2em] font-bold border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
+                    >
+                      Quick View
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={isOutOfStock || added ? undefined : handleAddToCart}
+                      disabled={isOutOfStock || added}
+                      className={`w-full py-3 rounded-[8px] font-label text-[11px] uppercase tracking-[0.12em] font-extrabold transition-all duration-300 cursor-pointer flex items-center justify-center ${
+                        isOutOfStock
+                          ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                          : added
+                            ? 'bg-black text-white shadow-md'
+                            : 'bg-[#f7bb0e] text-black hover:bg-[#c89611] shadow-md hover:shadow-lg'
+                      }`}
+                    >
+                      <AnimatePresence mode="wait">
+                        {added ? (
                           <motion.span
-                            initial={{ scale: 0.5, rotate: -30 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{
-                              delay: 0.05,
-                              type: 'spring',
-                              stiffness: 400,
-                              damping: 15,
-                            }}
-                            className="material-symbols-outlined text-[14px]"
+                            key="added"
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.85 }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                            className="flex items-center justify-center gap-1.5"
                           >
-                            check
+                            <motion.span
+                              initial={{ scale: 0.5, rotate: -30 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              transition={{
+                                delay: 0.05,
+                                type: 'spring',
+                                stiffness: 400,
+                                damping: 15,
+                              }}
+                              className="inline-flex"
+                            >
+                              <Check size={14} strokeWidth={3} />
+                            </motion.span>
+                            <span>Added</span>
                           </motion.span>
-                          <span>Added</span>
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="add"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {isOutOfStock ? 'Out of Stock' : 'Add to Bag'}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </button>
-                  <button
-                    onClick={(e) =>
-                      handleQuickViewAction(e, {
-                        id,
-                        _id,
-                        title,
-                        teluguTitle,
-                        nameTE,
-                        teluguName,
-                        price,
-                        oldPrice,
-                        rating,
-                        imageSrc,
-                        hoverImage,
-                        category: resolveCategoryName(primaryCategory, category),
-                        primaryCategory,
-                        secondaryCategories,
-                        badges,
-                      })
-                    }
-                    className="w-full bg-white/10 backdrop-blur-md text-white py-3 rounded-full font-label text-[10px] uppercase tracking-[0.2em] font-bold border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
-                  >
-                    Quick View
-                  </button>
-                </>
-              )}
+                        ) : (
+                          <motion.span
+                            key="add"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {isOutOfStock ? 'Out of Stock' : 'Add to Bag'}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                    <button
+                      onClick={(e) =>
+                        handleQuickViewAction(e, {
+                          id,
+                          _id,
+                          title,
+                          teluguTitle,
+                          nameTE,
+                          teluguName,
+                          price,
+                          oldPrice,
+                          rating,
+                          imageSrc,
+                          hoverImage,
+                          category: resolveCategoryName(primaryCategory, category),
+                          primaryCategory,
+                          secondaryCategories,
+                          badges,
+                        })
+                      }
+                      className="w-full bg-white/95 text-black py-3 rounded-[8px] font-label text-[11px] uppercase tracking-[0.12em] font-bold border border-black/10 hover:border-black/20 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    >
+                      Quick View
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Mobile & Tablet Quick Add Button */}
+          {/* Selection Overlay */}
+          {selectionMode && isSelected && (
+            <div className="absolute inset-0 bg-black/5 ring-4 ring-inset ring-black rounded-2xl z-30 pointer-events-none flex items-center justify-center transition-all">
+              <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-lg animate-scale-in">
+                <Check className="text-[24px]" strokeWidth={1.5} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Add Button — straddling the dividing line ("+ Add") */}
         {!selectionMode && (
-          <div className="xl:hidden absolute bottom-3 right-3 z-20">
+          <div className="absolute -bottom-3.5 right-2.5 sm:right-3 z-30 pointer-events-auto">
             {itemType === 'event' ? (
               <button
                 onClick={(e) => {
@@ -657,50 +550,62 @@ export const ProductCard = React.memo(function ProductCard({
                   e.stopPropagation();
                   navigate(getProductRoute('event', productId));
                 }}
-                className={`${compact ? 'w-7 h-7 lg:w-7 lg:h-7' : 'w-8 h-8 lg:w-8 lg:h-8'} min-h-0 shrink-0 aspect-square p-0 rounded-full flex items-center justify-center shadow-lg bg-black text-white hover:bg-stone-800 hover:scale-110 active:scale-95 transition-all duration-300 ease-out cursor-pointer transform-gpu`}
+                className={`${compact ? 'h-6 px-2.5 text-[10.5px]' : 'h-7 sm:h-8 px-3 sm:px-3.5 text-[11.5px] sm:text-[12.5px]'} ${isRectangular ? 'rounded-md' : 'rounded-[14px]'} flex items-center justify-center gap-1.5 bg-white text-neutral-950 hover:bg-neutral-50 active:translate-y-0.5 active:shadow-none transition-all font-bold tracking-tight select-none cursor-pointer border-[1.5px] border-neutral-900 shadow-[0_1.5px_0_0_#000,0_2px_4px_rgba(0,0,0,0.08)]`}
                 aria-label="Book setup"
               >
-                <span
-                  className={`material-symbols-outlined ${compact ? 'text-[11px]' : 'text-[13px] lg:text-[14px]'}`}
-                >
-                  event
-                </span>
+                <Calendar size={compact ? 12 : 14} strokeWidth={2.2} />
+                <span>Book</span>
               </button>
             ) : (
               <button
                 onClick={isOutOfStock || added ? undefined : handleAddToCart}
                 disabled={isOutOfStock || added}
-                className={`${compact ? 'w-7 h-7 lg:w-7 lg:h-7' : 'w-8 h-8 lg:w-8 lg:h-8'} min-h-0 shrink-0 aspect-square p-0 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ease-out hover:scale-110 active:scale-95 transform-gpu ${
+                className={`${compact ? 'h-6 px-2.5 text-[10.5px]' : 'h-7 sm:h-8 px-3 sm:px-3.5 text-[11.5px] sm:text-[12.5px]'} ${isRectangular ? 'rounded-md' : 'rounded-[14px]'} flex items-center justify-center gap-1.5 active:translate-y-0.5 active:shadow-none transition-all font-extrabold tracking-tight select-none ${
                   isOutOfStock
-                    ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                    ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed border-[1.5px] border-neutral-300'
                     : added
-                      ? 'bg-[#e0d6b8] text-[#1a1c1a] cursor-pointer'
-                      : 'bg-black text-white hover:bg-stone-800 hover:text-white cursor-pointer'
+                      ? 'bg-black text-[#f7bb0e] border-[1.5px] border-black cursor-pointer'
+                      : 'bg-white text-neutral-950 hover:bg-[#fffdf5] border-[1.5px] border-[#f7bb0e] shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)] cursor-pointer'
                 }`}
-                aria-label="Add to bag"
+                aria-label={added ? 'Added to bag' : 'Add to bag'}
               >
                 <AnimatePresence mode="wait">
                   {added ? (
                     <motion.span
                       key="check"
-                      initial={{ opacity: 0, scale: 0.5, rotate: -30 }}
-                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                      exit={{ opacity: 0, scale: 0.5, rotate: 30 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                      className={`material-symbols-outlined ${compact ? 'text-[11px]' : 'text-[13px] lg:text-[14px]'}`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                      className="inline-flex items-center gap-1"
                     >
-                      check
+                      <Check size={compact ? 12 : 14} strokeWidth={3} />
+                      <span>Added</span>
                     </motion.span>
                   ) : (
                     <motion.span
                       key="add"
-                      initial={{ opacity: 0, scale: 0.5 }}
+                      initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      transition={{ duration: 0.2 }}
-                      className={`material-symbols-outlined ${compact ? 'text-[11px]' : 'text-[13px] lg:text-[14px]'}`}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                      className="inline-flex items-center gap-1"
                     >
-                      {isOutOfStock ? 'remove_shopping_cart' : 'add'}
+                      {isOutOfStock ? (
+                        <>
+                          <Ban size={compact ? 11 : 12} strokeWidth={2.5} />
+                          <span>Sold</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus
+                            size={compact ? 13 : 15}
+                            strokeWidth={3}
+                            className="text-[#d99b00]"
+                          />
+                          <span>Add</span>
+                        </>
+                      )}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -708,25 +613,16 @@ export const ProductCard = React.memo(function ProductCard({
             )}
           </div>
         )}
-
-        {/* Selection Overlay */}
-        {selectionMode && isSelected && (
-          <div className="absolute inset-0 bg-black/5 ring-4 ring-inset ring-black rounded-2xl z-30 pointer-events-none flex items-center justify-center transition-all">
-            <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-lg animate-scale-in">
-              <Check className="text-[24px]" strokeWidth={1.5} />
-            </div>
-          </div>
-        )}
       </div>
 
       <div
-        className={`${compact ? 'pt-1.5 pb-1 px-1.5' : 'pt-2.5 pb-2 px-3.5 lg:px-4'} flex flex-col flex-1 transition-opacity duration-500 ${hideDetails ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`${compact ? 'pt-2 pb-1 px-1.5' : 'pt-3 pb-2 px-3.5 lg:px-4'} flex flex-col flex-1 transition-opacity duration-500 ${hideDetails ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <div
-          className={`flex items-center justify-between gap-2 h-4 lg:h-5 ${compact ? 'mb-0.5' : 'mb-1 sm:mb-1.5'}`}
+          className={`flex items-center gap-2 h-4 lg:h-5 ${compact ? 'mb-0.5' : 'mb-1 sm:mb-1.5'} max-w-[62%]`}
         >
           <span
-            className={`text-black/50 font-label uppercase ${compact ? 'text-[8px] tracking-[0.1em]' : 'text-[9px] lg:text-[10px] tracking-[0.2em]'} font-bold truncate min-w-0 transition-colors group-hover:text-black/80 leading-none`}
+            className={`text-[#525252] ${compact ? 'text-[10px]' : 'text-[11px] lg:text-[12px]'} font-semibold truncate leading-none`}
           >
             {resolveCategoryName(primaryCategory, category)}
           </span>
@@ -747,22 +643,23 @@ export const ProductCard = React.memo(function ProductCard({
           className={`group/link block ${compact ? 'mb-0' : 'mb-0.5'}`}
         >
           <h3
-            className={`text-black group-hover/link:text-primary transition-colors leading-snug font-medium line-clamp-1 font-serif-heading ${
-              compact ? 'text-[12px] lg:text-[13px]' : 'text-[13px] lg:text-[15px]'
+            className={`text-[#283618] leading-snug font-bold truncate font-serif-heading ${
+              compact ? 'text-[12px] lg:text-[13px]' : 'text-[14px] lg:text-[15.5px]'
             }`}
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            style={{ fontFamily: 'var(--font-display)' }}
+            title={title}
           >
             {title}
           </h3>
         </Link>
 
-        <div className={`${compact ? 'mt-0' : 'mt-0.5'} flex flex-col justify-end`}>
-          <div className="flex items-baseline gap-1.5 flex-wrap">
+        <div className={`${compact ? 'mt-1' : 'mt-1.5'} flex flex-col justify-end`}>
+          <div className="flex items-baseline gap-2 flex-wrap">
             <span
-              className={`font-serif-heading lining-nums font-bold text-black leading-none ${compact ? 'text-[13px] lg:text-[14px]' : 'text-[14px] lg:text-[17px]'}`}
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              className={`font-serif-heading lining-nums font-extrabold text-neutral-950 leading-none inline-flex items-baseline ${compact ? 'text-[13px] lg:text-[14px]' : 'text-[15px] sm:text-[16px] lg:text-[17px]'}`}
+              style={{ fontFamily: 'var(--font-display)' }}
             >
-              {'Rs. '}
+              {'₹'}
               {formatPrice(
                 itemType === 'event'
                   ? rentalPrice || price
@@ -772,33 +669,39 @@ export const ProductCard = React.memo(function ProductCard({
                       ? price
                       : rentalPricing?.rentalPrice || price,
               )}
-              {isRental && rentalPricing?.rentalPrice > 0 && (
-                <span
-                  className={`font-label text-black/40 ml-1 normal-case font-bold ${compact ? 'text-[8px] lg:text-[9px]' : 'text-[9px] lg:text-[10px]'}`}
-                >
-                  {`for up to ${rentalPricing.rentalDurationDays || 1} ${(rentalPricing.rentalDurationDays || 1) === 1 ? 'day' : 'days'}`}
-                </span>
-              )}
             </span>
             {numericOldPrice > numericPrice && (
               <span
-                className={`font-serif-heading lining-nums text-black/40 line-through ${compact ? 'text-[9px] lg:text-[10px]' : 'text-[10px] lg:text-[11px]'}`}
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                className={`font-serif-heading lining-nums text-neutral-400 line-through font-medium leading-none ${compact ? 'text-[10.5px] lg:text-[11px]' : 'text-[12px] lg:text-[13px]'}`}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
-                Rs. {formatPrice(numericOldPrice)}
+                ₹{formatPrice(numericOldPrice)}
+              </span>
+            )}
+            {discount && (
+              <span className="text-emerald-700 dark:text-emerald-500 font-bold text-[11px] lg:text-[12px] leading-none">
+                {discount}% off
               </span>
             )}
           </div>
+          {isRental && rentalPricing?.rentalPrice > 0 && (
+            <span
+              className={`text-neutral-500 font-medium mt-1 leading-tight ${compact ? 'text-[9px]' : 'text-[10px] lg:text-[11px]'}`}
+            >
+              for up to {rentalPricing.rentalDurationDays || 1}{' '}
+              {(rentalPricing.rentalDurationDays || 1) === 1 ? 'day' : 'days'}
+            </span>
+          )}
           {itemType !== 'event' && isRental && (
             <span
-              className={`text-black/50 font-bold uppercase tracking-widest mt-0.5 ${compact ? 'text-[8px]' : 'text-[9px] lg:text-[10px]'}`}
+              className={`text-neutral-500 font-medium tracking-wide mt-0.5 ${compact ? 'text-[8.5px]' : 'text-[9.5px] lg:text-[10.5px]'}`}
             >
-              Rental Price (Deposit: Rs. {formatPrice(resolvedDeposit)})
+              Rental Price (Deposit: ₹{formatPrice(resolvedDeposit)})
             </span>
           )}
           {itemType !== 'event' && !isRental && canRent && !canPurchase && (
             <span
-              className={`text-black/50 font-bold uppercase tracking-widest mt-0.5 ${compact ? 'text-[8px]' : 'text-[9px] lg:text-[10px]'}`}
+              className={`text-neutral-500 font-semibold tracking-wide uppercase mt-0.5 ${compact ? 'text-[8.5px]' : 'text-[9.5px]'}`}
             >
               Rental Price
             </span>

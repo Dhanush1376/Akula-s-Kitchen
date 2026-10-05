@@ -1,11 +1,17 @@
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import { m as motion } from 'framer-motion';
+import {
+  AlertTriangle,
+  CreditCard,
+  CheckCircle2,
+  ShieldCheck,
+  ArrowRight,
+  ArrowLeft,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 import React from 'react';
 import toast from 'react-hot-toast';
 
 import { useCheckout } from './CheckoutProvider';
 import {
-  RentalDateSummaryCard,
   TargetDeliveryDatePicker,
   CodOtpVerificationSection,
 } from '../features/checkout/components';
@@ -36,19 +42,11 @@ export default function CheckoutPaymentStep() {
     backendTotals,
     isTotalsLoading,
     totalsError,
-    appliedCoupon,
-    couponValid,
     fetchBackendTotals,
     settings,
     user,
-    hasRentalItems,
-    rentalStartDate,
-    rentalEndDate,
     needByDate,
     setNeedByDate,
-    orderType,
-    rentalCostBreakdown,
-    useWallet,
   } = useCheckout();
 
   const codMinOrder = settings?.payments?.codMinOrder ?? 500;
@@ -75,16 +73,7 @@ export default function CheckoutPaymentStep() {
     }
   }, [paymentOption, setCodConfirmed]);
 
-  const grossRentalAmount = rentalCostBreakdown?.totalAmount || 0;
-  const availableWalletBalance = (backendTotals?.walletBalance ?? user?.walletBalance) || 0;
-  const rentalWalletDeduction =
-    useWallet && availableWalletBalance > 0
-      ? Math.min(grossRentalAmount, availableWalletBalance)
-      : 0;
-  const netRentalPayable = Math.max(0, grossRentalAmount - rentalWalletDeduction);
-
-  const currentPayableTotal =
-    orderType === 'rental' ? netRentalPayable : (backendTotals?.total ?? 0);
+  const currentPayableTotal = backendTotals?.total ?? 0;
 
   const getSubmitButtonLabel = () => {
     if (isProcessing) return 'Processing...';
@@ -133,6 +122,11 @@ export default function CheckoutPaymentStep() {
     if (!activeSelectedAddress) {
       toast.error('Please select a delivery address');
       setActiveStep(1);
+      return;
+    }
+
+    if (!needByDate) {
+      toast.error('Please select a target delivery date');
       return;
     }
 
@@ -195,115 +189,80 @@ export default function CheckoutPaymentStep() {
   };
 
   return (
-    <div className="bg-surface-container-low -mt-2">
-      {/* Rental Agreement Summary Card */}
-      <RentalDateSummaryCard
-        hasRentalItems={hasRentalItems}
-        rentalStartDate={rentalStartDate}
-        rentalEndDate={rentalEndDate}
-        depositTotal={backendTotals?.depositTotal}
-      />
-
+    <div className="bg-transparent pb-1 lg:pb-6">
       {/* Target Delivery Date (Streamlined & Clean) */}
-      <TargetDeliveryDatePicker
-        needByDate={needByDate}
-        setNeedByDate={setNeedByDate}
-        hasRentalItems={hasRentalItems}
-        rentalStartDate={rentalStartDate}
-      />
-
-      {/* Promo Savings Banner (only displayed if a valid coupon is active) */}
-      {appliedCoupon && couponValid && backendTotals?.discount > 0 && (
-        <div className="p-3.5 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-between text-xs mb-4 shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-primary text-lg">local_offer</span>
-            <div>
-              <span className="font-bold text-on-surface block">
-                Promo Code <span className="font-mono text-primary uppercase">{appliedCoupon}</span>{' '}
-                applied
-              </span>
-              <p className="text-[10px] text-secondary">
-                You are saving ₹{backendTotals.discount.toLocaleString('en-IN')} on this order!
-              </p>
-            </div>
-          </div>
-          <span className="text-primary font-extrabold text-sm">
-            −₹{backendTotals.discount.toLocaleString('en-IN')}
-          </span>
-        </div>
-      )}
+      <TargetDeliveryDatePicker needByDate={needByDate} setNeedByDate={setNeedByDate} />
 
       {/* Payment Options Section */}
       {backendTotals?.total === 0 ? (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="p-5 bg-green-50 text-green-900 border border-green-200/60 rounded-lg mb-6 shadow-sm mt-2"
+          className="p-5 bg-emerald-50 text-emerald-950 border border-emerald-200/60 rounded-lg mb-6 shadow-xs mt-2"
         >
-          <div className="flex items-center gap-2.5 mb-2">
-            <span className="material-symbols-outlined text-green-600 text-[20px]">
-              check_circle
-            </span>
-            <h3 className="text-green-800 font-bold text-[13px] tracking-widest uppercase">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <h3 className="text-emerald-900 font-extrabold text-[13px] tracking-wider uppercase">
               Payment Complete
             </h3>
           </div>
-          <p className="text-green-700/80 text-[11px] font-medium leading-relaxed">
-            {backendTotals?.walletDeduction > 0
-              ? 'Used Siri Pay Wallet. Your wallet balance completely covers this order. No additional payment is required.'
-              : 'Your order total is fully covered. No additional payment is required.'}
+          <p className="text-emerald-700 text-xs font-medium leading-relaxed">
+            Your order total is fully covered. No additional payment is required.
           </p>
         </motion.div>
       ) : (
         <>
           {/* Payment Header */}
-          <div className="py-4 sm:py-6 mb-2">
-            <h2
-              className="font-sans text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
-              <span className="material-symbols-outlined text-[18px] text-primary">payments</span>
-              Payment Options
-            </h2>
+          <div className="pb-3 border-b border-neutral-200 mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-neutral-800" strokeWidth={2} />
+              <span
+                className="text-[13.5px] sm:text-[14px] font-semibold text-neutral-800 font-sans tracking-normal"
+                style={{ fontStretch: 'normal' }}
+              >
+                Choose Payment Method
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>100% Secure</span>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4 mb-4">
+          <div className="flex flex-col gap-3 mb-4">
             {/* Option: Razorpay (Secure Online Payment) */}
             {isRazorpayEnabled && (
               <div
                 onClick={() => setPaymentOption('razorpay')}
-                className={`relative p-5 rounded-lg border transition-all duration-300 cursor-pointer overflow-hidden ${
+                className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden ${
                   paymentOption === 'razorpay'
-                    ? 'border-primary bg-primary/5 shadow-md'
-                    : 'border-outline-variant/40 bg-surface-bright hover:border-primary/40 hover:shadow-sm'
+                    ? 'border-[#f7bb0e] ring-2 ring-[#f7bb0e]/20 bg-[#fffdfa] shadow-sm'
+                    : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md'
                 }`}
               >
-                <div className="flex items-start gap-3.5 select-none">
-                  {/* Custom Premium Radio Button */}
-                  <div className="pt-1">
+                <div className="flex items-center gap-3 select-none">
+                  {/* Custom Radio Button */}
+                  <div className="shrink-0">
                     <div
-                      className={`w-4.5 h-4.5 rounded-full border-[1.5px] flex items-center justify-center transition-all ${paymentOption === 'razorpay' ? 'border-primary bg-white' : 'border-outline-variant bg-transparent'}`}
+                      className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-all ${
+                        paymentOption === 'razorpay'
+                          ? 'border-neutral-950 bg-white'
+                          : 'border-neutral-300 bg-white'
+                      }`}
                     >
                       {paymentOption === 'razorpay' && (
-                        <motion.div
-                          layoutId="payment-radio-dot"
-                          className="w-2.5 h-2.5 rounded-full bg-primary"
-                          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#f7bb0e]" />
                       )}
                     </div>
                   </div>
 
-                  <div className="flex-1">
-                    <span className="text-[12px] font-semibold text-on-surface flex items-center gap-2">
-                      Secure Online Payment (Razorpay)
-                      <span className="bg-primary/10 text-primary border border-primary/30 text-[8px] px-1.5 py-0.5 rounded-sm font-extrabold uppercase tracking-wider">
-                        Recommended
-                      </span>
+                  <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                    <span className="text-[13px] font-semibold text-neutral-900 truncate">
+                      Online Payment (UPI / Cards / Netbanking)
                     </span>
-                    <p className="text-[10px] text-secondary mt-1 leading-relaxed">
-                      Pay securely using UPI, Credit/Debit Card, or Netbanking.
-                    </p>
+                    <span className="bg-[#fef9e7] text-neutral-900 border border-[#fae182] text-[9.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider shrink-0">
+                      Recommended
+                    </span>
                   </div>
                 </div>
               </div>
@@ -317,73 +276,57 @@ export default function CheckoutPaymentStep() {
                     setPaymentOption('cod');
                   }
                 }}
-                className={`relative p-5 rounded-lg border transition-all duration-300 overflow-hidden ${
+                className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 overflow-hidden ${
                   backendTotals.total > codMaxOrder || backendTotals.total < codMinOrder
-                    ? 'opacity-45 cursor-not-allowed border-outline-variant/20 bg-gray-50/50'
+                    ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-sm'
                     : 'cursor-pointer ' +
                       (paymentOption === 'cod'
-                        ? 'border-primary bg-primary/5 shadow-md'
-                        : 'border-outline-variant/40 bg-surface-bright hover:border-primary/40 hover:shadow-sm')
+                        ? 'border-[#f7bb0e] ring-2 ring-[#f7bb0e]/20 bg-[#fffdfa] shadow-sm'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md')
                 }`}
               >
-                <div className="flex items-start gap-3.5 select-none">
-                  {/* Custom Premium Radio Button */}
-                  <div className="pt-1">
+                <div className="flex items-center gap-3 select-none">
+                  {/* Custom Radio Button */}
+                  <div className="shrink-0">
                     <div
-                      className={`w-4.5 h-4.5 rounded-full border-[1.5px] flex items-center justify-center transition-all ${paymentOption === 'cod' ? 'border-primary bg-white' : 'border-outline-variant bg-transparent'}`}
+                      className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-all ${
+                        paymentOption === 'cod'
+                          ? 'border-neutral-950 bg-white'
+                          : 'border-neutral-300 bg-white'
+                      }`}
                     >
                       {paymentOption === 'cod' && (
-                        <motion.div
-                          layoutId="payment-radio-dot"
-                          className="w-2.5 h-2.5 rounded-full bg-primary"
-                          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#f7bb0e]" />
                       )}
                     </div>
                   </div>
 
-                  <div className="flex-1">
-                    <span className="text-[12px] font-semibold text-on-surface">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[13px] font-semibold text-neutral-900">
                       Cash on Delivery (COD)
                     </span>
-                    {backendTotals.total > codMaxOrder ? (
-                      <p className="text-[10px] text-red-600 font-bold mt-0.5 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">info</span>
+                    {backendTotals.total > codMaxOrder && (
+                      <p className="text-[11px] text-red-600 font-bold mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
                         COD unavailable for orders above ₹{codMaxOrder.toLocaleString('en-IN')}
                       </p>
-                    ) : backendTotals.total < codMinOrder ? (
-                      <p className="text-[10px] text-red-600 font-bold mt-0.5 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[12px]">info</span>
+                    )}
+                    {backendTotals.total < codMinOrder && (
+                      <p className="text-[11px] text-red-600 font-bold mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
                         COD requires minimum order of ₹{codMinOrder.toLocaleString('en-IN')}
                       </p>
-                    ) : (
-                      <p className="text-[10px] text-secondary mt-1 leading-relaxed">
-                        Pay with cash or UPI when your item arrives at your doorstep.
-                      </p>
                     )}
-                    {paymentOption === 'cod' &&
-                      backendTotals.total <= codMaxOrder &&
-                      backendTotals.total >= codMinOrder && (
-                        <div className="flex items-center gap-1.5 text-[10.5px] font-semibold text-emerald-800 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md mt-2 w-fit">
-                          <span className="material-symbols-outlined text-[13px] text-emerald-600 font-extrabold">
-                            verified
-                          </span>
-                          <span>
-                            Serviceable at {activeSelectedAddress?.pincode || 'your pincode'} by
-                            Standard Courier
-                          </span>
-                        </div>
-                      )}
                   </div>
                 </div>
               </div>
             )}
 
             {!isRazorpayEnabled && !isCodEnabled && (
-              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-600 text-lg">warning</span>
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  No payment methods are currently available. Please contact store support.
+                  No payment methods are currently available. Please contact kitchen support.
                 </span>
               </div>
             )}
@@ -409,7 +352,13 @@ export default function CheckoutPaymentStep() {
               onSelectCodChannel={setSelectedCodChannel}
               codOtpInput={codOtpInput}
               setCodOtpInput={setCodOtpInput}
-              handleSendCodOtp={handleSendCodOtp}
+              handleSendCodOtp={() => {
+                if (!needByDate) {
+                  toast.error('Please select a target delivery date first');
+                  return;
+                }
+                handleSendCodOtp();
+              }}
               handleVerifyCodOtp={handleVerifyCodOtp}
             />
           )}
@@ -417,13 +366,13 @@ export default function CheckoutPaymentStep() {
       )}
 
       {/* Sticky Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-surface-bright border-t border-outline-variant/20 p-3 shadow-lg z-40 flex flex-col items-center">
-        <div className="max-w-[768px] w-full mx-auto flex flex-col gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-neutral-200 p-3.5 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] z-40 flex flex-col items-center">
+        <div className="max-w-[768px] w-full mx-auto flex flex-col gap-2.5">
           {paymentError && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 text-red-700 p-3 rounded-lg flex items-start gap-3 border border-red-200 shadow-sm"
+              className="bg-red-50 text-red-700 p-3 rounded-lg flex items-start gap-2.5 border border-red-200 shadow-2xs"
             >
               <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" aria-hidden="true" />
               <span className="font-bold text-[11px] leading-snug flex-1">{paymentError}</span>
@@ -434,7 +383,7 @@ export default function CheckoutPaymentStep() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-3 bg-red-50 text-red-700 rounded-lg text-[11px] font-bold border border-red-200 flex flex-col gap-2 shadow-sm"
+              className="p-3 bg-red-50 text-red-700 rounded-lg text-[11px] font-bold border border-red-200 flex flex-col gap-2 shadow-2xs"
             >
               <div className="flex items-start gap-2">
                 <AlertTriangle
@@ -445,8 +394,8 @@ export default function CheckoutPaymentStep() {
               </div>
               <button
                 type="button"
-                onClick={() => fetchBackendTotals(appliedCoupon)}
-                className="btn-primary py-1 px-3 rounded-full text-[9px] uppercase tracking-wider w-fit self-end font-bold shadow-xs cursor-pointer !text-white"
+                onClick={() => fetchBackendTotals()}
+                className="bg-neutral-900 text-white py-1 px-3 rounded-md text-[10px] uppercase tracking-wider w-fit self-end font-bold shadow-2xs cursor-pointer"
               >
                 Retry Validation
               </button>
@@ -457,17 +406,25 @@ export default function CheckoutPaymentStep() {
             <button
               onClick={() => setActiveStep(1)}
               disabled={isProcessing}
-              className="flex-1 bg-transparent text-on-surface font-bold uppercase tracking-widest text-[9px] py-2.5 rounded-full border border-outline-variant/40 hover:bg-surface-container-low transition-colors disabled:opacity-50"
+              className="flex-1 bg-white text-neutral-800 font-extrabold uppercase tracking-wider text-xs py-3.5 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
             >
-              Back
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
             </button>
             <button
               onClick={handleBottomSubmit}
               disabled={isButtonDisabled()}
-              className="flex-1 btn-primary py-2.5 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm transition-all text-center disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2 !text-white"
+              className={`flex-2 py-3.5 sm:py-4 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-2 ${
+                isButtonDisabled()
+                  ? 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed'
+                  : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] active:scale-[0.98] cursor-pointer'
+              }`}
             >
-              {isProcessing && <div className="skeleton-box inline-block w-3 h-3 rounded-full" />}
+              {isProcessing && (
+                <div className="skeleton-box inline-block w-3.5 h-3.5 rounded-full" />
+              )}
               <span>{getSubmitButtonLabel()}</span>
+              {!isProcessing && <ArrowRight className="w-4 h-4" />}
             </button>
           </div>
         </div>

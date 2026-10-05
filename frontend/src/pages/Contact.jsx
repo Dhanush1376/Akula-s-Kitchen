@@ -1,6 +1,5 @@
 import { ExternalLink, CheckCircle2, Send } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
-import { MandalaElement } from '../components/ui/MandalaElement';
 import { SEO } from '../components/seo/SEO';
 import { ContactSkeleton } from '../components/ui/Skeleton';
 import { useState, useEffect } from 'react';
@@ -179,14 +178,7 @@ export function Contact() {
     <div className="bg-[var(--color-surface-ivory)] min-h-screen pt-24 lg:pt-32 pb-20 relative overflow-hidden selection:bg-primary/20">
       <SEO
         title="Contact Us"
-        description={`Get in touch with ${storeName || 'Siri Arts & Crafts'} for inquiries about our handcrafted products, event decor services, or custom design requests. We're here to help bring your vision to life.`}
-      />
-
-      {/* Atmospheric Background Decor */}
-      <MandalaElement
-        className="absolute top-20 -right-40 opacity-[0.04] pointer-events-none"
-        size={800}
-        duration={150}
+        description={`Get in touch with ${storeName || "Akula's Kitchen"} for inquiries about our culinary offerings, catering services, or custom dining requests. We're here to help bring your vision to life.`}
       />
 
       <main className="max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop relative z-10">
@@ -246,8 +238,11 @@ export function Contact() {
 
             <motion.a
               href={
+                settings?.contact?.googleMapsUrl ||
                 contact?.mapEmbed ||
-                'https://www.google.com/maps/place/Siri+Arts+%26+Crafts/@15.5024512,80.0450481,17z/data=!3m1!4b1!4m6!3m5!1s0x3a4b01495510d675:0xe98014cae349dbea!8m2!3d15.502446!4d80.047623!16s%2Fg%2F11scb6jg5_'
+                (addressDisplay
+                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressDisplay)}`
+                  : 'https://maps.google.com')
               }
               target="_blank"
               rel="noopener noreferrer"
@@ -259,7 +254,13 @@ export function Contact() {
               {/* Invisible overlay to block map interactions and capture clicks */}
               <div className="absolute inset-0 z-[1000] bg-transparent" />
 
-              <GPSMap address={{ latitude: '15.502446', longitude: '80.047623' }} />
+              <GPSMap
+                address={{
+                  city: settings?.contact?.city,
+                  state: settings?.contact?.state,
+                  pincode: settings?.contact?.postalCode,
+                }}
+              />
 
               {/* Hover indicator */}
               <div className="absolute inset-0 z-[1010] bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">

@@ -25,7 +25,7 @@ export const logStartupDiagnostics = () => {
 
   if (!config.isDev) {
     try {
-      window.__SIRI_DIAGNOSTICS__ = payload;
+      window.__AKULA_DIAGNOSTICS__ = payload;
     } catch {
       // ignore
     }

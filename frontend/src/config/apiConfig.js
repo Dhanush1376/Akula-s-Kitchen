@@ -4,7 +4,7 @@
  */
 
 export const PRODUCTION_API_ORIGIN =
-  import.meta.env.VITE_PRODUCTION_API_ORIGIN || 'https://api.siriartsandcrafts.com';
+  import.meta.env.VITE_PRODUCTION_API_ORIGIN || 'https://api.akulas.kitchen';
 
 const normalizeApiBase = (url) => {
   let trimmed = String(url || '')

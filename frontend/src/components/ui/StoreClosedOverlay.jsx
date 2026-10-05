@@ -4,7 +4,7 @@ import { ArrowRight, User, X, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useNavigate } from 'react-router-dom';
-import { SiriLogo } from './SiriLogo';
+import { BrandLogo } from './BrandLogo';
 import { BRAND, cleanPhoneDigits } from '../../config/brand';
 
 export function StoreClosedOverlay({ isOpen, onClose }) {
@@ -65,13 +65,13 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
         >
           {/* Top Bar with Brand Logo and Exit Button */}
           <div className="w-full max-w-4xl flex items-center justify-between shrink-0">
-            <SiriLogo size="42px" variant="white" />
+            <BrandLogo size="42px" variant="white" />
             <button
               onClick={onClose}
               aria-label="Close notice"
-              className="p-2.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="w-10 h-10 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full text-white/70 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
             >
-              <X className="w-6 h-6" strokeWidth={1.5} />
+              <X className="w-5 h-5" strokeWidth={1.8} />
             </button>
           </div>
 
@@ -83,7 +83,7 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
             transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-xl w-full mx-auto my-auto flex flex-col items-center text-center py-6 sm:py-8"
           >
-            {/* Playfair Display Title in Crisp White */}
+            {/* Display title in crisp white */}
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-white font-normal leading-[1.15] tracking-tight mb-4">
               {storeName} is Temporarily Closed
             </h1>

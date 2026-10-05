@@ -70,16 +70,7 @@ export function DashboardProvider({ children }) {
     const tabParam = searchParams.get('tab');
     if (
       tabParam &&
-      [
-        'profile',
-        'orders',
-        'rentals',
-        'addresses',
-        'wishlist',
-        'preferences',
-        'loyalty',
-        'bookings',
-      ].includes(tabParam)
+      ['profile', 'orders', 'addresses', 'wishlist', 'preferences', 'loyalty'].includes(tabParam)
     ) {
       const timer = setTimeout(() => {
         setActiveTab(tabParam);
@@ -100,7 +91,6 @@ export function DashboardProvider({ children }) {
 
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [selectedEventBookingId, setSelectedEventBookingId] = useState(null);
   const [selectedOrderItemIndex, setSelectedOrderItemIndex] = useState(0);
   const [isPriceDetailsOpen, setIsPriceDetailsOpen] = useState(true);
 
@@ -109,23 +99,18 @@ export function DashboardProvider({ children }) {
     if (!orderIdParam) {
       setSelectedOrderId(null);
     }
-    setSelectedEventBookingId(null);
   }, [activeTab, searchParams]);
 
   const userId = user?._id || user?.id;
 
   const {
     orders,
-    rentals,
-    customOrders,
     setOrders,
     addresses,
     setAddresses,
     recentlyViewed,
     setRecentlyViewed,
     isOrdersLoading,
-    isRentalsLoading,
-    isCustomOrdersLoading,
     isAddressesLoading,
     isLoadingRecentlyViewed,
     refetch: refetchDashboardData,
@@ -154,71 +139,15 @@ export function DashboardProvider({ children }) {
   const [orderViewsUpdated, setOrderViewsUpdated] = useState(0);
   useEffect(() => {
     const handleUpdate = () => setOrderViewsUpdated((prev) => prev + 1);
-    window.addEventListener('siri_order_views_updated', handleUpdate);
-    return () => window.removeEventListener('siri_order_views_updated', handleUpdate);
+    window.addEventListener('akula_order_views_updated', handleUpdate);
+    return () => window.removeEventListener('akula_order_views_updated', handleUpdate);
   }, []);
 
-  // ─── Normalize raw RentalOrder documents into unified order shape ───
-  const normalizedRentals = useMemo(() => {
-    if (!rentals || !Array.isArray(rentals)) return [];
-    return rentals.map((r) => {
-      const rentalItem = {
-        _id: (typeof r.product === 'object' ? r.product?._id : r.product) || r._id,
-        productId: typeof r.product === 'object' ? r.product : r.product,
-        title: r.productTitle || 'Rental Item',
-        imageSrc: r.productImage || (typeof r.product === 'object' ? r.product?.imageSrc : null),
-        price: r.rentalCharge || 0,
-        quantity: r.quantity || 1,
-        variant: `${r.durationDays || 1} Days Rental`,
-        type: 'rental',
-        isRental: true,
-        rentalStartDate: r.rentalStartDate,
-        rentalEndDate: r.rentalEndDate,
-        durationDays: r.durationDays,
-        securityDeposit: r.securityDeposit || 0,
-      };
-
-      return {
-        // Preserve all original rental fields for downstream use (invoice, detail, etc.)
-        ...r,
-        // Normalized identification
-        orderId: r.rentalOrderId || r._id,
-        orderType: 'rental',
-        isRental: true,
-        // Map status to orderStatus for unified status reading
-        orderStatus: r.status || 'confirmed',
-        // Synthesized items array for the order pipeline
-        items: [rentalItem],
-        // Financial fields mapped to standard names
-        subtotal: r.rentalCharge || 0,
-        total: r.totalAmount || r.rentalCharge || 0,
-        shippingFee: r.deliveryCharge || 0,
-        discount: 0,
-      };
-    });
-  }, [rentals]);
-
-  // ─── Dedicated rentalOrderItems for direct rental display ───
-  const rentalOrderItems = useMemo(() => {
-    return normalizedRentals.map((order) => ({
-      order,
-      item: order.items[0],
-      itemIdx: 0,
-    }));
-  }, [normalizedRentals]);
-
   const allOrders = useMemo(() => {
-    return [...(orders || []), ...normalizedRentals, ...(customOrders || [])].sort(
+    return [...(orders || [])].sort(
       (a, b) => new Date(b.createdAt || b.orderDate) - new Date(a.createdAt || a.orderDate),
     );
-  }, [orders, normalizedRentals, customOrders]);
-
-  // ─── Helper to reliably identify a rental order ───
-  const isRentalOrder = (o) =>
-    o.orderType === 'rental' ||
-    o.isRental === true ||
-    Boolean(o.rentalOrderId) ||
-    o.items?.some((i) => i.type === 'rental');
+  }, [orders]);
 
   const filteredOrders = useMemo(() => {
     if (!allOrders) return [];
@@ -228,17 +157,6 @@ export function DashboardProvider({ children }) {
       return allOrders.filter((o) =>
         ['confirmed', 'processing', 'shipped'].includes((o.orderStatus || o.status)?.toLowerCase()),
       );
-    if (orderFilter === 'RENTAL') return allOrders.filter(isRentalOrder);
-    if (orderFilter === 'PURCHASE')
-      return allOrders.filter(
-        (o) => !isRentalOrder(o) && o.customOrderId === undefined && !o.occasion,
-      );
-    if (orderFilter === 'CUSTOM')
-      return allOrders.filter((o) => o.customOrderId !== undefined || o.occasion);
-    if (orderFilter === 'RETURNS')
-      return allOrders.filter(
-        (o) => o.hasActiveReturn || o.returnRequestIds?.length > 0 || o.returnRequests?.length > 0,
-      );
     return allOrders;
   }, [allOrders, orderFilter]);
 
@@ -246,25 +164,9 @@ export function DashboardProvider({ children }) {
   const dashboardCounts = useMemo(() => {
     if (!allOrders) return { activeRentals: 0, upcomingReturns: 0, purchaseOrders: 0 };
     return {
-      activeRentals: allOrders.filter(
-        (o) =>
-          isRentalOrder(o) &&
-          !['completed', 'cancelled', 'returned'].includes(
-            (o.orderStatus || o.status)?.toLowerCase(),
-          ),
-      ).length,
-      upcomingReturns: allOrders.filter(
-        (o) =>
-          isRentalOrder(o) &&
-          [
-            'delivered',
-            'active_rental',
-            'active rental',
-            'return_requested',
-            'return requested',
-          ].includes((o.orderStatus || o.status)?.toLowerCase()),
-      ).length,
-      purchaseOrders: allOrders.filter((o) => !isRentalOrder(o)).length,
+      activeRentals: 0,
+      upcomingReturns: 0,
+      purchaseOrders: allOrders.length,
     };
   }, [allOrders]);
 
@@ -375,16 +277,15 @@ export function DashboardProvider({ children }) {
   const downloadInvoice = useCallback(
     (orderId) => {
       const targetOrder =
-        allOrders?.find((o) => (o._id || o.id || o.rentalOrderId) === orderId) ||
-        orders?.find((o) => (o._id || o.id) === orderId) ||
-        rentals?.find((o) => (o._id || o.id || o.rentalOrderId) === orderId);
+        allOrders?.find((o) => (o._id || o.id) === orderId) ||
+        orders?.find((o) => (o._id || o.id) === orderId);
       if (targetOrder) {
         setSelectedInvoiceOrder(targetOrder);
       } else {
         toast.error('Invoice data currently unavailable. Refreshing feed.');
       }
     },
-    [allOrders, orders, rentals],
+    [allOrders, orders],
   );
 
   const hasUpdatesForFilter = useCallback(
@@ -393,7 +294,7 @@ export function DashboardProvider({ children }) {
       const now = Date.now();
       let views = {};
       try {
-        views = JSON.parse(localStorage.getItem('siri_order_views') || '{}');
+        views = JSON.parse(localStorage.getItem('akula_order_views') || '{}');
       } catch (e) {}
 
       return allOrders.filter(filterFn).some((order) => {
@@ -410,26 +311,7 @@ export function DashboardProvider({ children }) {
   );
 
   const hasRecentOrderUpdates = useMemo(
-    () =>
-      hasUpdatesForFilter((o) => !isRentalOrder(o) && o.customOrderId === undefined && !o.occasion),
-    [hasUpdatesForFilter],
-  );
-
-  const hasRecentRentalUpdates = useMemo(
-    () => hasUpdatesForFilter(isRentalOrder),
-    [hasUpdatesForFilter],
-  );
-
-  const hasRecentCustomUpdates = useMemo(
-    () => hasUpdatesForFilter((o) => o.customOrderId !== undefined || o.occasion),
-    [hasUpdatesForFilter],
-  );
-
-  const hasRecentReturnUpdates = useMemo(
-    () =>
-      hasUpdatesForFilter(
-        (o) => o.hasActiveReturn || o.returnRequestIds?.length > 0 || o.returnRequests?.length > 0,
-      ),
+    () => hasUpdatesForFilter(() => true),
     [hasUpdatesForFilter],
   );
 
@@ -458,21 +340,17 @@ export function DashboardProvider({ children }) {
 
       selectedOrderId,
       setSelectedOrderId,
-      selectedEventBookingId,
-      setSelectedEventBookingId,
       selectedOrderItemIndex,
       setSelectedOrderItemIndex,
       isPriceDetailsOpen,
       setIsPriceDetailsOpen,
       orders,
-      rentals,
       setOrders,
       addresses,
       setAddresses,
       recentlyViewed,
       setRecentlyViewed,
       isOrdersLoading,
-      isRentalsLoading,
       isAddressesLoading,
       isLoadingRecentlyViewed,
       refetchDashboardData,
@@ -494,7 +372,6 @@ export function DashboardProvider({ children }) {
       filteredOrders,
       dashboardCounts,
       orderItems,
-      rentalOrderItems,
       selectedOrder,
       selectedItem,
 
@@ -507,9 +384,6 @@ export function DashboardProvider({ children }) {
       handleSetDefaultAddress,
       downloadInvoice,
       hasRecentOrderUpdates,
-      hasRecentRentalUpdates,
-      hasRecentCustomUpdates,
-      hasRecentReturnUpdates,
     }),
     [
       user,
@@ -529,15 +403,12 @@ export function DashboardProvider({ children }) {
       mobileShowContent,
       isUploadingAvatar,
       selectedOrderId,
-      selectedEventBookingId,
       selectedOrderItemIndex,
       isPriceDetailsOpen,
       orders,
-      rentals,
       addresses,
       recentlyViewed,
       isOrdersLoading,
-      isRentalsLoading,
       isAddressesLoading,
       isLoadingRecentlyViewed,
       refetchDashboardData,
@@ -550,7 +421,6 @@ export function DashboardProvider({ children }) {
       filteredOrders,
       dashboardCounts,
       orderItems,
-      rentalOrderItems,
       selectedOrder,
       selectedItem,
       setOrders,
@@ -563,9 +433,6 @@ export function DashboardProvider({ children }) {
       handleSetDefaultAddress,
       downloadInvoice,
       hasRecentOrderUpdates,
-      hasRecentRentalUpdates,
-      hasRecentCustomUpdates,
-      hasRecentReturnUpdates,
     ],
   );
 

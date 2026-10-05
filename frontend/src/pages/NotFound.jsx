@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { MandalaElement } from '../components/ui/MandalaElement';
 import { SEO } from '../components/seo/SEO';
 export function NotFound() {
   return (
@@ -9,10 +8,6 @@ export function NotFound() {
         description="The heritage masterpiece or custom ceremony styling selection you are looking for has either found a new home or is currently unavailable."
         robots="noindex, follow"
       />
-      {/* Decorative background for 404 */}
-      <div className="absolute inset-0 pointer-events-none -z-10 flex items-center justify-center opacity-[0.03]">
-        <MandalaElement size={800} rotate={true} duration={200} />
-      </div>
 
       <div className="relative z-10 text-center">
         <h2 className="font-display text-[120px] lg:text-[180px] leading-none text-primary/10 select-none">
@@ -50,19 +45,10 @@ export function NotFound() {
         <div className="text-center">
           <h3 className="font-label-sm mb-3">Services</h3>
           <Link
-            to="/custom-orders"
+            to="/collections"
             className="text-on-surface-variant hover:text-primary transition-colors text-sm"
           >
-            Custom Orders
-          </Link>
-        </div>
-        <div className="text-center">
-          <h3 className="font-label-sm mb-3">Events</h3>
-          <Link
-            to="/events"
-            className="text-on-surface-variant hover:text-primary transition-colors text-sm"
-          >
-            Event Styling
+            Browse Collections
           </Link>
         </div>
         <div className="text-center">

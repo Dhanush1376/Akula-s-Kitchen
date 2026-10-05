@@ -31,9 +31,4 @@ export const emptyWebsiteContent = {
   },
   testimonials: { sectionTitle: '', items: [], isVisible: true, status: 'published' },
   contact: { email: '', phone: '', whatsapp: '', address: '' },
-  aboutPage: { heroImage: '', title: '', subtitle: '' },
-  eventsPage: {
-    hero: { title: '', subtitle: '', backgroundImage: '' },
-    promo: { title: '', subtitle: '', image: '' },
-  },
 };

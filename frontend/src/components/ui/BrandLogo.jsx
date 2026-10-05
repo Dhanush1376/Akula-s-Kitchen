@@ -1,7 +1,7 @@
 import { BRAND } from '../../config/brand';
 import { useConfig } from '../../context/ConfigContext';
 
-export function SiriLogo({
+export function BrandLogo({
   className = '',
   size = '36px',
   _showSubtitle = false,
@@ -24,10 +24,12 @@ export function SiriLogo({
 
   return (
     <div
-      className={`inline-flex items-center justify-center ${className}`}
+      className={`inline-flex items-center justify-center shrink-0 ${className}`}
       style={{
         height: height + 'px',
         minHeight: height + 'px',
+        width: height + 'px',
+        minWidth: height + 'px',
       }}
     >
       <img
@@ -38,15 +40,17 @@ export function SiriLogo({
         fetchPriority="high"
         style={{
           height: '100%',
-          width: 'auto',
+          width: '100%',
           aspectRatio: '1 / 1',
           borderRadius: '50%',
           objectFit: 'cover',
           filter: variant === 'white' ? 'brightness(0) invert(1)' : 'none',
           transition: 'filter 0.3s ease',
         }}
-        className="h-full flex items-center"
+        className="h-full w-full object-cover flex items-center"
       />
     </div>
   );
 }
+
+export const AkulaLogo = BrandLogo;

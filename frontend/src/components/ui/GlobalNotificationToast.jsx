@@ -2,12 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { Bell, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {
-  notificationService,
-  bookingService,
-  orderService,
-  showcaseService,
-} from '../../services/domainServices';
+import { notificationService, orderService } from '../../services/domainServices';
 import { useAuth } from '../../context/AuthContext';
 import { useUserSocket } from '../../context/UserSocketProvider';
 
@@ -132,20 +127,14 @@ export function GlobalNotificationToast() {
     socket.on('order_status_updated', handleUpdateEvent);
     socket.on('order_status_update', handleUpdateEvent);
     socket.on('booking_status_updated', handleUpdateEvent);
-    socket.on('return:status_updated', handleUpdateEvent);
-    socket.on('return:created', handleUpdateEvent);
     socket.on('refund:status_updated', handleUpdateEvent);
-    socket.on('customOrder:statusChange', handleUpdateEvent);
 
     return () => {
       socket.off('notification:new', handleNewNotif);
       socket.off('order_status_updated', handleUpdateEvent);
       socket.off('order_status_update', handleUpdateEvent);
       socket.off('booking_status_updated', handleUpdateEvent);
-      socket.off('return:status_updated', handleUpdateEvent);
-      socket.off('return:created', handleUpdateEvent);
       socket.off('refund:status_updated', handleUpdateEvent);
-      socket.off('customOrder:statusChange', handleUpdateEvent);
     };
   }, [socket, triggerToast, fetchLatestNotification]);
 
@@ -197,54 +186,6 @@ export function GlobalNotificationToast() {
       try {
         const metadata = latestNotification.metadata || {};
         if (
-          latestNotification.type === 'booking' ||
-          metadata.bookingId ||
-          latestNotification.title?.toLowerCase().includes('booking')
-        ) {
-          if (metadata.bookingId) {
-            const bookingRes = await bookingService.getById(metadata.bookingId);
-            const booking = bookingRes?.data || bookingRes;
-            const img =
-              booking?.eventPackage?.image ||
-              booking?.eventPackage?.imageSrc ||
-              booking?.inspirationImages?.[0];
-            if (img && isMounted) {
-              setResolvedImage(img);
-              return;
-            }
-            if (booking?.eventPackage && isMounted) {
-              const pkgId = booking.eventPackage._id || booking.eventPackage;
-              if (typeof pkgId === 'string') {
-                const scRes = await showcaseService.getById(pkgId);
-                const sc = scRes?.data || scRes;
-                if (sc?.image && isMounted) {
-                  setResolvedImage(sc.image);
-                  return;
-                }
-              }
-            }
-          }
-
-          // Search showcase by title if not resolved yet
-          if (isMounted) {
-            const cleanTitle = (latestNotification.title || '')
-              .replace(/^rent:\s*/i, '')
-              .replace(/\s*booking$/i, '')
-              .replace(/booking\s*request\s*received/i, '')
-              .trim();
-            if (cleanTitle) {
-              const showcasesRes = await showcaseService.getAll();
-              const showcases = showcasesRes?.data || showcasesRes || [];
-              const matched = showcases.find((s) =>
-                s.title?.toLowerCase().includes(cleanTitle.toLowerCase()),
-              );
-              if (matched?.image && isMounted) {
-                setResolvedImage(matched.image);
-                return;
-              }
-            }
-          }
-        } else if (
           latestNotification.type === 'order' ||
           metadata.orderId ||
           latestNotification.title?.toLowerCase().includes('order')

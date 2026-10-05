@@ -171,7 +171,7 @@ const GPSMap = ({ address }) => {
       const goldMarkerIcon = L.divIcon({
         html: `
           <div class="flex flex-col items-center">
-            <svg class="w-8 h-8 text-[#8c7335] drop-shadow-md filter drop-shadow-[0_4px_6px_rgba(140,115,53,0.4)]" viewBox="0 0 24 24" fill="currentColor">
+            <svg class="w-8 h-8 text-[#000000] drop-shadow-md filter drop-shadow-[0_4px_6px_rgba(140,115,53,0.4)]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
             <div class="w-2.5 h-1 bg-black/20 rounded-full blur-[1px] -mt-0.5" />
@@ -206,7 +206,7 @@ const GPSMap = ({ address }) => {
         <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
             <div className="w-16 h-16 border-[1px] border-primary/30 border-t-primary rounded-full animate-spin duration-1000 ease-linear" />
-            <span className="text-[9px] text-[#8c7335] font-bold uppercase tracking-wider">
+            <span className="text-[9px] text-[#000000] font-bold uppercase tracking-wider">
               {inView && !leafletLoaded ? 'Loading Map Engine...' : 'Syncing GPS...'}
             </span>
           </div>

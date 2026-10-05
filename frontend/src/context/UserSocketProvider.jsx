@@ -102,36 +102,9 @@ export function UserSocketProvider({ children }) {
           queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
         });
 
-        socket.on('customOrder:newMessage', () => {
-          logger.dev('[WEBSOCKET] Custom order new message, invalidating queries');
-          queryClient.invalidateQueries({ queryKey: ['custom-orders'] });
-        });
-
-        socket.on('customOrder:statusChange', () => {
-          logger.dev('[WEBSOCKET] Custom order status change, invalidating queries');
-          queryClient.invalidateQueries({ queryKey: ['custom-orders'] });
-        });
-
-        socket.on('customOrder:quoteCreated', () => {
-          logger.dev('[WEBSOCKET] Custom order quote created, invalidating queries');
-          queryClient.invalidateQueries({ queryKey: ['custom-orders'] });
-        });
-
         socket.on('timeline_update', () => {
           logger.dev('[WEBSOCKET] Timeline update, invalidating queries');
           queryClient.invalidateQueries({ queryKey: ['order-timeline'] });
-        });
-
-        socket.on('return:status_updated', (data) => {
-          logger.dev(`[WEBSOCKET] Return ${data?.returnId} status updated to ${data?.status}`);
-          queryClient.invalidateQueries({ queryKey: ['orders'] });
-          queryClient.invalidateQueries({ queryKey: ['returns'] });
-        });
-
-        socket.on('return:created', (data) => {
-          logger.dev(`[WEBSOCKET] Return ${data?.returnId} created`);
-          queryClient.invalidateQueries({ queryKey: ['orders'] });
-          queryClient.invalidateQueries({ queryKey: ['returns'] });
         });
 
         socket.on('notification:new', (data) => {

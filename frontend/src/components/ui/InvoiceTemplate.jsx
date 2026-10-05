@@ -20,7 +20,7 @@ const Barcode = lazy(() => import('react-barcode'));
  */
 export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) {
   const { storeName, storeSettings } = useConfig();
-  const outerRadiusClass = isAdmin ? 'rounded-[6px]' : 'rounded-[28px]';
+  const outerRadiusClass = isAdmin ? 'rounded-[6px]' : 'rounded-[18px]';
   const cardRadiusClass = isAdmin ? 'rounded-[4px]' : 'rounded-2xl';
   const btnRadiusClass = isAdmin ? 'rounded-[4px]' : 'rounded-full';
 
@@ -246,7 +246,7 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
     : 'N/A';
 
   // ─── Store identity (from snapshot) ────────────────────────────────
-  const businessName = storeSnap.displayName || storeName || BRAND.name || 'Siri Arts & Crafts';
+  const businessName = storeSnap.displayName || storeName || BRAND.name || "Akula's Kitchen";
   const legalName =
     storeSnap.legalCompanyName ||
     storeSettings?.legal?.legalCompanyName ||
@@ -395,11 +395,9 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
         (typeof order.tax === 'number' ? order.tax : (order.tax?.totalTax ?? 0)),
     ) || 0;
 
-  const walletDeduction = order.walletDeduction ?? 0;
   const isTaxAddedOnTop = isGstEnabled && !isTaxInclusive && totalTax > 0;
 
-  const computedExclusiveTotal =
-    subtotal + securityDeposit + deliveryCharge + totalTax - discount - walletDeduction;
+  const computedExclusiveTotal = subtotal + securityDeposit + deliveryCharge + totalTax - discount;
 
   const grandTotal =
     taxSnap.grandTotal ??
@@ -407,7 +405,7 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
     order.total ??
     (isTaxAddedOnTop
       ? computedExclusiveTotal
-      : subtotal + securityDeposit + deliveryCharge - discount - walletDeduction);
+      : subtotal + securityDeposit + deliveryCharge - discount);
 
   const taxableAmount =
     Number(
@@ -939,7 +937,7 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
                               </span>
                             )}
                             {item.isRental && (
-                              <span className="block text-[8px] text-[#8c7335] font-medium mt-0.5">
+                              <span className="block text-[8px] text-[#000000] font-medium mt-0.5">
                                 Duration:{' '}
                                 {item.variant ||
                                   `${item.rentalDurationDays || rentalDurationDays || 1} Day Rental`}
@@ -993,16 +991,6 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
                       <span className="font-bold font-mono text-[#059669] w-[90px]">
                         {currency}
                         {securityDeposit.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-
-                  {walletDeduction > 0 && (
-                    <div className="flex justify-end gap-3 text-[#15803d]">
-                      <span className="font-bold">Wallet Deduction:</span>
-                      <span className="font-bold font-mono w-[90px]">
-                        -{currency}
-                        {walletDeduction.toLocaleString()}
                       </span>
                     </div>
                   )}

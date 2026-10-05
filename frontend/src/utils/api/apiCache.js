@@ -12,10 +12,6 @@ const TTL_BY_PREFIX = [
   ['/cms', 5 * 60 * 1000],
   ['/products/categories', 30 * 1000],
   ['/products', 30 * 1000],
-  ['/gallery/categories', 10 * 60 * 1000],
-  ['/gallery', 5 * 60 * 1000],
-  ['/events', 2 * 60 * 1000],
-  ['/showcase', 5 * 60 * 1000],
   ['/recommendations', 3 * 60 * 1000],
   ['/search', 1 * 60 * 1000],
 ];
@@ -32,7 +28,7 @@ const NO_CACHE_PATHS = [
   '/notifications',
   '/health',
   '/admin',
-  '/coupons',
+
   '/marketing',
   '/customer-intelligence',
   '/customers',

@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { m as motion } from 'framer-motion';
 import { WishlistView } from '../components/wishlist/WishlistView';
-import { MandalaArtDecor } from '../components/ui/MandalaArtDecor';
 import { SEO } from '../components/seo/SEO';
 import { useConfig } from '../context/ConfigContext';
 
@@ -13,19 +12,12 @@ export function Wishlist() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="bg-surface min-h-screen pt-[60px] pb-32 font-body text-on-surface relative overflow-hidden"
+      className="bg-surface min-h-screen pt-[calc(var(--ak-header-h,115px)+20px)] pb-32 font-sans text-neutral-900 relative overflow-hidden"
     >
       <SEO
         title="Wishlist"
-        description={`Your saved items at ${storeName || 'Siri Arts & Crafts'}.`}
+        description={`Your saved items at ${storeName || "Akula's Kitchen"}.`}
         noindex
-      />
-      <MandalaArtDecor
-        variant={3}
-        size={450}
-        opacity={0.02}
-        className="-top-24 -right-24 absolute opacity-[0.02] z-0 pointer-events-none"
-        spinDuration={240}
       />
       <div className="relative z-10">
         <WishlistView isEmbedded={false} />

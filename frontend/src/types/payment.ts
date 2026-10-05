@@ -2,7 +2,7 @@
  * Canonical Payment Domain Types
  */
 
-export type PaymentMethod = 'razorpay' | 'cod' | 'wallet' | 'offline';
+export type PaymentMethod = 'razorpay' | 'cod' | 'offline';
 
 export interface RazorpayOptions {
   key: string;

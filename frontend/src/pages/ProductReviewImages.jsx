@@ -27,8 +27,8 @@ function StarRating({ value = 0, max = 5, size = 14 }) {
             width={size}
             height={size}
             viewBox="0 0 24 24"
-            fill={filled ? '#D4A853' : 'none'}
-            stroke={filled ? '#D4A853' : '#d1c4a8'}
+            fill={filled ? '#F7BB0E' : 'none'}
+            stroke={filled ? '#F7BB0E' : '#d1c4a8'}
             strokeWidth="1.5"
           >
             <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
@@ -149,7 +149,7 @@ export function ProductReviewImages() {
   return (
     <div className="bg-surface min-h-screen pt-16 sm:pt-20 pb-12">
       <SEO
-        title={`Customer Gallery - ${product?.title || 'Artisanal Masterpiece'}`}
+        title={`Customer Gallery - ${product?.title || 'Product'}`}
         description={`Browse customer submitted gallery images for ${product?.title}`}
       />
 
@@ -257,7 +257,7 @@ export function ProductReviewImages() {
                     e.stopPropagation();
                     setActivePhotoIndex(null);
                   }}
-                  className="absolute top-3.5 right-3.5 z-30 w-8 h-8 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center transition-colors cursor-pointer shadow-md"
+                  className="absolute top-3.5 right-3.5 z-30 w-8 h-8 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center transition-colors cursor-pointer shadow-md"
                   aria-label="Close viewer"
                 >
                   <X className="w-4 h-4" strokeWidth={2} />
@@ -298,7 +298,7 @@ export function ProductReviewImages() {
 
               {/* Review Context Details Column */}
               <div
-                className={`w-full lg:w-[400px] bg-white/95 backdrop-blur-xl flex flex-col shrink-0 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-10 rounded-t-2xl sm:rounded-t-[28px] lg:rounded-none lg:rounded-tr-[28px] lg:rounded-br-[28px] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] relative ${
+                className={`w-full lg:w-[400px] bg-white/95 backdrop-blur-xl flex flex-col shrink-0 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:shadow-[-10px_0_30px_rgba(0,0,0,0.03)] z-10 rounded-t-[18px] lg:rounded-none lg:rounded-tr-[28px] lg:rounded-br-[28px] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] relative ${
                   isMobileDrawerOpen
                     ? 'max-h-[38vh] sm:max-h-[42vh] lg:max-h-full px-4 py-3 pt-5 sm:px-5 sm:py-4 sm:pt-6 lg:p-6 opacity-100 overflow-y-auto'
                     : 'max-h-0 lg:max-h-full p-0 lg:p-6 opacity-0 lg:opacity-100 overflow-hidden'
@@ -309,7 +309,7 @@ export function ProductReviewImages() {
                   className="lg:hidden absolute top-1 left-0 right-0 flex justify-center py-1 cursor-pointer"
                   onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
                 >
-                  <div className="w-10 h-1 bg-neutral-300 rounded-full opacity-70"></div>
+                  <div className="w-12 h-1.5 bg-neutral-400 rounded-full"></div>
                 </div>
 
                 {/* Close Button Header */}
@@ -319,7 +319,7 @@ export function ProductReviewImages() {
                   </h4>
                   <button
                     onClick={() => setActivePhotoIndex(null)}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-neutral-100 hover:bg-neutral-800 hover:text-white flex items-center justify-center transition-all duration-200 shadow-2xs shrink-0"
+                    className="w-7 h-7 sm:w-8 sm:h-8 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full bg-neutral-100 hover:bg-neutral-800 hover:text-white flex items-center justify-center transition-all duration-200 shadow-2xs"
                     aria-label="Close details"
                   >
                     <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={1.75} />

@@ -24,11 +24,13 @@ export function AddressesSection() {
       transition={{ duration: 0.3 }}
       className="space-y-4 text-left"
     >
-      <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 flex items-center justify-between shadow-xs font-body mb-4">
-        <h2 className="text-[9px] font-bold uppercase tracking-widest text-secondary flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[14px]">pin_drop</span>
-          Delivery Sites
-        </h2>
+      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 flex items-center justify-between shadow-2xs font-sans mb-4">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px] text-[#283618]">pin_drop</span>
+          <h2 className="text-[13px] sm:text-[14px] font-bold text-neutral-900 tracking-wide uppercase">
+            Saved Delivery Addresses
+          </h2>
+        </div>
         <button
           onClick={() => {
             setEditingAddressId('new');
@@ -52,11 +54,11 @@ export function AddressesSection() {
             });
             setIsAddressModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[9px] font-bold text-primary hover:bg-primary/5 transition-colors uppercase tracking-widest cursor-pointer bg-transparent border-0"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold text-neutral-950 bg-[#f7bb0e] hover:bg-[#eab00d] transition-all uppercase tracking-wider cursor-pointer shadow-xs active:scale-95"
           title="Add New Delivery Destination"
         >
-          <Plus className="text-[14px]" strokeWidth={1.5} />
-          Add New
+          <Plus size={14} strokeWidth={2.5} />
+          <span>Add New</span>
         </button>
       </div>
 
@@ -79,15 +81,15 @@ export function AddressesSection() {
 
       {addresses.length === 0 && !isAddressesLoading && (
         <div className="bg-surface-bright rounded-lg p-8 text-center shadow-sm flex flex-col items-center justify-center min-h-[35vh] relative overflow-hidden border border-black/5">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#8c7335]/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#000000]/5 rounded-full blur-3xl pointer-events-none" />
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="w-16 h-16 rounded-full bg-[#8c7335]/5 text-[#8c7335] flex items-center justify-center mb-5 relative"
+            className="w-16 h-16 rounded-full bg-[#000000]/5 text-[#000000] flex items-center justify-center mb-5 relative"
           >
             <div
-              className="absolute inset-0 rounded-full border border-[#8c7335]/20 animate-ping"
+              className="absolute inset-0 rounded-full border border-[#000000]/20 animate-ping"
               style={{ animationDuration: '3s' }}
             />
             <span className="material-symbols-outlined text-[24px] relative z-10">pin_drop</span>
@@ -122,7 +124,7 @@ export function AddressesSection() {
                 });
                 setIsAddressModalOpen(true);
               }}
-              className="group flex items-center gap-2 text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.2em] text-[#1a1a1a] pb-2 border-b-[1.5px] border-[#1a1a1a] transition-all hover:opacity-70 bg-transparent outline-none cursor-pointer"
+              className="group flex items-center gap-2 text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.2em] text-[#000000] pb-2 border-b-[1.5px] border-[#000000] transition-all hover:opacity-70 bg-transparent outline-none cursor-pointer"
             >
               Add New Site
               <ArrowRight

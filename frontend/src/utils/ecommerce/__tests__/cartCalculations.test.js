@@ -2,30 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { cleanRentalInfo, calculateCartSummary, transformDbCart } from '../cartCalculations';
 
 describe('cleanRentalInfo', () => {
-  it('returns undefined for missing or partial input', () => {
+  it('returns undefined as rentals are decommissioned', () => {
     expect(cleanRentalInfo(undefined)).toBeUndefined();
     expect(cleanRentalInfo({})).toBeUndefined();
-    expect(cleanRentalInfo({ startDate: '2026-07-01' })).toBeUndefined();
-  });
-
-  it('returns undefined for unparseable dates', () => {
-    expect(cleanRentalInfo({ startDate: 'not-a-date', endDate: '2026-07-05' })).toBeUndefined();
-  });
-
-  it('normalizes valid ranges to ISO strings with a computed duration', () => {
-    const result = cleanRentalInfo({ startDate: '2026-07-01', endDate: '2026-07-05' });
-    expect(result.startDate).toBe(new Date('2026-07-01').toISOString());
-    expect(result.endDate).toBe(new Date('2026-07-05').toISOString());
-    expect(result.duration).toBe(4);
-  });
-
-  it('prefers an explicit numeric duration over the computed one', () => {
-    const result = cleanRentalInfo({
-      startDate: '2026-07-01',
-      endDate: '2026-07-05',
-      duration: '10',
-    });
-    expect(result.duration).toBe(10);
+    expect(cleanRentalInfo({ startDate: '2026-07-01', endDate: '2026-07-05' })).toBeUndefined();
   });
 });
 
@@ -61,45 +41,28 @@ describe('calculateCartSummary', () => {
     expect(summary.total).toBe(159);
   });
 
-  it('prices rentals using total package price (not multiplied by days)', () => {
-    const items = [
-      {
-        product: { price: 999, rentalPricing: { rentalPrice: 699, rentalDurationDays: 5 } },
-        quantity: 1,
-        rentalInfo: { startDate: '2026-07-01', endDate: '2026-07-06' },
-      },
-    ];
-    // Complete package price is 699 (NOT 699 * 5)
-    expect(calculateCartSummary(items, 'rental').subtotal).toBe(699);
+  it('calculates tax correctly with taxSettings (inclusive)', () => {
+    const items = [{ product: { price: 118 }, quantity: 1 }];
+    const summary = calculateCartSummary(items, 'purchase', 0, 0, {
+      gstEnabled: true,
+      taxInclusive: true,
+      gstRate: 0.18,
+    });
+    expect(summary.subtotal).toBe(118);
+    expect(summary.estimatedTax).toBe(18);
+    expect(summary.total).toBe(118);
   });
 
-  it('multiplies package rental price by quantity', () => {
-    const items = [
-      {
-        product: { price: 999, rentalPricing: { rentalPrice: 500, rentalDurationDays: 3 } },
-        quantity: 2,
-        rentalInfo: { startDate: '2026-07-01', endDate: '2026-07-04' },
-      },
-    ];
-    expect(calculateCartSummary(items, 'rental').subtotal).toBe(1000);
-  });
-
-  it('includes security deposits for rentals', () => {
-    const items = [
-      {
-        product: {
-          price: 100,
-          deposit: 500,
-          rentalPricing: { rentalPrice: 300, rentalDurationDays: 2 },
-        },
-        quantity: 2,
-        rentalInfo: { startDate: '2026-07-01', endDate: '2026-07-03' },
-      },
-    ];
-    const summary = calculateCartSummary(items, 'rental');
-    expect(summary.subtotal).toBe(600);
-    expect(summary.depositTotal).toBe(1000);
-    expect(summary.total).toBe(1600);
+  it('calculates tax correctly with taxSettings (exclusive)', () => {
+    const items = [{ product: { price: 100 }, quantity: 1 }];
+    const summary = calculateCartSummary(items, 'purchase', 0, 0, {
+      gstEnabled: true,
+      taxInclusive: false,
+      gstRate: 0.18,
+    });
+    expect(summary.subtotal).toBe(100);
+    expect(summary.estimatedTax).toBe(18);
+    expect(summary.total).toBe(118);
   });
 });
 
@@ -113,7 +76,7 @@ describe('transformDbCart', () => {
   it('drops items whose product reference failed to populate', () => {
     const items = [
       { product: null, quantity: 1 },
-      { product: { _id: 'p1', title: 'Vase', price: 100 }, quantity: 2 },
+      { product: { _id: 'p1', title: 'Cookware', price: 100 }, quantity: 2 },
     ];
     const result = transformDbCart(items);
     expect(result).toHaveLength(1);
@@ -123,42 +86,36 @@ describe('transformDbCart', () => {
 
   it('defaults type to purchase and variant to Default', () => {
     const [item] = transformDbCart([
-      { product: { _id: 'p1', title: 'Vase', price: 100 }, quantity: 1 },
+      { product: { _id: 'p1', title: 'Cookware', price: 100 }, quantity: 1 },
     ]);
     expect(item.type).toBe('purchase');
     expect(item.variant).toBe('Default');
+    expect(item.price).toBe(100);
   });
 
-  it('normalizes rentalInfo through cleanRentalInfo', () => {
-    const [item] = transformDbCart([
-      {
-        product: { _id: 'p1', title: 'Arch', price: 100 },
-        quantity: 1,
-        type: 'rental',
-        rentalInfo: { startDate: 'garbage', endDate: '2026-07-05' },
-      },
-    ]);
-    expect(item.rentalInfo).toBeUndefined();
-  });
-
-  it('maps rental product with package rentalPrice', () => {
+  it('maps product properties accurately', () => {
     const [item] = transformDbCart([
       {
         product: {
-          _id: 'p1',
-          title: 'Wedding Arch',
+          _id: 'p2',
+          title: 'Copper Pan',
           price: 1500,
-          rentalPricing: { rentalPrice: 699, rentalDurationDays: 5 },
-          securityDeposit: 300,
+          oldPrice: 2000,
+          stock: 15,
+          rating: 4.8,
+          category: 'Cookware',
         },
-        quantity: 1,
-        type: 'rental',
-        rentalInfo: { startDate: '2026-07-01', endDate: '2026-07-06' },
+        quantity: 3,
       },
     ]);
-    expect(item.type).toBe('rental');
-    expect(item.price).toBe(699);
-    expect(item.oldPrice).toBe(699);
-    expect(item.deposit).toBe(300);
+    expect(item.id).toBe('p2');
+    expect(item.title).toBe('Copper Pan');
+    expect(item.price).toBe(1500);
+    expect(item.oldPrice).toBe(2000);
+    expect(item.stock).toBe(15);
+    expect(item.rating).toBe(4.8);
+    expect(item.category).toBe('Cookware');
+    expect(item.quantity).toBe(3);
+    expect(item.deposit).toBe(0);
   });
 });

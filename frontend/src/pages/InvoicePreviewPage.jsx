@@ -25,13 +25,12 @@ const sampleReferenceOrder = {
   store: {
     displayName: BRAND.name,
     legalCompanyName: BRAND.legalCompanyName || BRAND.name,
-    gstin: BRAND.gstin || '29AAAES9284D1ZX',
+    gstin: BRAND.gstin || '',
     cin: BRAND.cin || '',
-    addressLine1:
-      BRAND.address || '#28-1-92, South Street, ONGOLE-523001, Prakasam District, Andhra Pradesh',
-    city: BRAND.city || 'Ongole',
-    state: BRAND.state || 'Andhra Pradesh',
-    postalCode: BRAND.postalCode || '523001',
+    addressLine1: BRAND.address || '',
+    city: BRAND.city || '',
+    state: BRAND.state || '',
+    postalCode: BRAND.postalCode || '',
     country: BRAND.country || 'India',
   },
   items: [
@@ -72,13 +71,13 @@ const sampleExtremeOrder = {
     pincode: '530002',
   },
   items: [
-    { title: 'Handcrafted Kondapalli Dasavatara Wooden Statues Set', quantity: 2, price: 4999 },
+    { title: 'Idli Batter (1 kg)', quantity: 2, price: 4999 },
     {
-      title: 'Tirupati Venkateswara Swamy Brass Murti 12 Inch Antique Gold Finish',
+      title: 'Mango Avakaaya Pickle (500 g)',
       quantity: 1,
       price: 8500,
     },
-    { title: 'Traditional Kalamkari Peacock Wall Hanging 4x6 Feet', quantity: 3, price: 1200 },
+    { title: 'Cashews W240 (500 g)', quantity: 3, price: 1200 },
   ],
   subtotal: 22098,
   discount: 2000,
@@ -116,18 +115,17 @@ const sampleBalajiOrder = {
     email: BRAND.email,
     phone: BRAND.phone,
     legalCompanyName: BRAND.legalCompanyName || BRAND.name,
-    gstin: BRAND.gstin || '29AAAES9284D1ZX',
+    gstin: BRAND.gstin || '',
     cin: BRAND.cin || '',
-    addressLine1:
-      BRAND.address || '#28-1-92, South Street, ONGOLE-523001, Prakasam District, Andhra Pradesh',
-    city: BRAND.city || 'Ongole',
-    state: BRAND.state || 'Andhra Pradesh',
-    postalCode: BRAND.postalCode || '523001',
+    addressLine1: BRAND.address || '',
+    city: BRAND.city || '',
+    state: BRAND.state || '',
+    postalCode: BRAND.postalCode || '',
     country: BRAND.country || 'India',
   },
   items: [
     {
-      title: 'Handmade Decorative Clay Diya Set',
+      title: 'Gongura Pickle (250 g)',
       quantity: 2,
       price: 650,
     },
@@ -177,13 +175,12 @@ const sampleRentalBangleOrder = {
   store: {
     displayName: BRAND.name,
     legalCompanyName: BRAND.legalCompanyName || BRAND.name,
-    gstin: BRAND.gstin || '29AAAES9284D1ZX',
+    gstin: BRAND.gstin || '',
     cin: BRAND.cin || '',
-    addressLine1:
-      BRAND.address || '#28-1-92, South Street, ONGOLE-523001, Prakasam District, Andhra Pradesh',
-    city: BRAND.city || 'Ongole',
-    state: BRAND.state || 'Andhra Pradesh',
-    postalCode: BRAND.postalCode || '523001',
+    addressLine1: BRAND.address || '',
+    city: BRAND.city || '',
+    state: BRAND.state || '',
+    postalCode: BRAND.postalCode || '',
     country: BRAND.country || 'India',
   },
   items: [
@@ -285,7 +282,7 @@ export default function InvoicePreviewPage() {
             onClick={() => setShowModal(false)}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] no-print"
           />
-          <div className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[28px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[28px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:p-0 print:border-none print:shadow-none print:bg-white">
+          <div className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[18px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[18px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:p-0 print:border-none print:shadow-none print:bg-white">
             <InvoiceTemplate order={currentOrder} onClose={() => setShowModal(false)} />
           </div>
         </>

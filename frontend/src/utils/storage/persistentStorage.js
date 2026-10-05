@@ -1,6 +1,6 @@
 import logger from '../core/logger';
 
-const SECRET_SALT = 'siri_arts_crafts_secret_salt_2026';
+const SECRET_SALT = 'akulas_kitchen_secret_salt_2026';
 
 /**
  * Obfuscate text using a simple, fast XOR + Base64 cipher.
@@ -76,7 +76,7 @@ const sweepExpiredKeys = (storageType) => {
     const keysToRemove = [];
     for (let i = 0; i < storage.length; i++) {
       const key = storage.key(i);
-      if (key && (key.startsWith('siri_') || key.startsWith('checkout_'))) {
+      if (key && (key.startsWith('akula_') || key.startsWith('checkout_'))) {
         try {
           const raw = storage.getItem(key);
           if (raw) {

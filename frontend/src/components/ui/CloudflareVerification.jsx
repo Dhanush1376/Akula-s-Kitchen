@@ -1,9 +1,9 @@
-import { SiriLogo } from './SiriLogo';
+import { BrandLogo } from './BrandLogo';
 import { useEffect, useState } from 'react';
 
 export default function CloudflareVerification({
   onVerify,
-  domain = 'siriartsandcrafts.com',
+  domain = 'akulas.kitchen',
   isTesting = false,
 }) {
   const [dots, setDots] = useState(0);
@@ -37,7 +37,7 @@ export default function CloudflareVerification({
         {/* Header Section */}
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 bg-white flex items-center justify-center p-1 shrink-0 rounded-sm">
-            <SiriLogo size="32px" />
+            <BrandLogo size="32px" />
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight truncate">
             {domain}
@@ -55,7 +55,7 @@ export default function CloudflareVerification({
         </p>
 
         {/* Verification Box */}
-        <div className="border border-gray-700 bg-[#1a1a1a] rounded-sm p-4 w-full max-w-[480px] flex items-center justify-between shadow-xl">
+        <div className="border border-gray-700 bg-[#000000] rounded-sm p-4 w-full max-w-[480px] flex items-center justify-between shadow-xl">
           <div className="flex items-center gap-3">
             {/* Custom Spinner */}
             <div className="relative w-8 h-8 flex items-center justify-center">

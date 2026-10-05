@@ -13,7 +13,7 @@ import { useConfig } from '../context/ConfigContext';
 
 import { PLACEHOLDER_IMAGES } from '../constants/placeholderImages';
 
-const fallbackHero = PLACEHOLDER_IMAGES.collectionWedding;
+const fallbackHero = PLACEHOLDER_IMAGES.collectionFallback;
 
 const humanizeSlug = (value = '') =>
   value
@@ -91,7 +91,7 @@ export function CollectionDetail() {
   const description =
     heroProduct?.seoDescription ||
     heroProduct?.description ||
-    `Explore live ${collectionTitle} pieces from the ${storeName || 'Siri Arts & Crafts'} catalog.`;
+    `Explore live ${collectionTitle} pieces from the ${storeName || "Akula's Kitchen"} catalog.`;
 
   return (
     <div className="pt-20 lg:pt-28">
@@ -164,7 +164,7 @@ export function CollectionDetail() {
             >
               <ShareButton
                 url={window.location.href}
-                title={`${collectionTitle} - ${storeName || 'Siri Arts & Crafts'}`}
+                title={`${collectionTitle} - ${storeName || "Akula's Kitchen"}`}
                 description={description}
                 variant="primary"
               />
@@ -181,7 +181,7 @@ export function CollectionDetail() {
             <div className="lg:col-span-9">
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-10">
                 <p className="font-label text-[11px] uppercase tracking-widest text-secondary/60">
-                  {loading ? 'Loading live catalog' : `${products.length} Artisanal Selections`}
+                  {loading ? 'Loading live catalog' : `${products.length} Products`}
                 </p>
                 <Link
                   to={`/collections?category=${encodeURIComponent(collectionTitle)}`}

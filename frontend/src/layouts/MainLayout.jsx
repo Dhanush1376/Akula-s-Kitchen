@@ -8,7 +8,6 @@ import { Footer } from '../components/layout/Footer';
 import { BottomNav } from '../components/layout/BottomNav';
 import { CheckoutNavbar } from '../components/layout/CheckoutNavbar';
 import { SEO } from '../components/seo/SEO';
-import { MandalaElement } from '../components/ui/MandalaElement';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { getRouteSkeletonVariant, RouteSkeleton } from '../components/ui/RouteSkeleton';
 import { AuthGate } from '../components/auth/AuthGate';
@@ -24,11 +23,7 @@ const ConsentPopup = lazy(() =>
 const WhatsAppWidget = lazy(() =>
   import('../components/ui/WhatsAppWidget').then((m) => ({ default: m.WhatsAppWidget })),
 );
-const FloatingOfferCard = lazy(() =>
-  import('../components/promotions/FloatingOfferCard').then((m) => ({
-    default: m.FloatingOfferCard,
-  })),
-);
+
 const AdminInviteModal = lazy(() =>
   import('../components/auth/AdminInviteModal').then((m) => ({ default: m.AdminInviteModal })),
 );
@@ -68,27 +63,8 @@ export function MainLayout() {
   const fallbackVariant = getRouteSkeletonVariant(pathname);
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
+    <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
       <SEO />
-      {/* Global Background Art - Performance Optimized Gradients & Mandalas */}
-      {!isHighDensityPage && (
-        <div
-          className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
-          aria-hidden="true"
-          style={{ contentVisibility: 'auto' }}
-        >
-          {/* Enhanced Global Cinematic Glows - Reduced intensity for clarity */}
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.06)_0%,transparent_70%),radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.04)_0%,transparent_70%)]" />
-
-          {/* Subtle Heritage Mandalas - Minimal presence to avoid clutter */}
-          <div className="absolute -top-[10%] -right-[10%] w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] will-change-transform">
-            <MandalaElement size={800} opacity={0.03} rotate={false} skipFade={true} />
-          </div>
-          <div className="absolute -bottom-[15%] -left-[10%] w-[400px] sm:w-[600px] lg:w-[1000px] h-[400px] sm:h-[600px] lg:h-[1000px] will-change-transform">
-            <MandalaElement size={1000} opacity={0.02} rotate={false} variant={2} skipFade={true} />
-          </div>
-        </div>
-      )}
 
       <GlobalAnnouncementBanner />
       <TopNavbar />
@@ -111,9 +87,7 @@ export function MainLayout() {
       </main>
       {pathname !== '/cart' && !pathname.startsWith('/dashboard') && <Footer />}
       <BottomNav />
-      <Suspense fallback={null}>
-        <FloatingOfferCard />
-      </Suspense>
+
       <div
         className={`fixed ${
           isStoreClosed
@@ -147,15 +121,7 @@ export function MinimalLayout() {
   }, [pathname]);
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex flex-col relative overflow-hidden">
-      {/* Global Background Art */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
-        aria-hidden="true"
-      >
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_0%_0%,rgba(212,175,55,0.08)_0%,transparent_60%),radial-gradient(circle_at_100%_100%,rgba(212,175,55,0.08)_0%,transparent_60%)]" />
-      </div>
-
+    <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-hidden">
       <CheckoutNavbar />
       <main id="main-content" className="flex-1" tabIndex={-1}>
         <ErrorBoundary>

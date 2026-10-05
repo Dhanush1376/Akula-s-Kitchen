@@ -1,37 +1,29 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
   Search,
-  Camera,
   Heart,
   ShoppingCart,
   LogIn,
-  Info,
-  Settings,
   User,
-  Package,
-  MapPin,
   LogOut,
   Menu,
   ShoppingBag,
   ChevronDown,
   X,
+  LayoutGrid,
+  Mic,
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
-import { SiriLogo } from '../ui/SiriLogo';
-import { MandalaElement } from '../ui/MandalaElement';
+import { BrandLogo } from '../ui/BrandLogo';
 import React, { Suspense, useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { adminInviteService, eventService } from '../../services/domainServices';
+import { adminInviteService } from '../../services/domainServices';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { useSearchOverlay } from '../../hooks/useSearchOverlay';
-import { prefetchManager } from '../../utils/performance/prefetchManager';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useScrollDirection } from '../../hooks/useScrollDirection';
-import { useVisualSearch } from '../../hooks/useVisualSearch';
-import { customOrderService } from '../../services/api/customOrderService';
 import { productService } from '../../services/api/productService';
 import { lazyWithRetry as lazy } from '../../utils/performance/lazyWithRetry';
 import { useConfig } from '../../context/ConfigContext';
@@ -41,19 +33,16 @@ const IntelligentSearchOverlay = lazy(() =>
     default: m.IntelligentSearchOverlay,
   })),
 );
-const VisualSearchOverlay = lazy(() =>
-  import('../search/VisualSearchOverlay').then((m) => ({ default: m.VisualSearchOverlay })),
-);
 
 // Search caching is now handled by useSearchOverlay hook
 
 export function TopNavbar() {
-  const { storeSettings, storeNameUpper, hideGallerySection } = useConfig();
+  const { storeSettings, storeNameUpper } = useConfig();
   const { navigation } = useWebsiteContent();
-  const logoText = navigation?.logo?.text || storeNameUpper || 'SIRI ARTS & CRAFTS';
+  const logoText = navigation?.logo?.text || storeNameUpper || "AKULA'S KITCHEN";
   const logoWords = logoText.split(' ');
-  const _firstWord = logoWords[0] || 'SIRI';
-  const _restWords = logoWords.slice(1).join(' ') || 'ARTS & CRAFTS';
+  const _firstWord = logoWords[0] || "AKULA'S";
+  const _restWords = logoWords.slice(1).join(' ') || 'KITCHEN';
 
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +53,6 @@ export function TopNavbar() {
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [eventCategories, setEventCategories] = useState([]);
   const [openAccordion, setOpenAccordion] = useState(null);
 
   useEffect(() => {
@@ -74,21 +62,6 @@ export function TopNavbar() {
       .then((res) => {
         if (active && res?.success && res.data) {
           setCategories(res.data);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    eventService
-      .getCategories()
-      .then((res) => {
-        if (active && res?.success && res.data) {
-          setEventCategories(res.data.map((cat) => cat.name));
         }
       })
       .catch(() => {});
@@ -123,13 +96,27 @@ export function TopNavbar() {
 
   const isHomePage = location.pathname === '/';
   const isShopPage = location.pathname === '/collections';
-  const isEventsPage = location.pathname === '/events';
-  const isAboutPage = location.pathname === '/about';
   const isWishlistPage = location.pathname === '/wishlist';
   const isCartPage = location.pathname === '/cart';
 
-  // Always enable transparency on shop page at the top, since hero banner is always visible
-  const isTransparent = (isHomePage || isShopPage || isEventsPage) && isAtTop;
+  // Solid brand header everywhere (the editorial hero is not full-bleed)
+  const isTransparent = false;
+  const showCategoryChips = isHomePage;
+  const activeCategory = searchParams.get('category');
+  const [chipsScrolled, setChipsScrolled] = useState(false);
+
+  // Publish the real header height so pages can offset content beneath the fixed bar
+  const navRef = React.useRef(null);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const publish = () =>
+      document.documentElement.style.setProperty('--ak-header-h', `${el.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const adminRoles = [
     'owner',
@@ -166,68 +153,21 @@ export function TopNavbar() {
     };
   }, [isAuthenticated, user]);
 
-  const [hasUnreadCustomOrders, setHasUnreadCustomOrders] = useState(false);
-  const [orderViewsUpdated, setOrderViewsUpdated] = useState(0);
-
-  useEffect(() => {
-    const handleUpdate = () => setOrderViewsUpdated((prev) => prev + 1);
-    window.addEventListener('siri_order_views_updated', handleUpdate);
-    return () => window.removeEventListener('siri_order_views_updated', handleUpdate);
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    if (isAuthenticated && user) {
-      customOrderService
-        .getMyOrders()
-        .then((res) => {
-          if (active && res?.success && res?.data) {
-            const now = Date.now();
-            let views = {};
-            try {
-              views = JSON.parse(localStorage.getItem('siri_order_views') || '{}');
-            } catch (e) {}
-
-            const hasUnread = res.data.some((order) => {
-              if (!order.statusHistory || !order.statusHistory.length) return false;
-              const lastUpdate = new Date(
-                order.statusHistory[order.statusHistory.length - 1].timestamp,
-              ).getTime();
-              const lastViewTime = views[order._id || order.id] || 0;
-              return now - lastUpdate < 24 * 60 * 60 * 1000 && lastUpdate > lastViewTime;
-            });
-            setHasUnreadCustomOrders(hasUnread);
-          }
-        })
-        .catch(() => {});
-    } else {
-      setHasUnreadCustomOrders(false);
-    }
-    return () => {
-      active = false;
-    };
-  }, [isAuthenticated, user, location.pathname, orderViewsUpdated]);
-
   // ─── INTELLIGENT SEARCH OVERLAYS ───
   const search = useSearchOverlay();
-  const visualSearch = useVisualSearch();
 
   // Connect inline search bars across pages to the global search overlay
   useEffect(() => {
     const handleOpenGlobalSearch = (e) => {
       const mode = e.detail?.mode || 'text';
-      if (mode === 'visual') {
-        visualSearch.open();
-      } else {
-        search.handleOpen(mode);
-        if (e.detail?.query != null) {
-          search.setQuery(e.detail.query);
-        }
+      search.handleOpen(mode);
+      if (e.detail?.query != null) {
+        search.setQuery(e.detail.query);
       }
     };
     window.addEventListener('open-global-search', handleOpenGlobalSearch);
     return () => window.removeEventListener('open-global-search', handleOpenGlobalSearch);
-  }, [search, visualSearch]);
+  }, [search]);
 
   const mobileMenuRef = React.useRef(null);
   const mobileTriggerRef = React.useRef(null);
@@ -288,10 +228,6 @@ export function TopNavbar() {
     };
   }, [isOpen, isMobile]);
 
-  const isGalleryHidden = Boolean(
-    hideGallerySection || storeSettings?.storefront?.hideGallerySection,
-  );
-
   const isGalleryLink = (link) => {
     const href = (link?.href || link?.link || '').toLowerCase().trim();
     const label = (link?.label || '').toLowerCase().trim();
@@ -301,9 +237,7 @@ export function TopNavbar() {
       href.startsWith('/gallery?') ||
       href.includes('gallery') ||
       label === 'gallery' ||
-      label.includes('gallery') ||
-      label === 'inspiration' ||
-      label === 'inspirations'
+      label.includes('gallery')
     );
   };
 
@@ -315,351 +249,183 @@ export function TopNavbar() {
         label: link.label,
         href: link.href || link.link,
       }))
-      .filter((link) => {
-        if (isGalleryHidden && isGalleryLink(link)) {
-          return false;
-        }
-        return true;
-      }) || [];
+      .filter((link) => !isGalleryLink(link)) || [];
 
   const navLinks = [
     { label: 'Home', href: '/', mobileOnly: true },
     ...dbLinks,
     { label: 'My Orders', href: '/dashboard/orders', mobileOnly: true },
     { label: 'Contact Us', href: '/contact', mobileOnly: true },
-  ].filter((link) => {
-    if (isGalleryHidden && isGalleryLink(link)) {
-      return false;
-    }
-    return true;
-  });
+  ].filter((link) => !isGalleryLink(link));
 
   const isActive = (href) => location.pathname === href;
+
+  const defaultCategories = [
+    'Bangle Trays',
+    'Butta Decorations',
+    'Pickles',
+    'Batters',
+    'Snacks',
+    'Podis',
+    'Sweets',
+  ];
+
+  const displayCategories = categories && categories.length > 0 ? categories : defaultCategories;
+
+  const categoriesScrollRef = React.useRef(null);
 
   return (
     <>
       <nav
-        className={`top-navbar fixed top-0 w-full transition-all duration-500 ${
-          isTransparent
-            ? 'bg-gradient-to-b from-black/90 via-black/40 to-transparent border-transparent py-2'
-            : !isAtTop
-              ? 'bg-surface/95 backdrop-blur-2xl border-b border-primary-container/20 py-1.5'
-              : 'bg-surface/90 backdrop-blur-md py-2 border-b border-outline-variant/10'
-        } ${hideNavbar ? '-translate-y-full' : 'translate-y-0'}`}
-        style={{
-          zIndex: 'var(--z-sticky)',
-          boxShadow: isTransparent ? 'none' : !isAtTop ? 'var(--shadow-md)' : 'var(--shadow-xs)',
-        }}
+        ref={navRef}
+        className={`top-navbar fixed top-0 left-0 right-0 w-full transition-transform duration-300 z-50 pointer-events-none ${
+          hideNavbar ? '-translate-y-full' : 'translate-y-0'
+        }`}
+        style={{ zIndex: 'var(--z-sticky)' }}
       >
-        {/* Background Mandala Art */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center">
-          {!isTransparent && (
-            <div className="opacity-[0.1]">
-              <MandalaElement size={350} duration={240} variant={1} skipFade={true} />
-            </div>
-          )}
-        </div>
+        <div className="max-w-[1400px] mx-auto px-2 sm:px-4 pt-2 sm:pt-2.5 pb-1 pointer-events-auto">
+          <div className="bg-white/95 backdrop-blur-md border border-neutral-200 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.06)] flex items-center gap-2.5 sm:gap-3.5">
+            {/* Big Circular Logo spanning full height on left */}
+            <Link to="/" className="shrink-0 flex items-center self-center group">
+              <BrandLogo
+                size="64px"
+                className="drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
+                variant="default"
+              />
+            </Link>
 
-        <div className="max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop">
-          <div className="flex items-center justify-between w-full gap-4">
-            {/* Exquisite Boutique Brand Logo or Page Context Header */}
-            <div className="flex-shrink-0 flex justify-start min-w-0">
-              {isWishlistPage || isCartPage ? (
-                <button
-                  onClick={() => navigate('/collections')}
-                  className="group flex items-center gap-2 shrink-0 cursor-pointer"
-                >
-                  <ArrowLeft
-                    size={24}
-                    strokeWidth={1.5}
-                    className="text-on-surface group-hover:-translate-x-1 transition-transform"
-                  />
-                  <span className="font-label text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.2em] text-on-surface leading-none pt-0.5">
-                    {isWishlistPage ? 'Wishlist' : 'Cart'}
-                  </span>
-                </button>
-              ) : (
-                <Link to="/" className="group flex items-center shrink-0">
-                  <div className="flex flex-col justify-center">
-                    {/* Desktop Layout: Side-by-side */}
-                    <div className="hidden lg:flex items-center">
-                      <SiriLogo size="36px" variant={isTransparent ? 'white' : 'default'} />
-                    </div>
-
-                    {/* Mobile Layout: Stacked */}
-                    <div className="flex lg:hidden flex-col leading-none">
-                      <SiriLogo
-                        size="36px"
-                        showSubtitle={false}
-                        variant={isTransparent ? 'white' : 'default'}
-                      />
-                    </div>
-                  </div>
-                </Link>
-              )}
-            </div>
-
-            {/* Navigation Links (Tablet/Desktop) - Enhanced with elegant active state indicator */}
-            {/* Desktop Navigation (Full) */}
-            <div className="hidden lg:flex flex-grow justify-center items-center">
-              <ul className="flex items-center space-x-2">
-                {navLinks
-                  .filter((l) => !l.mobileOnly)
-                  .map((link, idx) => {
-                    const active = isActive(link.href);
-                    return (
-                      <li key={idx}>
-                        <Link
-                          className={`relative font-label-sm text-[10px] lg:text-[11px] uppercase tracking-[0.2em] lg:tracking-[0.25em] px-2.5 lg:px-3.5 py-2 rounded-full transition-all duration-300 flex items-center font-bold whitespace-nowrap ${
-                            active
-                              ? isTransparent
-                                ? 'text-white bg-white/20'
-                                : 'text-primary bg-primary-container/10'
-                              : isTransparent
-                                ? 'text-white hover:bg-white/10'
-                                : 'text-on-surface hover:text-primary hover:bg-surface-container-low'
-                          }`}
-                          to={link.href}
-                        >
-                          <span className="flex items-center">
-                            <span>{link.label}</span>
-                            {link.label === 'Custom Orders' && hasUnreadCustomOrders && (
-                              <span className="ml-0.5 relative w-1.5 h-1.5 rounded-full bg-[#ff5a00] shadow-sm"></span>
-                            )}
-                          </span>
-                          {active && (
-                            <span
-                              className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isTransparent ? 'bg-white' : 'bg-primary'}`}
-                            />
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-              </ul>
-            </div>
-
-            {/* Right side actions group */}
-            <div className="flex-shrink-0 flex items-center justify-end gap-1 lg:gap-2">
-              {/* Trailing Luxury Icons */}
-              <div className="flex items-center gap-1 lg:gap-3">
-                {/* Unified Search Bar (Tablet/Desktop) */}
+            {/* Right Content: Top Row (Search + Actions) & Bottom Row (TODAY + Categories) */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+              {/* Top Row: Pill Search Bar + Actions */}
+              <div className="flex items-center gap-2 sm:gap-3 w-full">
+                {/* Pill Search Bar */}
                 <div
-                  onClick={search.handleOpen}
-                  className={`hidden lg:flex items-center gap-2.5 px-4 h-10 rounded-full cursor-pointer transition-all duration-300 border backdrop-blur-md w-[200px] lg:w-[260px] group ${
-                    isTransparent
-                      ? 'border-white/20 hover:bg-white/10 text-white'
-                      : 'border-outline-variant/40 hover:border-primary/40 hover:bg-primary/5 text-on-surface'
-                  }`}
+                  onClick={() => search.handleOpen('text')}
+                  className="flex-1 min-w-0 h-10 sm:h-11 bg-white border border-[#e5e0d8] hover:border-neutral-400 rounded-full pl-3.5 sm:pl-4 pr-1 sm:pr-1.5 flex items-center gap-2 shadow-2xs transition-all cursor-pointer group"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') search.handleOpen('text');
+                  }}
+                  aria-label="Search batters, pickles, snacks"
                 >
                   <Search
-                    size={18}
-                    strokeWidth={1.5}
-                    className={`transition-colors ${isTransparent ? 'opacity-70 group-hover:opacity-100' : 'text-on-surface-variant group-hover:text-primary'}`}
+                    size={17}
+                    strokeWidth={2}
+                    className="text-neutral-600 shrink-0 group-hover:text-black transition-colors"
                   />
-                  <span
-                    className={`flex-1 text-[13px] font-medium truncate select-none ${isTransparent ? 'opacity-70' : 'text-on-surface-variant/70'}`}
-                  >
-                    Search products...
+                  <span className="flex-1 text-[12px] sm:text-[13px] text-neutral-500 font-normal truncate select-none">
+                    Search batters, pickles, snacks...
                   </span>
-
-                  {visualSearch.isEnabled && visualSearch.isCameraSearchEnabled && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        visualSearch.open();
-                      }}
-                      className={`flex items-center justify-center w-8 h-8 rounded-full relative flex-shrink-0 transition-all duration-300 hover:scale-110 ${
-                        isTransparent
-                          ? 'text-white hover:bg-white/20'
-                          : 'text-on-surface hover:bg-black/5'
-                      }`}
-                      aria-label="Visual Search"
-                    >
-                      <Camera size={20} strokeWidth={1.5} />
-                    </button>
-                  )}
+                  <span
+                    className="h-4 sm:h-5 w-px bg-neutral-200 shrink-0 mx-0.5"
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      search.handleOpen('voice');
+                    }}
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#fbb03b] hover:bg-[#f7a626] active:scale-95 flex items-center justify-center text-neutral-950 shrink-0 transition-transform shadow-2xs cursor-pointer"
+                    aria-label="Voice Search"
+                    title="Voice Search"
+                  >
+                    <Mic size={16} strokeWidth={2.2} />
+                  </button>
                 </div>
 
-                {/* Mobile Unified Search Icon */}
-                <button
-                  onClick={search.handleOpen}
-                  className={`lg:hidden ${isTransparent ? 'text-white hover:bg-white/10' : 'text-on-surface hover:text-primary hover:bg-primary-container/10'} transition-all duration-300 hover:scale-110 flex items-center justify-center w-10 h-10 rounded-full relative group cursor-pointer min-h-0 icon-button-touch-target`}
-                  aria-label="Search Catalog"
-                >
-                  <Search size={24} strokeWidth={1.5} />
-                </button>
-
-                <Link
-                  to="/wishlist"
-                  className={`${isTransparent ? 'text-white hover:bg-white/10' : 'text-on-surface hover:text-primary hover:bg-primary/10'} transition-all duration-300 hover:scale-110 hidden lg:flex items-center justify-center w-10 h-10 rounded-full relative group cursor-pointer min-h-0 icon-button-touch-target flex-shrink-0 aspect-square`}
-                  aria-label="View Wishlist"
-                >
-                  <Heart size={24} strokeWidth={1.5} />
-                </Link>
-
-                <motion.button
-                  id="cart-trigger-desktop"
-                  onMouseEnter={() => prefetchManager.prefetchRoute('/cart', { kind: 'hover' })}
-                  onClick={() => {
-                    navigate('/cart');
-                  }}
-                  animate={
-                    isCartBouncing
-                      ? { scale: [1, 1.25, 0.9, 1.1, 1], rotate: [0, 10, -10, 5, 0] }
-                      : {}
-                  }
-                  transition={{ duration: 0.5 }}
-                  className={`${isTransparent ? 'text-white hover:bg-white/10' : 'text-on-surface hover:text-[#d4af37] hover:bg-[#d4af37]/10'} transition-all duration-300 hover:scale-110 flex items-center justify-center w-10 h-10 rounded-full relative group cursor-pointer min-h-0 icon-button-touch-target flex-shrink-0 aspect-square`}
-                  aria-label="View Bag"
-                >
-                  <ShoppingCart size={24} strokeWidth={1.5} />
-                  {cartCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className={`absolute top-0.5 right-0.5 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs border-2 ${isTransparent ? 'border-transparent' : 'border-surface-bright'}`}
-                    >
-                      {cartCount}
-                    </motion.span>
-                  )}
-                </motion.button>
-
-                {!isAuthenticated ? (
-                  <button
-                    onClick={openAuthModal}
-                    className={`${isTransparent ? 'border border-white/20 hover:bg-white/10 text-white' : 'border border-outline-variant/40 hover:border-primary/40 hover:bg-primary/5 text-on-surface hover:text-primary'} transition-all duration-300 hover:scale-110 hidden lg:flex items-center justify-center w-10 h-10 rounded-full relative group cursor-pointer min-h-0 icon-button-touch-target flex-shrink-0 aspect-square`}
-                    aria-label="User Account"
+                {/* Right Action Group: Cart & Menu Circular Buttons */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {/* Cart Circle Button */}
+                  <motion.button
+                    type="button"
+                    id="cart-trigger-btn"
+                    onClick={() => navigate('/cart')}
+                    animate={
+                      isCartBouncing
+                        ? { scale: [1, 1.25, 0.9, 1.1, 1], rotate: [0, 10, -10, 5, 0] }
+                        : {}
+                    }
+                    transition={{ duration: 0.5 }}
+                    className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full bg-white border border-[#e5e0d8] hover:border-neutral-300 hover:bg-neutral-50 flex items-center justify-center text-neutral-800 shadow-2xs transition-all relative cursor-pointer shrink-0"
+                    aria-label="View Cart"
                   >
-                    <LogIn size={24} strokeWidth={1.5} />
-                  </button>
-                ) : (
-                  <div className="relative hidden lg:flex items-center gap-4">
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                        aria-expanded={isProfileDropdownOpen}
-                        aria-haspopup="true"
-                        onMouseEnter={() =>
-                          prefetchManager.prefetchRoute('/dashboard', { kind: 'hover' })
-                        }
-                        className={`${isTransparent ? 'border border-white/20 hover:bg-white/10 text-white' : 'border border-outline-variant/40 hover:border-primary/40 hover:bg-primary/5 text-on-surface hover:text-primary'} transition-all duration-300 hover:scale-110 flex items-center justify-center w-10 h-10 rounded-full relative group cursor-pointer min-h-0 icon-button-touch-target flex-shrink-0 aspect-square`}
-                        aria-label="User Dropdown"
+                    <ShoppingCart size={19} strokeWidth={1.8} />
+                    {cartCount > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 min-w-[19px] h-[19px] sm:min-w-[20px] sm:h-[20px] px-1 bg-[#f7bb0e] text-neutral-950 text-[10px] sm:text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-2xs"
                       >
-                        <span
-                          className={`text-[11px] uppercase font-bold tracking-wider ${isTransparent ? 'text-white' : 'text-primary'}`}
-                        >
-                          {user?.name?.substring(0, 2) || user?.email?.substring(0, 2) || 'U'}
-                        </span>
-                        {hasPendingInvite && (
-                          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
-                        )}
-                      </button>
+                        {cartCount}
+                      </motion.span>
+                    )}
+                  </motion.button>
 
-                      <AnimatePresence>
-                        {isProfileDropdownOpen && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={() => setIsProfileDropdownOpen(false)}
-                            />
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 10 }}
-                              className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-2xl border border-outline-variant/30 rounded-2xl shadow-xl py-2.5 z-50 overflow-hidden"
-                            >
-                              <div className="px-4 py-2 border-b border-outline-variant/10 mb-1">
-                                <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider truncate">
-                                  {user?.name || 'Customer'}
-                                </p>
-                                <p className="text-[9px] text-on-surface-variant/50 truncate font-light tracking-wide">
-                                  {user?.email}
-                                </p>
-                              </div>
-
-                              {hasPendingInvite && (
-                                <div className="px-4 py-2 bg-rose-50 border-b border-rose-100 text-[10px] text-rose-600 font-bold flex items-center gap-1.5 animate-pulse">
-                                  <Info size={15} strokeWidth={1.5} />
-                                  <span>Pending Admin Invitation</span>
-                                </div>
-                              )}
-
-                              {adminRoles.includes(user?.role) && (
-                                <Link
-                                  to="/admin"
-                                  onClick={() => setIsProfileDropdownOpen(false)}
-                                  className="flex items-center gap-3 px-4 py-2 text-[11px] uppercase tracking-wider text-primary hover:bg-primary/10 transition-colors font-bold border-b border-outline-variant/10 mb-1.5 pb-2"
-                                >
-                                  <Settings size={17} strokeWidth={1.5} />
-                                  <span>Admin Portal</span>
-                                </Link>
-                              )}
-
-                              <Link
-                                to="/dashboard?tab=profile"
-                                onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-[11px] uppercase tracking-wider text-on-surface hover:bg-primary/5 hover:text-primary transition-colors font-bold"
-                              >
-                                <User size={17} strokeWidth={1.5} />
-                                <span>My Profile</span>
-                              </Link>
-
-                              <Link
-                                to="/dashboard?tab=orders"
-                                onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-[11px] uppercase tracking-wider text-on-surface hover:bg-primary/5 hover:text-primary transition-colors font-bold"
-                              >
-                                <Package size={17} strokeWidth={1.5} />
-                                <span>Orders</span>
-                              </Link>
-
-                              <Link
-                                to="/dashboard?tab=addresses"
-                                onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2 text-[11px] uppercase tracking-wider text-on-surface hover:bg-primary/5 hover:text-primary transition-colors font-bold"
-                              >
-                                <MapPin size={17} strokeWidth={1.5} />
-                                <span>Addresses</span>
-                              </Link>
-
-                              <button
-                                onClick={() => {
-                                  setIsProfileDropdownOpen(false);
-                                  logout();
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2 text-[11px] uppercase tracking-wider text-error hover:bg-error/5 transition-colors font-bold border-t border-outline-variant/10 mt-1.5 pt-2 cursor-pointer"
-                              >
-                                <LogOut size={17} strokeWidth={1.5} />
-                                <span>Logout</span>
-                              </button>
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                )}
+                  {/* Menu Hamburger Circle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(true)}
+                    className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full bg-white border border-[#e5e0d8] hover:border-neutral-300 hover:bg-neutral-50 flex items-center justify-center text-neutral-800 shadow-2xs transition-all cursor-pointer shrink-0"
+                    aria-label="Open Navigation Menu"
+                    aria-expanded={isOpen}
+                  >
+                    <Menu size={20} strokeWidth={2.2} />
+                  </button>
+                </div>
               </div>
 
-              <button
-                onMouseEnter={() =>
-                  prefetchManager.prefetchRoute('/collections', { kind: 'hover' })
-                }
-                onClick={() => setIsOpen(true)}
-                className={`lg:hidden flex flex-col items-center justify-center gap-[5px] w-10 h-10 rounded-full transition-all duration-300 hover:scale-110 cursor-pointer min-h-0 icon-button-touch-target ${isTransparent ? 'text-white hover:bg-white/10' : 'hover:bg-primary-container/10 hover:text-primary text-on-surface'}`}
-                aria-label="Open navigation menu"
-                aria-expanded={isOpen}
-                aria-controls="mobile-menu-drawer"
-              >
-                <Menu size={26} strokeWidth={1.5} className="text-current" />
-              </button>
+              {/* Bottom Row: Horizontal Scrolling Row (TODAY + Categories) */}
+              <div className="flex items-center w-full min-w-0 relative">
+                {/* Horizontal Scrolling Categories including TODAY */}
+                <div
+                  ref={categoriesScrollRef}
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-0.5 px-0.5"
+                  role="tablist"
+                  aria-label="Product Categories"
+                >
+                  {/* TODAY Pill Button (Dark Olive Green) */}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="bg-[#283618] hover:bg-[#1f2b13] text-white rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 text-[11px] sm:text-[11.5px] font-bold tracking-wider uppercase whitespace-nowrap transition-all shadow-2xs cursor-pointer border-0 outline-none"
+                    aria-label="Today specials"
+                  >
+                    <LayoutGrid size={14} strokeWidth={2.2} className="shrink-0" />
+                    <span>TODAY</span>
+                  </button>
+
+                  {displayCategories.map((cat, i) => {
+                    const catName = typeof cat === 'string' ? cat : cat?.name;
+                    if (!catName) return null;
+                    const isSelected =
+                      isShopPage && activeCategory?.toLowerCase() === catName.toLowerCase();
+                    return (
+                      <button
+                        key={`${catName}-${i}`}
+                        type="button"
+                        onClick={() =>
+                          navigate(`/collections?category=${encodeURIComponent(catName)}`)
+                        }
+                        className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-[11px] sm:text-[11.5px] tracking-wider uppercase whitespace-nowrap shadow-2xs transition-all shrink-0 cursor-pointer border-0 outline-none ${
+                          isSelected
+                            ? 'bg-[#f7bb0e] text-neutral-950'
+                            : 'bg-neutral-100/80 hover:bg-neutral-200/70 text-neutral-800 hover:text-black'
+                        }`}
+                      >
+                        <span>{catName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Premium Full-Screen Immersive Mobile Menu */}
+      {/* Premium Floating Rounded Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -668,91 +434,100 @@ export function TopNavbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.3 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/35 backdrop-blur-xs z-[115] lg:hidden"
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[115] lg:hidden"
             />
 
-            {/* Slide-out Drawer Panel */}
+            {/* Slide-out Floating Card / Drawer Panel */}
             <motion.div
               ref={mobileMenuRef}
               id="mobile-menu-drawer"
               role="dialog"
               aria-modal="true"
               aria-label="Mobile Navigation Menu"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 250, mass: 0.8 }}
-              className="fixed right-0 top-0 bottom-0 w-[85%] max-w-[450px] h-full bg-surface-bright z-[120] lg:hidden px-6 py-6 flex flex-col overflow-y-auto overflow-x-hidden shadow-[-20px_0_60px_rgba(0,0,0,0.15)] border-l border-outline-variant/10"
+              initial={{ x: '100%', opacity: 0.5 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
+              className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[78%] max-w-[300px] sm:max-w-[320px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden p-4 sm:p-5 flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_12px_45px_rgba(0,0,0,0.18)] rounded-3xl border border-black/[0.08]"
+              style={{
+                marginTop: 'env(safe-area-inset-top, 0px)',
+                marginBottom: 'env(safe-area-inset-bottom, 0px)',
+              }}
             >
-              {/* Minimal Header */}
-              <div className="flex justify-between items-center mb-12 px-2">
-                <SiriLogo size="42px" />
+              {/* Drawer Header */}
+              <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">
+                <BrandLogo size="44px" />
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-10 h-10 flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-neutral-100/80 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer"
                   aria-label="Close menu"
                 >
-                  <X size={32} strokeWidth={1.5} />
+                  <X size={20} strokeWidth={2} />
                 </button>
               </div>
 
-              {/* Editorial Typography List Navigation */}
-              <div className="flex-grow flex flex-col justify-start items-start w-full mt-4">
-                <ul className="relative z-10 flex flex-col items-start w-full border-t border-outline-variant/30">
+              {/* Navigation List */}
+              <div className="flex-grow flex flex-col justify-start items-start w-full">
+                <ul className="relative z-10 flex flex-col items-start w-full divide-y divide-black/[0.06]">
                   {navLinks.map((link, idx) => {
                     const active = isActive(link.href);
                     const isShopLink =
                       link.label.toLowerCase() === 'shop' ||
                       link.label.toLowerCase() === 'collections' ||
                       link.label.toLowerCase() === 'shop by category';
-                    const isEventsLink = link.label.toLowerCase() === 'events';
-                    const hasSubMenu = isShopLink || isEventsLink;
-                    const accordionId = isShopLink ? 'shop' : isEventsLink ? 'events' : null;
-                    const subItems = isShopLink ? categories : isEventsLink ? eventCategories : [];
+                    const hasSubMenu = isShopLink;
+                    const accordionId = isShopLink ? 'shop' : null;
+                    const subItems = isShopLink ? categories : [];
 
                     return (
                       <motion.li
                         key={idx}
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{
-                          delay: 0.05 + idx * 0.05,
-                          duration: 0.4,
-                          ease: [0.22, 1, 0.36, 1],
+                          delay: 0.04 + idx * 0.04,
+                          duration: 0.3,
                         }}
-                        className="w-full flex flex-col items-start border-b border-outline-variant/30"
+                        className="w-full flex flex-col items-start"
                       >
-                        <div className="flex items-center justify-between w-full group">
+                        <div className="flex items-center justify-between w-full group py-1">
                           {hasSubMenu ? (
                             <button
                               onClick={() =>
                                 setOpenAccordion(openAccordion === accordionId ? null : accordionId)
                               }
-                              className={`flex items-center justify-between font-serif uppercase tracking-wider text-[15px] transition-all duration-300 w-full text-left py-3 px-1 ${active || openAccordion === accordionId ? 'text-primary' : 'text-on-surface hover:text-primary'}`}
+                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2.5 px-2 rounded-xl hover:bg-neutral-100/70 ${
+                                active || openAccordion === accordionId
+                                  ? 'text-primary bg-neutral-100/50'
+                                  : 'text-neutral-800'
+                              }`}
                             >
                               <span>{link.label}</span>
-                              <div className="flex items-center justify-center pl-5 border-l border-outline-variant/40 h-5">
+                              <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
                                 <ChevronDown
-                                  size={16}
-                                  strokeWidth={1.5}
-                                  className={`transition-transform duration-300 ${openAccordion === accordionId ? 'rotate-180' : ''}`}
+                                  size={15}
+                                  strokeWidth={2}
+                                  className={`transition-transform duration-200 ${
+                                    openAccordion === accordionId
+                                      ? 'rotate-180 text-black'
+                                      : 'text-neutral-500'
+                                  }`}
                                 />
                               </div>
                             </button>
                           ) : (
                             <Link
                               onClick={() => setIsOpen(false)}
-                              className={`group flex items-center justify-start gap-3 font-serif uppercase tracking-wider text-[15px] transition-all duration-300 w-full text-left py-3 px-1 ${active ? 'text-primary' : 'text-on-surface hover:text-primary'}`}
+                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2.5 px-2 rounded-xl hover:bg-neutral-100/70 ${
+                                active
+                                  ? 'text-primary bg-[#f7bb0e]/15 font-extrabold'
+                                  : 'text-neutral-800'
+                              }`}
                               to={link.href}
                             >
-                              <span className="text-left relative flex items-center justify-start gap-2 w-full">
-                                <span>{link.label}</span>
-                                {link.label === 'Custom Orders' && hasUnreadCustomOrders && (
-                                  <span className="relative w-2 h-2 rounded-full bg-[#ff5a00] shadow-sm"></span>
-                                )}
-                              </span>
+                              <span>{link.label}</span>
                             </Link>
                           )}
                         </div>
@@ -765,47 +540,32 @@ export function TopNavbar() {
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="overflow-hidden w-full flex flex-col items-start space-y-5 px-1 pb-5 pt-2"
+                                transition={{ duration: 0.25 }}
+                                className="overflow-hidden w-full flex flex-col items-start space-y-1 pl-3 pr-1 pb-3 pt-1"
                               >
                                 {isShopLink && (
-                                  <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.05, duration: 0.3 }}
-                                    className="w-full"
-                                  >
+                                  <div className="w-full">
                                     <Link
                                       to={link.href}
                                       onClick={() => setIsOpen(false)}
-                                      className="font-serif text-[15px] capitalize text-on-surface hover:text-primary transition-all duration-300 text-left w-full block"
+                                      className="font-sans font-medium text-[13px] text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
                                     >
-                                      View All
+                                      All Collections
                                     </Link>
-                                  </motion.div>
+                                  </div>
                                 )}
                                 {subItems.map((cat, i) => {
                                   const categoryName = typeof cat === 'string' ? cat : cat.name;
                                   return (
-                                    <motion.div
-                                      key={i}
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      transition={{ delay: 0.05 + (i + 1) * 0.03, duration: 0.3 }}
-                                      className="w-full"
-                                    >
+                                    <div key={i} className="w-full">
                                       <Link
-                                        to={
-                                          isShopLink
-                                            ? `/collections?category=${encodeURIComponent(categoryName)}`
-                                            : `/events?type=${encodeURIComponent(categoryName)}`
-                                        }
+                                        to={`/collections?category=${encodeURIComponent(categoryName)}`}
                                         onClick={() => setIsOpen(false)}
-                                        className="font-serif text-[15px] capitalize text-on-surface hover:text-primary transition-all duration-300 text-left w-full block"
+                                        className="font-sans font-medium text-[13px] capitalize text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
                                       >
                                         {categoryName.toLowerCase()}
                                       </Link>
-                                    </motion.div>
+                                    </div>
                                   );
                                 })}
                               </motion.div>
@@ -817,23 +577,22 @@ export function TopNavbar() {
                   })}
                   {isAuthenticated && adminRoles.includes(user?.role) && (
                     <motion.li
-                      initial={{ opacity: 0, x: -10 }}
+                      initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
-                        delay: 0.05 + navLinks.length * 0.05,
-                        duration: 0.4,
-                        ease: [0.22, 1, 0.36, 1],
+                        delay: 0.04 + navLinks.length * 0.04,
+                        duration: 0.3,
                       }}
-                      className="flex justify-start w-full bg-[#F5F2EC] border-b border-outline-variant/30"
+                      className="w-full py-1"
                     >
                       <Link
                         onClick={() => setIsOpen(false)}
-                        className="group flex items-center justify-start gap-3 font-serif uppercase tracking-wider text-[15px] transition-all duration-300 w-full text-left py-3 px-1 text-on-surface hover:text-primary"
+                        className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2.5 px-3 rounded-xl bg-neutral-100/80 hover:bg-neutral-200/80 text-neutral-900"
                         to="/admin"
                       >
                         <span>Admin Portal</span>
                         {hasPendingInvite && (
-                          <span className="relative w-2 h-2 rounded-full bg-[#ff5a00] shadow-sm"></span>
+                          <span className="relative w-2 h-2 rounded-full bg-[#ff4d4f] shadow-xs" />
                         )}
                       </Link>
                     </motion.li>
@@ -841,112 +600,98 @@ export function TopNavbar() {
                 </ul>
               </div>
 
-              {/* Ultra-Minimal Footer */}
+              {/* Bottom Quick Actions Footer */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-auto w-full px-2 pb-12 pt-8"
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="mt-auto w-full pt-4 border-t border-black/[0.06]"
               >
-                <div className="w-full mt-4">
-                  <div className="flex items-center justify-between w-full px-1">
-                    {/* Left Group: Utilities */}
-                    <div className="flex items-center gap-4 sm:gap-7">
+                <div className="flex items-center justify-between w-full px-1">
+                  {/* Left: Utilities */}
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <Link
+                      to="/wishlist"
+                      onClick={() => setIsOpen(false)}
+                      className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                        <Heart size={18} strokeWidth={1.8} />
+                      </div>
+                      <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                        Wishlist
+                      </span>
+                    </Link>
+
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        setIsCartOpen(true);
+                      }}
+                      className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
+                    >
+                      <div className="relative w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                        <ShoppingBag size={18} strokeWidth={1.8} />
+                        {cartCount > 0 && (
+                          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#f7bb0e] text-black text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                            {cartCount}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                        Bag
+                      </span>
+                    </button>
+
+                    {isAuthenticated && (
                       <Link
-                        to="/wishlist"
+                        to="/dashboard"
                         onClick={() => setIsOpen(false)}
-                        className="flex flex-col items-center gap-2 text-on-surface hover:text-primary transition-colors group"
+                        className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
                       >
-                        <Heart
-                          size={24}
-                          strokeWidth={1.3}
-                          className="group-hover:scale-105 transition-transform"
-                        />
-                        <span className="text-[9px] font-sans uppercase tracking-[0.2em]">
-                          Wishlist
+                        <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                          <User size={18} strokeWidth={1.8} />
+                        </div>
+                        <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                          Profile
                         </span>
                       </Link>
+                    )}
+                  </div>
 
-                      <motion.button
+                  {/* Right: Auth Action */}
+                  <div>
+                    {!isAuthenticated ? (
+                      <button
                         onClick={() => {
                           setIsOpen(false);
-                          setIsCartOpen(true);
+                          openAuthModal();
                         }}
-                        animate={isCartBouncing ? { scale: [1, 1.1, 0.95, 1.05, 1] } : {}}
-                        transition={{ duration: 0.4 }}
-                        className="flex flex-col items-center gap-2 text-on-surface hover:text-primary transition-colors relative cursor-pointer group"
+                        className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
                       >
-                        <div className="relative">
-                          <ShoppingBag
-                            size={24}
-                            strokeWidth={1.3}
-                            className="group-hover:scale-105 transition-transform"
-                          />
-                          {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                              {cartCount}
-                            </span>
-                          )}
+                        <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                          <LogIn size={18} strokeWidth={1.8} />
                         </div>
-                        <span className="text-[9px] font-sans uppercase tracking-[0.2em]">Bag</span>
-                      </motion.button>
-
-                      {isAuthenticated && (
-                        <Link
-                          to="/dashboard"
-                          onClick={() => setIsOpen(false)}
-                          className="flex flex-col items-center gap-2 text-on-surface hover:text-primary transition-colors group"
-                        >
-                          <User
-                            size={24}
-                            strokeWidth={1.3}
-                            className="group-hover:scale-105 transition-transform"
-                          />
-                          <span className="text-[9px] font-sans uppercase tracking-[0.2em]">
-                            Profile
-                          </span>
-                        </Link>
-                      )}
-                    </div>
-
-                    {/* Right Group: Authentication */}
-                    <div className="flex items-center">
-                      {!isAuthenticated ? (
-                        <button
-                          onClick={() => {
-                            setIsOpen(false);
-                            openAuthModal();
-                          }}
-                          className="flex flex-col items-center gap-2 text-on-surface hover:text-primary transition-colors group cursor-pointer"
-                        >
-                          <LogIn
-                            size={24}
-                            strokeWidth={1.3}
-                            className="group-hover:scale-105 transition-transform"
-                          />
-                          <span className="text-[9px] font-sans uppercase tracking-[0.2em]">
-                            Sign In
-                          </span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setIsOpen(false);
-                            logout();
-                          }}
-                          className="flex flex-col items-center gap-2 text-on-surface hover:text-error transition-colors group cursor-pointer"
-                        >
-                          <LogOut
-                            size={24}
-                            strokeWidth={1.3}
-                            className="group-hover:scale-105 transition-transform"
-                          />
-                          <span className="text-[9px] font-sans uppercase tracking-[0.2em]">
-                            Sign Out
-                          </span>
-                        </button>
-                      )}
-                    </div>
+                        <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                          Sign In
+                        </span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsOpen(false);
+                          logout();
+                        }}
+                        className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-red-600 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-red-50 text-neutral-700 group-hover:text-red-600 transition-colors">
+                          <LogOut size={18} strokeWidth={1.8} />
+                        </div>
+                        <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-red-600">
+                          Sign Out
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -955,7 +700,7 @@ export function TopNavbar() {
         )}
       </AnimatePresence>
 
-      {(search.isOpen || visualSearch.isOpen) && (
+      {search.isOpen && (
         <Suspense fallback={null}>
           <IntelligentSearchOverlay
             isOpen={search.isOpen}
@@ -977,20 +722,6 @@ export function TopNavbar() {
             onExecuteSearch={search.executeSearch}
             onClearRecent={search.clearRecentSearches}
             correctedQuery={search.correctedQuery}
-            visualSearch={visualSearch}
-          />
-          <VisualSearchOverlay
-            isOpen={visualSearch.isOpen}
-            phase={visualSearch.phase}
-            previewUrl={visualSearch.previewUrl}
-            results={visualSearch.results}
-            error={visualSearch.error}
-            scanProgress={visualSearch.scanProgress}
-            scanStatus={visualSearch.scanStatus}
-            onClose={visualSearch.close}
-            onImageSelect={(file, mode) => visualSearch.handleImageSelect(file, mode || 'upload')}
-            onRetry={visualSearch.retry}
-            onReset={visualSearch.reset}
           />
         </Suspense>
       )}

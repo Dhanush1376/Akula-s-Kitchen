@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
 import { fallbackCollections, getCollectionIcon, formatPrice } from './searchUtils';
-import { MANDALA_VARIANT_URLS } from '../../constants/mandalaAssets';
 
 export function SearchDiscovery({
   discoveryData,
@@ -20,21 +19,6 @@ export function SearchDiscovery({
 
   return (
     <div className="py-2 relative overflow-hidden min-h-[400px]">
-      {/* Mandala Background Watermark */}
-      <div
-        className="absolute top-0 right-0 translate-x-[15%] -translate-y-[15%] pointer-events-none opacity-[0.12] lg:opacity-[0.08] z-0 mix-blend-normal"
-        style={{
-          WebkitMaskImage: 'radial-gradient(circle, black 30%, transparent 70%)',
-          maskImage: 'radial-gradient(circle, black 30%, transparent 70%)',
-        }}
-      >
-        <img
-          src={MANDALA_VARIANT_URLS[1]}
-          alt=""
-          className="w-[120vw] h-[120vw] lg:w-[650px] lg:h-[650px] object-contain dark:invert animate-[spin_120s_linear_infinite]"
-        />
-      </div>
-
       <div className="relative z-10">
         {/* Mobile Event Collections moved down */}
 

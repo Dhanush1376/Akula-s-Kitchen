@@ -2,10 +2,9 @@ import { Truck, PackageCheck, History } from 'lucide-react';
 import React from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { SEO } from '../components/seo/SEO';
-import { MandalaElement } from '../components/ui/MandalaElement';
 import { OrderTrackingSkeleton } from '../components/ui/Skeleton';
 import { useOrderTracking } from '../hooks/useOrderTracking';
-import { TrackingTimeline } from '../components/tracking/TrackingTimeline';
+import OrderJourneyTracker from '../features/orders/components/OrderJourneyTracker';
 import { TrackingCourierDetails } from '../components/tracking/TrackingCourierDetails';
 import { TrackingOperatorPanel } from '../components/tracking/TrackingOperatorPanel';
 import { useConfig } from '../context/ConfigContext';
@@ -62,61 +61,48 @@ export function OrderTrackingPublic() {
           to="/"
           className="btn-primary px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md"
         >
-          Return to Atelier
+          Return to Store
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-bright py-12 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 relative overflow-hidden font-sans">
       <SEO title={`Track Dispatch #${order._id.substring(0, 8).toUpperCase()}`} noindex />
 
-      {/* Decorative Brand Mandala */}
-      <MandalaElement
-        variant={2}
-        size={500}
-        className="absolute -top-40 -right-40 opacity-[0.03] pointer-events-none"
-      />
-      <MandalaElement
-        variant={1}
-        size={550}
-        className="absolute -bottom-40 -left-40 opacity-[0.03] pointer-events-none"
-      />
-
-      <div className="max-w-[800px] mx-auto space-y-6 relative z-10">
+      <div className="max-w-[768px] mx-auto space-y-4 relative z-10">
         {/* Top Header Card */}
-        <div className="bg-white border border-outline-variant/30 rounded-2xl p-6 lg:p-8 shadow-xs text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40" />
-
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider mb-4">
-            <Truck className="text-xs" strokeWidth={1.5} />
-            <span>{order.courierPartner || 'Standard Courier'} Feed</span>
+        <div className="bg-white border border-neutral-200 rounded-lg p-5 sm:p-6 shadow-sm text-center relative overflow-hidden">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-neutral-100 border border-neutral-200 text-neutral-700 rounded-md text-[10.5px] font-semibold mb-3">
+            <Truck className="w-3.5 h-3.5 text-neutral-600" strokeWidth={1.8} />
+            <span>{order.courierPartner || 'Courier'} Tracking</span>
           </div>
 
-          <h2 className="font-body text-2xl font-bold text-on-surface mb-2">
+          <h2 className="text-[15px] sm:text-[16px] font-bold text-neutral-900 mb-1">
             Live Dispatch Tracking
           </h2>
-          <p className="text-xs text-secondary leading-relaxed max-w-md mx-auto">
-            Order Reference: <strong className="text-on-surface font-mono">{order._id}</strong>
+          <p className="text-[12px] text-neutral-500 leading-relaxed max-w-md mx-auto">
+            Order Reference:{' '}
+            <strong className="text-neutral-900 font-mono font-semibold">{order._id}</strong>
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-dashed border-outline-variant/30 text-left text-[11px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-neutral-200 text-left text-[11.5px]">
             <div>
-              <span className="text-[9px] uppercase font-bold text-secondary tracking-widest block mb-0.5">
+              <span className="text-[10px] font-semibold text-neutral-500 block mb-0.5">
                 AWB Tracking No
               </span>
-              <strong className="text-on-surface font-mono text-xs">
+              <strong className="text-neutral-900 font-mono text-[11.5px] font-semibold">
                 {order.trackingNumber ||
                   `SR-${order._id.substring(order._id.length - 8).toUpperCase()}-IN`}
               </strong>
             </div>
             <div>
-              <span className="text-[9px] uppercase font-bold text-secondary tracking-widest block mb-0.5">
+              <span className="text-[10px] font-semibold text-neutral-500 block mb-0.5">
                 Date Dispatched
               </span>
-              <strong className="text-on-surface">
-                {new Date(order.createdAt).toLocaleDateString('en-US', {
+              <strong className="text-neutral-900 font-medium">
+                {new Date(order.createdAt).toLocaleDateString('en-IN', {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric',
@@ -124,19 +110,19 @@ export function OrderTrackingPublic() {
               </strong>
             </div>
             <div>
-              <span className="text-[9px] uppercase font-bold text-secondary tracking-widest block mb-0.5">
+              <span className="text-[10px] font-semibold text-neutral-500 block mb-0.5">
                 Payment Method
               </span>
-              <strong className="text-on-surface font-bold uppercase">
-                {order.paymentMethod?.includes('COD') ? 'Cash on Delivery' : 'Prepaid (Online)'}
+              <strong className="text-neutral-900 font-medium uppercase">
+                {order.paymentMethod?.includes('COD') ? 'Cash on Delivery' : 'Prepaid'}
               </strong>
             </div>
             <div>
-              <span className="text-[9px] uppercase font-bold text-secondary tracking-widest block mb-0.5">
+              <span className="text-[10px] font-semibold text-neutral-500 block mb-0.5">
                 Current Status
               </span>
               <span
-                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${statusColors[order.orderStatus] || 'bg-surface'}`}
+                className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${statusColors[order.orderStatus] || 'bg-neutral-100 text-neutral-800 border-neutral-200'}`}
               >
                 {order.orderStatus}
               </span>
@@ -144,13 +130,19 @@ export function OrderTrackingPublic() {
           </div>
         </div>
 
-        {/* Real-time Timeline Visualization (Overall Order) */}
-        <TrackingTimeline orderStatus={order.orderStatus} />
+        {/* Real-time Multi-Color Timeline Journey */}
+        <OrderJourneyTracker
+          order={order}
+          status={order.orderStatus}
+          isDelivered={order.orderStatus?.toLowerCase() === 'delivered'}
+          isCancelled={order.orderStatus?.toLowerCase() === 'cancelled'}
+          isRefunded={order.orderStatus?.toLowerCase() === 'refunded'}
+        />
 
         {/* Package Level Progress */}
         {order.packages && order.packages.length > 0 && (
-          <div className="bg-white border border-outline-variant/30 rounded-2xl p-6 lg:p-8 shadow-xs mt-6">
-            <h2 className="text-xs font-bold text-secondary uppercase tracking-widest mb-4 flex items-center gap-1.5">
+          <div className="bg-white border border-neutral-200 rounded-lg p-5 shadow-sm mt-4">
+            <h2 className="text-[12.5px] font-semibold text-neutral-800 mb-3 flex items-center gap-1.5">
               <PackageCheck className="text-sm" strokeWidth={1.5} />
               <span>Package Tracking ({order.packages.length})</span>
             </h2>
@@ -310,7 +302,7 @@ export function OrderTrackingPublic() {
 
         {/* Footer info */}
         <div className="text-center text-[10px] text-secondary font-medium tracking-wide">
-          {storeNameUpper || 'SIRI ARTS & CRAFTS'} • ATELIER DELIVERIES • NEED HELP? CALL{' '}
+          {storeNameUpper || "AKULA'S KITCHEN"} • KITCHEN DELIVERIES • NEED HELP? CALL{' '}
           {storeSettings?.support?.phone || storeSettings?.contact?.phone || '+91 99999 99999'}
         </div>
       </div>

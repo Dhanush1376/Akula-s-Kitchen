@@ -1,13 +1,11 @@
-import { PackageCheck, FileEdit, Tag, BellRing } from 'lucide-react';
+import { BellRing, CheckCircle2, Clock, Truck, XCircle } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
 import { OptimizedImage } from '../ui/OptimizedImage';
 import { useRazorpay } from '../../hooks/useRazorpay';
 import { useUserSocket } from '../../context/UserSocketProvider';
-import { ReturnExchangeSection } from './ReturnExchangeSection';
 import {
   OrderDeliveryAddressCard,
-  RentalDepositStatusCard,
   OrderPricingSummaryCard,
   OrderJourneyTracker,
 } from '../../features/orders/components';
@@ -16,321 +14,221 @@ export function OrderDetail() {
   const {
     selectedOrder: order,
     selectedItem: item,
-    _selectedOrderItemIndex,
+    setSelectedOrderId,
     isPriceDetailsOpen,
     setIsPriceDetailsOpen,
     downloadInvoice,
     setReviewingProduct,
     user,
   } = useDashboard();
+
   const { resumePayment } = useRazorpay();
   const [isResuming, setIsResuming] = React.useState(false);
-  const [returnRequest, setReturnRequest] = React.useState(null);
-  const [exchangeDetails, setExchangeDetails] = React.useState(null);
   const activeStepRef = React.useRef(null);
-
-  const socket = useUserSocket();
+  const _socket = useUserSocket();
 
   useEffect(() => {
     if (!order?.statusHistory?.length) return;
 
     // Update local storage to mark this order as viewed
-    const initialViews = JSON.parse(localStorage.getItem('siri_order_views') || '{}');
+    const initialViews = JSON.parse(localStorage.getItem('akula_order_views') || '{}');
     initialViews[order._id || order.id] = Date.now();
-    localStorage.setItem('siri_order_views', JSON.stringify(initialViews));
-    window.dispatchEvent(new Event('siri_order_views_updated'));
+    localStorage.setItem('akula_order_views', JSON.stringify(initialViews));
+    window.dispatchEvent(new Event('akula_order_views_updated'));
   }, [order]);
 
-  React.useEffect(() => {
-    if (!order || !item) return;
-    const fetchReturn = async () => {
-      try {
-        const { returnService } = await import('../../services/api/returnService');
-        const res = await returnService.getMyReturns();
-        let activeReturn = null;
-        if (res.data?.success) {
-          const returns = res.data.data.returns || res.data.data || [];
-          activeReturn = returns.find(
-            (r) =>
-              (typeof r.orderId === 'object' ? r.orderId._id || r.orderId.id : r.orderId) ===
-                (order._id || order.id) &&
-              r.items.some(
-                (ri) =>
-                  (typeof ri.productId === 'object' ? ri.productId._id : ri.productId) ===
-                  (typeof item.productId === 'object' ? item.productId._id : item.productId),
-              ),
-          );
-          setReturnRequest(activeReturn || null);
-        }
+  if (!order) return null;
 
-        if (activeReturn && activeReturn.returnType === 'exchange') {
-          const exRes = await returnService.getMyExchanges();
-          if (exRes.data?.success) {
-            const exchanges = exRes.data.data.exchanges || exRes.data.data || [];
-            const activeEx = exchanges.find(
-              (e) =>
-                (typeof e.returnRequestId === 'object'
-                  ? e.returnRequestId._id
-                  : e.returnRequestId) === activeReturn._id,
-            );
-            setExchangeDetails(activeEx || null);
-          }
-        } else {
-          setExchangeDetails(null);
-        }
-      } catch (err) {
-        console.error('Failed to load return details', err);
-      }
-    };
+  const status = (order.orderStatus || order.status || 'Confirmed').toLowerCase();
 
-    fetchReturn();
-
-    if (!socket) return;
-
-    const handleUpdate = (data) => {
-      if (!data || data.orderId === (order._id || order.id)) {
-        fetchReturn();
-      }
-    };
-
-    socket.on('return:status_updated', handleUpdate);
-    socket.on('return:created', handleUpdate);
-
-    return () => {
-      socket.off('return:status_updated', handleUpdate);
-      socket.off('return:created', handleUpdate);
-    };
-  }, [order, item, socket]);
-
-  if (!order || !item) return null;
-
-  const prodTitle =
-    item.title ||
-    (typeof item.productId === 'object' ? item.productId?.title : null) ||
-    'Artisanal Piece';
-  const prodPrice =
-    item.price || (typeof item.productId === 'object' ? item.productId?.price : 0) || 0;
-  const prodImage =
-    (order.isCustomOrder && order.customOrderId?.productSnapshot?.imageSrc) ||
-    (order.isCustomOrder && order.customOrderId?.inspirationImages?.[0]) ||
-    (order.isCustomOrder && order.customOrderId?.referenceImages?.[0]) ||
-    item.imageSrc ||
-    (typeof item.productId === 'object'
-      ? item.productId?.imageSrc || item.productId?.images?.[0]
-      : null) ||
-    'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png';
-  const prodVariant = item.variant || 'Default';
-  const discount =
-    order.discount ||
-    (item.originalPrice ? Math.max(0, (item.originalPrice - item.price) * item.quantity) : 0);
-  const status = order.orderStatus || order.status || 'Confirmed';
-  const isRental =
-    order.isRental === true || order.orderType === 'rental' || item.type === 'rental';
-
-  const isDelivered = [
-    'delivered',
-    'returned',
-    'refunded',
-    'settled',
-    'active_rental',
-    'active rental',
-  ].includes(status?.toLowerCase());
-  const isCancelled = status?.toLowerCase() === 'cancelled';
-  const isReturned = ['returned', 'refunded', 'settled'].includes(status?.toLowerCase());
+  const isDelivered = ['delivered', 'returned', 'refunded', 'settled'].includes(status);
+  const isCancelled = status === 'cancelled';
   const isRefunded =
-    status?.toLowerCase() === 'refunded' ||
+    status === 'refunded' ||
     order.paymentStatus === 'refunded' ||
     order.refundStatus === 'refunded' ||
-    status?.toLowerCase() === 'settled';
+    status === 'settled';
 
-  const isNonRefundable =
-    typeof item.productId === 'object' ? item.productId?.isNonRefundable : false;
-  const isReturnExchangeBlocked =
-    !isDelivered || returnRequest || isNonRefundable || isReturned || isRefunded || isCancelled;
+  const isRental = order.orderType === 'rental' || order.isRental === true;
+
+  const getStatusBadge = () => {
+    switch (status) {
+      case 'delivered':
+        return {
+          icon: CheckCircle2,
+          label: 'Delivered',
+          classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        };
+      case 'shipped':
+      case 'out_for_delivery':
+        return {
+          icon: Truck,
+          label: status === 'out_for_delivery' ? 'Out for Delivery' : 'Shipped',
+          classes: 'bg-blue-50 text-blue-700 border-blue-200',
+        };
+      case 'cancelled':
+        return {
+          icon: XCircle,
+          label: 'Cancelled',
+          classes: 'bg-red-50 text-red-700 border-red-200',
+        };
+      default:
+        return {
+          icon: Clock,
+          label: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
+          classes: 'bg-amber-50 text-amber-800 border-amber-200',
+        };
+    }
+  };
+
+  const statusBadge = getStatusBadge();
+  const StatusIcon = statusBadge.icon;
+
+  const orderDate = new Date(order.createdAt || order.orderDate || Date.now()).toLocaleDateString(
+    'en-IN',
+    { day: 'numeric', month: 'short', year: 'numeric' },
+  );
+
+  const itemsList = order.items && order.items.length > 0 ? order.items : item ? [item] : [];
 
   return (
-    <div className="space-y-4 text-left font-body">
-      {/* Product Summary Header */}
-      <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 shadow-xs">
-        <div className="pb-4 mb-4 border-b border-outline-variant/20 flex justify-between items-center relative">
-          <h2 className="text-[9px] font-bold uppercase tracking-widest text-secondary flex items-center gap-1.5 pl-2">
-            <PackageCheck className="text-[14px]" strokeWidth={1.5} />
-            Order Overview
-          </h2>
-          <span className="text-[9px] text-secondary font-mono tracking-wider">
-            ID: {order._id}
-          </span>
+    <div className="space-y-3.5 text-left font-sans">
+      {/* Main Order Overview Card */}
+      <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm space-y-4">
+        {/* Header Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-neutral-200">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[13.5px] sm:text-[14px] font-bold text-neutral-950 font-mono">
+                #
+                {String(order._id || order.id)
+                  .slice(-8)
+                  .toUpperCase()}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold border ${statusBadge.classes}`}
+              >
+                <StatusIcon className="w-3 h-3" />
+                <span>{statusBadge.label}</span>
+              </span>
+            </div>
+            <p className="text-[11.5px] text-neutral-500 mt-0.5">
+              Placed on {orderDate}
+              {order.paymentMethod && <span> • Paid via {order.paymentMethod.toUpperCase()}</span>}
+            </p>
+          </div>
+
+          <div className="text-left sm:text-right">
+            <span className="text-[10.5px] text-neutral-500 block">Total Amount</span>
+            <span className="text-[15px] sm:text-[16px] font-bold text-neutral-950">
+              ₹{(order.total || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
         </div>
 
-        <div className="flex flex-row items-center gap-4">
-          <div className="w-16 h-16 rounded overflow-hidden bg-surface-container border border-outline-variant/20 shrink-0 shadow-sm">
-            <OptimizedImage
-              src={prodImage}
-              alt={prodTitle}
-              containerClassName="w-full h-full"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-[12px] truncate text-on-surface">{prodTitle}</h3>
-            <p className="text-[10px] text-secondary mt-1 tracking-wider">
-              Variant: {prodVariant} • Qty: {item.quantity || 1}
-            </p>
-            <div className="mt-1 flex items-center gap-3">
-              <span className="text-[12px] font-bold text-primary font-body">
-                ₹{(prodPrice * (item.quantity || 1)).toLocaleString()}
-              </span>
-              {isRental && item.durationDays && (
-                <span className="text-[10px] text-secondary font-medium font-body">
-                  for {item.durationDays} days
-                </span>
-              )}
-              {!isRental && item.originalPrice && item.originalPrice > prodPrice && (
-                <span className="text-[10px] text-secondary line-through font-light font-body">
-                  ₹{(item.originalPrice * (item.quantity || 1)).toLocaleString()}
-                </span>
-              )}
-            </div>
-            {/* Rental specific dates and deposit */}
-            {isRental && item.rentalStartDate && item.rentalEndDate && (
-              <p className="text-[10px] text-secondary font-light mt-1.5 font-body">
-                Period:{' '}
-                {new Date(item.rentalStartDate).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                })}
-                {' – '}
-                {new Date(item.rentalEndDate).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </p>
-            )}
-            {isRental && item.securityDeposit > 0 && (
-              <p className="text-[10px] text-[#8c7335] font-medium mt-0.5 font-body">
-                Includes ₹{item.securityDeposit.toLocaleString()} refundable deposit
-              </p>
-            )}
+        {/* Ordered Items List */}
+        <div>
+          <h3 className="text-[12.5px] font-semibold text-neutral-800 mb-2.5">
+            Items Ordered ({itemsList.length})
+          </h3>
+
+          <div className="divide-y divide-neutral-100">
+            {itemsList.map((orderItem, idx) => {
+              const itemTitle =
+                orderItem.title ||
+                (typeof orderItem.productId === 'object' ? orderItem.productId?.title : null) ||
+                'Delicacy Item';
+              const itemImage =
+                orderItem.imageSrc ||
+                (typeof orderItem.productId === 'object'
+                  ? orderItem.productId?.imageSrc || orderItem.productId?.images?.[0]
+                  : null) ||
+                '/MainLogo.png';
+              const itemVariant = orderItem.variant || 'Default';
+              const itemQty = orderItem.quantity || 1;
+              const itemPrice =
+                orderItem.price ||
+                (typeof orderItem.productId === 'object' ? orderItem.productId?.price : 0) ||
+                0;
+
+              return (
+                <div key={idx} className="py-3 first:pt-0 last:pb-0 flex items-center gap-3">
+                  <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-md bg-neutral-100 border border-neutral-200 overflow-hidden shrink-0">
+                    <OptimizedImage
+                      src={itemImage}
+                      alt={itemTitle}
+                      containerClassName="w-full h-full"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-neutral-900 text-[13px] truncate leading-tight">
+                      {itemTitle}
+                    </h4>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">
+                      {itemVariant && itemVariant !== 'Default' ? `Pack: ${itemVariant} • ` : ''}
+                      Qty: {itemQty}
+                    </p>
+                    <div className="text-[12.5px] font-bold text-neutral-950 mt-0.5">
+                      ₹{(itemPrice * itemQty).toLocaleString('en-IN')}
+                    </div>
+                  </div>
+
+                  {/* Review Button for Delivered item */}
+                  {isDelivered && !isRental && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setReviewingProduct({
+                          productId: orderItem.productId?._id || orderItem.productId,
+                          productTitle: itemTitle,
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-md border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition-colors shrink-0 cursor-pointer"
+                    >
+                      Rate & Review
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
-
-      {!isRental && <ReturnExchangeSection orderId={order._id || order.id} />}
 
       {/* Dynamic Timeline Tracker */}
       <OrderJourneyTracker
         order={order}
         status={status}
-        isRental={isRental}
         isDelivered={isDelivered}
         isCancelled={isCancelled}
-        isReturned={isReturned}
         isRefunded={isRefunded}
-        returnRequest={returnRequest}
-        exchangeDetails={exchangeDetails}
         activeStepRef={activeStepRef}
-        isResuming={isResuming}
-        setIsResuming={setIsResuming}
-        resumePayment={resumePayment}
       />
 
-      {/* Loyalty Review Callout — Purchase only */}
-      {!isRental && (
-        <div
-          className={`bg-surface-bright border border-outline-variant/40 rounded-lg p-5 shadow-xs transition-all flex items-center justify-between gap-4 ${!isDelivered ? 'opacity-75 grayscale-[50%]' : ''}`}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary/5 text-primary flex items-center justify-center border border-primary/20 shrink-0">
-              <span className="material-symbols-outlined text-[16px]">stars</span>
-            </div>
-            <div>
-              <h4 className="font-bold text-[9px] uppercase tracking-widest text-on-surface">
-                Rate this Artisan Masterpiece
-              </h4>
-              <p className="text-[9px] text-secondary tracking-wider mt-0.5">
-                {isDelivered
-                  ? 'Share your review to win Loyalty Coins!'
-                  : 'Unlocks once item is successfully delivered.'}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() =>
-              isDelivered &&
-              setReviewingProduct({
-                productId: item.productId?._id || item.productId,
-                productTitle: prodTitle,
-              })
-            }
-            disabled={!isDelivered}
-            className="px-6 py-2.5 bg-surface hover:bg-surface-container-low text-on-surface font-bold uppercase tracking-widest text-[9px] rounded-lg border border-outline-variant/30 shadow-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
-          >
-            <FileEdit className="text-[14px]" strokeWidth={1.5} /> Write Review
-          </button>
-        </div>
-      )}
-
-      {/* Rental Security Deposit Status Card */}
-      <RentalDepositStatusCard isRental={isRental} order={order} item={item} />
-
-      {/* Split Panels: Delivery Address & Map Grid */}
+      {/* Delivery Address & GPS Location Card */}
       <OrderDeliveryAddressCard shippingAddress={order.shippingAddress} />
 
-      {/* Discount Banner */}
-      {discount > 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2">
-            <Tag className="text-[14px]" strokeWidth={1.5} />
-            <span className="text-[9px] font-bold uppercase tracking-widest">
-              Premium Discount Applied
-            </span>
-          </div>
-          <strong className="text-[11px] font-body text-emerald-950">
-            Saved ₹{discount.toLocaleString()}
-          </strong>
-        </div>
-      )}
-
-      {/* Collapsible Payment Details Panel */}
+      {/* Pricing Breakdown & Invoice Card */}
       <OrderPricingSummaryCard
         order={order}
         item={item}
-        isRental={isRental}
         isPriceDetailsOpen={isPriceDetailsOpen}
         setIsPriceDetailsOpen={setIsPriceDetailsOpen}
         isResuming={isResuming}
         setIsResuming={setIsResuming}
         resumePayment={resumePayment}
         downloadInvoice={downloadInvoice}
-        returnRequest={returnRequest}
-        isReturnExchangeBlocked={isReturnExchangeBlocked}
-        isDelivered={isDelivered}
-        isNonRefundable={isNonRefundable}
       />
 
-      {/* Footer Info */}
-      <div className="flex items-start gap-3 p-4 bg-surface-bright border border-outline-variant/30 rounded-lg shadow-xs">
-        <BellRing className="text-primary text-[16px] mt-0.5" strokeWidth={1.5} />
-        <div className="space-y-2">
-          <p className="text-[10px] text-secondary tracking-wider leading-relaxed">
-            Real-time dispatch and delivery status updates are forwarded automatically to{' '}
-            <strong className="text-on-surface">{user?.phone || 'your mobile contact'}</strong> and{' '}
-            <strong className="text-on-surface">{user?.email}</strong>.
-          </p>
-          <div className="text-[8px] text-secondary/60 font-bold uppercase tracking-widest flex items-center gap-3">
-            <span>
-              Ordered:{' '}
-              {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
-            </span>
-            {order.trackingNumber && <span>AWB: {order.trackingNumber}</span>}
-          </div>
-        </div>
+      {/* Dispatch Note Footer */}
+      <div className="flex items-center gap-2 p-3 bg-neutral-50/80 border border-neutral-200 rounded-lg text-[11px] text-neutral-500">
+        <BellRing className="w-3.5 h-3.5 text-neutral-600 shrink-0" strokeWidth={1.8} />
+        <span>
+          Real-time delivery updates are sent automatically to{' '}
+          <strong className="text-neutral-800 font-semibold">{user?.phone || user?.email}</strong>.
+        </span>
       </div>
     </div>
   );

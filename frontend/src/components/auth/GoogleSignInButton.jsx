@@ -67,7 +67,7 @@ export function GoogleSignInButton({ onClick, isLoading, disabled = false, rende
         onClick={onClick}
         disabled={disabled || isLoading}
         whileTap={{ scale: 0.98 }}
-        className="w-full h-12 bg-white border border-outline-variant/40 text-on-surface-variant rounded-full flex items-center justify-center gap-3 font-label-sm text-[10px] uppercase tracking-widest font-bold hover:bg-surface-container-low/80 hover:border-outline-variant/60 hover:shadow-sm transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed group relative overflow-hidden shadow-xs"
+        className="w-full h-12 bg-white hover:bg-neutral-50 active:scale-98 text-neutral-900 rounded-full flex items-center justify-center gap-2.5 font-extrabold text-[12px] sm:text-[13px] uppercase tracking-wider border-[1.5px] border-black/15 hover:border-black/35 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group relative overflow-hidden cursor-pointer"
         aria-label="Continue with Google"
       >
         {isLoading ? (
@@ -75,9 +75,9 @@ export function GoogleSignInButton({ onClick, isLoading, disabled = false, rende
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full"
+              className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full"
             />
-            <span className="text-on-surface-variant/60">Signing in…</span>
+            <span className="text-neutral-900 font-bold">Signing in…</span>
           </div>
         ) : (
           <>

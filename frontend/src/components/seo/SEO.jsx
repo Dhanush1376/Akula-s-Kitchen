@@ -13,9 +13,8 @@ import {
 import { getOptimizedUrl } from '../../utils/media/imageUtils';
 
 const DEFAULT_DESCRIPTION =
-  'Shop premium handcrafted wedding decor, pooja essentials, floral decorations, event styling, and personalized gifts at Siri Arts & Crafts.';
-const DEFAULT_TITLE =
-  'Siri Arts & Crafts — Handcrafted Wedding Decor, Event Decorations & Custom Gifts';
+  "Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen.";
+const DEFAULT_TITLE = "Akula's Kitchen — Authentic Flavors & Premium Culinary Experiences";
 const priceValidUntilDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   .toISOString()
   .split('T')[0];
@@ -52,12 +51,12 @@ export function SEO({
   const { storeSettings } = useConfig();
 
   const sameAs = buildSameAsLinks(footer?.socialLinks);
-  const siteName = storeSettings?.general?.storeName?.trim() || SITE_NAME || 'Siri Arts & Crafts';
+  const siteName = storeSettings?.general?.storeName?.trim() || SITE_NAME || "Akula's Kitchen";
   const siteUrl = SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
-  const locality = storeSettings?.contact?.city || 'Ongole';
+  const locality = storeSettings?.contact?.city || '';
   const region = storeSettings?.contact?.state || 'Andhra Pradesh';
-  const postalCode = storeSettings?.contact?.postalCode || '523001';
+  const postalCode = storeSettings?.contact?.postalCode || '';
   const country = storeSettings?.contact?.country || 'India';
   const street = storeSettings?.contact?.address || contact?.address || '';
   const supportHoursStr = storeSettings?.contact?.supportHours || 'Mon - Sat, 10 AM to 6 PM';
@@ -79,11 +78,11 @@ export function SEO({
 
   const tagline = storeSettings?.general?.tagline?.trim();
   const defaultDesc = tagline
-    ? `${tagline}. Shop premium handcrafted wedding decor, pooja essentials, and event styling at ${siteName}.`
-    : `Shop premium handcrafted wedding decor, pooja essentials, floral decorations, event styling, and personalized gifts at ${siteName}.`;
+    ? `${tagline}. Experience authentic recipes, premium quality, and culinary excellence at ${siteName}.`
+    : `Authentic flavors, premium quality, and exquisite culinary experiences by ${siteName}.`;
   const defaultTitle = tagline
     ? `${siteName} — ${tagline}`
-    : `${siteName} — Handcrafted Wedding Decor, Event Decorations & Custom Gifts`;
+    : `${siteName} — Authentic Flavors & Premium Culinary Experiences`;
 
   const settingsPhone = storeSettings?.contact?.phone || contact?.phone;
   const contactPhone = settingsPhone
@@ -95,10 +94,11 @@ export function SEO({
   const globalSeoKeywords = seo?.globalKeywords;
   const globalSeoOgImage = seo?.ogImage;
 
-  // Clean title to avoid duplicate "| Siri Arts & Crafts" or stale store name suffix
+  // Clean title to avoid duplicate "| Akula's Kitchen" or stale store name suffix
   const cleanTitle = title
     ? title
         .replace(new RegExp(`\\s*\\|?\\s*${siteName}$`, 'i'), '')
+        .replace(/\s*\|\s*Akula's Kitchen$/i, '')
         .replace(/\s*\|\s*Siri Arts & Crafts$/i, '')
         .replace(/\s*\|\s*Siri Arts and Crafts$/i, '')
         .trim()
@@ -123,7 +123,7 @@ export function SEO({
     url: siteUrl,
     logo: siteUrl ? `${siteUrl}/favicon.png` : undefined,
     description:
-      tagline || 'Premium handcrafted event decor, wedding trays, and heritage pooja essentials.',
+      tagline || 'Authentic flavors, premium recipes, and exquisite culinary experiences.',
     address: {
       '@type': 'PostalAddress',
       ...(street && { streetAddress: street }),
@@ -152,7 +152,7 @@ export function SEO({
     telephone: contactPhone,
     description:
       tagline ||
-      'Premium handcrafted event decor, wedding trays, and heritage pooja essentials. Woven with tradition and refined for the modern aesthetic.',
+      "Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen.",
     address: {
       '@type': 'PostalAddress',
       ...(street && { streetAddress: street }),
@@ -294,7 +294,11 @@ export function SEO({
       <meta property="og:image:height" content="630" />
       <meta
         property="og:image:alt"
-        content={title ? `${title} — ${siteName}` : `${siteName} — Premium Handcrafted Event Decor`}
+        content={
+          title
+            ? `${title} — ${siteName}`
+            : `${siteName} — Authentic Flavors & Premium Culinary Experiences`
+        }
       />
       <meta property="og:locale" content="en_IN" />
 
@@ -306,7 +310,11 @@ export function SEO({
       {metaImage && <meta name="twitter:image" content={metaImage} />}
       <meta
         name="twitter:image:alt"
-        content={title ? `${title} — ${siteName}` : `${siteName} — Premium Handcrafted Event Decor`}
+        content={
+          title
+            ? `${title} — ${siteName}`
+            : `${siteName} — Authentic Flavors & Premium Culinary Experiences`
+        }
       />
 
       {article && (
@@ -317,8 +325,8 @@ export function SEO({
         </>
       )}
 
-      <meta name="theme-color" content="#d4af37" />
-      <meta name="msapplication-TileColor" content="#d4af37" />
+      <meta name="theme-color" content="#F7BB0E" />
+      <meta name="msapplication-TileColor" content="#F7BB0E" />
 
       {currentUrl && <link rel="alternate" hrefLang="en-in" href={currentUrl} />}
       {currentUrl && <link rel="alternate" hrefLang="x-default" href={currentUrl} />}
@@ -343,18 +351,12 @@ export function SEO({
                 {
                   '@type': 'SiteNavigationElement',
                   position: 2,
-                  name: 'Event Decorations',
+                  name: 'Menu & Services',
                   url: `${siteUrl}/events`,
                 },
                 {
                   '@type': 'SiteNavigationElement',
                   position: 3,
-                  name: 'Custom Orders',
-                  url: `${siteUrl}/custom-orders`,
-                },
-                {
-                  '@type': 'SiteNavigationElement',
-                  position: 4,
                   name: 'Contact',
                   url: `${siteUrl}/contact`,
                 },

@@ -9,7 +9,7 @@ export function MaintenanceGate() {
   const { loading, isStoreClosed, isMaintenanceMode } = useConfig();
   const [isOverlayOpen, setIsOverlayOpen] = useState(() => {
     try {
-      return sessionStorage.getItem('siri_store_closed_dismissed') !== 'true';
+      return sessionStorage.getItem('akula_store_closed_dismissed') !== 'true';
     } catch {
       return true;
     }
@@ -31,7 +31,7 @@ export function MaintenanceGate() {
   const handleCloseOverlay = () => {
     setIsOverlayOpen(false);
     try {
-      sessionStorage.setItem('siri_store_closed_dismissed', 'true');
+      sessionStorage.setItem('akula_store_closed_dismissed', 'true');
     } catch {}
   };
 

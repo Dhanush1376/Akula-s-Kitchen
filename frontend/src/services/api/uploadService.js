@@ -3,13 +3,14 @@ import { uploadWithRetry } from './_shared';
 import { mediaLibraryService } from '../mediaLibraryService';
 
 export const uploadService = {
-  uploadImages: async (formData, folder = 'siri-arts-crafts/direct-uploads', onProgress = null) => {
+  uploadImages: async (formData, folder = 'akulas-kitchen/direct-uploads', onProgress = null) => {
     let targetFolder = folder;
     if (
+      !targetFolder.startsWith('akulas-kitchen/') &&
       !targetFolder.startsWith('siri-arts-crafts/') &&
       !targetFolder.startsWith('event_decor_ecommerce/')
     ) {
-      targetFolder = `siri-arts-crafts/${folder}`;
+      targetFolder = `akulas-kitchen/${folder}`;
     }
 
     return uploadWithRetry(async (fd) => {

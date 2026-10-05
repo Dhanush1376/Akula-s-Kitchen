@@ -1,9 +1,19 @@
 import React from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
+import {
+  ShieldCheck,
+  Phone,
+  Mail,
+  ArrowRight,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 
 /**
  * Encapsulated 6-digit OTP verification section for Cash on Delivery (COD) orders.
- * Supports Phone (SMS), Email, and Customer Choice (Both) delivery channels based on store settings.
+ * Redesigned in Akula's Kitchen aesthetic with reduced border radius and clean labels.
  */
 export default function CodOtpVerificationSection({
   paymentOption,
@@ -125,68 +135,61 @@ export default function CodOtpVerificationSection({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="mb-4 rounded-lg border border-outline-variant/40 bg-surface-bright p-4 sm:p-5 shadow-xs space-y-3"
+          className="mb-4 rounded-lg border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm space-y-3.5"
         >
           {/* Header */}
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-label text-[10px] sm:text-[11px] font-bold text-on-surface uppercase tracking-widest flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[15px] text-primary">
-                verified_user
+          <div className="flex items-center justify-between gap-2 border-b border-neutral-200 pb-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-neutral-800" strokeWidth={2} />
+              <span
+                className="text-[13px] font-semibold text-neutral-800 font-sans tracking-normal"
+                style={{ fontStretch: 'normal' }}
+              >
+                Verify COD Order
               </span>
-              Verify COD Order
-            </h3>
-
-            {/* Channel Indicator Badge */}
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 font-label text-[9px] font-bold uppercase tracking-wider text-primary">
-              <span className="material-symbols-outlined text-[12px]">
-                {isEmailActive ? 'mail' : 'sms'}
-              </span>
-              <span>{isEmailActive ? 'Email Verification' : 'SMS Verification'}</span>
-            </span>
+            </div>
           </div>
 
           {!codVerified ? (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {/* Channel Selector if configured as 'both' and OTP not yet sent */}
               {configuredCodChannel === 'both' && !codOtpSent && (
-                <div className="flex items-center gap-2 bg-surface-container-low/60 p-1.5 rounded-md border border-outline-variant/30">
-                  <span className="font-label text-[9px] uppercase tracking-wider font-bold text-secondary px-2">
+                <div className="flex items-center gap-2.5 bg-neutral-50 p-1.5 rounded-lg border border-neutral-200">
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-neutral-500 px-2 shrink-0">
                     Verify via:
                   </span>
                   <div className="grid grid-cols-2 gap-1.5 flex-1">
                     <button
                       type="button"
                       onClick={() => onSelectCodChannel && onSelectCodChannel('phone')}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md font-label text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                         selectedCodChannel === 'phone'
-                          ? 'bg-primary text-white shadow-xs'
-                          : 'text-on-surface hover:bg-black/5'
+                          ? 'bg-[#f7bb0e] text-neutral-950 border border-[#f7bb0e] shadow-xs'
+                          : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-[13px]">call</span>
-                      <span>Phone SMS</span>
+                      <Phone className="w-3.5 h-3.5" strokeWidth={2.2} />
+                      <span>Phone</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onSelectCodChannel && onSelectCodChannel('email')}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md font-label text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                         selectedCodChannel === 'email'
-                          ? 'bg-primary text-white shadow-xs'
-                          : 'text-on-surface hover:bg-black/5'
+                          ? 'bg-[#f7bb0e] text-neutral-950 border border-[#f7bb0e] shadow-xs'
+                          : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-[13px]">mail</span>
-                      <span>Email Code</span>
+                      <Mail className="w-3.5 h-3.5" strokeWidth={2.2} />
+                      <span>Email</span>
                     </button>
                   </div>
                 </div>
               )}
 
               {isTargetMissing ? (
-                <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-md flex items-center gap-2 text-amber-800 text-xs">
-                  <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0">
-                    warning
-                  </span>
+                <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center gap-2 text-amber-900 text-xs">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>
                     {isEmailActive
                       ? 'Please ensure your account or delivery address has a valid email address.'
@@ -194,15 +197,17 @@ export default function CodOtpVerificationSection({
                   </span>
                 </div>
               ) : !codOtpSent ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/50 border border-outline-variant/30 p-3 sm:p-3.5 rounded-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-50 border border-neutral-200 p-3.5 rounded-lg">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11.5px] text-secondary font-medium">
+                    <span className="text-[12px] text-neutral-600 font-medium">
                       {isEmailActive ? 'Send OTP to email:' : 'Send OTP to phone:'}
                     </span>
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-bright border border-outline-variant/40 text-[11.5px] font-mono font-medium text-on-surface">
-                      <span className="material-symbols-outlined text-[13px] text-primary">
-                        {isEmailActive ? 'mail' : 'call'}
-                      </span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-neutral-200 text-[12px] font-mono font-bold text-neutral-950">
+                      {isEmailActive ? (
+                        <Mail className="w-3.5 h-3.5 text-neutral-600" />
+                      ) : (
+                        <Phone className="w-3.5 h-3.5 text-neutral-600" />
+                      )}
                       <span>{targetValue}</span>
                     </div>
                   </div>
@@ -210,34 +215,32 @@ export default function CodOtpVerificationSection({
                     type="button"
                     onClick={handleSendCodOtp}
                     disabled={isSendingOtp || isProcessing}
-                    className="btn-primary py-2 px-4 rounded-full font-label text-[9px] sm:text-[10px] font-bold uppercase tracking-widest shadow-xs !text-white flex items-center justify-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer shrink-0"
+                    className="bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] py-2.5 px-5 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                   >
                     {isSendingOtp ? (
                       <>
-                        <span className="material-symbols-outlined text-[13px] animate-spin">
-                          progress_activity
-                        </span>
-                        <span>{isEmailActive ? 'Sending...' : 'Sending...'}</span>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Sending...</span>
                       </>
                     ) : (
                       <>
-                        <span>{isEmailActive ? 'Send Email OTP' : 'Send OTP'}</span>
-                        <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                        <span>Send OTP</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3 bg-surface-container-low/50 border border-outline-variant/30 p-4 rounded-md">
+                <div className="space-y-3.5 bg-neutral-50 border border-neutral-200 p-4 rounded-lg">
                   <div className="text-center sm:text-left">
-                    <p className="text-[12px] text-on-surface font-medium">
+                    <p className="text-[12px] text-neutral-800 font-medium">
                       Enter the 6-digit OTP sent to {isEmailActive ? 'email' : 'phone'}:{' '}
-                      <span className="font-mono font-semibold text-primary">{targetValue}</span>
+                      <span className="font-bold text-neutral-950">{targetValue}</span>
                     </p>
-                    <p className="text-[10.5px] text-secondary mt-0.5">
+                    <p className="text-[11px] text-neutral-500 mt-0.5">
                       {isEmailActive
-                        ? 'Please check your email inbox (and spam/junk folder).'
-                        : 'Please check your mobile SMS messages.'}
+                        ? 'Please check your email inbox and spam folder.'
+                        : 'Please check your incoming mobile SMS.'}
                     </p>
                   </div>
 
@@ -259,21 +262,21 @@ export default function CodOtpVerificationSection({
                         onPaste={handleOtpPaste}
                         onChange={(e) => handleDigitChange(idx, e.target.value)}
                         onKeyDown={(e) => handleDigitKeyDown(idx, e)}
-                        className="w-full aspect-square min-w-0 bg-surface-bright border border-outline-variant/40 focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-md text-center font-mono font-bold text-base text-on-surface shadow-xs outline-none transition-all disabled:opacity-50"
+                        className="w-full aspect-square min-w-0 bg-white border border-neutral-200 focus:border-[#f7bb0e] focus:ring-2 focus:ring-[#f7bb0e]/20 rounded-md text-center font-mono font-bold text-base text-neutral-950 shadow-xs outline-none transition-all disabled:opacity-50"
                       />
                     ))}
                   </div>
 
                   {/* Resend option */}
-                  <div className="flex justify-center pt-2 border-t border-outline-variant/20">
+                  <div className="flex justify-center pt-2 border-t border-neutral-200">
                     <button
                       type="button"
                       onClick={handleSendCodOtp}
                       disabled={isSendingOtp || isProcessing}
-                      className="font-label text-[9px] sm:text-[10px] text-primary font-bold uppercase tracking-wider hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      className="text-[11px] text-neutral-700 hover:text-black font-bold uppercase tracking-wider hover:underline flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
-                      <span className="material-symbols-outlined text-[13px]">sync</span>
-                      Resend code
+                      <RefreshCw className="w-3 h-3 text-neutral-500" />
+                      <span>Resend OTP</span>
                     </button>
                   </div>
                 </div>
@@ -283,15 +286,13 @@ export default function CodOtpVerificationSection({
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200/60 p-3 rounded-md text-emerald-900"
+              className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-lg text-emerald-900"
             >
-              <span className="material-symbols-outlined text-[18px] text-emerald-700">
-                check_circle
-              </span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
               <div className="flex-1 min-w-0 text-xs">
                 <span className="font-bold">COD Verified:</span>{' '}
                 <span className="text-emerald-800">
-                  Identity confirmed via {isEmailActive ? 'email' : 'phone'}. Ready to place order.
+                  Confirmed via {isEmailActive ? 'email' : 'phone'}. Ready to place order.
                 </span>
               </div>
             </motion.div>

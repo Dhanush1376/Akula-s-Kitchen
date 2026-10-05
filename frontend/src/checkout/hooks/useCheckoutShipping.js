@@ -9,13 +9,13 @@ import { detectAndResolveAddress } from '../../utils/locationService';
 export function useCheckoutShipping({ isAuthenticated, user, setActiveStep, setIsProcessing }) {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_selected_address_id', {
+    return persistentStorage.getItem('akula_checkout_selected_address_id', {
       session: true,
       fallback: null,
     });
   });
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_is_adding_address', {
+    return persistentStorage.getItem('akula_checkout_is_adding_address', {
       session: true,
       fallback: false,
     });
@@ -23,16 +23,16 @@ export function useCheckoutShipping({ isAuthenticated, user, setActiveStep, setI
 
   useEffect(() => {
     if (selectedAddressId) {
-      persistentStorage.setItem('siri_checkout_selected_address_id', selectedAddressId, {
+      persistentStorage.setItem('akula_checkout_selected_address_id', selectedAddressId, {
         session: true,
       });
     } else {
-      persistentStorage.removeItem('siri_checkout_selected_address_id', { session: true });
+      persistentStorage.removeItem('akula_checkout_selected_address_id', { session: true });
     }
   }, [selectedAddressId]);
 
   useEffect(() => {
-    persistentStorage.setItem('siri_checkout_is_adding_address', isAddingNewAddress, {
+    persistentStorage.setItem('akula_checkout_is_adding_address', isAddingNewAddress, {
       session: true,
     });
   }, [isAddingNewAddress]);
@@ -41,7 +41,7 @@ export function useCheckoutShipping({ isAuthenticated, user, setActiveStep, setI
   const [addressError, setAddressError] = useState('');
 
   const [newAddress, setNewAddress] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_new_address', {
+    return persistentStorage.getItem('akula_checkout_new_address', {
       session: true,
       fallback: {
         name: user?.name || '',
@@ -64,7 +64,7 @@ export function useCheckoutShipping({ isAuthenticated, user, setActiveStep, setI
   });
 
   useEffect(() => {
-    persistentStorage.setItem('siri_checkout_new_address', newAddress, { session: true });
+    persistentStorage.setItem('akula_checkout_new_address', newAddress, { session: true });
   }, [newAddress]);
 
   useEffect(() => {
@@ -91,10 +91,10 @@ export function useCheckoutShipping({ isAuthenticated, user, setActiveStep, setI
         .then((res) => {
           if (res.success && res.data) {
             setSavedAddresses(res.data);
-            const savedAddrId = persistentStorage.getItem('siri_checkout_selected_address_id', {
+            const savedAddrId = persistentStorage.getItem('akula_checkout_selected_address_id', {
               session: true,
             });
-            const savedIsAdding = persistentStorage.getItem('siri_checkout_is_adding_address', {
+            const savedIsAdding = persistentStorage.getItem('akula_checkout_is_adding_address', {
               session: true,
             });
 

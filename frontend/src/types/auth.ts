@@ -24,12 +24,6 @@ export interface UserAddress {
   type?: 'home' | 'work' | 'other';
 }
 
-export interface UserWallet {
-  balance: number;
-  holdBalance?: number;
-  currency?: string;
-}
-
 export interface User {
   _id: string;
   id?: string;
@@ -41,7 +35,6 @@ export interface User {
   isPhoneVerified?: boolean;
   avatar?: string;
   addresses?: UserAddress[];
-  wallet?: UserWallet;
   createdAt?: string;
   updatedAt?: string;
   lastLoginAt?: string;

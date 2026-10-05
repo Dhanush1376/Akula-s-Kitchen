@@ -8,7 +8,7 @@ import { isPrerendering } from '../utils/performance/prerender';
 import logger from '../utils/core/logger';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes — stale-while-revalidate in background
 const STALE_REFRESH_MS = 60 * 1000; // revalidate at most once per minute when stale
-const LOCAL_STORAGE_KEY = 'siri_arts_website_content';
+const LOCAL_STORAGE_KEY = 'akula_website_content';
 
 // Global shared state for singleton caching and request de-duplication
 let globalCache = null;
@@ -46,20 +46,6 @@ export const refreshWebsiteContent = async () => {
       const mergedContent = { ...initialWebsiteContent, ...response.data };
       if (response.data.hero) {
         mergedContent.hero = { ...initialWebsiteContent.hero, ...response.data.hero };
-      }
-      if (response.data.eventsPage) {
-        mergedContent.eventsPage = {
-          ...initialWebsiteContent.eventsPage,
-          ...response.data.eventsPage,
-          hero: {
-            ...initialWebsiteContent.eventsPage.hero,
-            ...(response.data.eventsPage.hero || {}),
-          },
-          promo: {
-            ...initialWebsiteContent.eventsPage.promo,
-            ...(response.data.eventsPage.promo || {}),
-          },
-        };
       }
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedContent));
@@ -129,20 +115,6 @@ export function useWebsiteContent() {
             const mergedContent = { ...initialWebsiteContent, ...response.data };
             if (response.data.hero) {
               mergedContent.hero = { ...initialWebsiteContent.hero, ...response.data.hero };
-            }
-            if (response.data.eventsPage) {
-              mergedContent.eventsPage = {
-                ...initialWebsiteContent.eventsPage,
-                ...response.data.eventsPage,
-                hero: {
-                  ...initialWebsiteContent.eventsPage.hero,
-                  ...(response.data.eventsPage.hero || {}),
-                },
-                promo: {
-                  ...initialWebsiteContent.eventsPage.promo,
-                  ...(response.data.eventsPage.promo || {}),
-                },
-              };
             }
             try {
               localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedContent));

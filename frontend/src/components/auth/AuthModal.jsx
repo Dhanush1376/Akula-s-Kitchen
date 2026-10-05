@@ -1,6 +1,5 @@
 import { X } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
-import { MandalaElement } from '../ui/MandalaElement';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
@@ -141,54 +140,40 @@ export function AuthModal() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="w-full sm:max-w-[390px] relative flex flex-col justify-end"
+            className="w-full sm:max-w-[420px] relative flex flex-col justify-end"
           >
-            <div className="relative bg-[#faf9f6] w-full rounded-t-[28px] sm:rounded-[28px] p-4 xs:p-5 sm:p-8 border-t sm:border border-outline-variant/30 shadow-[0_-10px_40px_rgba(115,92,0,0.04)] sm:shadow-[0_30px_70px_rgba(115,92,0,0.06)] overflow-y-auto max-h-[95%] no-scrollbar">
+            <div className="relative bg-white w-full rounded-t-[18px] sm:rounded-2xl p-6 sm:p-8 border-t sm:border border-black/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] overflow-y-auto max-h-[95%] no-scrollbar">
               {/* Grab handle for mobile bottom sheet */}
-              <div className="sm:hidden w-12 h-1 bg-outline-variant/40 rounded-full mx-auto mb-4 shrink-0" />
-              {/* Concentric rotating gold mandalas for luxury styling */}
-              <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-[0.06] z-0">
-                <MandalaElement
-                  size={300}
-                  duration={70}
-                  variant={1}
-                  opacity={1}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary"
-                />
-                <MandalaElement
-                  size={180}
-                  duration={40}
-                  variant={2}
-                  opacity={0.8}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary"
-                />
-              </div>
+              <div className="sm:hidden w-12 h-1.5 bg-neutral-400 rounded-full mx-auto mb-4 shrink-0" />
 
               {/* Close button */}
               <button
                 onClick={closeAuthModal}
-                className="absolute top-6 right-6 w-11 h-11 rounded-full bg-white/50 backdrop-blur-md border border-outline-variant/20 flex items-center justify-center hover:bg-primary/10 text-on-surface-variant/40 hover:text-primary transition-all duration-300 z-50 cursor-pointer shadow-2xs"
+                className="absolute top-5 right-5 w-9 h-9 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full bg-[#fff9e6] hover:bg-[#f7bb0e] border border-[#f7bb0e]/40 flex items-center justify-center text-neutral-900 transition-all z-50 cursor-pointer shadow-xs active:scale-95"
                 aria-label="Close authentication modal"
               >
-                <X className="text-[18px]" strokeWidth={1.5} />
+                <X size={16} strokeWidth={2.2} />
               </button>
 
               {/* Core Content Layout */}
               <div className="relative z-10">
                 <AnimatePresence mode="wait">
                   {step === 'success' ? (
-                    <AuthSuccessScreen MandalaElement={MandalaElement} isNewUser={isNewUser} />
+                    <AuthSuccessScreen isNewUser={isNewUser} />
                   ) : (
                     <motion.div
                       key="form-container"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="space-y-8"
+                      className="space-y-6"
                     >
                       {/* Headings */}
-                      <div className="text-left mb-8 sm:mb-10 space-y-1.5 sm:space-y-2">
-                        <h2 className="font-display text-[24px] sm:text-[28px] leading-tight text-on-surface-variant font-light">
+                      <div className="text-left mb-6 sm:mb-8 space-y-2">
+                        <h2
+                          className="font-serif-heading text-[25px] sm:text-[28px] leading-tight text-neutral-950 font-extrabold tracking-tight"
+                          style={{ fontFamily: 'var(--font-display)' }}
+                        >
                           {step === '2fa'
                             ? 'Enter Authenticator Code'
                             : step === 'otp'
@@ -198,7 +183,7 @@ export function AuthModal() {
                                 : 'Login or Sign Up'}
                         </h2>
                         {step !== 'otp' && step !== 'account_exists' && step !== 'name_prompt' && (
-                          <p className="text-on-surface-variant/60 text-[13px] font-light leading-relaxed">
+                          <p className="text-amber-950/70 text-[13px] font-normal leading-relaxed">
                             {step === '2fa'
                               ? 'Enter the 6-digit code from your authenticator app.'
                               : customerAuthMethod === 'email_only'
@@ -209,20 +194,18 @@ export function AuthModal() {
                           </p>
                         )}
                         {step === 'name_prompt' && (
-                          <p className="text-on-surface-variant/60 text-[13px] font-light leading-relaxed">
+                          <p className="text-amber-950/70 text-[13px] font-normal leading-relaxed">
                             Help us personalize your orders and account experience.
                           </p>
                         )}
                         {step === 'otp' && (
-                          <p className="text-on-surface-variant/60 text-[13px] font-light leading-relaxed">
+                          <p className="text-amber-950/70 text-[13px] font-normal leading-relaxed">
                             Code sent to{' '}
-                            <span className="font-semibold text-on-surface-variant">
-                              {identifier}
-                            </span>
+                            <span className="font-bold text-neutral-950">{identifier}</span>
                             <button
                               type="button"
                               onClick={() => setStep('identifier')}
-                              className="text-primary font-bold hover:underline cursor-pointer ml-1.5 uppercase text-[10px] tracking-wider"
+                              className="text-neutral-950 hover:text-[#b38505] font-extrabold underline ml-1.5 uppercase text-[10px] tracking-wider cursor-pointer"
                             >
                               Change
                             </button>

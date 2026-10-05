@@ -1,5 +1,5 @@
 /**
- * Premium Animation System for Siri Arts & Crafts
+ * Premium Animation System for Akula's Kitchen
  * Focus: Minimalism, Elegance, Luxury
  */
 

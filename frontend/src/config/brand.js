@@ -9,16 +9,16 @@ export const getBrandName = (settings) => {
     settings?.general?.storeName?.trim() ||
     getStoredStoreName() ||
     import.meta.env.VITE_SITE_NAME ||
-    'Siri Arts & Crafts'
+    "Akula's Kitchen"
   );
 };
 
 export const getStoredStoreName = () => {
   try {
-    const direct = localStorage.getItem('siri_store_name');
+    const direct = localStorage.getItem('akula_store_name');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.general?.storeName?.trim()) {
@@ -33,10 +33,10 @@ export const getStoredStoreName = () => {
 
 export const getStoredEmail = () => {
   try {
-    const direct = localStorage.getItem('siri_support_email');
+    const direct = localStorage.getItem('akula_support_email');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       const email = parsed?.general?.supportEmail || parsed?.contact?.email;
@@ -48,10 +48,10 @@ export const getStoredEmail = () => {
 
 export const getStoredPhone = () => {
   try {
-    const direct = localStorage.getItem('siri_store_phone');
+    const direct = localStorage.getItem('akula_store_phone');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       const phone = parsed?.general?.phone || parsed?.contact?.phone;
@@ -63,10 +63,10 @@ export const getStoredPhone = () => {
 
 export const getStoredAlternatePhone = () => {
   try {
-    const direct = localStorage.getItem('siri_store_alt_phone');
+    const direct = localStorage.getItem('akula_store_alt_phone');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       const alt = parsed?.general?.alternatePhone || parsed?.contact?.alternatePhone;
@@ -78,10 +78,10 @@ export const getStoredAlternatePhone = () => {
 
 export const getStoredWhatsAppNumber = () => {
   try {
-    const direct = localStorage.getItem('siri_store_whatsapp');
+    const direct = localStorage.getItem('akula_store_whatsapp');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       const whatsapp = parsed?.general?.whatsappNumber || parsed?.contact?.whatsappNumber;
@@ -93,10 +93,10 @@ export const getStoredWhatsAppNumber = () => {
 
 export const getStoredTagline = () => {
   try {
-    const direct = localStorage.getItem('siri_store_tagline');
+    const direct = localStorage.getItem('akula_store_tagline');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.general?.tagline?.trim()) return parsed.general.tagline.trim();
@@ -107,10 +107,10 @@ export const getStoredTagline = () => {
 
 export const getStoredSupportHours = () => {
   try {
-    const direct = localStorage.getItem('siri_store_support_hours');
+    const direct = localStorage.getItem('akula_store_support_hours');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.contact?.supportHours?.trim()) return parsed.contact.supportHours.trim();
@@ -121,10 +121,10 @@ export const getStoredSupportHours = () => {
 
 export const getStoredAddress = () => {
   try {
-    const direct = localStorage.getItem('siri_store_address');
+    const direct = localStorage.getItem('akula_store_address');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       const address = parsed?.contact?.address || parsed?.general?.address;
@@ -136,24 +136,24 @@ export const getStoredAddress = () => {
 
 export const getStoredCity = () => {
   try {
-    const direct = localStorage.getItem('siri_store_city');
+    const direct = localStorage.getItem('akula_store_city');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.contact?.city?.trim()) return parsed.contact.city.trim();
     }
   } catch (_e) {}
-  return 'Ongole';
+  return '';
 };
 
 export const getStoredState = () => {
   try {
-    const direct = localStorage.getItem('siri_store_state');
+    const direct = localStorage.getItem('akula_store_state');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.contact?.state?.trim()) return parsed.contact.state.trim();
@@ -164,24 +164,24 @@ export const getStoredState = () => {
 
 export const getStoredPostalCode = () => {
   try {
-    const direct = localStorage.getItem('siri_store_postal_code');
+    const direct = localStorage.getItem('akula_store_postal_code');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.contact?.postalCode?.trim()) return parsed.contact.postalCode.trim();
     }
   } catch (_e) {}
-  return '523001';
+  return '';
 };
 
 export const getStoredCountry = () => {
   try {
-    const direct = localStorage.getItem('siri_store_country');
+    const direct = localStorage.getItem('akula_store_country');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.contact?.country?.trim()) return parsed.contact.country.trim();
@@ -192,10 +192,10 @@ export const getStoredCountry = () => {
 
 export const getStoredCompanyName = () => {
   try {
-    const direct = localStorage.getItem('siri_company_name');
+    const direct = localStorage.getItem('akula_company_name');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.legal?.companyName?.trim()) return parsed.legal.companyName.trim();
@@ -206,10 +206,10 @@ export const getStoredCompanyName = () => {
 
 export const getStoredLegalCompanyName = () => {
   try {
-    const direct = localStorage.getItem('siri_legal_company_name');
+    const direct = localStorage.getItem('akula_legal_company_name');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.legal?.legalCompanyName?.trim()) return parsed.legal.legalCompanyName.trim();
@@ -220,10 +220,10 @@ export const getStoredLegalCompanyName = () => {
 
 export const getStoredCIN = () => {
   try {
-    const direct = localStorage.getItem('siri_store_cin');
+    const direct = localStorage.getItem('akula_store_cin');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.legal?.cin?.trim()) return parsed.legal.cin.trim();
@@ -234,10 +234,10 @@ export const getStoredCIN = () => {
 
 export const getStoredRegisteredAddress = () => {
   try {
-    const direct = localStorage.getItem('siri_registered_address');
+    const direct = localStorage.getItem('akula_registered_address');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.legal?.registeredAddress?.trim()) return parsed.legal.registeredAddress.trim();
@@ -248,10 +248,10 @@ export const getStoredRegisteredAddress = () => {
 
 export const getStoredGSTIN = () => {
   try {
-    const direct = localStorage.getItem('siri_store_gstin');
+    const direct = localStorage.getItem('akula_store_gstin');
     if (direct?.trim()) return direct.trim();
 
-    const cached = localStorage.getItem('siri_public_settings');
+    const cached = localStorage.getItem('akula_public_settings');
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed?.taxes?.gstNumber?.trim()) return parsed.taxes.gstNumber.trim();

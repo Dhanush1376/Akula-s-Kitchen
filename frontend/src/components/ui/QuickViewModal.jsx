@@ -265,7 +265,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             className={`pointer-events-auto relative w-full bg-surface shadow-2xl flex flex-col lg:flex-row border border-outline-variant/10 overflow-hidden transition-all duration-200 ${
               isConverting
                 ? '!fixed !inset-0 !z-[300] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none'
-                : 'max-w-[440px] sm:max-w-[480px] lg:max-w-5xl rounded-t-3xl sm:rounded-[24px] lg:rounded-[32px] h-auto max-h-[90dvh] sm:max-h-[85vh]'
+                : 'max-w-[440px] sm:max-w-[480px] lg:max-w-5xl rounded-t-[18px] sm:rounded-[18px] lg:rounded-[20px] h-auto max-h-[90dvh] sm:max-h-[85vh]'
             }`}
           >
             {/* Top conversion progress bar */}

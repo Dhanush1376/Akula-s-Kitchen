@@ -74,45 +74,6 @@ export function HomeSkeleton() {
           ))}
         </div>
       </div>
-
-      {/* Gallery Inspiration Skeleton */}
-      <div className="max-w-[1400px] mx-auto px-6 mt-20 lg:mt-32 animate-pulse">
-        <div className="flex flex-col items-center mb-8 lg:mb-10 text-center">
-          <div className="h-3 w-24 bg-surface-container-high rounded-full mb-2 mx-auto"></div>
-          <div className="h-8 lg:h-10 w-48 lg:w-64 bg-surface-container-high rounded-full mx-auto"></div>
-        </div>
-        <div className="columns-2 lg:columns-3 lg:columns-5 gap-3 lg:gap-5.5 space-y-3 lg:space-y-5.5">
-          {['aspect-[4/5]', 'aspect-square', 'aspect-[3/4]', 'aspect-[4/5]', 'aspect-square'].map(
-            (aspect, i) => (
-              <div
-                key={i}
-                className={`w-full ${aspect} bg-surface-container-high rounded-[24px]`}
-              ></div>
-            ),
-          )}
-        </div>
-      </div>
-
-      {/* Shop By Occasion Skeleton */}
-      <div className="max-w-[1400px] mx-auto px-6 mt-20 lg:mt-32 mb-24 animate-pulse">
-        <div className="flex flex-col items-center text-center mb-8 lg:mb-10">
-          <div className="h-3 w-24 bg-surface-container-high rounded-full mb-2"></div>
-          <div className="h-8 lg:h-10 w-56 lg:w-72 bg-surface-container-high rounded-full"></div>
-        </div>
-
-        {/* Mobile Swipe Carousel */}
-        <div className="flex gap-6 justify-center overflow-hidden lg:hidden">
-          <div className="w-[75vw] sm:w-[50vw] h-[400px] bg-surface-container-high rounded-[36px] shrink-0"></div>
-          <div className="w-[75vw] sm:w-[50vw] h-[400px] bg-surface-container-high rounded-[36px] shrink-0 opacity-40"></div>
-        </div>
-
-        {/* Desktop Accordion */}
-        <div className="hidden lg:flex w-full max-w-[1200px] mx-auto h-[600px] gap-4 px-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex-1 bg-surface-container-high rounded-[32px] h-full"></div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

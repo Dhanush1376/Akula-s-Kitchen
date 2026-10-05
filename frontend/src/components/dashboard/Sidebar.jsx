@@ -2,11 +2,13 @@ import {
   Camera,
   ShoppingBag,
   ChevronRight,
-  PackageCheck,
   User,
-  CalendarDays,
   LogOut,
   Bell,
+  MapPin,
+  Heart,
+  Package,
+  Phone,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -33,21 +35,15 @@ export function Sidebar() {
     mobileShowContent,
     setMobileShowContent,
     hasRecentOrderUpdates,
-    hasRecentRentalUpdates,
-    hasRecentCustomUpdates,
   } = useDashboard();
 
   const path = location.pathname;
   let activeTab = null;
   if (path.includes('/orders')) activeTab = 'orders';
-  else if (path.includes('/rentals')) activeTab = 'rentals';
-  else if (path.includes('/events')) activeTab = 'bookings';
   else if (path.includes('/addresses')) activeTab = 'addresses';
   else if (path.includes('/settings')) activeTab = 'preferences';
   else if (path.includes('/collections')) activeTab = 'collections';
   else if (path.includes('/shopping-bag')) activeTab = 'shopping-bag';
-  else if (path.includes('/wallet')) activeTab = 'loyalty';
-  else if (path.includes('/returns')) activeTab = 'returns';
   else if (path.includes('/notifications')) activeTab = 'notifications';
   else if (path.includes('/security')) activeTab = 'security';
   else if (path.includes('/profile')) activeTab = 'profile';
@@ -69,91 +65,94 @@ export function Sidebar() {
     return () => window.removeEventListener('notifications_status_changed', handler);
   }, []);
 
+  const tabClass = (isActive) =>
+    `w-full text-left px-4 py-2.5 text-[12px] flex items-center justify-between transition-all cursor-pointer outline-none ${
+      isActive
+        ? 'text-[#283618] font-bold bg-[#283618]/10 border-l-2 border-[#283618]'
+        : 'text-neutral-700 font-medium hover:bg-neutral-50 hover:text-neutral-900'
+    }`;
+
   return (
     <div
-      className={`col-span-1 lg:col-span-2 lg:col-span-3 space-y-4 ${mobileShowContent ? 'hidden lg:block' : 'block'}`}
+      className={`col-span-1 lg:col-span-2 lg:col-span-3 space-y-3 ${mobileShowContent ? 'hidden lg:block' : 'block'}`}
     >
-      {/* Dynamic Avatar & Basic Info Card */}
-      <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 flex flex-col items-center text-center shadow-xs relative group overflow-hidden">
-        {/* Profile Image with Edit Overlay */}
-        <div
-          onClick={handleAvatarClick}
-          className="w-20 h-20 rounded-full border border-outline-variant/50 relative overflow-hidden bg-surface-container flex items-center justify-center cursor-pointer shadow-sm group/avatar hover:border-primary transition-colors"
-        >
-          {isUploadingAvatar && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-              <div className="skeleton-box inline-block w-6 h-6 rounded-md" />
-            </div>
-          )}
+      {/* Profile Card */}
+      <div className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="p-4 flex flex-col items-center text-center">
+          {/* Avatar */}
+          <div
+            onClick={handleAvatarClick}
+            className="w-16 h-16 rounded-full border border-neutral-200 relative overflow-hidden bg-neutral-100 flex items-center justify-center cursor-pointer shadow-sm group/avatar hover:border-neutral-400 transition-colors"
+          >
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                <div className="w-5 h-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
 
-          {user?.avatar ? (
-            <OptimizedImage
-              src={user.avatar}
-              alt={user.name || 'Avatar'}
-              className="w-full h-full object-cover"
-              priority={true}
-              fallback={
-                <div className="absolute inset-0 flex items-center justify-center bg-surface-container text-primary">
-                  <User className="w-8 h-8 opacity-70" strokeWidth={1.5} />
-                </div>
-              }
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-surface-container text-primary">
-              <User className="w-8 h-8 opacity-70" strokeWidth={1.5} />
-            </div>
-          )}
+            {user?.avatar ? (
+              <OptimizedImage
+                src={user.avatar}
+                alt={user.name || 'Avatar'}
+                className="w-full h-full object-cover"
+                priority={true}
+                fallback={
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 text-neutral-400">
+                    <User className="w-7 h-7" strokeWidth={1.5} />
+                  </div>
+                }
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 text-neutral-400">
+                <User className="w-7 h-7" strokeWidth={1.5} />
+              </div>
+            )}
 
-          {/* Edit Camera Overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
-            <Camera className="text-[18px]" strokeWidth={1.5} />
+            {/* Edit Camera Overlay */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-white transition-opacity duration-300">
+              <Camera className="w-4 h-4" strokeWidth={1.5} />
+            </div>
           </div>
-        </div>
 
-        {/* Secret input for upload */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleAvatarChange}
-          accept="image/*"
-          className="hidden"
-        />
+          {/* Secret input for upload */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAvatarChange}
+            accept="image/*"
+            className="hidden"
+          />
 
-        <div className="mt-3 w-full">
-          {!user ? (
-            <>
-              <span className="font-label-sm text-[11px] text-secondary font-bold tracking-widest uppercase block">
-                Welcome, Guest
-              </span>
-              <button
-                onClick={openAuthModal}
-                className="text-xs font-bold text-primary hover:underline mt-1 block w-full text-center cursor-pointer bg-transparent border-none outline-none"
-              >
-                Login
-              </button>
-            </>
-          ) : (
-            <>
-              <strong className="text-sm text-on-surface block truncate font-bold">
-                {user.name}
-              </strong>
-              <span className="text-[11px] text-secondary block truncate font-light mb-2">
-                {user.email || user.phone || ''}
-              </span>
-
-              <div className="flex flex-col gap-1 items-center">
-                <span
-                  className={`text-[9px] px-2 py-0.5 rounded-full border tracking-wider font-semibold uppercase ${
-                    user.isVerified
-                      ? 'bg-green-50/70 text-green-700 border-green-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                  }`}
+          <div className="mt-2.5 w-full">
+            {!user ? (
+              <>
+                <span className="text-[12px] text-neutral-600 font-medium block">
+                  Welcome, Guest
+                </span>
+                <button
+                  onClick={openAuthModal}
+                  className="text-[12px] font-semibold text-[#283618] hover:underline mt-1 block w-full text-center cursor-pointer bg-transparent border-none outline-none"
                 >
-                  {user.isVerified ? 'Verified Session' : 'Pending Verification'}
+                  Login
+                </button>
+              </>
+            ) : (
+              <>
+                <strong className="text-[13px] text-neutral-900 block truncate font-bold">
+                  {user.name}
+                </strong>
+                <span className="text-[11px] text-neutral-600 font-medium block truncate mb-1.5">
+                  {user.email || user.phone || ''}
                 </span>
 
+                {user.isVerified && (
+                  <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold">
+                    Verified
+                  </span>
+                )}
+
                 {user.createdAt && (
-                  <span className="text-[9px] text-secondary/50 font-medium">
+                  <span className="text-[10px] text-neutral-500 font-medium block mt-1">
                     Joined{' '}
                     {new Date(user.createdAt).toLocaleString('default', {
                       month: 'long',
@@ -161,230 +160,189 @@ export function Sidebar() {
                     })}
                   </span>
                 )}
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Account Suite Selector tabs */}
+      {/* Navigation */}
       <div
         role="tablist"
-        aria-label="Artisan Navigation Hub"
-        className="bg-surface-bright border border-outline-variant/40 rounded-lg shadow-xs overflow-hidden"
+        aria-label="Account Navigation"
+        className="bg-white border border-neutral-200 rounded-lg shadow-sm overflow-hidden"
       >
-        <div className="border-b border-surface-container">
-          <div className="px-4 py-3 bg-surface-container-low text-secondary font-bold text-[11px] uppercase tracking-wider flex items-center gap-2">
-            <ShoppingBag className="text-sm text-primary" strokeWidth={1.5} />
-            Orders
-          </div>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'orders'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('orders', '/dashboard/orders')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'orders'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>My Orders</span>
-              {hasRecentOrderUpdates && (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-              )}
-            </div>
-            <ChevronRight className="text-xs" strokeWidth={1.5} />
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'rentals'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('rentals', '/dashboard/rentals')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'rentals'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>My Rentals</span>
-              {hasRecentRentalUpdates && (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-              )}
-            </div>
-            <PackageCheck className="text-xs text-[#8c7335]" strokeWidth={1.5} />
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'bookings'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('bookings', '/dashboard/events')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'bookings'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>My Event Bookings</span>
-            <CalendarDays className="text-xs text-[var(--color-gold-dark)]" strokeWidth={1.5} />
-          </motion.button>
-        </div>
-
-        <div className="border-b border-surface-container">
-          <div className="px-4 py-3 bg-surface-container-low text-secondary font-bold text-[11px] uppercase tracking-wider flex items-center gap-2">
-            <User className="text-sm text-primary" strokeWidth={1.5} />
-            Profile
-          </div>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'profile'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('profile', '/dashboard/profile')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'profile'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>Profile Settings</span>
-            <ChevronRight className="text-xs" strokeWidth={1.5} />
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'notifications'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('notifications', '/dashboard/notifications')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'notifications'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <span>Notifications</span>
-              {hasUnreadNotifications && (
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
-              )}
-            </div>
-            <Bell className="text-xs text-primary" strokeWidth={1.5} />
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'addresses'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('addresses', '/dashboard/addresses')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'addresses'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>Addresses</span>
-            <span className="text-[11px] text-secondary font-bold">
-              ({addresses ? addresses.length : 0})
-            </span>
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'preferences'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('preferences', '/dashboard/settings')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'preferences'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>Settings</span>
-            <ChevronRight className="text-xs" strokeWidth={1.5} />
-          </motion.button>
-        </div>
-
-        <div className="border-b border-surface-container">
-          <div className="px-4 py-3 bg-surface-container-low text-secondary font-bold text-[11px] uppercase tracking-wider flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-primary">folder_special</span>
-            Collections
-          </div>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'collections'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('collections', '/wishlist')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'collections'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>Curated Wishlist</span>
-            <span className="text-[11px] font-bold text-primary font-semibold">
-              ({wishlistItems ? wishlistItems.length : 0})
-            </span>
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'shopping-bag'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('shopping-bag', '/cart')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'shopping-bag'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>My Shopping Bag</span>
-            <span className="text-[11px] font-bold text-primary font-semibold">({cartCount})</span>
-          </motion.button>
-
-          <motion.button
-            role="tab"
-            aria-selected={activeTab === 'loyalty'}
-            whileHover={{ x: 3 }}
-            onClick={() => handleTabClick('loyalty', '/dashboard/wallet')}
-            className={`w-full text-left px-8 py-2.5 font-medium text-[12px] flex items-center justify-between transition-colors cursor-pointer outline-none ${
-              activeTab === 'loyalty'
-                ? 'text-primary font-bold bg-primary/5 border-l-2 border-primary'
-                : 'text-on-surface hover:bg-surface-container-low'
-            }`}
-          >
-            <span>Siri Coins & Wallet</span>
-            <span className="material-symbols-outlined text-xs text-[var(--color-gold-dark)]">
-              stars
-            </span>
-          </motion.button>
-        </div>
-
+        {/* Orders Section */}
         <motion.button
-          whileHover={{
-            backgroundColor: 'var(--color-error-container)',
-            color: 'var(--color-on-error-container)',
-          }}
+          role="tab"
+          aria-selected={activeTab === 'orders'}
+          whileHover={{ x: 2 }}
+          onClick={() => handleTabClick('orders', '/dashboard/orders')}
+          className={tabClass(activeTab === 'orders')}
+        >
+          <div className="flex items-center gap-2.5">
+            <ShoppingBag
+              className={`w-4 h-4 ${activeTab === 'orders' ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>My Orders</span>
+            {hasRecentOrderUpdates && (
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+            )}
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
+        </motion.button>
+
+        <div className="border-t border-neutral-100" />
+
+        {/* Profile */}
+        <motion.button
+          role="tab"
+          aria-selected={activeTab === 'profile'}
+          whileHover={{ x: 2 }}
+          onClick={() => handleTabClick('profile', '/dashboard/profile')}
+          className={tabClass(activeTab === 'profile')}
+        >
+          <div className="flex items-center gap-2.5">
+            <User
+              className={`w-4 h-4 ${activeTab === 'profile' ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>Profile</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
+        </motion.button>
+
+        <div className="border-t border-neutral-100" />
+
+        {/* Notifications */}
+        <motion.button
+          role="tab"
+          aria-selected={activeTab === 'notifications'}
+          whileHover={{ x: 2 }}
+          onClick={() => handleTabClick('notifications', '/dashboard/notifications')}
+          className={tabClass(activeTab === 'notifications')}
+        >
+          <div className="flex items-center gap-2.5">
+            <Bell
+              className={`w-4 h-4 ${activeTab === 'notifications' ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>Notifications</span>
+            {hasUnreadNotifications && (
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+            )}
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
+        </motion.button>
+
+        <div className="border-t border-neutral-100" />
+
+        {/* Addresses */}
+        <motion.button
+          role="tab"
+          aria-selected={activeTab === 'addresses'}
+          whileHover={{ x: 2 }}
+          onClick={() => handleTabClick('addresses', '/dashboard/addresses')}
+          className={tabClass(activeTab === 'addresses')}
+        >
+          <div className="flex items-center gap-2.5">
+            <MapPin
+              className={`w-4 h-4 ${activeTab === 'addresses' ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>Addresses</span>
+            <span className="text-[11px] font-semibold text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded-md">
+              {addresses ? addresses.length : 0}
+            </span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
+        </motion.button>
+
+        <div className="border-t border-neutral-100" />
+
+        {/* Wishlist */}
+        <motion.button
+          role="tab"
+          aria-selected={activeTab === 'collections'}
+          whileHover={{ x: 2 }}
+          onClick={() => handleTabClick('collections', '/wishlist')}
+          className={tabClass(activeTab === 'collections')}
+        >
+          <div className="flex items-center gap-2.5">
+            <Heart
+              className={`w-4 h-4 ${activeTab === 'collections' ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>Wishlist</span>
+            <span className="text-[11px] font-semibold text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded-md">
+              {wishlistItems ? wishlistItems.length : 0}
+            </span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
+        </motion.button>
+
+        <div className="border-t border-neutral-100" />
+
+        {/* Shopping Bag */}
+        <motion.button
+          role="tab"
+          aria-selected={activeTab === 'shopping-bag'}
+          whileHover={{ x: 2 }}
+          onClick={() => handleTabClick('shopping-bag', '/cart')}
+          className={tabClass(activeTab === 'shopping-bag')}
+        >
+          <div className="flex items-center gap-2.5">
+            <Package
+              className={`w-4 h-4 ${activeTab === 'shopping-bag' ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>Shopping Bag</span>
+            <span className="text-[11px] font-semibold text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded-md">
+              {cartCount}
+            </span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
+        </motion.button>
+
+        <div className="border-t border-neutral-100" />
+
+        {/* Logout */}
+        <button
           onClick={() => {
             logout();
             setTimeout(() => navigate('/'), 400);
           }}
-          className="w-full text-left px-4 py-3.5 text-error font-bold text-[11px] uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer outline-none"
+          className="w-full text-left px-4 py-2.5 text-[12px] text-red-600 font-medium flex items-center gap-2 hover:bg-red-50/60 transition-colors cursor-pointer outline-none"
         >
-          <LogOut className="text-sm" strokeWidth={1.5} />
+          <LogOut className="w-3.5 h-3.5" strokeWidth={1.8} />
           Logout
-        </motion.button>
-
-        <div className="flex flex-col gap-1.5 p-4 text-on-surface-variant/40 font-label-sm text-[10px] uppercase tracking-widest font-bold border-t border-surface-container">
-          <span className="max-w-md">Address: {addressText}</span>
-          <span>Phone: +91 {phoneText}</span>
-        </div>
+        </button>
       </div>
+
+      {/* Footer info */}
+      {(addressText || phoneText) && (
+        <div className="px-3.5 py-3 rounded-lg bg-neutral-50/80 border border-neutral-200/80 text-[11px] text-neutral-700 space-y-1.5">
+          {addressText && (
+            <div className="flex items-start gap-2">
+              <MapPin className="w-3.5 h-3.5 text-[#283618] shrink-0 mt-0.5" strokeWidth={2} />
+              <span className="line-clamp-2 font-medium leading-tight text-neutral-800">
+                {addressText}
+              </span>
+            </div>
+          )}
+          {phoneText && (
+            <div className="flex items-center gap-2">
+              <Phone className="w-3.5 h-3.5 text-[#283618] shrink-0" strokeWidth={2} />
+              <span className="font-semibold text-neutral-800 tracking-wide">
+                {phoneText.startsWith('+91')
+                  ? phoneText
+                  : `+91 ${phoneText.replace(/^\+?91\s*/, '')}`}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

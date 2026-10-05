@@ -10,12 +10,12 @@ export const lazyWithRetry = (componentImport) =>
     try {
       return await componentImport();
     } catch (error) {
-      const lastReload = window.sessionStorage.getItem('siri_chunk_reload_time');
+      const lastReload = window.sessionStorage.getItem('akula_chunk_reload_time');
       const now = Date.now();
 
       if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
         // Assume that the error is due to a new deploy (changed chunk hashes)
-        window.sessionStorage.setItem('siri_chunk_reload_time', String(now));
+        window.sessionStorage.setItem('akula_chunk_reload_time', String(now));
 
         // Unregister service workers first to prevent them from intercepting the reload and serving old cached index.html
         if ('serviceWorker' in navigator) {

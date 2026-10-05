@@ -1,4 +1,4 @@
-import { MapPin, ArrowRight } from 'lucide-react';
+import { MapPin, ChevronDown, ArrowRight } from 'lucide-react';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -12,24 +12,28 @@ export function CartAddressBar({
 }) {
   return (
     <div
-      className={`w-full bg-[#fbf9f6] border-b border-black/10 relative hover:bg-[#f6f2ea] transition-colors ${isAddressDropdownOpen ? 'z-50' : 'z-30'}`}
+      className={`w-full bg-white border-b border-neutral-200 relative hover:bg-neutral-50/80 transition-colors ${isAddressDropdownOpen ? 'z-50' : 'z-30'}`}
     >
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-8 relative">
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative">
         <div
           onClick={() => setIsAddressDropdownOpen(!isAddressDropdownOpen)}
-          className="flex items-center justify-between py-3 cursor-pointer select-none"
+          className="flex items-center justify-between py-2 sm:py-2.5 cursor-pointer select-none"
         >
           <div className="flex items-center gap-2 min-w-0">
-            <MapPin className="text-[18px] text-primary" strokeWidth={1.5} />
-            <span className="text-[11px] lg:text-xs text-[#1a1817] font-semibold truncate leading-none">
+            <MapPin className="w-4 h-4 text-neutral-800 shrink-0" strokeWidth={2} />
+            <span className="text-[11px] sm:text-xs text-neutral-800 font-medium truncate leading-tight">
+              <strong className="text-neutral-950 font-bold mr-1">Deliver to:</strong>
               {activeAddress
                 ? `${activeAddress.name} - ${activeAddress.addressString || activeAddress.address}, ${activeAddress.locality || ''}, ${activeAddress.city}`
-                : 'Add a delivery address'}
+                : 'Select delivery address'}
             </span>
           </div>
-          <span className="material-symbols-outlined text-[18px] text-black/40">
-            {isAddressDropdownOpen ? 'expand_less' : 'expand_more'}
-          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-neutral-400 transition-transform duration-200 shrink-0 ml-2 ${
+              isAddressDropdownOpen ? 'rotate-180' : ''
+            }`}
+            strokeWidth={2}
+          />
         </div>
 
         <AnimatePresence>
@@ -38,10 +42,10 @@ export function CartAddressBar({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-full left-4 right-4 mt-1 bg-white border border-black/10 rounded-2xl shadow-xl z-50 p-3 max-h-60 overflow-y-auto"
+              className="absolute top-full left-4 right-4 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 p-2.5 max-h-60 overflow-y-auto"
             >
-              <div className="text-[9px] uppercase tracking-wider font-bold text-black/40 px-2.5 pb-2 mb-1 border-b border-black/5">
-                Select Destination
+              <div className="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 px-2.5 pb-2 mb-1 border-b border-black/5">
+                Saved Delivery Addresses
               </div>
               {addresses && addresses.length > 0 ? (
                 addresses.map((addr) => (
@@ -51,33 +55,33 @@ export function CartAddressBar({
                       setDefaultAddress(addr._id || addr.id);
                       setIsAddressDropdownOpen(false);
                     }}
-                    className={`p-2.5 rounded-xl text-[11px] cursor-pointer hover:bg-neutral-50 transition-colors flex items-start gap-2 ${addr.isDefault ? 'bg-primary/5 text-primary font-bold' : 'text-black/70'}`}
+                    className={`p-2.5 rounded-lg text-[11px] cursor-pointer hover:bg-neutral-50 transition-colors flex items-start gap-2 ${addr.isDefault ? 'bg-[#fef9e7] text-neutral-900 font-bold border border-[#fae182]' : 'text-neutral-700'}`}
                   >
-                    <span className="material-symbols-outlined text-[14px] mt-0.5">
+                    <span className="material-symbols-outlined text-[15px] mt-0.5 text-neutral-900">
                       {addr.isDefault ? 'radio_button_checked' : 'radio_button_unchecked'}
                     </span>
                     <div className="min-w-0">
-                      <div className="font-bold">
+                      <div className="font-extrabold text-neutral-950">
                         {addr.name} ({addr.tag})
                       </div>
-                      <div className="truncate text-black/50 text-[10px]">
+                      <div className="truncate text-neutral-500 text-[10.5px]">
                         {addr.addressString || addr.address}, {addr.locality}, {addr.city}
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-2.5 rounded-xl text-[11px] text-black/50 text-center">
-                  No other addresses saved.
+                <div className="p-3 rounded-xl text-[11px] text-neutral-400 text-center">
+                  No other saved addresses found.
                 </div>
               )}
               <div className="mt-2 pt-2 border-t border-black/5 flex justify-end">
                 <Link
                   to="/dashboard?tab=addresses"
-                  className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline flex items-center gap-1"
+                  className="text-[10px] font-extrabold text-neutral-900 hover:text-[#f7bb0e] uppercase tracking-wider transition-colors flex items-center gap-1"
                 >
                   Manage Addresses
-                  <ArrowRight className="text-[12px]" strokeWidth={1.5} />
+                  <ArrowRight className="w-3 h-3" strokeWidth={2.2} />
                 </Link>
               </div>
             </motion.div>

@@ -21,7 +21,6 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import { uploadService } from '../../services/api/uploadService';
-import { LoadingButton } from '../ui/LoadingButton';
 import { useMobileDrawerEngine, DrawerDragHandle } from '../ui/drawer';
 
 // ─── Star Component ─────────────────────────────────────────────────────────
@@ -48,9 +47,9 @@ function StarRating({ value = 0, max = 5, interactive = false, size = 20, onChan
               width={size}
               height={size}
               viewBox="0 0 24 24"
-              fill={filled ? '#D4A853' : 'none'}
-              stroke={filled ? '#D4A853' : '#d1c4a8'}
-              strokeWidth="1.5"
+              fill={filled ? '#F7BB0E' : 'none'}
+              stroke={filled ? '#F7BB0E' : '#d4cbb8'}
+              strokeWidth="1.8"
             >
               <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
             </svg>
@@ -285,96 +284,104 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
         exit="exit"
         transition={sheetTransition}
         {...dragProps}
-        className="relative bg-surface w-full max-w-lg h-auto max-h-[88dvh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-lg shadow-2xl flex flex-col z-[100000] font-body text-left border-t sm:border border-outline-variant/30 overflow-hidden"
+        className="relative bg-surface w-full max-w-lg h-auto max-h-[88dvh] sm:max-h-[90vh] rounded-t-[18px] sm:rounded-lg shadow-2xl flex flex-col z-[100000] font-body text-left border-t sm:border border-outline-variant/30 overflow-hidden"
       >
         {isMobile && <DrawerDragHandle onClick={onClose} />}
 
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 pt-5 border-b border-outline-variant/20 shrink-0 bg-surface-bright rounded-t-3xl sm:rounded-t-lg">
-          <div>
-            <h2 className="text-[9px] font-bold uppercase tracking-widest text-secondary flex items-center gap-1.5">
-              <FileEdit className="text-[14px]" strokeWidth={1.5} />
-              {existingReview ? 'Edit Your Review' : 'Write a Review'}
-            </h2>
-            <p className="font-body text-[11px] text-on-surface mt-1 font-bold line-clamp-1">
-              {productTitle}
-            </p>
+        {/* Header — Olive Green Brand Theme */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1f2b13] shrink-0 bg-[#283618] text-white rounded-t-[18px] sm:rounded-t-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-[#f7bb0e] shrink-0">
+              <FileEdit className="w-4 h-4" strokeWidth={2} />
+            </div>
+            <div>
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-white">
+                {existingReview ? 'Edit Your Review' : 'Write a Review'}
+              </h2>
+              <p className="text-[12px] text-white/80 font-medium line-clamp-1">{productTitle}</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center transition-all text-secondary"
+            className="w-8 h-8 rounded-full hover:bg-white/10 active:scale-95 flex items-center justify-center transition-all text-white/80 hover:text-white cursor-pointer"
+            aria-label="Close review modal"
           >
-            <X className="text-[16px]" strokeWidth={1.5} />
+            <X className="w-4 h-4" strokeWidth={2} />
           </button>
         </div>
 
         {/* Scrollable Form Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-5 space-y-4 no-scrollbar bg-surface">
+        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-5 space-y-4 no-scrollbar bg-neutral-50/50">
           <form onSubmit={handleSubmit} className="space-y-4 pb-4">
             {/* User Profile Info */}
-            <div className="flex items-center gap-3 p-4 bg-surface-bright rounded-lg border border-outline-variant/40 shadow-xs">
-              <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                <span className="font-display text-primary text-[10px] font-bold uppercase">
-                  {userInitials}
-                </span>
+            <div className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-neutral-200/80 shadow-2xs">
+              <div className="w-9 h-9 rounded-full bg-[#283618] text-[#f7bb0e] flex items-center justify-center shrink-0 font-bold text-[11px] shadow-2xs">
+                <span>{userInitials}</span>
               </div>
               <div>
-                <p className="font-body text-[8px] uppercase tracking-widest text-secondary font-bold">
+                <p className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">
                   Reviewing as
                 </p>
-                <p className="font-body text-[10px] font-bold text-on-surface uppercase tracking-wider mt-0.5">
-                  {user?.name || 'Customer'}
+                <p className="text-[12.5px] font-bold text-neutral-900 capitalize">
+                  {user?.name || 'Verified Customer'}
                 </p>
               </div>
             </div>
 
             {/* Star Picker */}
-            <div className="flex flex-col items-center gap-2 py-5 bg-surface-bright rounded-lg border border-outline-variant/40 shadow-xs">
-              <p className="font-label text-[9px] uppercase tracking-widest text-secondary font-bold">
+            <div className="flex flex-col items-center gap-2 py-5 px-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs">
+              <p className="text-[10.5px] uppercase tracking-wider text-neutral-600 font-bold">
                 Your Rating
               </p>
-              <StarRating value={rating} interactive size={28} onChange={setRating} />
-              {rating > 0 && (
+              <div className="py-1">
+                <StarRating value={rating} interactive size={32} onChange={setRating} />
+              </div>
+              {rating > 0 ? (
                 <motion.p
                   key={rating}
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="font-body text-[10px] font-bold uppercase tracking-widest text-amber-600 mt-1"
+                  className="text-[12px] font-bold uppercase tracking-wider text-[#283618]"
                 >
                   {ratingLabels[rating]}
                 </motion.p>
+              ) : (
+                <p className="text-[11px] text-neutral-400 font-medium">Tap a star to rate</p>
               )}
             </div>
 
             {/* Comment */}
-            <div className="bg-surface-bright rounded-lg border border-outline-variant/40 shadow-xs p-5 space-y-3">
-              <label className="text-[9px] uppercase tracking-widest text-secondary font-bold flex items-center gap-1.5">
-                <MessageSquare className="text-[14px]" strokeWidth={1.5} />
+            <div className="bg-white rounded-xl border border-neutral-200/80 shadow-2xs p-4 space-y-2.5">
+              <label className="text-[10.5px] uppercase tracking-wider text-neutral-700 font-bold flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
                 Your Experience
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
-                placeholder="Tell others about the quality, craftsmanship, and delivery experience..."
-                className="w-full bg-transparent border-b border-outline-variant/30 focus:border-primary outline-none py-2 text-[11px] text-on-surface placeholder:text-secondary/50 resize-none transition-colors"
+                placeholder="Tell others about the quality, taste, and delivery experience..."
+                className="w-full bg-neutral-50/60 border border-neutral-200 rounded-lg p-3 focus:bg-white focus:border-[#283618] focus:ring-1 focus:ring-[#283618] outline-none text-[12.5px] text-neutral-900 placeholder:text-neutral-400 resize-none transition-all leading-relaxed"
               />
-              <p className="text-[9px] text-secondary/70 font-mono text-right">
-                {comment.length} chars
-              </p>
+              <div className="flex items-center justify-between text-[10.5px] text-neutral-400 font-mono">
+                <span>Min 10 characters</span>
+                <span className={comment.length >= 10 ? 'text-[#283618] font-bold' : ''}>
+                  {comment.length} chars
+                </span>
+              </div>
             </div>
 
             {/* Photo Uploader */}
-            <div className="bg-surface-bright rounded-lg border border-outline-variant/40 shadow-xs p-5 space-y-3">
-              <label className="text-[9px] uppercase tracking-widest text-secondary font-bold flex items-center gap-1.5 mb-2">
-                <Camera className="text-[14px]" strokeWidth={1.5} />
+            <div className="bg-white rounded-xl border border-neutral-200/80 shadow-2xs p-4 space-y-2.5">
+              <label className="text-[10.5px] uppercase tracking-wider text-neutral-700 font-bold flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
                 Add Photos (Max 5)
               </label>
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2.5 pt-1">
                 {combinedPreviews.map((preview, idx) => (
                   <div
                     key={idx}
-                    className="relative w-14 h-14 rounded-lg overflow-hidden border border-outline-variant/30 bg-surface-container shadow-sm group flex-shrink-0"
+                    className="relative w-16 h-16 rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 shadow-2xs group flex-shrink-0"
                   >
                     <OptimizedImage
                       src={preview}
@@ -393,16 +400,16 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
                           setLocalPreviews((prev) => prev.filter((_, i) => i !== localIdx));
                         }
                       }}
-                      className="absolute top-1 right-1 w-4 h-4 rounded bg-black/70 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-all opacity-0 group-hover:opacity-100"
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-all opacity-90 group-hover:opacity-100"
                     >
-                      <X className="text-[10px]" strokeWidth={1.5} />
+                      <X className="w-3 h-3" strokeWidth={2} />
                     </button>
                   </div>
                 ))}
-                {selectedFiles.length < 5 && (
-                  <label className="w-14 h-14 rounded-lg border border-dashed border-outline-variant/50 hover:border-primary bg-surface-container-lowest hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-0.5 text-secondary hover:text-primary flex-shrink-0">
-                    <Plus className="text-[16px]" strokeWidth={1.5} />
-                    <span className="text-[7px] font-bold uppercase tracking-wider">Add</span>
+                {selectedFiles.length + remoteImages.length < 5 && (
+                  <label className="w-16 h-16 rounded-xl border-2 border-dashed border-neutral-300 hover:border-[#283618] bg-neutral-50 hover:bg-[#283618]/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-neutral-500 hover:text-[#283618] flex-shrink-0">
+                    <Plus className="w-5 h-5" strokeWidth={2} />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Add</span>
                     <input
                       type="file"
                       multiple
@@ -427,15 +434,17 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
             </div>
 
             <div className="pt-2">
-              <LoadingButton
+              <button
                 type="submit"
-                loading={submitting}
-                disabled={rating === 0}
-                fullWidth
-                icon="send"
+                disabled={submitting || rating === 0}
+                className="w-full h-11 rounded-xl bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.99] text-white font-bold text-[12.5px] uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center gap-2"
               >
-                {existingReview ? 'Update Review' : 'Submit Review'}
-              </LoadingButton>
+                {submitting ? (
+                  <span>Submitting...</span>
+                ) : (
+                  <span>{existingReview ? 'Update Review' : 'Submit Review'}</span>
+                )}
+              </button>
             </div>
           </form>
         </div>
@@ -537,7 +546,7 @@ export function ProductReviews({ productId, productTitle }) {
   // ── CTA button logic ──────────────────────────────────────────────────────
   const renderCTA = () => {
     const buttonClass =
-      'w-10 h-10 rounded-full flex items-center justify-center bg-[#8a7337]/10 text-[#8a7337] hover:bg-[#8a7337] hover:text-white transition-all cursor-pointer shrink-0';
+      'w-10 h-10 rounded-full flex items-center justify-center bg-[#000000]/10 text-[#000000] hover:bg-[#000000] hover:text-white transition-all cursor-pointer shrink-0';
     const disabledClass =
       'w-10 h-10 flex items-center justify-center bg-neutral-100 text-black/40 rounded-full border border-black/5 shrink-0';
 
@@ -617,7 +626,7 @@ export function ProductReviews({ productId, productTitle }) {
               <Link
                 to={`/product/${productId}/reviews`}
                 title={`View all ${reviews.length} reviews`}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 border border-black/5 text-[#8a7337] transition-all cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 border border-black/5 text-[#000000] transition-all cursor-pointer shrink-0"
               >
                 <ArrowRight className="text-[20px]" strokeWidth={1.5} />
               </Link>
@@ -677,8 +686,8 @@ export function ProductReviews({ productId, productTitle }) {
                     width="10"
                     height="10"
                     viewBox="0 0 24 24"
-                    fill="#D4A853"
-                    stroke="#D4A853"
+                    fill="#F7BB0E"
+                    stroke="#F7BB0E"
                     strokeWidth="1.5"
                     className="shrink-0"
                   >
@@ -689,7 +698,7 @@ export function ProductReviews({ productId, productTitle }) {
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full bg-[#D4A853] rounded-full"
+                      className="h-full bg-[#F7BB0E] rounded-full"
                     />
                   </div>
                   <span className="font-label text-[11px] text-black/40 w-8 text-right font-semibold">

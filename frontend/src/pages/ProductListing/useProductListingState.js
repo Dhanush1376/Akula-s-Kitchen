@@ -1,13 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useProducts, useCategories, useDynamicFilters } from '../../hooks/useProductQueries';
-import { useVisualSearch } from '../../hooks/useVisualSearch';
 import { persistentStorage } from '../../utils/storage/persistentStorage';
 import { scrollToShopAnchor } from './shopScrollAnchor';
 
 export function useProductListingState() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const visualSearch = useVisualSearch();
   const navigate = useNavigate();
 
   const categoryParam = searchParams.get('category') || 'All';
@@ -15,14 +13,13 @@ export function useProductListingState() {
   const searchParam = searchParams.get('search') || '';
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
   const idsParam = searchParams.get('ids') || undefined;
-  const couponParam = searchParams.get('coupon') || undefined;
 
   const [localSearch, setLocalSearch] = useState(searchParam);
   const [sortBy, setSortBy] = useState(() => {
-    return persistentStorage.getItem('siri_sort_preference', { fallback: 'New Arrivals' });
+    return persistentStorage.getItem('akula_sort_preference', { fallback: 'New Arrivals' });
   });
   const [filters, setFilters] = useState(() => {
-    const saved = persistentStorage.getItem('siri_product_filters');
+    const saved = persistentStorage.getItem('akula_product_filters');
     if (saved && typeof saved === 'object') {
       return saved;
     }
@@ -30,11 +27,11 @@ export function useProductListingState() {
   });
 
   useEffect(() => {
-    persistentStorage.setItem('siri_sort_preference', sortBy);
+    persistentStorage.setItem('akula_sort_preference', sortBy);
   }, [sortBy]);
 
   useEffect(() => {
-    persistentStorage.setItem('siri_product_filters', filters);
+    persistentStorage.setItem('akula_product_filters', filters);
   }, [filters]);
 
   // Sync external searchParam into localSearch
@@ -61,71 +58,73 @@ export function useProductListingState() {
     return () => clearTimeout(timer);
   }, [localSearch, searchParam, setSearchParams]);
 
+  // Immediate commit for explicit submissions
   const commitSearch = useCallback(
-    (query, extraParams = {}) => {
-      const q = typeof query === 'string' ? query : localSearch;
-      setLocalSearch(q);
+    (query) => {
+      setLocalSearch(query);
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          if (q) next.set('search', q);
+          if (query) next.set('search', query);
           else next.delete('search');
           next.delete('page');
-          if (extraParams && typeof extraParams === 'object') {
-            Object.entries(extraParams).forEach(([key, val]) => {
-              if (val === undefined || val === null) {
-                next.delete(key);
-              } else {
-                next.set(key, String(val));
-              }
-            });
-          }
           return next;
         },
         { replace: true },
       );
     },
-    [localSearch, setSearchParams],
+    [setSearchParams],
   );
 
-  const sortMap = {
-    Popularity: 'rating',
-    'Price: Low to High': 'price_asc',
-    'Price: High to Low': 'price_desc',
-    'New Arrivals': 'newest',
-  };
+  // Prepare Query Params for Product Query Hook
+  const queryParams = useMemo(() => {
+    const params = {
+      page: pageParam,
+      limit: 12,
+    };
 
-  const queryParams = {
-    page: pageParam,
-    limit: 100,
-    search: searchParam,
-    category: categoryParam !== 'All' ? categoryParam : undefined,
-    collection: collectionParam,
-    ids: idsParam,
-    coupon: couponParam,
-    sort: sortMap[sortBy] || 'newest',
-    spellcheck: searchParams.get('spellcheck') || undefined,
-  };
-
-  if (filters.priceRange && Array.isArray(filters.priceRange) && filters.priceRange.length > 0) {
-    let min = Infinity;
-    let max = -Infinity;
-    filters.priceRange.forEach((range) => {
-      const parts = range.split('-');
-      const currentMin = parseInt(parts[0], 10) || 0;
-      const currentMax = parts[1] ? parseInt(parts[1], 10) : Infinity;
-      if (currentMin < min) min = currentMin;
-      if (currentMax > max) max = currentMax;
-    });
-    if (min !== Infinity) queryParams.minPrice = min;
-    if (max !== -Infinity && max !== Infinity) queryParams.maxPrice = max;
-  }
-
-  Object.keys(filters).forEach((key) => {
-    if (key !== 'priceRange' && Array.isArray(filters[key]) && filters[key].length > 0) {
-      queryParams[key] = filters[key].join(',');
+    if (categoryParam !== 'All') {
+      params.category = categoryParam;
     }
-  });
+    if (collectionParam) {
+      params.collection = collectionParam;
+    }
+    if (searchParam) {
+      params.search = searchParam;
+    }
+    if (idsParam) {
+      params.ids = idsParam;
+    }
+
+    // Sort Mapping
+    switch (sortBy) {
+      case 'Price: Low to High':
+        params.sort = 'price_asc';
+        break;
+      case 'Price: High to Low':
+        params.sort = 'price_desc';
+        break;
+      case 'Customer Rating':
+        params.sort = 'rating';
+        break;
+      case 'Featured':
+        params.sort = 'featured';
+        break;
+      case 'New Arrivals':
+      default:
+        params.sort = 'newest';
+        break;
+    }
+
+    // Filter Mappings
+    Object.entries(filters).forEach(([key, values]) => {
+      if (Array.isArray(values) && values.length > 0) {
+        params[key] = values.join(',');
+      }
+    });
+
+    return params;
+  }, [categoryParam, collectionParam, searchParam, pageParam, sortBy, filters, idsParam]);
 
   const { data: productsData, isLoading: loading, isFetching, isError } = useProducts(queryParams);
   const { data: filterGroups = [] } = useDynamicFilters(queryParams);
@@ -135,45 +134,12 @@ export function useProductListingState() {
     return ['All', ...categoriesData];
   }, [categoriesData]);
 
-  const unifiedResults = useMemo(() => {
-    if (!visualSearch.results) return [];
-    const items = [];
-    const seen = new Set();
-
-    if (visualSearch.results.bestMatch) {
-      items.push({ ...visualSearch.results.bestMatch, _isExactMatch: true });
-      seen.add(visualSearch.results.bestMatch.id || visualSearch.results.bestMatch._id);
-    }
-
-    if (visualSearch.results.similarProducts) {
-      visualSearch.results.similarProducts.forEach((p) => {
-        const id = p.id || p._id;
-        if (!seen.has(id)) {
-          items.push(p);
-          seen.add(id);
-        }
-      });
-    }
-
-    if (visualSearch.results.relatedProducts) {
-      visualSearch.results.relatedProducts.forEach((p) => {
-        const id = p.id || p._id;
-        if (!seen.has(id)) {
-          items.push(p);
-          seen.add(id);
-        }
-      });
-    }
-    return items;
-  }, [visualSearch.results]);
-
   const products = useMemo(() => {
-    if (visualSearch.results) return unifiedResults;
     return productsData?.data || productsData?.products || [];
-  }, [visualSearch.results, unifiedResults, productsData]);
+  }, [productsData]);
 
-  const totalPages = visualSearch.results ? 1 : productsData?.totalPages || 1;
-  const totalCount = visualSearch.results ? unifiedResults.length : productsData?.totalCount || 0;
+  const totalPages = productsData?.totalPages || 1;
+  const totalCount = productsData?.totalCount || 0;
 
   const handleCategorySelect = useCallback(
     (cat) => {
@@ -201,22 +167,22 @@ export function useProductListingState() {
   const toggleFilter = useCallback((type, value) => {
     setFilters((prev) => {
       const current = prev[type] || [];
-      const next = current.includes(value)
-        ? current.filter((i) => i !== value)
+      const updated = current.includes(value)
+        ? current.filter((item) => item !== value)
         : [...current, value];
 
-      if (next.length === 0) {
-        const newFilters = { ...prev };
-        delete newFilters[type];
-        return newFilters;
+      if (updated.length === 0) {
+        const next = { ...prev };
+        delete next[type];
+        return next;
       }
-      return { ...prev, [type]: next };
+      return { ...prev, [type]: updated };
     });
   }, []);
 
   const setFilterValue = useCallback((type, value) => {
     setFilters((prev) => {
-      if (!value || (Array.isArray(value) && value.length === 0)) {
+      if (value === null || value === undefined || value === '') {
         const newFilters = { ...prev };
         delete newFilters[type];
         return newFilters;
@@ -228,19 +194,12 @@ export function useProductListingState() {
   const clearAllFilters = useCallback(() => {
     setFilters({});
     setSearchParams({});
-    if (visualSearch.results) {
-      visualSearch.reset();
-    }
-  }, [setSearchParams, visualSearch]);
-
-  console.log('[DEBUG] productsData:', productsData);
-  console.log('[DEBUG] products:', products);
+  }, [setSearchParams]);
 
   return useMemo(
     () => ({
       searchParams,
       setSearchParams,
-      visualSearch,
       navigate,
       categoryParam,
       searchParam,
@@ -259,7 +218,6 @@ export function useProductListingState() {
       isError,
       filterGroups,
       categories,
-      unifiedResults,
       products,
       totalPages,
       totalCount,
@@ -269,7 +227,6 @@ export function useProductListingState() {
     [
       searchParams,
       setSearchParams,
-      visualSearch,
       navigate,
       categoryParam,
       searchParam,
@@ -289,7 +246,6 @@ export function useProductListingState() {
       isError,
       filterGroups,
       categories,
-      unifiedResults,
       products,
       totalPages,
       totalCount,

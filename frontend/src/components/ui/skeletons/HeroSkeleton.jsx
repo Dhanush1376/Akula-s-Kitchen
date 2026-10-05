@@ -5,11 +5,11 @@ export function HeroSkeleton() {
   return (
     <>
       {/* ─────────── MOBILE HERO SKELETON ─────────── */}
-      <section className="relative w-full overflow-hidden bg-[#0f0e0c] lg:hidden">
+      <section className="relative w-full overflow-hidden bg-[#000000] lg:hidden">
         <div className="relative text-white pt-32 pb-24 px-7 flex flex-col z-10 min-h-[100dvh] justify-center overflow-hidden">
           {/* Background Skeleton Image Block */}
-          <div className="absolute inset-0 z-0 bg-[#1c1a17]">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0E0C] via-[#0F0E0C]/60 to-transparent" />
+          <div className="absolute inset-0 z-0 bg-[#141414]">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/60 to-transparent" />
           </div>
 
           <div className="relative z-10 flex flex-col items-start max-w-[300px]">
@@ -21,18 +21,18 @@ export function HeroSkeleton() {
               />
               <div className="flex flex-col gap-1.5 mt-1">
                 <Skeleton className="h-2 w-24 !bg-white/20 !border-white/5" />
-                <Skeleton className="h-2 w-20 !bg-[#d4af37]/40 !border-transparent" />
+                <Skeleton className="h-2 w-20 !bg-[#f7bb0e]/40 !border-transparent" />
               </div>
             </div>
 
             {/* Title */}
             <div className="space-y-2 mb-5 w-full">
               <Skeleton className="h-[38px] w-full !bg-white/10 !border-white/5" />
-              <Skeleton className="h-[38px] w-3/4 !bg-[#d4af37]/30 !border-transparent" />
+              <Skeleton className="h-[38px] w-3/4 !bg-[#f7bb0e]/30 !border-transparent" />
             </div>
 
             {/* Thin Gold Divider */}
-            <Skeleton className="w-12 h-[1px] mb-5 !bg-[#d4af37]/60 !border-transparent rounded-none" />
+            <Skeleton className="w-12 h-[1px] mb-5 !bg-[#f7bb0e]/60 !border-transparent rounded-none" />
 
             {/* Subtext */}
             <div className="space-y-2 mb-6 max-w-[270px] w-full">
@@ -43,7 +43,7 @@ export function HeroSkeleton() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col gap-4 items-start w-full mt-2">
-              <Skeleton className="h-[52px] w-[240px] rounded-full !bg-[#d4af37]/40 !border-transparent" />
+              <Skeleton className="h-[52px] w-[240px] rounded-full !bg-[#f7bb0e]/40 !border-transparent" />
               <div className="flex items-center gap-3.5 py-3">
                 <Skeleton variant="circle" className="w-10 h-10 !bg-white/10 !border-white/20" />
                 <Skeleton className="h-[11px] w-[140px] !bg-white/20 !border-white/5" />
@@ -51,17 +51,17 @@ export function HeroSkeleton() {
             </div>
           </div>
 
-          {/* Bottom-Right Rotating Mandala Seal */}
+          {/* Bottom-Right Rotating Seal */}
           <div className="absolute right-4 bottom-20 w-24 h-24 z-20 flex items-center justify-center">
             <Skeleton
               variant="circle"
-              className="w-[52px] h-[52px] !bg-[#1c1a17] !border-[#d4af37]/30"
+              className="w-[52px] h-[52px] !bg-[#141414] !border-[#f7bb0e]/30"
             />
           </div>
 
           {/* Gold-Stroked Wavy Bottom Mask SVG (simplified for skeleton) */}
           <div
-            className="absolute bottom-0 left-0 w-full h-12 bg-[#FDFBF7]"
+            className="absolute bottom-0 left-0 w-full h-12 bg-[#FFFFFF]"
             style={{
               clipPath: 'polygon(0 100%, 100% 100%, 100% 0, 88% 20%, 50% 10%, 12% 20%, 0 0)',
             }}

@@ -1,8 +1,8 @@
-import { Link } from 'react-router-dom';
+import { ChefHat } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { ProductCard } from '../shared/ProductCard';
+import { SectionHeader } from '../shared/SectionHeader';
 import { RecommendationSkeleton } from '../ui/Skeleton';
-import { MandalaArtDecor } from '../ui/MandalaArtDecor';
 import { useState, useEffect, useMemo } from 'react';
 import {
   useSimilarRecommendations,
@@ -19,10 +19,11 @@ export function RecommendationSystem({
   currentProductId,
   targetType = 'product',
   hideHeader = false,
+  hideChefDivider = false,
+  containerClassName = '',
   compact = false,
   horizontalScroll = false,
   rentalOnly = false,
-  hideMandala = false,
 }) {
   const { isAuthenticated } = useAuth();
   const [shouldFetch, setShouldFetch] = useState(false);
@@ -159,56 +160,32 @@ export function RecommendationSystem({
     <section
       className={`${compact ? 'pt-1 pb-0 lg:py-2' : 'pt-6 pb-4 lg:pt-10 lg:pb-6'} bg-transparent relative overflow-hidden`}
     >
-      {/* Subtle Glow Accent */}
-      <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none z-0" />
+      {/* Subtle Warm Glow Accent */}
+      <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-[#f7bb0e]/5 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none z-0" />
 
-      {!hideMandala && (
-        <MandalaArtDecor
-          variant={3}
-          size={compact ? 350 : 600}
-          opacity={0.06}
-          className="absolute -bottom-[100px] -left-[100px] lg:-bottom-[150px] lg:-left-[150px] pointer-events-none z-0"
-          spinDuration={180}
-        />
-      )}
-
-      <div className="max-w-max-width mx-auto px-4 lg:px-6 lg:px-8 relative z-10">
-        {!compact && !hideHeader && (
-          <div className="w-full flex justify-center mb-10 lg:mb-14">
-            <div className="w-full max-w-[180px] flex items-center justify-center gap-3 opacity-60">
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-[#826237] to-[#826237]" />
-              <span
-                className="material-symbols-outlined text-[16px] text-[#826237]"
-                style={{ fontVariationSettings: "'wght' 300" }}
-              >
-                local_florist
-              </span>
-              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#826237] to-[#826237]" />
+      <div
+        className={
+          containerClassName || 'max-w-max-width mx-auto px-4 lg:px-6 lg:px-8 relative z-10'
+        }
+      >
+        {!compact && !hideHeader && !hideChefDivider && (
+          <div className="w-full flex justify-center mb-8 lg:mb-10">
+            <div className="w-full max-w-[180px] flex items-center justify-center gap-3 opacity-70">
+              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-black to-black" />
+              <ChefHat className="w-4 h-4 text-black shrink-0" strokeWidth={2} />
+              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-black to-black" />
             </div>
           </div>
         )}
 
         {!hideHeader && (
-          <div
-            className={`${compact ? 'mb-3' : 'mb-6'} w-full flex items-center justify-between relative z-10`}
-          >
-            <h2
-              className={`${
-                compact
-                  ? 'text-[11px] uppercase tracking-widest font-bold text-on-surface/80 font-label'
-                  : 'text-xl lg:text-2xl font-light tracking-tight text-on-surface font-display'
-              } leading-tight m-0`}
-            >
-              {rentalOnly ? 'Rental Masterpieces' : 'You May Also Like'}
-            </h2>
-            <Link
-              to="/collections"
-              className="text-[10px] lg:text-[12px] font-label uppercase tracking-widest font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-            >
-              View All
-              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </Link>
-          </div>
+          <SectionHeader
+            title={rentalOnly ? 'Rental Masterpieces' : 'You May Also Like'}
+            seeAllLink="/collections"
+            linkText="View All"
+            size="sm"
+            className="mb-3"
+          />
         )}
 
         <AnimatePresence mode="wait">

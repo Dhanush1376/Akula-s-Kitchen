@@ -7,7 +7,7 @@ export function StatusPill({ children, color = 'neutral', className = '' }) {
     success: 'bg-green-500/10 text-green-700 border-green-500/20',
     warning: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
     danger: 'bg-red-500/10 text-red-700 border-red-500/20',
-    accent: 'bg-[#8c7335]/5 text-[#8c7335] border-[#8c7335]/30',
+    accent: 'bg-[#000000]/5 text-[#000000] border-[#000000]/30',
   };
 
   const style = colorStyles[color] || colorStyles.neutral;

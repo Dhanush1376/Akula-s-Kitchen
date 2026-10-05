@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Reusable and production-grade Icon component for Siri Arts & Crafts.
+ * Reusable and production-grade Icon component for Akula's Kitchen.
  * Renders Google Material Symbols Outlined with automatic name sanitation,
  * hydration safety, accessibility support, and prevention of raw text leakages.
  */

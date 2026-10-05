@@ -52,8 +52,8 @@ export function BlogListing() {
   return (
     <div className="min-h-screen bg-background pt-24 pb-20">
       <SEO
-        title="Event Decoration Blog & Ideas"
-        description={`Explore the latest event decoration trends, wedding ideas, and traditional pooja setups from the experts at ${storeName || 'Siri Arts & Crafts'}.`}
+        title="Culinary Blog & Recipes"
+        description={`Explore culinary stories, authentic recipes, and dining inspiration from the experts at ${storeName || "Akula's Kitchen"}.`}
         canonicalUrl="/blog"
       />
 
@@ -64,8 +64,7 @@ export function BlogListing() {
             Ideas & Inspiration
           </h1>
           <p className="text-on-surface-variant text-lg lg:text-xl">
-            Discover expert guides, styling tips, and the latest trends in luxury event decoration
-            and handmade gifting.
+            Discover recipes, culinary stories, and dining inspiration from Akula's Kitchen.
           </p>
         </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import X from 'lucide-react/dist/esm/icons/x';
+import { Calendar, CalendarDays, X } from 'lucide-react';
 
 const formatDisplayDate = (dateVal) => {
   if (!dateVal) return '';
@@ -31,14 +31,10 @@ const formatDisplayDate = (dateVal) => {
 };
 
 /**
- * Clean target delivery date picker component with rental date sync and clear actions.
+ * Clean target delivery date picker component in Akula's Kitchen theme.
+ * Configured as a required field with validation.
  */
-export default function TargetDeliveryDatePicker({
-  needByDate,
-  setNeedByDate,
-  hasRentalItems,
-  rentalStartDate,
-}) {
+export default function TargetDeliveryDatePicker({ needByDate, setNeedByDate }) {
   const targetDateInputRef = React.useRef(null);
 
   const handleOpenDatePicker = () => {
@@ -60,45 +56,49 @@ export default function TargetDeliveryDatePicker({
         : needByDate
       : '';
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   return (
-    <div className="py-4 sm:py-5 mb-2 border-b border-black/5">
-      <div className="flex items-center justify-between gap-2 mb-2.5">
-        <label className="text-[11px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-primary">calendar_clock</span>
-          Target Delivery Date
-          <span className="text-[9px] font-medium text-secondary/70 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full lowercase tracking-normal">
-            optional
-          </span>
-        </label>
-        {hasRentalItems && rentalStartDate && needByDate !== rentalStartDate && (
-          <button
-            type="button"
-            onClick={() => setNeedByDate(rentalStartDate)}
-            className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+    <div className="py-3 sm:py-4 mb-3 border-b border-neutral-200">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-neutral-800" strokeWidth={2} />
+          <span
+            className="text-[13px] font-semibold text-neutral-800 font-sans tracking-normal"
+            style={{ fontStretch: 'normal' }}
           >
-            <span className="material-symbols-outlined text-[13px]">sync</span>
-            Sync with Rental Date
-          </button>
-        )}
+            Target Delivery Date
+          </span>
+          <span
+            className="text-red-500 font-bold -ml-1 text-xs leading-none"
+            title="Required field"
+          >
+            *
+          </span>
+        </div>
+        <span className="text-[9.5px] font-extrabold text-neutral-700 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md uppercase tracking-wider">
+          Required
+        </span>
       </div>
 
       <div
         onClick={handleOpenDatePicker}
-        className={`group relative flex items-center justify-between w-full h-11 sm:h-12 rounded-xl border px-3.5 shadow-2xs cursor-pointer transition-all ${
+        className={`group relative flex items-center justify-between w-full h-11 sm:h-12 rounded-lg border px-3.5 shadow-sm hover:shadow-md cursor-pointer transition-all ${
           needByDate
-            ? 'border-primary/50 bg-primary/[0.04] ring-1 ring-primary/20'
-            : 'border-outline-variant/30 bg-surface-bright hover:border-primary/40 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15'
+            ? 'border-[#f7bb0e] bg-[#fffdfa] ring-2 ring-[#f7bb0e]/20'
+            : 'border-neutral-200 bg-white hover:border-neutral-300 focus-within:border-[#f7bb0e] focus-within:ring-2 focus-within:ring-[#f7bb0e]/15'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
-          <span className="material-symbols-outlined text-[18px] text-primary shrink-0">
-            calendar_today
-          </span>
+          <Calendar
+            className={`w-4 h-4 shrink-0 transition-colors ${
+              needByDate ? 'text-neutral-950' : 'text-neutral-400 group-hover:text-neutral-700'
+            }`}
+            strokeWidth={2}
+          />
           <span
-            className={`min-w-0 truncate text-[13px] select-none ${
-              needByDate
-                ? 'text-neutral-900 dark:text-white font-semibold'
-                : 'text-secondary/60 font-normal'
+            className={`min-w-0 truncate text-[12.5px] select-none ${
+              needByDate ? 'text-neutral-950 font-bold' : 'text-neutral-400 font-medium'
             }`}
           >
             {needByDate ? formatDisplayDate(needByDate) : 'Select preferred delivery date...'}
@@ -114,22 +114,21 @@ export default function TargetDeliveryDatePicker({
                 e.stopPropagation();
                 setNeedByDate('');
               }}
-              className="p-1 rounded-full text-secondary/60 hover:text-on-surface hover:bg-black/5 active:bg-black/10 transition-colors cursor-pointer"
+              className="p-1 rounded-md text-neutral-400 hover:text-black hover:bg-neutral-100 transition-colors cursor-pointer"
               aria-label="Clear selected date"
               title="Clear date"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
-          <span className="material-symbols-outlined text-[18px] text-secondary/40 group-hover:text-primary transition-colors pointer-events-none">
-            edit_calendar
-          </span>
+          <CalendarDays className="w-4 h-4 text-neutral-400 group-hover:text-neutral-800 transition-colors pointer-events-none" />
         </div>
 
         <input
           ref={targetDateInputRef}
           type="date"
-          min={new Date().toISOString().split('T')[0]}
+          required
+          min={todayStr}
           value={formattedValue}
           onChange={(e) => setNeedByDate(e.target.value)}
           style={{

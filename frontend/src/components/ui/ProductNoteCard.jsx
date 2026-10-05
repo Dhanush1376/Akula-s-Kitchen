@@ -1,82 +1,41 @@
-import { Info, Gift } from 'lucide-react';
+import { Gift } from 'lucide-react';
 import React from 'react';
 
-export function ProductNoteCard({ customerNote, complimentaryGift, dimensions }) {
-  if (!customerNote && !complimentaryGift?.enabled && !dimensions) return null;
+export function ProductNoteCard({ complimentaryGift }) {
+  if (!complimentaryGift?.enabled) return null;
 
   return (
-    <div className="space-y-4">
-      {/* Designer's Note & Dimensions Section */}
-      {(customerNote || dimensions) && (
-        <div className="flex items-start gap-3 p-3.5 bg-[#fdfbf7] rounded-xl border border-[#e0d6b8] shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#f5ecd5]/50 to-transparent rounded-full blur-2xl pointer-events-none"></div>
-          <Info
-            className="text-[18px] text-[#8c7335] shrink-0 mt-0.5 relative z-10"
-            strokeWidth={1.5}
-          />
-          <div className="flex flex-col relative z-10 w-full">
-            <span className="font-label-sm text-[11px] sm:text-[12px] text-[#8c7335] uppercase tracking-[0.1em] font-bold">
-              {customerNote && dimensions
-                ? "Designer's Note & Dimensions"
-                : customerNote
-                  ? "Designer's Note"
-                  : 'Product Dimensions'}
-            </span>
-
-            {customerNote && (
-              <span className="font-body-sm text-[13px] sm:text-[14px] text-on-surface/80 font-medium mt-0.5 whitespace-pre-wrap">
-                {customerNote}
-              </span>
-            )}
-
-            {customerNote && dimensions && <hr className="my-2.5 border-[#e0d6b8]/60 w-full" />}
-
-            {dimensions && (
-              <div className={!customerNote ? 'mt-0.5' : ''}>
-                <span className="font-body-sm text-[13px] sm:text-[14px] text-on-surface/80 font-medium">
-                  <strong className="text-[#2a2c2a] uppercase tracking-wider text-[10px] mr-1">
-                    Dimensions:
-                  </strong>
-                  {dimensions}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-3">
       {/* Complimentary Gift Section */}
       {complimentaryGift?.enabled && (
-        <div className="flex items-start gap-3 p-3.5 bg-[#f7f9fc] rounded-xl border border-[#cbdce8] shadow-xs relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#dbeafe]/40 to-transparent rounded-full blur-2xl pointer-events-none" />
-          <Gift
-            className="w-[18px] h-[18px] text-[#1e4976] shrink-0 mt-0.5 relative z-10"
-            strokeWidth={1.5}
-          />
-          <div className="flex flex-col relative z-10 w-full">
+        <div className="p-4 bg-white rounded-2xl border border-black/10 shadow-xs flex items-start gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#f7bb0e]/20 flex items-center justify-center shrink-0 mt-0.5 text-neutral-950">
+            <Gift className="w-4 h-4" strokeWidth={2} />
+          </div>
+          <div className="flex flex-col w-full">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-label-sm text-[11px] sm:text-[12px] text-[#1e4976] uppercase tracking-[0.1em] font-bold">
+              <span className="text-[11px] text-neutral-950 uppercase tracking-wider font-extrabold">
                 Complimentary Gift
               </span>
               {complimentaryGift.displayBadge ? (
-                <span className="px-2 py-0.5 bg-[#1e4976]/10 text-[#1e4976] border border-[#1e4976]/20 text-[9px] uppercase tracking-wider font-bold rounded-md">
+                <span className="px-2.5 py-0.5 bg-neutral-100 text-neutral-900 text-[10px] uppercase tracking-wider font-extrabold rounded-full border border-black/10">
                   {complimentaryGift.displayBadge}
                 </span>
               ) : (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#1e4976] bg-[#1e4976]/10 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   Included Free
                 </span>
               )}
             </div>
 
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className="font-body-sm text-[13px] sm:text-[14px] text-on-surface/90 font-semibold">
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-[13px] text-neutral-950 font-bold">
                 {complimentaryGift.quantity} × {complimentaryGift.name || 'Surprise Gift'}
               </span>
             </div>
 
             {complimentaryGift.description && (
-              <span className="font-body-sm text-[12px] sm:text-[13px] text-on-surface/70 font-medium mt-1 leading-relaxed">
+              <span className="text-[12px] text-neutral-600 font-normal mt-0.5 leading-relaxed">
                 {complimentaryGift.description}
               </span>
             )}

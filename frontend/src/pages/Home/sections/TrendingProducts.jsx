@@ -1,8 +1,6 @@
 import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { CarouselWrapper } from '../../../components/shared/CarouselWrapper';
 import { ProductCard } from '../../../components/shared/ProductCard';
-import { MandalaElement } from '../../../components/ui/MandalaElement';
-import { MandalaArtDecor } from '../../../components/ui/MandalaArtDecor';
 import { useTrendingRecommendations } from '../../../hooks/useRecommendationQueries';
 import { useProducts } from '../../../hooks/useProductQueries';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
@@ -59,15 +57,6 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
   if (isPending || loading) {
     return (
       <section className="h1-section !pt-4 lg:!pt-8 relative isolate" id="h1-trending">
-        {/* Background glow gradient behind mandala */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary-container/20 rounded-full blur-[100px] pointer-events-none z-[-1]" />
-
-        {/* Decorative Mandala */}
-        <MandalaArtDecor
-          className="absolute -top-6 -right-[500px] opacity-[0.03] z-[-1]"
-          size={1000}
-        />
-
         <div className="h1-container relative z-10 animate-pulse">
           <div className="flex justify-between items-end mb-8 lg:mb-10">
             <div>
@@ -100,19 +89,10 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
 
   return (
     <section className="h1-section !pt-4 lg:!pt-8 !pb-4 lg:!pb-8 relative isolate" id="h1-trending">
-      {/* Background glow gradient behind mandala */}
-      <div className="absolute top-0 -left-32 w-[250px] h-[250px] bg-primary-container/15 rounded-full blur-[70px] pointer-events-none z-[-1]" />
-      <MandalaElement
-        variant={1}
-        size={400}
-        className="absolute top-12 -left-20 z-[-1]"
-        opacity={0.08}
-        duration={120}
-      />
       <div className="h1-container relative z-10">
         <SectionHeader
           kicker={config.sectionSubtitle !== undefined ? config.sectionSubtitle : config.kicker}
-          title={config.sectionTitle || 'Trending Now'}
+          title={config.sectionTitle || "Today's picks"}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>

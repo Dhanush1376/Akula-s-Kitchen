@@ -4,7 +4,7 @@ import { useAutocomplete, useTrendingSearches, useDiscoveryData } from './useSea
 import { useSearchAnalytics } from './useSearchAnalytics';
 import { useScrollLock } from './useScrollLock';
 
-const RECENT_SEARCHES_KEY = 'siri_recent_searches';
+const RECENT_SEARCHES_KEY = 'akula_recent_searches';
 const MAX_RECENT = 12;
 
 /**
@@ -101,7 +101,7 @@ export function useSearchOverlay() {
 
     list.forEach((item) => {
       if (item.type === 'category') groups[0].items.push(item);
-      else if (item.type === 'event' || item.type === 'gallery') groups[1].items.push(item);
+      else if (item.type === 'event') groups[1].items.push(item);
       else if (item.type === 'product') groups[2].items.push(item);
       else groups[3].items.push(item);
     });
@@ -195,19 +195,8 @@ export function useSearchOverlay() {
         navigate(`/collections?category=${encodeURIComponent(suggestion.title)}`);
       } else if (suggestion.type === 'product') {
         navigate(`/product/${suggestion.slug || suggestion.id}`);
-      } else if (suggestion.type === 'event') {
-        navigate(`/events/${suggestion.slug || suggestion.id}`);
-      } else if (suggestion.type === 'gallery') {
-        navigate(`/gallery/${suggestion.id}`);
       } else {
-        const currentPath = window.location.pathname;
-        if (currentPath.startsWith('/events')) {
-          navigate(`/events?search=${encodeURIComponent(suggestion.title)}`);
-        } else if (currentPath.startsWith('/gallery')) {
-          navigate(`/gallery?search=${encodeURIComponent(suggestion.title)}`);
-        } else {
-          navigate(`/collections?search=${encodeURIComponent(suggestion.title)}`);
-        }
+        navigate(`/collections?search=${encodeURIComponent(suggestion.title)}`);
       }
 
       handleClose();
@@ -224,14 +213,7 @@ export function useSearchOverlay() {
       saveRecentSearch(q);
       trackEvent('search_executed', q);
 
-      const currentPath = window.location.pathname;
-      if (currentPath.startsWith('/events')) {
-        navigate(`/events?search=${encodeURIComponent(q)}`);
-      } else if (currentPath.startsWith('/gallery')) {
-        navigate(`/gallery?search=${encodeURIComponent(q)}`);
-      } else {
-        navigate(`/collections?search=${encodeURIComponent(q)}`);
-      }
+      navigate(`/collections?search=${encodeURIComponent(q)}`);
 
       handleClose();
     },

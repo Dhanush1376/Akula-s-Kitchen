@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useCartMutations } from './useCartQueries';
-import { cleanRentalInfo, calculateCartSummary } from '../utils/ecommerce/cartCalculations';
+import { calculateCartSummary } from '../utils/ecommerce/cartCalculations';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { hasSessionMarker } from '../utils/auth/authStorage';
@@ -28,13 +28,8 @@ export function useOptimisticCartMutation({
   const addItem = useCallback(
     (product) => {
       runProtectedAction(() => {
-        const itemType = product.type || 'purchase';
-        const targetCartKey =
-          itemType === 'purchase'
-            ? 'purchaseCart'
-            : itemType === 'rental'
-              ? 'rentalCart'
-              : 'customCart';
+        const itemType = 'purchase';
+        const targetCartKey = 'purchaseCart';
 
         const previousCart = queryClient.getQueryData(['cart', cartKey]);
         const currentItems = previousCart?.[targetCartKey]?.items || [];
@@ -60,13 +55,12 @@ export function useOptimisticCartMutation({
         setIsCartOpen(true);
         const qty = requestedQty;
 
-        // React Query useCartMutations handles the optimistic UI and rollback natively now!
+        // React Query useCartMutations handles optimistic UI
         addToCart({
           product,
           productId: product._id || product.id,
           quantity: qty,
           type: itemType,
-          rentalInfo: cleanRentalInfo(product.rentalInfo),
         });
       });
     },
@@ -83,18 +77,9 @@ export function useOptimisticCartMutation({
 
   const attemptAddToCart = useCallback(
     (product) => {
-      const itemType = product.type || 'purchase';
-
-      if (itemType !== activeCartMode) {
-        toast(
-          `Switched to ${itemType === 'rental' ? 'Rental' : itemType === 'custom' ? 'Custom' : 'Purchase'} Cart to add this item`,
-        );
-        setActiveCartMode(itemType);
-      }
-
       addItem(product);
     },
-    [activeCartMode, setActiveCartMode, addItem],
+    [addItem],
   );
 
   const removeItem = useCallback(
@@ -126,24 +111,20 @@ export function useOptimisticCartMutation({
         // 1. Manually update cache instantly for the UI slider responsiveness
         const previousCart = queryClient.getQueryData(['cart', cartKey]);
         if (previousCart) {
-          const targetCartKey =
-            activeCartMode === 'purchase'
-              ? 'purchaseCart'
-              : activeCartMode === 'rental'
-                ? 'rentalCart'
-                : 'customCart';
-          const updatedItems = previousCart[targetCartKey].items.map((item) => {
-            const itemId = item.product?._id || item.product?.id;
-            if (itemId === id) {
-              return { ...item, quantity: numericQuantity };
-            }
-            return item;
-          });
+          const targetCartKey = 'purchaseCart';
+          const updatedItems =
+            previousCart[targetCartKey]?.items.map((item) => {
+              const itemId = item.product?._id || item.product?.id;
+              if (itemId === id) {
+                return { ...item, quantity: numericQuantity };
+              }
+              return item;
+            }) || [];
 
-          const { subtotal, depositTotal, total } = calculateCartSummary(
+          const { subtotal, total } = calculateCartSummary(
             updatedItems,
-            activeCartMode,
-            previousCart[targetCartKey].summary?.shippingFee || 0,
+            'purchase',
+            previousCart[targetCartKey]?.summary?.shippingFee || 0,
           );
 
           queryClient.setQueryData(['cart', cartKey], {
@@ -152,9 +133,8 @@ export function useOptimisticCartMutation({
               ...previousCart[targetCartKey],
               items: updatedItems,
               summary: {
-                ...(previousCart[targetCartKey].summary || emptySummary),
+                ...(previousCart[targetCartKey]?.summary || emptySummary),
                 subtotal,
-                depositTotal,
                 total,
               },
             },
@@ -168,18 +148,13 @@ export function useOptimisticCartMutation({
 
         syncTimeoutRef.current = setTimeout(() => {
           const currentCart = queryClient.getQueryData(['cart', cartKey]);
-          const allItems = [
-            ...(currentCart?.purchaseCart?.items || []),
-            ...(currentCart?.rentalCart?.items || []),
-          ];
+          const allItems = currentCart?.purchaseCart?.items || [];
 
           const payload = allItems.map((item) => {
             return {
               product: item.product?._id || item.product?.id || item._id || item.id || item.product,
               quantity: item.quantity,
-              type: item.type || 'purchase',
-              rentalInfo: cleanRentalInfo(item.rentalInfo),
-              deposit: item.deposit,
+              type: 'purchase',
             };
           });
 
@@ -193,7 +168,6 @@ export function useOptimisticCartMutation({
       runProtectedAction,
       syncCart,
       queryClient,
-      activeCartMode,
       cartKey,
       emptySummary,
       maxQuantityPerItem,
@@ -202,22 +176,9 @@ export function useOptimisticCartMutation({
 
   const clearCart = useCallback(() => {
     runProtectedAction(() => {
-      const currentCart = queryClient.getQueryData(['cart', cartKey]);
-      const otherCartKey = activeCartMode === 'purchase' ? 'rentalCart' : 'purchaseCart';
-      const otherItems = currentCart?.[otherCartKey]?.items || [];
-      const payload = otherItems.map((item) => {
-        return {
-          product: item.product?._id || item.product?.id || item._id || item.id || item.product,
-          quantity: item.quantity,
-          type: item.type || 'purchase',
-          rentalInfo: cleanRentalInfo(item.rentalInfo),
-          deposit: item.deposit,
-        };
-      });
-
-      syncCart({ cartItems: payload });
+      syncCart({ cartItems: [] });
     });
-  }, [runProtectedAction, syncCart, queryClient, activeCartMode, cartKey]);
+  }, [runProtectedAction, syncCart]);
 
   return { addItem, attemptAddToCart, removeItem, updateQuantity, clearCart };
 }

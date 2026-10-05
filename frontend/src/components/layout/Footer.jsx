@@ -1,7 +1,6 @@
-import { Camera } from 'lucide-react';
+import { Phone, Mail, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MandalaElement } from '../ui/MandalaElement';
-import { SiriLogo } from '../ui/SiriLogo';
+import { BrandLogo } from '../ui/BrandLogo';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { CONTACT_EMAIL, SOCIAL_INSTAGRAM, SOCIAL_PINTEREST } from '../../constants/brandEnv';
 import { useQuery } from '@tanstack/react-query';
@@ -21,7 +20,6 @@ export function Footer() {
     supportPhone: configPhone,
     alternatePhone: configAltPhone,
     storeSettings,
-    hideGallerySection,
   } = useConfig();
   const { contact, footer, navigation } = useWebsiteContent();
   const { data: settings } = useQuery({
@@ -37,10 +35,7 @@ export function Footer() {
   });
   const policies = policiesResponse?.data || [];
 
-  const logoText = navigation?.logo?.text || storeNameUpper || 'SIRI ARTS & CRAFTS';
-  const logoWords = logoText.split(' ');
-  const _firstWord = logoWords[0] || 'SIRI';
-  const _restWords = logoWords.slice(1).join(' ') || 'ARTS & CRAFTS';
+  const logoText = navigation?.logo?.text || storeNameUpper || "AKULA'S KITCHEN";
   const currentYear = new Date().getFullYear();
 
   const primaryPhone =
@@ -76,44 +71,45 @@ export function Footer() {
     settings?.legal?.companyName ||
     settings?.general?.storeName ||
     storeName ||
-    'Siri Arts & Crafts';
-
-  const isGalleryHidden = Boolean(
-    hideGallerySection ||
-    storeSettings?.storefront?.hideGallerySection ||
-    settings?.storefront?.hideGallerySection,
-  );
+    "Akula's Kitchen";
 
   // Dynamic CMS Link Mappings
   let exploreLinks =
     footer?.exploreLinks?.length > 0
       ? footer.exploreLinks
       : [
-          { label: 'Collections', href: '/collections' },
-          { label: 'Events', href: '/events' },
-          { label: 'Gallery', href: '/gallery' },
+          { label: 'All Collections', href: '/collections' },
+          { label: 'Special Today', href: '/' },
         ];
 
-  if (isGalleryHidden) {
-    exploreLinks = exploreLinks.filter((link) => {
-      const href = (link?.href || link?.link || '').toLowerCase().trim();
-      const label = (link?.label || '').toLowerCase().trim();
-      return !href.includes('gallery') && !label.includes('gallery');
-    });
-  }
+  exploreLinks = exploreLinks.filter((link) => {
+    const href = (link?.href || link?.link || '').toLowerCase().trim();
+    const label = (link?.label || '').toLowerCase().trim();
+    return !href.includes('gallery') && !label.includes('gallery');
+  });
 
-  const studioLinks =
+  const studioLinks = (
     footer?.studioLinks?.length > 0
       ? footer.studioLinks
       : [
-          { label: 'Our Story', href: '/about' },
-          { label: 'Custom Orders', href: '/custom-orders' },
-          { label: 'Contact', href: '/contact' },
-        ];
+          { label: 'Shop Menu', href: '/collections' },
+          { label: 'Customer Support', href: '/contact' },
+        ]
+  ).filter((link) => {
+    const href = (link?.href || link?.link || '').toLowerCase().trim();
+    const label = (link?.label || '').toLowerCase().trim();
+    return (
+      href !== '/about' &&
+      !href.includes('/about') &&
+      label !== 'our story' &&
+      label !== 'about us' &&
+      label !== 'about'
+    );
+  });
 
   const defaultPolicyLinks = [
     { label: 'Shipping Policy', href: '/policy/shipping-policy' },
-    { label: 'Terms and Conditions', href: '/policy/terms-and-conditions' },
+    { label: 'Terms & Conditions', href: '/policy/terms-and-conditions' },
     { label: 'Refund Policy', href: '/policy/refund-policy' },
     { label: 'Exchange Policy', href: '/policy/exchange-policy' },
     { label: 'Return Policy', href: '/policy/return-policy' },
@@ -126,181 +122,195 @@ export function Footer() {
         ? policies.map((p) => ({ label: p.title, href: `/policy/${p.slug}` }))
         : defaultPolicyLinks;
 
-  const trustBadges =
-    footer?.trustBadges?.length > 0
-      ? footer.trustBadges
-      : [
-          { label: 'Secure Checkout', icon: 'lock' },
-          { label: '100% Handcrafted', icon: 'draw' },
-          { label: 'Fast Delivery', icon: 'local_shipping' },
-          { label: 'Simple Returns', icon: 'refresh' },
-        ];
-
   return (
-    <footer className="w-full relative bg-gradient-to-b from-surface to-secondary-container/10 border-t border-black/5 overflow-hidden">
-      {/* Background Depth & Glow */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 opacity-[0.02] pointer-events-none">
-        <MandalaElement size={400} duration={180} variant={2} skipFade={true} />
-      </div>
+    <footer className="w-full bg-[#1b2510] text-white border-t border-[#283618] relative overflow-hidden">
+      {/* Subtle decorative background gradient */}
+      <div className="absolute top-0 right-1/4 w-[600px] h-[350px] bg-[#f7bb0e]/5 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop pt-6 pb-[calc(var(--bottom-nav-height,65px)+var(--safe-area-bottom,0px)+88px)] lg:pb-10 relative z-10">
-        {/* Brand Soul - Left Aligned */}
-        <div className="flex flex-col items-start text-left mb-5.5 lg:mb-7">
-          <Link to="/" className="group flex items-center mb-4">
-            <SiriLogo size="32px" />
-          </Link>
-          <p className="font-body text-on-surface-variant/80 max-w-sm leading-relaxed font-light text-[11px] lg:px-0">
-            {footer?.description ||
-              storeTagline ||
-              settings?.general?.tagline ||
-              'Ancient craftsmanship meets modern elegance.'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-gutter">
-          {/* Navigation Matrix - 3 Columns on Mobile */}
-          <div className="col-span-1 lg:col-span-8 grid grid-cols-3 gap-x-2 gap-y-6 lg:gap-x-4">
-            <div className="flex flex-col space-y-2.5">
-              <h4 className="font-label-sm text-primary uppercase tracking-[0.1em] font-bold text-[10px]">
-                Explore
-              </h4>
-              <nav className="flex flex-col space-y-2">
-                {exploreLinks.map((link, idx) => (
-                  <Link
-                    key={idx}
-                    className="text-[10px] lg:text-[11px] text-on-surface-variant/70 hover:text-primary transition-colors"
-                    to={link.href || '#'}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-            <div className="flex flex-col space-y-2.5">
-              <h4 className="font-label-sm text-primary uppercase tracking-[0.1em] font-bold text-[10px]">
-                Studio
-              </h4>
-              <nav className="flex flex-col space-y-2">
-                {studioLinks.map((link, idx) => (
-                  <Link
-                    key={idx}
-                    className="text-[10px] lg:text-[11px] text-on-surface-variant/70 hover:text-primary transition-colors"
-                    to={link.href || '#'}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-            <div className="flex flex-col space-y-2.5 col-span-1">
-              <h4 className="font-label-sm text-primary uppercase tracking-[0.1em] font-bold text-[10px]">
-                Support
-              </h4>
-              <div className="flex flex-col space-y-2 text-[10px] text-on-surface-variant/70 leading-relaxed font-medium">
-                <div className="flex flex-col space-y-1">
-                  {primaryPhone && (
-                    <a
-                      href={`tel:${cleanPhoneDigits(primaryPhone)}`}
-                      className="hover:text-primary transition-colors whitespace-nowrap"
-                    >
-                      {formatPhoneWithCountryCode(primaryPhone)}
-                    </a>
-                  )}
-                  {alternatePhone &&
-                    formatPhoneWithCountryCode(alternatePhone) !==
-                      formatPhoneWithCountryCode(primaryPhone) && (
-                      <a
-                        href={`tel:${cleanPhoneDigits(alternatePhone)}`}
-                        className="hover:text-primary transition-colors whitespace-nowrap text-on-surface-variant/60"
-                        title="Alternate support number"
-                      >
-                        {formatPhoneWithCountryCode(alternatePhone)}
-                      </a>
-                    )}
-                </div>
-                <a
-                  href={`mailto:${email}`}
-                  className="hover:text-primary transition-colors break-words"
-                >
-                  {email}
-                </a>
+      {/* Main container */}
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 pt-12 pb-[calc(var(--bottom-nav-height,65px)+var(--safe-area-bottom,0px)+36px)] lg:pb-12 relative z-10">
+        {/* Navigation & Brand Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 border-b border-white/10">
+          {/* Brand Info Column */}
+          <div className="lg:col-span-4 flex flex-col items-start gap-4">
+            <Link to="/" className="inline-flex items-center gap-3.5 group">
+              <BrandLogo
+                size="52px"
+                className="drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+                variant="default"
+              />
+              <div className="flex flex-col">
+                <span className="font-extrabold text-[17px] tracking-tight text-white group-hover:text-[#f7bb0e] transition-colors">
+                  {logoText}
+                </span>
+                <span className="text-[10px] text-white/60 tracking-wider uppercase font-semibold">
+                  Handcrafted & Pure
+                </span>
               </div>
-            </div>
-          </div>
+            </Link>
 
-          {/* Social Presence */}
-          <div className="col-span-1 lg:col-span-4 flex flex-col gap-3.5 lg:items-start lg:items-end">
-            <div className="flex items-center gap-2 lg:gap-3.5">
+            <p className="text-[13px] text-neutral-300 leading-relaxed max-w-sm font-normal">
+              {footer?.description ||
+                storeTagline ||
+                settings?.general?.tagline ||
+                'Authentic homemade delicacies, freshly prepared daily with pure traditional ingredients.'}
+            </p>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-2.5 pt-1">
               {instagramLink && (
                 <a
-                  aria-label="Instagram"
-                  className="text-on-surface-variant/50 hover:text-primary transition-all flex items-center justify-center gap-1.5 min-w-[40px] min-h-[40px]"
+                  aria-label="Follow on Instagram"
                   href={instagramLink}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
                 >
-                  <Camera className="font-light text-[16px]" strokeWidth={1.5} />
-                  <span className="font-label-sm text-[10px] uppercase tracking-widest font-bold">
-                    Insta
-                  </span>
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                  </svg>
                 </a>
               )}
               {pinterestLink && (
                 <a
-                  aria-label="Pinterest"
-                  className="text-on-surface-variant/50 hover:text-primary transition-all flex items-center justify-center gap-1.5 min-w-[40px] min-h-[40px]"
+                  aria-label="Follow on Pinterest"
                   href={pinterestLink}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
                 >
-                  <span className="material-symbols-outlined font-light text-[16px]">push_pin</span>
-                  <span className="font-label-sm text-[10px] uppercase tracking-widest font-bold">
-                    Pin
-                  </span>
+                  <span className="font-bold text-[14px]">P</span>
                 </a>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Trust Signals Strip */}
-        <div className="mt-8 pt-6 border-t border-black/5">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-2 gap-y-3.5 sm:gap-4 lg:gap-6">
-            {trustBadges.map((badge, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <div className="w-6 h-6 rounded-full bg-primary/5 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[12px] text-primary">
-                    {badge.icon || badge.href || 'star'}
-                  </span>
-                </div>
-                <span className="font-label-sm text-[9px] xs:text-[9.5px] sm:text-[10px] text-on-surface-variant/70 uppercase tracking-[0.06em] sm:tracking-[0.15em] font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-                  {badge.label}
-                </span>
+          {/* Links Columns */}
+          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-8">
+            {/* Explore Column */}
+            <div>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-4">
+                Explore
+              </h3>
+              <ul className="space-y-2.5">
+                {exploreLinks.map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      to={link.href || '#'}
+                      className="text-[13px] text-neutral-300 hover:text-white transition-colors flex items-center gap-1 group font-medium"
+                    >
+                      <span>{link.label}</span>
+                      <ArrowUpRight
+                        size={12}
+                        className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#f7bb0e]"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Kitchen Column */}
+            <div>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-4">
+                Kitchen
+              </h3>
+              <ul className="space-y-2.5">
+                {studioLinks.map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      to={link.href || '#'}
+                      className="text-[13px] text-neutral-300 hover:text-white transition-colors flex items-center gap-1 group font-medium"
+                    >
+                      <span>{link.label}</span>
+                      <ArrowUpRight
+                        size={12}
+                        className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#f7bb0e]"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Direct Contact Column */}
+            <div className="col-span-2 sm:col-span-1">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-4">
+                Help & Contact
+              </h3>
+              <div className="space-y-3">
+                {primaryPhone && (
+                  <a
+                    href={`tel:${cleanPhoneDigits(primaryPhone)}`}
+                    className="flex items-center gap-2.5 text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
+                      <Phone size={13} strokeWidth={2.2} />
+                    </div>
+                    <span className="truncate">{formatPhoneWithCountryCode(primaryPhone)}</span>
+                  </a>
+                )}
+                {alternatePhone &&
+                  formatPhoneWithCountryCode(alternatePhone) !==
+                    formatPhoneWithCountryCode(primaryPhone) && (
+                    <a
+                      href={`tel:${cleanPhoneDigits(alternatePhone)}`}
+                      className="flex items-center gap-2.5 text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
+                      title="Alternate support number"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
+                        <Phone size={13} strokeWidth={2.2} />
+                      </div>
+                      <span className="truncate">{formatPhoneWithCountryCode(alternatePhone)}</span>
+                    </a>
+                  )}
+                {email && (
+                  <a
+                    href={`mailto:${email}`}
+                    className="flex items-center gap-2.5 text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
+                      <Mail size={13} strokeWidth={2.2} />
+                    </div>
+                    <span className="truncate">{email}</span>
+                  </a>
+                )}
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* Bottom Editorial Bar */}
-        <div className="mt-6 pt-4 border-t border-black/5 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 text-left pr-14 sm:pr-16 lg:pr-0">
-          <div className="flex flex-col gap-1">
-            <p className="font-label-sm text-on-surface-variant/50 tracking-[0.1em] text-[9px] uppercase font-bold">
+        {/* Bottom Legal & Policies Row */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px] text-neutral-400">
+          <div className="flex flex-wrap items-center gap-2">
+            <span>
               {footer?.copyright?.replace('{year}', currentYear.toString()) ||
-                `© ${currentYear} ${businessName}.`}
-              {(settings?.legal?.cin || configCin) && (
-                <span className="ml-2 font-normal text-on-surface-variant/40">
-                  • CIN: {settings?.legal?.cin || configCin}
-                </span>
-              )}
-            </p>
+                `© ${currentYear} ${businessName}. All rights reserved.`}
+            </span>
+            {(settings?.legal?.cin || configCin) && (
+              <span className="text-neutral-500 font-mono text-[11px]">
+                • CIN: {settings?.legal?.cin || configCin}
+              </span>
+            )}
           </div>
-          <div className="flex items-center flex-wrap gap-x-3.5 gap-y-2 sm:gap-4">
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {policyLinks.map((link, idx) => (
               <Link
                 key={idx}
                 to={link.href || '#'}
-                className="font-label-sm text-on-surface-variant/50 text-[9px] uppercase tracking-widest hover:text-on-surface whitespace-nowrap"
+                className="hover:text-neutral-200 transition-colors text-neutral-400 font-medium whitespace-nowrap"
               >
                 {link.label}
               </Link>

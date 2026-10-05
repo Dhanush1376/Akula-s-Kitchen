@@ -98,11 +98,11 @@ export function TrackingOperatorPanel({
 
                 <div className="space-y-3">
                   <label className="block text-[10px] uppercase font-bold text-secondary tracking-widest">
-                    ATELIER/TRANSIT SCAN NOTE
+                    STORE/TRANSIT SCAN NOTE
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter courier notes (e.g. Dispatched from Ongole warehouse, Out for delivery at Jubilee Hills hub)"
+                    placeholder="Enter courier notes (e.g. Dispatched from warehouse, Out for delivery at Jubilee Hills hub)"
                     value={operatorNote}
                     onChange={(e) => setOperatorNote(e.target.value)}
                     className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-primary transition-all font-semibold"

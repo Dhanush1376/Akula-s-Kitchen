@@ -25,7 +25,7 @@ export const AdminImage = memo(
     if (!isValid || error) {
       return (
         <div
-          className={`flex flex-col items-center justify-center bg-[#f7f6f2] dark:bg-[#1a1917] text-[#8a877f] dark:text-[#9e9b93] rounded border border-black/5 dark:border-white/5 text-center p-1 select-none overflow-hidden ${className}`}
+          className={`flex flex-col items-center justify-center bg-[#f7f7f7] dark:bg-[#000000] text-[#737373] dark:text-[#8a8a8a] rounded border border-black/5 dark:border-white/5 text-center p-1 select-none overflow-hidden ${className}`}
           style={{ minHeight: '36px', minWidth: '36px' }}
         >
           <ImageOff className="w-3.5 h-3.5 opacity-60 mb-0.5" strokeWidth={1.75} />

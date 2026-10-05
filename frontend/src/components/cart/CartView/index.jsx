@@ -1,19 +1,27 @@
-import { CheckCircle2, Trash2, BadgeCheck, Heart, Lock, AlertTriangle } from 'lucide-react';
+import {
+  CheckCircle2,
+  Trash2,
+  BadgeCheck,
+  Heart,
+  Lock,
+  AlertTriangle,
+  ArrowRight,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useState, useEffect, Profiler } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+
 import { useConfig } from '../../../context/ConfigContext';
 import toast from 'react-hot-toast';
 
 import { logRenderMetrics } from '../../../utils/performance/profilerLogger';
 import { useCart } from '../../../context/CartContext';
 import { useWishlist } from '../../../context/WishlistContext';
-import { couponService, cmsService } from '../../../services/domainServices';
+import { cmsService } from '../../../services/domainServices';
 import { useAuth } from '../../../context/AuthContext';
 import { useRecommendationTracker } from '../../../hooks/useRecommendationTracker';
-import { persistentStorage } from '../../../utils/storage/persistentStorage';
 import { useUserAddresses, useAddressMutations } from '../../../hooks/useUserQueries';
 
 import { Skeleton, CartSkeleton } from '../../ui';
@@ -25,9 +33,7 @@ import { CartItemRow } from '../CartItemRow';
 import { CartEmptyState } from './CartEmptyState';
 import { CartModeSelector } from './CartModeSelector';
 import { CartSummary } from './CartSummary';
-import { CartCouponSection } from './CartCouponSection';
 import { CartAddressBar } from './CartAddressBar';
-import { CouponModal } from './CouponModal';
 
 const RecommendationSystem = React.lazy(() =>
   import('../../sections/RecommendationSystem').then((m) => ({
@@ -44,10 +50,6 @@ export function CartView({ isEmbedded = false }) {
     summary,
     totalMRP,
     loading,
-    claimedCoupon,
-    setClaimedCoupon,
-    appliedCoupon,
-    setAppliedCoupon,
     activeCartMode,
     setActiveCartMode,
     purchaseCartCount,
@@ -67,6 +69,7 @@ export function CartView({ isEmbedded = false }) {
   const { setDefaultAddress } = useAddressMutations();
   const [isAddressDropdownOpen, setIsAddressDropdownOpen] = useState(false);
   const [isClearCartDialogOpen, setIsClearCartDialogOpen] = useState(false);
+  const [notification, setNotification] = useState('');
 
   const activeAddress = React.useMemo(() => {
     if (!addresses || addresses.length === 0) return null;
@@ -91,33 +94,9 @@ export function CartView({ isEmbedded = false }) {
 
   useEffect(() => {
     try {
-      sessionStorage.removeItem('siri_checkout_step');
+      sessionStorage.removeItem('akula_checkout_step');
     } catch (_e) {}
   }, []);
-
-  const [couponInput, setCouponInput] = useState('');
-  const [couponError, setCouponError] = useState('');
-  const [notification, setNotification] = useState('');
-  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
-
-  const { data: couponsData } = useQuery({
-    queryKey: ['coupons'],
-    queryFn: async () => {
-      const res = await couponService.getAll();
-      return res.success ? res.data : res;
-    },
-    enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const activeCoupons = React.useMemo(() => {
-    const list =
-      couponsData?.data || couponsData?.items || (Array.isArray(couponsData) ? couponsData : []);
-    return list.filter((c) => {
-      const isExpired = new Date() > new Date(c.expiryDate);
-      return c.isActive && !isExpired && (!c.usageLimit || c.usedCount < c.usageLimit);
-    });
-  }, [couponsData]);
 
   const triggerNotification = (msg) => {
     setNotification(msg);
@@ -126,7 +105,6 @@ export function CartView({ isEmbedded = false }) {
 
   const actualSubtotal = summary?.subtotal || 0;
   const discountOnMRP = Math.max(0, (totalMRP || 0) - actualSubtotal);
-  const couponDiscountAmount = appliedCoupon?.calculatedDiscount || 0;
 
   const depositTotal =
     activeCartMode === 'rental'
@@ -155,23 +133,9 @@ export function CartView({ isEmbedded = false }) {
         : 0;
   const platformFee = items.length > 0 ? Math.max(0, configuredPlatformFee) : 0;
 
-  const [useWallet, setUseWallet] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_use_wallet', {
-      session: true,
-      fallback: false,
-    });
-  });
+  const basePayableAmount = actualSubtotal + platformFee + shippingFee + depositTotal;
 
-  useEffect(() => {
-    persistentStorage.setItem('siri_checkout_use_wallet', useWallet, { session: true });
-  }, [useWallet]);
-
-  const basePayableAmount =
-    actualSubtotal - couponDiscountAmount + platformFee + shippingFee + depositTotal;
-  const walletDeduction =
-    useWallet && user?.walletBalance > 0 ? Math.min(user.walletBalance, basePayableAmount) : 0;
-
-  const finalPayableAmount = items.length > 0 ? basePayableAmount - walletDeduction : 0;
+  const finalPayableAmount = items.length > 0 ? basePayableAmount : 0;
 
   // Real-time order limits violations evaluation
   const itemsExceedingQty = React.useMemo(() => {
@@ -236,56 +200,6 @@ export function CartView({ isEmbedded = false }) {
     triggerNotification(
       `Adjusted ${itemsExceedingQty.length} item(s) to max allowed quantity of ${maxQuantityPerItem}`,
     );
-  };
-
-  const nextAvailableCoupon = React.useMemo(() => {
-    return activeCoupons
-      .filter((c) => c.minPurchaseAmount && c.minPurchaseAmount > actualSubtotal)
-      .sort((a, b) => a.minPurchaseAmount - b.minPurchaseAmount)[0];
-  }, [activeCoupons, actualSubtotal]);
-
-  const couponGap = nextAvailableCoupon
-    ? nextAvailableCoupon.minPurchaseAmount - actualSubtotal
-    : 0;
-
-  const handleApplyCoupon = async (e, codeParam = null) => {
-    if (e) e.preventDefault();
-    const code = (codeParam || couponInput).trim().toUpperCase();
-    if (!code) return;
-
-    if (actualSubtotal === 0) {
-      setCouponError('Please add items to apply a coupon.');
-      return;
-    }
-
-    try {
-      const itemsPayload = items.map((item) => ({
-        productId: item.id || item._id || item.productId,
-        quantity: item.quantity,
-        type: item.type,
-      }));
-
-      const res = await couponService.apply(code, actualSubtotal, itemsPayload);
-      if (res.success) {
-        setAppliedCoupon(res.data);
-        setClaimedCoupon(code);
-        setCouponError('');
-        triggerNotification('Applied coupon successfully');
-        setIsCouponModalOpen(false);
-      } else {
-        setCouponError(res.message || 'Invalid coupon code.');
-        if (codeParam) setClaimedCoupon('');
-      }
-    } catch (err) {
-      setCouponError(err.response?.data?.message || 'Failed to apply coupon.');
-      if (codeParam) setClaimedCoupon('');
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponInput('');
-    setClaimedCoupon('');
   };
 
   const handleMoveToWishlist = (item) => {
@@ -366,28 +280,25 @@ export function CartView({ isEmbedded = false }) {
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="bg-surface-bright rounded-2xl p-6 max-w-[320px] w-full shadow-2xl border border-outline-variant/20 text-center"
+              className="bg-white rounded-xl p-6 max-w-[340px] w-full shadow-2xl border border-black/10 text-center"
             >
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
-                <Trash2 className="text-[24px]" strokeWidth={1.5} />
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
+                <Trash2 className="w-6 h-6" strokeWidth={1.8} />
               </div>
-              <h3 className="text-[18px] font-bold text-on-surface mb-2 font-display">
-                Clear entire bag?
-              </h3>
-              <p className="text-[13px] text-secondary/80 mb-6">
-                Are you sure you want to remove all items from your bag? This action cannot be
-                undone.
+              <h3 className="text-[15px] font-bold text-neutral-900 mb-1">Clear entire bag?</h3>
+              <p className="text-[12.5px] text-neutral-500 mb-6">
+                Are you sure you want to remove all items from your bag? This cannot be undone.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2.5">
                 <button
                   onClick={() => setIsClearCartDialogOpen(false)}
-                  className="flex-1 py-2.5 rounded-full border border-outline-variant/40 text-secondary font-bold text-[12px] uppercase tracking-wider hover:bg-surface-container-low transition-colors"
+                  className="flex-1 py-2.5 rounded-full border border-black/15 text-neutral-700 font-bold text-[11px] uppercase tracking-wider hover:bg-neutral-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmClearCart}
-                  className="flex-1 py-2.5 rounded-full bg-red-600 text-white font-bold text-[12px] uppercase tracking-wider hover:bg-red-700 transition-colors shadow-sm"
+                  className="flex-1 py-2.5 rounded-full bg-red-600 text-white font-bold text-[11px] uppercase tracking-wider hover:bg-red-700 transition-colors shadow-xs cursor-pointer"
                 >
                   Clear Bag
                 </button>
@@ -416,7 +327,7 @@ export function CartView({ isEmbedded = false }) {
         customCartCount={customCartCount}
       />
 
-      <div className="mb-4 lg:mb-5">
+      <div className="mb-3 lg:mb-4">
         <CheckoutSteps
           steps={
             activeCartMode === 'rental'
@@ -428,224 +339,160 @@ export function CartView({ isEmbedded = false }) {
         />
       </div>
 
-      <div className="max-w-[1240px] mx-auto px-2 sm:px-6">
+      <div className="max-w-[1240px] mx-auto px-3 sm:px-6">
         {items.length === 0 ? (
           <CartEmptyState activeCartMode={activeCartMode} />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-6">
-            {/* Left Content List: Cart Entities */}
-            <div className="lg:col-span-7 xl:col-span-8 space-y-3">
-              {discountOnMRP + couponDiscountAmount > 0 && (
-                <div className="bg-primary/10 border border-primary/20 text-primary text-[13px] font-bold rounded-lg flex items-center justify-center p-3 gap-2 shadow-xs">
-                  <BadgeCheck className="text-[18px]" strokeWidth={1.5} />
-                  You're saving ₹{(discountOnMRP + couponDiscountAmount).toLocaleString()} on this
-                  order
-                </div>
-              )}
-
-              {nextAvailableCoupon && !appliedCoupon && (
-                <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 flex gap-4 shadow-xs relative overflow-hidden">
-                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full opacity-50 blur-xl"></div>
-                  <div className="flex-1 z-10">
-                    <h3 className="text-on-surface font-extrabold text-[13px] mb-1 tracking-wide">
-                      Add ₹{couponGap.toLocaleString()} to unlock special prices
-                    </h3>
-                    <p className="text-secondary text-[11px] leading-relaxed">
-                      Add items worth ₹{couponGap.toLocaleString()} more to apply code{' '}
-                      <span className="font-bold text-on-surface uppercase tracking-wide">
-                        {nextAvailableCoupon.code}
-                      </span>{' '}
-                      for {nextAvailableCoupon.discountPercent}% OFF!
-                    </p>
-                  </div>
-                  <span className="material-symbols-outlined text-primary text-3xl">redeem</span>
-                </div>
-              )}
-
-              <div className="bg-surface-bright rounded-lg p-4 flex items-center justify-between font-bold text-[11px] uppercase tracking-widest shadow-xs border border-outline-variant/40">
-                <div className="flex items-center gap-2">
-                  <span>
-                    <span className="text-on-surface font-extrabold">{cartCount}</span> Items in Bag{' '}
-                    <span className="text-secondary font-medium ml-1">
-                      (₹{actualSubtotal.toLocaleString()})
-                    </span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-secondary">
-                  <button
-                    onClick={handleClearCart}
-                    className="hover:text-red-600 transition-colors cursor-pointer"
-                    title="Delete All"
-                  >
-                    <Trash2 className="text-[18px]" strokeWidth={1.5} />
-                  </button>
-                  <button
-                    onClick={handleMoveAllToWishlist}
-                    className="hover:text-primary transition-colors cursor-pointer"
-                    title="Move All to Wishlist"
-                  >
-                    <Heart className="text-[18px]" strokeWidth={1.5} />
-                  </button>
-                </div>
+          <>
+            {/* Page Header */}
+            <div className="pt-2 pb-4 flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+              <div>
+                <h1 className="text-[18px] sm:text-[20px] font-bold text-neutral-900 tracking-tight leading-none">
+                  Shopping Bag
+                </h1>
               </div>
-
-              {/* Order Limits Warning Banner */}
-              {orderLimitError && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 shadow-xs mb-3"
-                >
-                  <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[12px] font-bold text-amber-900 leading-tight">
-                        Order Requirement Notice
-                      </p>
-                      <p className="text-[11px] text-amber-800/90 mt-0.5 leading-snug">
-                        {orderLimitError}
-                      </p>
-                    </div>
-                  </div>
-                  {hasQuantityViolation && (
-                    <button
-                      type="button"
-                      onClick={handleFixOverLimitQuantities}
-                      className="shrink-0 px-3.5 py-1.5 rounded-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-xs"
-                    >
-                      Fix Quantities to {maxQuantityPerItem}
-                    </button>
-                  )}
-                </motion.div>
-              )}
-
-              <motion.div layout className="space-y-3">
-                <AnimatePresence>
-                  {items.map((item) => {
-                    const uniqueKey = `${item.id || item._id}-${item.variant}`;
-                    return (
-                      <CartItemRow
-                        key={uniqueKey}
-                        item={item}
-                        activeCartMode={activeCartMode}
-                        settings={settings}
-                        deliveryDateStr={deliveryDateStr}
-                        removeItem={removeItem}
-                        updateQuantity={updateQuantity}
-                        handleMoveToWishlist={handleMoveToWishlist}
-                        triggerNotification={triggerNotification}
-                      />
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
-
-              <div className="mt-2 lg:mt-6">
-                <React.Suspense fallback={<Skeleton className="h-52 w-full rounded-2xl" />}>
-                  <RecommendationSystem
-                    category={items.length > 0 ? items[0].category : undefined}
-                    currentProductId={items.length > 0 ? items[0].id || items[0]._id : undefined}
-                    hideHeader={false}
-                    horizontalScroll={true}
-                    compact={true}
-                    rentalOnly={false}
-                    hideMandala={true}
-                  />
-                </React.Suspense>
-              </div>
+              <p className="text-[12px] text-neutral-500 font-medium">
+                Fresh homestyle delicacies, prepared with care
+              </p>
             </div>
 
-            {/* Right Column Pane */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="lg:col-span-5 xl:col-span-4 space-y-3"
-            >
-              {user && user.walletBalance > 0 && (
-                <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs relative overflow-hidden">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        id="cart-use-wallet-checkbox"
-                        checked={useWallet}
-                        onChange={(e) => setUseWallet(e.target.checked)}
-                        className="mt-1 rounded text-primary focus:ring-0 cursor-pointer h-4 w-4"
-                      />
-                      <label
-                        htmlFor="cart-use-wallet-checkbox"
-                        className="cursor-pointer select-none"
-                      >
-                        <span className="text-xs font-bold text-on-surface block uppercase tracking-wider">
-                          Use Siri Pay Wallet
-                        </span>
-                        <span className="text-[10px] text-secondary font-light">
-                          Available Balance:{' '}
-                          <strong className="text-on-surface font-semibold">
-                            ₹{user.walletBalance.toLocaleString('en-IN')}
-                          </strong>
-                        </span>
-                      </label>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+              {/* Left Content List: Cart Entities */}
+              <div className="lg:col-span-7 xl:col-span-8 space-y-3">
+                {discountOnMRP > 0 && (
+                  <div className="bg-[#fef9e7] border border-[#fae182] text-neutral-950 text-[12px] font-bold rounded-lg flex items-center justify-between p-3 gap-2 shadow-sm mb-3">
+                    <div className="flex items-center gap-2">
+                      <BadgeCheck className="w-4 h-4 text-[#d99b00]" strokeWidth={2.2} />
+                      <span>Total Savings on MRP</span>
                     </div>
-                    <span className="material-symbols-outlined text-primary text-sm animate-pulse">
-                      stars
+                    <span className="font-extrabold text-emerald-700 text-[13px]">
+                      − ₹{discountOnMRP.toLocaleString()}
                     </span>
                   </div>
+                )}
 
-                  <AnimatePresence>
-                    {useWallet && walletDeduction > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-3 pt-3 border-t border-outline-variant/30 text-[11px] text-primary font-bold flex justify-between"
-                      >
-                        <span>Wallet Deducted:</span>
-                        <span>− ₹{walletDeduction.toLocaleString('en-IN')}</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                <div className="bg-white rounded-lg p-3 sm:p-3.5 flex items-center justify-between font-bold text-[11px] uppercase tracking-wider shadow-sm border border-neutral-200 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-950 font-extrabold">
+                      {cartCount} {cartCount === 1 ? 'Item' : 'Items'} in Bag
+                    </span>
+                    <span className="text-neutral-300">·</span>
+                    <span className="text-neutral-600 font-bold">
+                      ₹{actualSubtotal.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-neutral-500">
+                    <button
+                      onClick={handleMoveAllToWishlist}
+                      className="hover:text-black transition-colors flex items-center gap-1.5 text-[10.5px] font-extrabold cursor-pointer"
+                      title="Move All to Wishlist"
+                    >
+                      <Heart className="w-3.5 h-3.5" strokeWidth={2} />
+                      <span className="hidden sm:inline">Save All</span>
+                    </button>
+                    <span className="text-neutral-200">|</span>
+                    <button
+                      onClick={handleClearCart}
+                      className="hover:text-red-600 transition-colors flex items-center gap-1.5 text-[10.5px] font-extrabold cursor-pointer"
+                      title="Delete All"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                      <span className="hidden sm:inline">Clear</span>
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              <CartCouponSection
-                appliedCoupon={appliedCoupon}
-                couponDiscountAmount={couponDiscountAmount}
-                handleRemoveCoupon={handleRemoveCoupon}
-                runProtectedAction={runProtectedAction}
-                setIsCouponModalOpen={setIsCouponModalOpen}
-                isAuthenticated={isAuthenticated}
-                activeCoupons={activeCoupons}
-                handleApplyCoupon={handleApplyCoupon}
-                couponInput={couponInput}
-                setCouponInput={setCouponInput}
-                couponError={couponError}
-                setCouponError={setCouponError}
-              />
+                {/* Order Limits Warning Banner */}
+                {orderLimitError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 shadow-xs mb-3"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[12px] font-bold text-amber-900 leading-tight">
+                          Order Requirement Notice
+                        </p>
+                        <p className="text-[11px] text-amber-800/90 mt-0.5 leading-snug">
+                          {orderLimitError}
+                        </p>
+                      </div>
+                    </div>
+                    {hasQuantityViolation && (
+                      <button
+                        type="button"
+                        onClick={handleFixOverLimitQuantities}
+                        className="shrink-0 px-3.5 py-1.5 rounded-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                      >
+                        Fix Quantities to {maxQuantityPerItem}
+                      </button>
+                    )}
+                  </motion.div>
+                )}
 
-              <CartSummary
-                loading={loading}
-                activeCartMode={activeCartMode}
-                cartCount={cartCount}
-                totalMRP={totalMRP}
-                actualSubtotal={actualSubtotal}
-                discountOnMRP={discountOnMRP}
-                couponDiscountAmount={couponDiscountAmount}
-                appliedCoupon={appliedCoupon}
-                platformFee={platformFee}
-                shippingFee={shippingFee}
-                useWallet={useWallet}
-                walletDeduction={walletDeduction}
-                finalPayableAmount={finalPayableAmount}
-                depositTotal={depositTotal}
-                runProtectedAction={runProtectedAction}
-                navigate={navigate}
-                orderLimitError={orderLimitError}
-                orderLimitButtonText={orderLimitButtonText}
-              />
-            </motion.div>
-          </div>
+                <motion.div layout className="space-y-3">
+                  <AnimatePresence>
+                    {items.map((item) => {
+                      const uniqueKey = `${item.id || item._id}-${item.variant}`;
+                      return (
+                        <CartItemRow
+                          key={uniqueKey}
+                          item={item}
+                          activeCartMode={activeCartMode}
+                          settings={settings}
+                          deliveryDateStr={deliveryDateStr}
+                          removeItem={removeItem}
+                          updateQuantity={updateQuantity}
+                          handleMoveToWishlist={handleMoveToWishlist}
+                          triggerNotification={triggerNotification}
+                        />
+                      );
+                    })}
+                  </AnimatePresence>
+                </motion.div>
+
+                <div className="mt-2 lg:mt-6">
+                  <React.Suspense fallback={<Skeleton className="h-52 w-full rounded-2xl" />}>
+                    <RecommendationSystem
+                      category={items.length > 0 ? items[0].category : undefined}
+                      currentProductId={items.length > 0 ? items[0].id || items[0]._id : undefined}
+                      hideHeader={false}
+                      horizontalScroll={true}
+                      compact={true}
+                      rentalOnly={false}
+                    />
+                  </React.Suspense>
+                </div>
+              </div>
+
+              {/* Right Column Pane */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="lg:col-span-5 xl:col-span-4 space-y-3"
+              >
+                <CartSummary
+                  loading={loading}
+                  activeCartMode={activeCartMode}
+                  cartCount={cartCount}
+                  totalMRP={totalMRP}
+                  actualSubtotal={actualSubtotal}
+                  discountOnMRP={discountOnMRP}
+                  platformFee={platformFee}
+                  shippingFee={shippingFee}
+                  finalPayableAmount={finalPayableAmount}
+                  depositTotal={depositTotal}
+                  runProtectedAction={runProtectedAction}
+                  navigate={navigate}
+                  orderLimitError={orderLimitError}
+                  orderLimitButtonText={orderLimitButtonText}
+                />
+              </motion.div>
+            </div>
+          </>
         )}
       </div>
     </>
@@ -655,13 +502,13 @@ export function CartView({ isEmbedded = false }) {
     <Profiler id="CartView" onRender={logRenderMetrics}>
       <>
         {isEmbedded ? (
-          <div className="w-full text-on-surface">{innerContent}</div>
+          <div className="w-full text-neutral-950">{innerContent}</div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="bg-surface-container-low min-h-screen pt-[56px] lg:pt-[64px] pb-[160px] lg:pb-28 font-body text-on-surface"
+            className="bg-white min-h-screen pt-[var(--ak-header-h,56px)] pb-24 lg:pb-16 font-body text-neutral-950 modern-sans-headings"
           >
             {innerContent}
           </motion.div>
@@ -673,19 +520,19 @@ export function CartView({ isEmbedded = false }) {
             <motion.div
               initial={{ y: 100 }}
               animate={{ y: 0 }}
-              className="fixed bottom-0 left-0 w-full h-[calc(72px+var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px)))] lg:h-[80px] z-[100] lg:hidden bg-white/95 backdrop-blur-xl border-t border-outline-variant/15 px-6 pb-[var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px))] flex items-center justify-between gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] select-none"
+              className="fixed bottom-0 left-0 w-full h-[calc(68px+var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px)))] lg:hidden z-[100] bg-white/95 backdrop-blur-xl border-t border-black/[0.08] px-4 sm:px-6 pb-[var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px))] flex items-center justify-between gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] select-none"
             >
               <div className="flex flex-col justify-center truncate">
-                <span className="font-label text-[8px] uppercase tracking-[0.25em] text-stone-500 font-bold leading-none">
-                  {cartCount} ITEM{cartCount !== 1 ? 'S' : ''} IN BAG
+                <span className="font-sans text-[10px] uppercase tracking-wider text-neutral-500 font-bold leading-none">
+                  {cartCount} item{cartCount !== 1 ? 's' : ''} in Bag
                 </span>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="font-sans text-[15px] text-black font-bold leading-none">
+                <div className="flex items-baseline gap-1.5 mt-1">
+                  <span className="text-[18px] text-neutral-950 font-bold leading-none">
                     ₹{finalPayableAmount.toLocaleString('en-IN')}
                   </span>
-                  {appliedCoupon && (
-                    <span className="bg-green-100 text-green-800 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase border border-green-200 tracking-wider">
-                      {appliedCoupon.code}
+                  {totalMRP > finalPayableAmount && (
+                    <span className="text-[11px] text-neutral-400 line-through">
+                      ₹{totalMRP.toLocaleString('en-IN')}
                     </span>
                   )}
                 </div>
@@ -704,51 +551,38 @@ export function CartView({ isEmbedded = false }) {
                     return;
                   }
                   runProtectedAction(() => {
-                    sessionStorage.removeItem('siri_checkout_step');
+                    sessionStorage.removeItem('akula_checkout_step');
                     navigate('/checkout', {
-                      state: { checkoutMode: activeCartMode, couponCode: appliedCoupon?.code },
+                      state: { checkoutMode: activeCartMode },
                     });
                   });
                 }}
-                className={`h-10 px-5 rounded-full font-label text-[10px] uppercase tracking-widest font-bold shadow-md active:scale-[0.96] transition-all flex items-center justify-center gap-1.5 border-none shrink-0 ${
+                className={`h-11 px-6 rounded-lg font-sans text-xs uppercase tracking-wider font-extrabold shadow-sm active:scale-[0.97] transition-all flex items-center justify-center gap-1.5 border shrink-0 ${
                   isStoreClosed || orderLimitError
-                    ? 'bg-stone-200 text-stone-500 border border-stone-300 cursor-not-allowed'
-                    : 'bg-black text-white cursor-pointer'
+                    ? 'bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed'
+                    : 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] hover:bg-[#eab00d] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] cursor-pointer'
                 }`}
               >
                 {isStoreClosed ? (
                   <>
-                    <Lock className="w-3 h-3 text-stone-500" />
+                    <Lock className="w-3.5 h-3.5 text-neutral-500" />
                     <span>Paused</span>
                   </>
                 ) : orderLimitError ? (
                   <>
-                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
                     <span>{orderLimitButtonText || 'Limits Not Met'}</span>
                   </>
-                ) : activeCartMode === 'rental' ? (
-                  'Rent Now'
                 ) : (
-                  'Checkout'
+                  <>
+                    <span>Proceed to Checkout</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
                 )}
               </button>
             </motion.div>,
             document.body,
           )}
-
-        {/* Premium Coupon Selector Modal */}
-        <CouponModal
-          isCouponModalOpen={isCouponModalOpen}
-          setIsCouponModalOpen={setIsCouponModalOpen}
-          handleApplyCoupon={handleApplyCoupon}
-          couponInput={couponInput}
-          setCouponInput={setCouponInput}
-          couponError={couponError}
-          setCouponError={setCouponError}
-          activeCoupons={activeCoupons}
-          actualSubtotal={actualSubtotal}
-          items={items}
-        />
       </>
     </Profiler>
   );

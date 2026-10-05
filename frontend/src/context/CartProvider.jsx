@@ -17,34 +17,20 @@ export function CartProvider({ children }) {
   const queryClient = useQueryClient();
 
   const [activeCartMode, setActiveCartMode] = useState(() => {
-    return persistentStorage.getItem('siri_cart_mode', { fallback: 'purchase' });
+    return persistentStorage.getItem('akula_cart_mode', { fallback: 'purchase' });
   });
 
   useEffect(() => {
-    persistentStorage.setItem('siri_cart_mode', activeCartMode);
+    persistentStorage.setItem('akula_cart_mode', activeCartMode);
   }, [activeCartMode]);
 
   const emptySummary = useMemo(
-    () => ({ subtotal: 0, shippingFee: 0, platformFee: 0, discount: 0, total: 0 }),
+    () => ({ subtotal: 0, shippingFee: 0, platformFee: 0, total: 0 }),
     [],
   );
 
   const emptyCart = useMemo(() => ({ items: [], summary: emptySummary }), [emptySummary]);
-  const emptyRentalCart = useMemo(
-    () => ({ items: [], summary: { ...emptySummary, depositTotal: 0 } }),
-    [emptySummary],
-  );
 
-  const [claimedCoupon, setClaimedCouponState] = useState(() => {
-    return persistentStorage.getItem('siri_claimed_coupon', { fallback: '' });
-  });
-
-  const setClaimedCoupon = useCallback((code) => {
-    setClaimedCouponState(code);
-    persistentStorage.setItem('siri_claimed_coupon', code);
-  }, []);
-
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Guest Cart Local State
@@ -114,41 +100,10 @@ export function CartProvider({ children }) {
     };
   }, [isAuthenticated, cartData, guestCart, emptyCart]);
 
-  const rentalCart = useMemo(() => {
-    if (isAuthenticated) {
-      if (cartData?.rentalCart) {
-        const rawItems = cartData.rentalCart.items || [];
-        const transformed = transformDbCart(rawItems);
-        return {
-          items: transformed,
-          summary: cartData.rentalCart.summary,
-        };
-      }
-      return emptyRentalCart;
-    }
-    // Return Guest Cart
-    const guestItems = guestCart.rentalCart?.items || [];
-    return {
-      items: transformDbCart(guestItems),
-      summary: guestCart.rentalCart?.summary || emptyRentalCart.summary,
-    };
-  }, [isAuthenticated, cartData, guestCart, emptyRentalCart]);
-
   const customCart = emptyCart;
 
-  const items =
-    activeCartMode === 'purchase'
-      ? purchaseCart.items
-      : activeCartMode === 'rental'
-        ? rentalCart.items
-        : customCart.items;
-
-  const summary =
-    activeCartMode === 'purchase'
-      ? purchaseCart.summary
-      : activeCartMode === 'rental'
-        ? rentalCart.summary
-        : customCart.summary;
+  const items = activeCartMode === 'custom' ? customCart.items : purchaseCart.items;
+  const summary = activeCartMode === 'custom' ? customCart.summary : purchaseCart.summary;
 
   const {
     addItem: optAddItem,
@@ -174,8 +129,7 @@ export function CartProvider({ children }) {
         optAddItem(product);
       } else {
         const currentGuestCart = GuestCartService.getCart();
-        const targetCartKey =
-          (product.type || 'purchase') === 'purchase' ? 'purchaseCart' : 'rentalCart';
+        const targetCartKey = 'purchaseCart';
         const currentItems = currentGuestCart[targetCartKey]?.items || [];
         const itemId = product._id || product.id;
         const existingItem = currentItems.find(
@@ -194,12 +148,7 @@ export function CartProvider({ children }) {
         }
 
         setIsCartOpen(true);
-        GuestCartService.addToCart(
-          product,
-          product.quantity || 1,
-          product.type || 'purchase',
-          product.rentalInfo,
-        );
+        GuestCartService.addToCart(product, product.quantity || 1, 'purchase');
         setGuestCart(GuestCartService.getCart());
       }
     },
@@ -210,9 +159,7 @@ export function CartProvider({ children }) {
     (product) => {
       const itemType = product.type || 'purchase';
       if (itemType !== activeCartMode) {
-        toast(
-          `Switched to ${itemType === 'rental' ? 'Rental' : itemType === 'custom' ? 'Custom' : 'Purchase'} Cart to add this item`,
-        );
+        toast(`Switched to ${itemType === 'custom' ? 'Custom' : 'Purchase'} Cart to add this item`);
         setActiveCartMode(itemType);
       }
       addItem(product);
@@ -265,10 +212,6 @@ export function CartProvider({ children }) {
     () => purchaseCart.items.reduce((acc, item) => acc + item.quantity, 0),
     [purchaseCart.items],
   );
-  const rentalCartCount = useMemo(
-    () => rentalCart.items.reduce((acc, item) => acc + item.quantity, 0),
-    [rentalCart.items],
-  );
   const customCartCount = useMemo(
     () => customCart.items.reduce((acc, item) => acc + item.quantity, 0),
     [customCart.items],
@@ -279,12 +222,7 @@ export function CartProvider({ children }) {
   const totalMRP = useMemo(
     () =>
       items.reduce(
-        (acc, item) =>
-          acc +
-          (item.type === 'rental'
-            ? Number(item.price) || 0
-            : Number(item.oldPrice || item.price) || 0) *
-            item.quantity,
+        (acc, item) => acc + (Number(item.oldPrice || item.price) || 0) * item.quantity,
         0,
       ),
     [items],
@@ -308,10 +246,8 @@ export function CartProvider({ children }) {
       items,
       cartCount,
       purchaseCartCount,
-      rentalCartCount,
       customCartCount,
       purchaseCart,
-      rentalCart,
       customCart,
       activeCartMode,
       subtotal,
@@ -319,18 +255,14 @@ export function CartProvider({ children }) {
       summary: summary || emptySummary,
       isCartOpen,
       loading: (isAuthenticated ? cartLoading : false) || isMerging,
-      claimedCoupon,
-      appliedCoupon,
       isInCart,
     }),
     [
       items,
       cartCount,
       purchaseCartCount,
-      rentalCartCount,
       customCartCount,
       purchaseCart,
-      rentalCart,
       customCart,
       activeCartMode,
       subtotal,
@@ -340,8 +272,6 @@ export function CartProvider({ children }) {
       isCartOpen,
       cartLoading,
       isMerging,
-      claimedCoupon,
-      appliedCoupon,
       isInCart,
       isAuthenticated,
     ],
@@ -356,8 +286,6 @@ export function CartProvider({ children }) {
       clearCart,
       setIsCartOpen,
       setActiveCartMode,
-      setClaimedCoupon,
-      setAppliedCoupon,
     }),
     [
       addItem,
@@ -367,8 +295,6 @@ export function CartProvider({ children }) {
       clearCart,
       setIsCartOpen,
       setActiveCartMode,
-      setClaimedCoupon,
-      setAppliedCoupon,
     ],
   );
 

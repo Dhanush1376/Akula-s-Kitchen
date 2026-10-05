@@ -2,10 +2,10 @@ import { Wrench, Mail } from 'lucide-react';
 import React from 'react';
 import { m } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { SiriLogo } from './SiriLogo';
-import { MandalaElement } from './MandalaElement';
+import { BrandLogo } from './BrandLogo';
 import { useConfig } from '../../context/ConfigContext';
 import { BRAND } from '../../config/brand';
+import { SOCIAL_INSTAGRAM } from '../../constants/brandEnv';
 
 export function MaintenanceScreen({ isStoreDisabled = false }) {
   const {
@@ -25,7 +25,8 @@ export function MaintenanceScreen({ isStoreDisabled = false }) {
     storeSettings?.contact?.email ||
     configEmail ||
     BRAND.email;
-  const instagram = storeSettings?.contact?.instagram || 'https://instagram.com/siriarts';
+  const instagram =
+    storeSettings?.contact?.instagram || storeSettings?.social?.instagramUrl || SOCIAL_INSTAGRAM;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -46,16 +47,6 @@ export function MaintenanceScreen({ isStoreDisabled = false }) {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center relative overflow-hidden px-4">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-5">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] aspect-square">
-          <MandalaElement className="w-full h-full text-primary" />
-        </div>
-        <div className="absolute -bottom-[20%] -right-[10%] w-[50%] aspect-square">
-          <MandalaElement className="w-full h-full text-primary" />
-        </div>
-      </div>
-
       <m.div
         className="w-full max-w-2xl mx-auto z-10 flex flex-col items-center text-center"
         variants={containerVariants}
@@ -63,7 +54,7 @@ export function MaintenanceScreen({ isStoreDisabled = false }) {
         animate="visible"
       >
         <m.div variants={itemVariants} className="mb-12">
-          <SiriLogo size="48px" />
+          <BrandLogo size="48px" />
         </m.div>
 
         <m.div variants={itemVariants} className="relative mb-8">
@@ -121,19 +112,21 @@ export function MaintenanceScreen({ isStoreDisabled = false }) {
               <span>Email Us</span>
             </a>
 
-            <a
-              href={instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 rounded-full bg-surface-variant hover:bg-surface-variant-hover text-on-surface transition-colors duration-200"
-            >
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg"
-                alt="Instagram"
-                className="w-5 h-5"
-              />
-              <span>Instagram</span>
-            </a>
+            {instagram && (
+              <a
+                href={instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-surface-variant hover:bg-surface-variant-hover text-on-surface transition-colors duration-200"
+              >
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg"
+                  alt="Instagram"
+                  className="w-5 h-5"
+                />
+                <span>Instagram</span>
+              </a>
+            )}
           </div>
         </m.div>
 

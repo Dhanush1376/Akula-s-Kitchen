@@ -35,21 +35,21 @@ const logger = {
   info: isDev
     ? withContext('info', console.info.bind(console))
     : (...args) => {
-        if (typeof window !== 'undefined' && window.__SIRI_DEBUG__) {
-          console.info('[Siri]', ...args);
+        if (typeof window !== 'undefined' && window.__AKULA_DEBUG__) {
+          console.info('[Akula]', ...args);
         }
       },
 
   warn: isDev
     ? withContext('warn', console.warn.bind(console))
     : (...args) => {
-        console.warn('[Siri]', ...args);
+        console.warn('[Akula]', ...args);
       },
 
   error: isDev
     ? withContext('error', console.error.bind(console))
     : (message, ...args) => {
-        console.error('[Siri]', message, ...args);
+        console.error('[Akula]', message, ...args);
         reportToSentry(message, ...args);
       },
 

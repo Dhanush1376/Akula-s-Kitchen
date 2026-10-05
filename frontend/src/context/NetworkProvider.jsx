@@ -30,7 +30,7 @@ export function NetworkProvider({ children }) {
 
   // Initialize queue from localStorage
   const [pendingQueue, setPendingQueue] = useState(() => {
-    const stored = safeLocalStorage.getItem('siri_offline_sync_queue');
+    const stored = safeLocalStorage.getItem('akula_offline_sync_queue');
     return stored ? JSON.parse(stored) : [];
   });
 
@@ -188,7 +188,7 @@ export function NetworkProvider({ children }) {
 
     setPendingQueue((prev) => {
       const updated = [...prev, newQueueItem];
-      safeLocalStorage.setItem('siri_offline_sync_queue', JSON.stringify(updated));
+      safeLocalStorage.setItem('akula_offline_sync_queue', JSON.stringify(updated));
       return updated;
     });
 
@@ -203,7 +203,7 @@ export function NetworkProvider({ children }) {
   const dequeueRequest = useCallback((id) => {
     setPendingQueue((prev) => {
       const updated = prev.filter((item) => item.id !== id);
-      safeLocalStorage.setItem('siri_offline_sync_queue', JSON.stringify(updated));
+      safeLocalStorage.setItem('akula_offline_sync_queue', JSON.stringify(updated));
       return updated;
     });
   }, []);

@@ -17,7 +17,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useCart } from '../../context/CartContext';
 import { prefetchManager } from '../../utils/performance/prefetchManager';
-import { useActiveCoupons } from '../../hooks/useActiveCoupons';
+
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useConfig } from '../../context/ConfigContext';
 
@@ -37,17 +37,8 @@ const getItemImage = (item) => {
 };
 
 export function CartDrawer({ isOpen, onClose }) {
-  const {
-    items,
-    removeItem,
-    updateQuantity,
-    subtotal,
-    cartCount,
-    loading,
-    appliedCoupon,
-    setClaimedCoupon,
-    activeCartMode,
-  } = useCart();
+  const { items, removeItem, updateQuantity, subtotal, cartCount, loading, activeCartMode } =
+    useCart();
 
   const {
     maxQuantityPerItem = 10,
@@ -59,11 +50,8 @@ export function CartDrawer({ isOpen, onClose }) {
   const isRentalMode =
     activeCartMode === 'rental' || (items.length > 0 && items.every((i) => i.type === 'rental'));
   const navigate = useNavigate();
-  const { data: activeCoupons = [] } = useActiveCoupons();
 
   const [confirmingRemove, setConfirmingRemove] = React.useState(null);
-
-  const drawerCoupons = activeCoupons.filter((c) => c.displayLocations?.includes('cart_drawer'));
 
   const drawerRef = React.useRef(null);
   const triggerElementRef = React.useRef(null);
@@ -147,11 +135,11 @@ export function CartDrawer({ isOpen, onClose }) {
                 aria-label="Close cart"
               >
                 <ArrowLeft
-                  className="text-[22px] text-[#1a1a1a] group-hover:-translate-x-1 transition-transform"
+                  className="text-[22px] text-[#000000] group-hover:-translate-x-1 transition-transform"
                   strokeWidth={1.5}
                 />
                 <span
-                  className="font-label text-[13px] font-bold uppercase tracking-[0.18em] text-[#1a1a1a] leading-none pt-0.5"
+                  className="font-label text-[13px] font-bold uppercase tracking-[0.18em] text-[#000000] leading-none pt-0.5"
                   style={{ fontFamily: 'var(--font-label)' }}
                 >
                   Cart
@@ -190,7 +178,7 @@ export function CartDrawer({ isOpen, onClose }) {
                 <div className="h-full flex items-center justify-center">
                   <EmptyState
                     title="Your bag is empty"
-                    description="Discover our curated pieces and start building your dream event."
+                    description="Discover our authentic batters, traditional podis, and handcrafted delights."
                     icon="shopping_bag"
                     actionLabel="Explore Collections"
                     onAction={() => {
@@ -204,7 +192,7 @@ export function CartDrawer({ isOpen, onClose }) {
                   {items.filter((item) => item.type === 'purchase').length > 0 && (
                     <div className="space-y-3">
                       <div
-                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#1a1a1a] flex items-center gap-2 ml-0.5"
+                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#000000] flex items-center gap-2 ml-0.5"
                         style={{ fontFamily: 'var(--font-label)' }}
                       >
                         <ShoppingBag className="text-[14px] text-primary" strokeWidth={1.8} />
@@ -259,8 +247,8 @@ export function CartDrawer({ isOpen, onClose }) {
                                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                                     <div>
                                       <p
-                                        className="font-serif-heading text-[15px] font-medium leading-snug text-[#1a1a1a] truncate group-hover:text-primary transition-colors"
-                                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                                        className="font-serif-heading text-[15px] font-medium leading-snug text-[#000000] truncate group-hover:text-primary transition-colors"
+                                        style={{ fontFamily: 'var(--font-display)' }}
                                       >
                                         {item.title}
                                       </p>
@@ -270,8 +258,8 @@ export function CartDrawer({ isOpen, onClose }) {
                                         </p>
                                       )}
                                       <p
-                                        className="font-serif-heading text-[15px] text-[#1a1a1a] mt-1.5 font-bold lining-nums"
-                                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                                        className="font-serif-heading text-[15px] text-[#000000] mt-1.5 font-bold lining-nums"
+                                        style={{ fontFamily: 'var(--font-display)' }}
                                       >
                                         ₹{item.price?.toLocaleString()}
                                       </p>
@@ -287,7 +275,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                                 item.quantity - 1,
                                               )
                                             }
-                                            className="w-7 h-7 min-h-0 rounded-full flex items-center justify-center text-black/50 hover:bg-black/5 hover:text-[#1a1a1a] transition-all cursor-pointer active:scale-95"
+                                            className="w-7 h-7 min-h-0 rounded-full flex items-center justify-center text-black/50 hover:bg-black/5 hover:text-[#000000] transition-all cursor-pointer active:scale-95"
                                             aria-label="Decrease quantity"
                                           >
                                             <Minus className="text-[16px]" strokeWidth={1.5} />
@@ -313,7 +301,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                             </button>
                                           </div>
                                         )}
-                                        <span className="font-body text-[13px] w-6 text-center font-semibold text-[#1a1a1a]">
+                                        <span className="font-body text-[13px] w-6 text-center font-semibold text-[#000000]">
                                           {item.quantity}
                                         </span>
                                         <button
@@ -333,7 +321,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                             item.quantity >= maxQuantityPerItem ||
                                             item.quantity >= (item.stock || 999)
                                               ? 'opacity-30 cursor-not-allowed text-black/30'
-                                              : 'text-black/50 hover:bg-black/5 hover:text-[#1a1a1a] cursor-pointer active:scale-95'
+                                              : 'text-black/50 hover:bg-black/5 hover:text-[#000000] cursor-pointer active:scale-95'
                                           }`}
                                           aria-label="Increase quantity"
                                         >
@@ -386,7 +374,7 @@ export function CartDrawer({ isOpen, onClose }) {
                   {items.filter((item) => item.type === 'custom').length > 0 && (
                     <div className="space-y-3">
                       <div
-                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#1a1a1a] flex items-center gap-2 ml-0.5"
+                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#000000] flex items-center gap-2 ml-0.5"
                         style={{ fontFamily: 'var(--font-label)' }}
                       >
                         <Palette className="text-[14px] text-primary" strokeWidth={1.8} />
@@ -410,7 +398,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                     transition: { duration: 0.2 },
                                   }}
                                   key={`${item.id || item._id}-${item.variant || ''}`}
-                                  className="relative flex gap-4 p-3.5 rounded-2xl bg-gradient-to-br from-[#faf8f2] to-[#f5f1e6] border border-[#b38235]/15 shadow-[0_2px_12px_rgba(179,130,53,0.05)] hover:shadow-[0_8px_24px_rgba(179,130,53,0.1)] hover:-translate-y-0.5 transition-all duration-300 group"
+                                  className="relative flex gap-4 p-3.5 rounded-2xl bg-gradient-to-br from-[#ffffff] to-[#f5f1e6] border border-[#000000]/15 shadow-[0_2px_12px_rgba(179,130,53,0.05)] hover:shadow-[0_8px_24px_rgba(179,130,53,0.1)] hover:-translate-y-0.5 transition-all duration-300 group"
                                 >
                                   <div className="w-[82px] h-[100px] rounded-[14px] overflow-hidden flex-shrink-0 bg-[#eeeade] relative shadow-inner border border-black/[0.03]">
                                     {itemImage ? (
@@ -437,15 +425,15 @@ export function CartDrawer({ isOpen, onClose }) {
                                         <Image className="text-[26px]" strokeWidth={1.5} />
                                       </div>
                                     )}
-                                    <div className="absolute top-1.5 left-1.5 bg-[#b38235] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md z-10">
+                                    <div className="absolute top-1.5 left-1.5 bg-[#000000] text-white text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md z-10">
                                       Custom
                                     </div>
                                   </div>
                                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                                     <div>
                                       <p
-                                        className="font-serif-heading text-[15px] font-medium leading-snug text-[#1a1a1a] truncate group-hover:text-[#b38235] transition-colors"
-                                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                                        className="font-serif-heading text-[15px] font-medium leading-snug text-[#000000] truncate group-hover:text-[#000000] transition-colors"
+                                        style={{ fontFamily: 'var(--font-display)' }}
                                       >
                                         {item.title || 'Custom Order'}
                                       </p>
@@ -455,14 +443,14 @@ export function CartDrawer({ isOpen, onClose }) {
                                         </p>
                                       )}
                                       <p
-                                        className="font-serif-heading text-[15px] text-[#1a1a1a] mt-1.5 font-bold lining-nums"
-                                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                                        className="font-serif-heading text-[15px] text-[#000000] mt-1.5 font-bold lining-nums"
+                                        style={{ fontFamily: 'var(--font-display)' }}
                                       >
                                         ₹{item.price?.toLocaleString()}
                                       </p>
                                     </div>
                                     <div className="flex items-center justify-between mt-3">
-                                      <div className="flex items-center gap-1.5 bg-white shadow-sm border border-[#b38235]/10 px-1.5 py-1 rounded-full h-9">
+                                      <div className="flex items-center gap-1.5 bg-white shadow-sm border border-[#000000]/10 px-1.5 py-1 rounded-full h-9">
                                         <div className="relative">
                                           <button
                                             onClick={() =>
@@ -511,7 +499,7 @@ export function CartDrawer({ isOpen, onClose }) {
                   {items.filter((item) => item.type === 'rental').length > 0 && (
                     <div className="space-y-3">
                       <div
-                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#1a1a1a] flex items-center gap-2 ml-0.5"
+                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#000000] flex items-center gap-2 ml-0.5"
                         style={{ fontFamily: 'var(--font-label)' }}
                       >
                         <CalendarCheck className="text-[14px] text-primary" strokeWidth={1.8} />
@@ -535,7 +523,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                     transition: { duration: 0.2 },
                                   }}
                                   key={`${item.id || item._id}-${item.variant || ''}`}
-                                  className="relative flex gap-4 p-3.5 rounded-2xl bg-gradient-to-br from-[#faf8f2] to-[#f5f1e6] border border-primary/20 shadow-[0_2px_12px_rgba(115,92,0,0.05)] hover:shadow-[0_8px_24px_rgba(115,92,0,0.1)] hover:-translate-y-0.5 transition-all duration-300 group"
+                                  className="relative flex gap-4 p-3.5 rounded-2xl bg-gradient-to-br from-[#ffffff] to-[#f5f1e6] border border-primary/20 shadow-[0_2px_12px_rgba(115,92,0,0.05)] hover:shadow-[0_8px_24px_rgba(115,92,0,0.1)] hover:-translate-y-0.5 transition-all duration-300 group"
                                 >
                                   <div className="w-[82px] h-[100px] rounded-[14px] overflow-hidden flex-shrink-0 bg-[#eeeade] relative shadow-inner border border-black/[0.03]">
                                     {itemImage ? (
@@ -569,8 +557,8 @@ export function CartDrawer({ isOpen, onClose }) {
                                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                                     <div>
                                       <p
-                                        className="font-serif-heading text-[15px] font-medium leading-snug text-[#1a1a1a] truncate group-hover:text-primary transition-colors"
-                                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                                        className="font-serif-heading text-[15px] font-medium leading-snug text-[#000000] truncate group-hover:text-primary transition-colors"
+                                        style={{ fontFamily: 'var(--font-display)' }}
                                       >
                                         {item.title}
                                       </p>
@@ -580,8 +568,8 @@ export function CartDrawer({ isOpen, onClose }) {
                                         </p>
                                       )}
                                       <p
-                                        className="font-serif-heading text-[15px] text-[#1a1a1a] mt-1.5 font-bold lining-nums"
-                                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                                        className="font-serif-heading text-[15px] text-[#000000] mt-1.5 font-bold lining-nums"
+                                        style={{ fontFamily: 'var(--font-display)' }}
                                       >
                                         ₹{item.price?.toLocaleString()}
                                       </p>
@@ -623,7 +611,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                             </button>
                                           </div>
                                         )}
-                                        <span className="font-body text-[13px] w-6 text-center font-semibold text-[#1a1a1a]">
+                                        <span className="font-body text-[13px] w-6 text-center font-semibold text-[#000000]">
                                           {item.quantity}
                                         </span>
                                         <button
@@ -704,73 +692,24 @@ export function CartDrawer({ isOpen, onClose }) {
                   paddingBottom: `calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))`,
                 }}
               >
-                {/* Promotions Panel */}
-                {drawerCoupons.length > 0 && !appliedCoupon && (
-                  <div className="mb-2 -mx-4 px-4">
-                    <div
-                      className="font-label text-[9px] uppercase tracking-[0.18em] text-black/40 font-bold mb-1.5"
-                      style={{ fontFamily: 'var(--font-label)' }}
-                    >
-                      Available Offers
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide snap-x">
-                      {drawerCoupons.map((coupon) => (
-                        <div
-                          key={coupon.code}
-                          onClick={() => {
-                            setClaimedCoupon(coupon.code);
-                          }}
-                          className="snap-start shrink-0 w-[200px] p-2 rounded-lg border border-[var(--color-gold-dark)]/20 bg-gradient-to-br from-[#faf8f2] to-white shadow-sm cursor-pointer hover:shadow-md transition-all group"
-                        >
-                          <div className="flex justify-between items-start mb-0.5">
-                            <span className="font-mono text-[10px] font-bold text-[#1a1a1a] bg-black/5 px-1.5 py-0.5 rounded">
-                              {coupon.code}
-                            </span>
-                            <span className="text-[9px] font-bold text-[var(--color-gold-dark)] group-hover:scale-105 transition-transform">
-                              Tap to Apply
-                            </span>
-                          </div>
-                          <p className="font-body text-[10px] text-black/60 leading-tight">
-                            {coupon.discountType === 'percentage'
-                              ? `Get ${coupon.discountValue}% OFF`
-                              : `Get ₹${coupon.discountValue} OFF`}
-                            {coupon.minOrderAmount > 0 &&
-                              ` on orders above ₹${coupon.minOrderAmount}`}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                {/* Subtotal */}
                 <div className="flex justify-between items-center text-[12px]">
                   <span className="font-body text-black/50 font-medium">Subtotal</span>
                   <span
-                    className="font-serif-heading font-bold text-[#1a1a1a] lining-nums text-[13px]"
-                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    className="font-serif-heading font-bold text-[#000000] lining-nums text-[13px]"
+                    style={{ fontFamily: 'var(--font-display)' }}
                   >
                     ₹{subtotal.toLocaleString()}
                   </span>
                 </div>
-                {appliedCoupon && appliedCoupon.calculatedDiscount > 0 && (
-                  <div className="flex justify-between items-center text-[12px] text-green-700 font-medium bg-green-50/50 p-1 rounded -mx-1">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[13px] text-green-600">
-                        local_activity
-                      </span>
-                      Discount ({appliedCoupon.code})
-                    </span>
-                    <span>− ₹{appliedCoupon.calculatedDiscount.toLocaleString()}</span>
-                  </div>
-                )}
 
                 <div className="h-[1px] bg-gradient-to-r from-transparent via-black/[0.06] to-transparent my-1.5" />
 
                 <div className="flex justify-between items-end">
                   <div className="space-y-0.5">
                     <span
-                      className="font-serif-heading text-[14px] font-bold text-[#1a1a1a]"
-                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                      className="font-serif-heading text-[14px] font-bold text-[#000000]"
+                      style={{ fontFamily: 'var(--font-display)' }}
                     >
                       Estimated Total
                     </span>
@@ -779,10 +718,10 @@ export function CartDrawer({ isOpen, onClose }) {
                     </p>
                   </div>
                   <span
-                    className="font-serif-heading text-[19px] leading-none font-bold text-[#1a1a1a] lining-nums"
-                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    className="font-serif-heading text-[19px] leading-none font-bold text-[#000000] lining-nums"
+                    style={{ fontFamily: 'var(--font-display)' }}
                   >
-                    ₹{(subtotal - (appliedCoupon?.calculatedDiscount || 0)).toLocaleString()}
+                    ₹{subtotal.toLocaleString()}
                   </span>
                 </div>
 
@@ -790,7 +729,7 @@ export function CartDrawer({ isOpen, onClose }) {
                   <Link
                     to="/cart"
                     onClick={onClose}
-                    className="flex-1 block text-center py-2.5 rounded-full font-label text-[10px] uppercase tracking-[0.15em] text-[#1a1a1a] bg-transparent hover:bg-black/5 border border-black/10 active:scale-[0.98] transition-all duration-300 font-bold group"
+                    className="flex-1 block text-center py-2.5 rounded-full font-label text-[10px] uppercase tracking-[0.15em] text-[#000000] bg-transparent hover:bg-black/5 border border-black/10 active:scale-[0.98] transition-all duration-300 font-bold group"
                   >
                     View Bag
                   </Link>
@@ -798,13 +737,12 @@ export function CartDrawer({ isOpen, onClose }) {
                     to="/checkout"
                     state={{
                       checkoutMode: isRentalMode ? 'rental' : activeCartMode,
-                      couponCode: appliedCoupon?.code,
                     }}
                     onMouseEnter={() =>
                       prefetchManager.prefetchRoute('/checkout', { kind: 'hover' })
                     }
                     onClick={onClose}
-                    className="flex-[1.5] relative overflow-hidden block bg-[#1a1a1a] text-white py-2.5 rounded-full font-label text-[10px] uppercase tracking-[0.15em] text-center hover:bg-black active:scale-[0.98] transition-all duration-300 shadow-sm font-bold group"
+                    className="flex-[1.5] relative overflow-hidden block bg-[#000000] text-white py-2.5 rounded-full font-label text-[10px] uppercase tracking-[0.15em] text-center hover:bg-black active:scale-[0.98] transition-all duration-300 shadow-sm font-bold group"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-1.5">
                       {isRentalMode

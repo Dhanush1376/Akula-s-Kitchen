@@ -11,20 +11,13 @@ export function getRouteSkeletonVariant(path) {
   if (path === '/cart') return 'cart';
   if (path === '/checkout') return 'checkout';
   if (path.startsWith('/dashboard')) return 'dashboard';
-  if (path.match(/^\/gallery\/[^/]+$/)) return 'gallery-detail';
-  if (path.startsWith('/gallery')) return 'gallery';
   if (path === '/wishlist') return 'wishlist';
-  if (path === '/events/collections') return 'event-collections';
-  if (path.startsWith('/events')) return 'event-showcases';
   if (path === '/contact') return 'contact';
-  if (path === '/about') return 'about';
-  if (path === '/custom-orders') return 'custom-orders';
   if (path === '/blog') return 'blog';
   if (path.startsWith('/blog/')) return 'blog-post';
   if (path.startsWith('/track/')) return 'order-tracking';
   if (path === '/order-success') return 'order-success';
   if (['/shipping', '/returns', '/privacy', '/terms'].includes(path)) return 'policy';
-  if (path.match(/^\/(wedding-decorations|event-decorators)-[a-z]+$/)) return 'location';
   if (path.startsWith('/admin')) return 'admin';
 
   return 'page';
@@ -44,26 +37,10 @@ const LazySkeletons = {
   cart: lazy(() => import('./Skeleton').then((m) => ({ default: m.CartSkeleton }))),
   checkout: lazy(() => import('./Skeleton').then((m) => ({ default: m.CheckoutStepSkeleton }))),
   dashboard: lazy(() => import('./Skeleton').then((m) => ({ default: m.DashboardSkeleton }))),
-  gallery: lazy(() => import('./Skeleton').then((m) => ({ default: m.GallerySkeleton }))),
-  'gallery-detail': lazy(() =>
-    import('./Skeleton').then((m) => ({ default: m.GalleryDetailSkeleton })),
-  ),
   wishlist: lazy(() => import('./Skeleton').then((m) => ({ default: m.WishlistPageSkeleton }))),
-  event: lazy(() => import('./Skeleton').then((m) => ({ default: m.EventDetailSkeleton }))),
   contact: lazy(() => import('./Skeleton').then((m) => ({ default: m.ContactSkeleton }))),
-  about: lazy(() => import('./Skeleton').then((m) => ({ default: m.AboutSkeleton }))),
   blog: lazy(() => import('./Skeleton').then((m) => ({ default: m.BlogListingSkeleton }))),
   'blog-post': lazy(() => import('./Skeleton').then((m) => ({ default: m.BlogPostSkeleton }))),
-  'custom-orders': lazy(() =>
-    import('./Skeleton').then((m) => ({ default: m.CustomOrdersSkeleton })),
-  ),
-  'event-collections': lazy(() =>
-    import('./Skeleton').then((m) => ({ default: m.EventCollectionsSkeleton })),
-  ),
-  'event-showcases': lazy(() =>
-    import('./Skeleton').then((m) => ({ default: m.EventShowcasesSkeleton })),
-  ),
-  location: lazy(() => import('./Skeleton').then((m) => ({ default: m.LocationLandingSkeleton }))),
   'order-success': lazy(() =>
     import('./Skeleton').then((m) => ({ default: m.OrderSuccessSkeleton })),
   ),

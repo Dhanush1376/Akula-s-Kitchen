@@ -4,9 +4,7 @@ import {
   Plus,
   Ban,
   CornerDownLeft,
-  Calendar,
   Truck,
-  Info,
   CalendarDays,
   Lock,
   Heart,
@@ -15,10 +13,8 @@ import {
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { handleImageError, getOptimizedUrl, getBlurDataUri } from '../../utils/media/imageUtils';
 import { useProduct } from '../../hooks/useProductQueries';
-import { customOrderService } from '../../services/domainServices';
 import { useConfig } from '../../context/ConfigContext';
 import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 
@@ -37,87 +33,23 @@ export const CartItemRow = React.memo(function CartItemRow({
   const savingsPct =
     itemOldPrice > item.price ? Math.round(((itemOldPrice - item.price) / itemOldPrice) * 100) : 0;
 
-  // Fetch the live Custom Order from the API to bypass stale localStorage cache
-  const { data: apiCustomOrder, isLoading: isCustomOrderLoading } = useQuery({
-    queryKey: ['cartCustomOrder', item.id || item._id],
-    queryFn: async () => {
-      const res = await customOrderService.getById(item.id || item._id);
-      return res.success ? res.data : res;
-    },
-    enabled: item.type === 'custom',
-    staleTime: 1000 * 60 * 5, // 5 mins
-  });
-
-  const customOrderData = apiCustomOrder || item.product;
-
-  const actualProductId =
-    customOrderData?.productId?._id ||
-    customOrderData?.productId ||
-    item.product?._id ||
-    item.product?.id ||
-    item.id ||
-    item._id;
+  const actualProductId = item.product?._id || item.product?.id || item.id || item._id;
   const { data: realProduct, isLoading: isRealProductLoading } = useProduct(actualProductId, {
     enabled: Boolean(actualProductId),
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
-  const isProductDataLoading =
-    (item.type === 'custom' && isCustomOrderLoading) ||
-    (actualProductId && isRealProductLoading && !realProduct);
+  const isProductDataLoading = Boolean(actualProductId && isRealProductLoading && !realProduct);
 
   const isItemNonRefundable = Boolean(
     item.isNonRefundable ||
-    item.itemType === 'event' ||
-    item.type === 'custom' ||
     activeCartMode === 'rental' ||
     realProduct?.isNonRefundable ||
-    realProduct?.returnSettings?.isReturnable === false ||
-    realProduct?.itemType === 'event' ||
-    realProduct?.category === 'Events',
+    realProduct?.returnSettings?.isReturnable === false,
   );
 
-  // For custom orders, dynamically pull title and image from the full product object
-  // or fetch from API if missing.
-  let displayTitle = item.title;
-  if (item.type === 'custom') {
-    const betterTitle =
-      realProduct?.title ||
-      realProduct?.name ||
-      customOrderData?.customProduct?.name ||
-      customOrderData?.productSnapshot?.title ||
-      customOrderData?.quotation?.items?.[0]?.name ||
-      customOrderData?.productSnapshot?.name ||
-      customOrderData?.occasion;
-
-    if (betterTitle) {
-      displayTitle = betterTitle;
-    } else if (item.title === 'Custom Order - Event' && customOrderData?.orderId) {
-      displayTitle = `Custom Order ${customOrderData.orderId}`;
-    }
-  }
-
-  let displayImage = item.imageSrc;
-  if (item.type === 'custom') {
-    if (customOrderData || realProduct) {
-      displayImage =
-        realProduct?.images?.[0] ||
-        realProduct?.imageSrc ||
-        customOrderData?.customProduct?.images?.[0]?.url ||
-        customOrderData?.customProduct?.images?.[0] ||
-        customOrderData?.productSnapshot?.image ||
-        customOrderData?.quotation?.items?.[0]?.image ||
-        customOrderData?.referenceImages?.[0] ||
-        customOrderData?.inspirationImages?.[0] ||
-        customOrderData?.files?.[0]?.url ||
-        item.imageSrc;
-    }
-    if (!displayImage) {
-      // Fallback elegant image for Custom Orders without uploaded references
-      displayImage =
-        'https://images.unsplash.com/photo-1519225421980-715cb0215aed?q=80&w=300&auto=format&fit=crop';
-    }
-  }
+  const displayTitle = item.title;
+  const displayImage = item.imageSrc || realProduct?.images?.[0] || realProduct?.imageSrc;
 
   return (
     <motion.div
@@ -126,7 +58,7 @@ export const CartItemRow = React.memo(function CartItemRow({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, x: -50, scale: 0.9 }}
       transition={{ duration: 0.25 }}
-      className={`bg-surface-bright rounded-lg shadow-xs p-3.5 relative group border transition-all duration-300 ${item.stock === 0 ? 'border-red-200' : 'border-outline-variant/40 hover:border-primary/20'}`}
+      className={`bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md p-3 sm:p-3.5 relative group border transition-all duration-200 ${item.stock === 0 ? 'border-red-200' : 'border-neutral-200 hover:border-neutral-300'}`}
     >
       {/* Top Right Close Icon */}
       <button
@@ -134,17 +66,18 @@ export const CartItemRow = React.memo(function CartItemRow({
           removeItem(item.id || item._id, item.variant, item.type);
           triggerNotification(`Removed "${item.title}"`);
         }}
-        className="absolute top-3 right-3 text-secondary/60 hover:text-on-surface transition-colors cursor-pointer w-7 h-7 min-h-0 flex items-center justify-center rounded-full hover:bg-surface-container z-10"
+        className="absolute top-3.5 right-3.5 text-neutral-400 hover:text-red-600 transition-colors cursor-pointer w-8 h-8 min-h-0 flex items-center justify-center rounded-full hover:bg-neutral-100 z-10"
+        aria-label="Remove item from bag"
       >
-        <X className="text-[20px]" strokeWidth={1.5} />
+        <X className="w-4 h-4" strokeWidth={2} />
       </button>
 
-      <div className="flex gap-3 sm:gap-4">
-        {/* Left Column: Image */}
-        <div className="relative w-[85px] h-[115px] sm:w-[100px] sm:h-[130px] bg-surface-container rounded-md overflow-hidden flex-shrink-0 border border-outline-variant/20">
+      <div className="flex gap-3.5 sm:gap-4">
+        {/* Left Column: Food Image */}
+        <div className="relative w-[85px] h-[85px] sm:w-[96px] sm:h-[96px] bg-neutral-100 rounded-md overflow-hidden flex-shrink-0 border border-neutral-200">
           {item.stock === 0 && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
-              <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+            <div className="absolute inset-0 bg-white/75 backdrop-blur-xs z-10 flex items-center justify-center">
+              <span className="bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Out of Stock
               </span>
             </div>
@@ -154,60 +87,50 @@ export const CartItemRow = React.memo(function CartItemRow({
               onError={handleImageError}
               whileHover={{ scale: 1.05 }}
               src={
-                (displayImage ? getOptimizedUrl(displayImage, 100, 130) : '') ||
-                getBlurDataUri(100, 130)
+                (displayImage ? getOptimizedUrl(displayImage, 110, 110) : '') ||
+                getBlurDataUri(110, 110)
               }
               alt={displayTitle}
-              className={`w-full h-full object-cover transition-transform ${item.stock === 0 ? 'grayscale' : ''} text-[10px] text-secondary/50 text-center flex items-center justify-center break-words`}
+              className={`w-full h-full object-cover transition-transform ${item.stock === 0 ? 'grayscale' : ''} text-[10px] text-neutral-400 text-center flex items-center justify-center break-words`}
             />
           </Link>
         </div>
 
         {/* Right Details */}
-        <div className="flex-1 min-w-0 pr-8 py-1">
+        <div className="flex-1 min-w-0 pr-6 sm:pr-8 py-0.5">
           {activeCartMode === 'rental' && (
-            <span className="inline-block bg-primary/10 text-primary text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-[3px] mb-2 border border-primary/20">
+            <span className="inline-block bg-[#f7bb0e]/15 text-neutral-900 text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1.5 border border-[#f7bb0e]/30">
               Rental Item
             </span>
           )}
           <Link to={`/product/${item.id || item._id}`}>
-            <h3 className="font-display font-medium text-[13px] sm:text-[14px] text-on-surface line-clamp-2 leading-tight">
+            <h3 className="font-semibold text-[13.5px] sm:text-[14.5px] text-neutral-900 line-clamp-2 leading-snug hover:text-black transition-colors">
               {displayTitle}
             </h3>
           </Link>
-          {activeCartMode === 'custom' && (
-            <div className="mt-2 space-y-1">
-              <span className="inline-block bg-primary/10 text-primary text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-[3px] border border-primary/20">
-                Custom Order
-              </span>
-              <p className="text-[10px] text-secondary/80 leading-snug font-medium line-clamp-2 pr-2">
-                Bespoke customized order based on approved quotation.
-              </p>
-            </div>
-          )}
 
-          {/* Size & Qty controls */}
-          <div className="flex items-center gap-3 mt-4">
+          {/* Size / Pack & Quantity controls */}
+          <div className="flex flex-wrap items-center gap-2.5 mt-2.5">
             {item.variant && item.variant !== 'Default' && (
-              <div className="bg-surface-container-lowest border border-outline-variant/60 rounded px-2.5 py-1 text-[12px] font-bold text-on-surface flex items-center gap-1">
-                <span className="text-secondary/70 font-medium">Size:</span> {item.variant}
+              <div className="bg-[#fef9e7] border border-[#fae182] rounded-md px-2 py-0.5 text-[10.5px] font-extrabold text-neutral-900 flex items-center gap-1">
+                <span className="text-neutral-500 font-medium">Pack:</span> {item.variant}
               </div>
             )}
 
             <div
-              className={`flex items-center border border-outline-variant/60 rounded-md overflow-hidden bg-surface-container-lowest h-[36px] mt-1 ${item.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`inline-flex items-center border border-neutral-200 rounded-md overflow-hidden bg-neutral-50 h-[28px] sm:h-[30px] ${item.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   updateQuantity(item.id || item._id, item.variant, item.quantity - 1);
                 }}
-                className="w-10 h-full flex items-center justify-center text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer min-h-0"
+                className="w-8 sm:w-8.5 h-full flex items-center justify-center text-neutral-600 hover:text-black hover:bg-neutral-200/60 transition-colors cursor-pointer min-h-0"
                 aria-label="Decrease quantity"
               >
-                <Minus className="text-[16px]" strokeWidth={1.5} />
+                <Minus className="w-3.5 h-3.5" strokeWidth={2.2} />
               </button>
-              <div className="w-8 h-full flex items-center justify-center font-display text-[13px] font-bold text-on-surface border-x border-outline-variant/30 bg-surface-bright">
+              <div className="w-7 sm:w-8 h-full flex items-center justify-center font-display text-[12px] sm:text-[13px] font-extrabold text-neutral-950 bg-white border-x border-neutral-200">
                 {item.quantity}
               </div>
               <button
@@ -221,22 +144,22 @@ export const CartItemRow = React.memo(function CartItemRow({
                 disabled={
                   item.quantity >= (item.stock || 999) || item.quantity >= maxQuantityPerItem
                 }
-                className={`w-10 h-full flex items-center justify-center transition-colors min-h-0 ${
+                className={`w-8 sm:w-8.5 h-full flex items-center justify-center transition-colors min-h-0 ${
                   item.quantity >= (item.stock || 999) || item.quantity >= maxQuantityPerItem
-                    ? 'text-secondary/30 cursor-not-allowed bg-surface-container-low'
-                    : 'text-secondary hover:text-on-surface hover:bg-surface-container cursor-pointer'
+                    ? 'text-neutral-300 cursor-not-allowed bg-neutral-100'
+                    : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60 cursor-pointer'
                 }`}
                 aria-label="Increase quantity"
               >
-                <Plus className="text-[16px]" strokeWidth={1.5} />
+                <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
               </button>
             </div>
           </div>
 
           {item.quantity > maxQuantityPerItem && (
-            <div className="flex items-center gap-2 mt-2 p-2 bg-amber-50 border border-amber-300 rounded text-[11px] text-amber-900 font-medium">
+            <div className="flex items-center gap-2 mt-2 p-2 bg-amber-50 border border-amber-300 rounded-lg text-[11px] text-amber-900 font-medium">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Exceeds max allowed quantity of {maxQuantityPerItem} per product</span>
+              <span>Exceeds max allowed quantity of {maxQuantityPerItem}</span>
               <button
                 type="button"
                 onClick={() =>
@@ -263,105 +186,58 @@ export const CartItemRow = React.memo(function CartItemRow({
 
           {/* Pricing & Policy below Quantity (only for purchase) */}
           {activeCartMode === 'purchase' && (
-            <div className="mt-3 flex flex-col gap-2 w-full">
+            <div className="mt-2.5 flex flex-col gap-1.5 w-full">
               {/* Pricing Row */}
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="font-display text-[15px] font-semibold text-on-surface">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-[15px] sm:text-[16px] font-bold text-neutral-950">
                   ₹{item.price.toLocaleString()}
                 </span>
                 {itemOldPrice > item.price && (
-                  <span className="font-display text-[12px] text-secondary/50 line-through font-light">
+                  <span className="text-[12px] sm:text-[13px] text-neutral-400 line-through font-normal">
                     ₹{itemOldPrice.toLocaleString()}
                   </span>
                 )}
                 {savingsPct > 0 && (
-                  <span className="text-[10px] font-bold text-primary">{savingsPct}% Off</span>
+                  <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
+                    {savingsPct}% Off
+                  </span>
                 )}
               </div>
 
-              {/* Return policy & delivery forecast strip */}
-              <div className="text-[11px] text-secondary w-full">
-                <div className="flex flex-col gap-1.5 mt-1">
+              {/* Delivery forecast strip */}
+              <div className="text-[11px] text-neutral-600 w-full">
+                <div className="flex flex-col gap-1">
                   {isProductDataLoading ? (
                     <div className="flex items-center gap-1.5 py-0.5 opacity-60">
-                      <div className="w-3 h-3 rounded-full bg-outline-variant/40 animate-pulse" />
-                      <div className="w-24 h-2.5 rounded-sm bg-outline-variant/40 animate-pulse" />
+                      <div className="w-3 h-3 rounded-full bg-neutral-200 animate-pulse" />
+                      <div className="w-24 h-2.5 rounded-sm bg-neutral-200 animate-pulse" />
                     </div>
                   ) : isItemNonRefundable ? (
-                    <div className="flex items-center gap-1.5 text-[#d97706] font-bold whitespace-nowrap text-[10px]">
-                      <Ban className="text-[13px]" strokeWidth={1.5} />
-                      Non-Refundable
+                    <div className="flex items-center gap-1 text-amber-700 font-bold whitespace-nowrap text-[10px]">
+                      <Ban className="w-3 h-3" strokeWidth={2} />
+                      Non-Returnable (Perishable Food)
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 whitespace-nowrap text-[10px]">
-                      <CornerDownLeft className="text-[13px]" strokeWidth={1.5} />
+                    <div className="flex items-center gap-1 whitespace-nowrap text-[10.5px]">
+                      <CornerDownLeft className="w-3 h-3 text-neutral-500" strokeWidth={2} />
                       <span>
-                        <span className="font-display font-semibold text-on-surface text-[12px]">
+                        <strong className="text-neutral-950 font-bold">
                           {item.product?.returnSettings?.returnWindow ||
                             item.product?.returnSettings?.returnWindowDays ||
                             settings?.returnsExchanges?.returnWindowDays ||
-                            14}{' '}
-                          days
-                        </span>{' '}
-                        return available
+                            14}
+                          d
+                        </strong>{' '}
+                        returns
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1.5 whitespace-nowrap text-[10px]">
-                    {Boolean(
-                      item.itemType === 'event' ||
-                      realProduct?.itemType === 'event' ||
-                      realProduct?.category === 'Events',
-                    ) ? (
-                      <>
-                        <Calendar className="text-[13px]" strokeWidth={1.5} />
-                        <span>Event setup date to be confirmed</span>
-                      </>
-                    ) : activeCartMode === 'rental' ? (
-                      <>
-                        <Truck className="text-[13px]" strokeWidth={1.5} />
-                        <span>Delivery schedule to be coordinated</span>
-                      </>
-                    ) : (
-                      <>
-                        <Truck className="text-[13px]" strokeWidth={1.5} />
-                        <span>
-                          Delivery by{' '}
-                          <span className="text-on-surface font-display font-semibold text-[12px]">
-                            {deliveryDateStr}
-                          </span>
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Pricing & Policy below Quantity (for custom orders) */}
-          {activeCartMode === 'custom' && (
-            <div className="mt-3 flex flex-col gap-2 w-full">
-              {/* Pricing Row */}
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="font-display text-[15px] font-semibold text-on-surface">
-                  ₹{(item.price * item.quantity).toLocaleString()}
-                </span>
-                <span className="text-[9px] font-bold text-secondary uppercase tracking-widest">
-                  Total Quoted Price
-                </span>
-              </div>
-
-              {/* Return policy & delivery forecast strip */}
-              <div className="text-[11px] text-secondary w-full">
-                <div className="flex flex-col gap-1.5 mt-1">
-                  <div className="flex items-center gap-1.5 text-[#d97706] font-bold whitespace-nowrap text-[10px]">
-                    <Ban className="text-[13px]" strokeWidth={1.5} />
-                    Custom Orders are Non-Refundable
-                  </div>
-                  <div className="flex items-center gap-1.5 whitespace-nowrap text-[10px]">
-                    <Info className="text-[13px]" strokeWidth={1.5} />
-                    <span>Final delivery schedule to be coordinated</span>
+                  <div className="flex items-center gap-1.5 whitespace-nowrap text-[10.5px] text-neutral-600">
+                    <Truck className="w-3.5 h-3.5 text-neutral-500 shrink-0" strokeWidth={2} />
+                    <span>
+                      Delivery by{' '}
+                      <strong className="text-neutral-950 font-bold">{deliveryDateStr}</strong>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -370,48 +246,46 @@ export const CartItemRow = React.memo(function CartItemRow({
         </div>
       </div>
 
-      {/* Rental pricing & policy details (displayed below the photo with premium styling) */}
+      {/* Rental pricing & policy details */}
       {activeCartMode === 'rental' && (
-        <div className="mt-3 pt-3 border-t border-outline-variant/10 flex flex-col gap-2.5 w-full text-[11px] text-secondary">
+        <div className="mt-3 pt-3 border-t border-neutral-200 flex flex-col gap-2.5 w-full text-[11px] text-neutral-600">
           {/* Total Due Row */}
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-display text-[16px] font-semibold text-on-surface">
+            <span className="text-[15px] font-bold text-neutral-950">
               ₹{((item.price + (item.deposit || 0)) * item.quantity).toLocaleString()}
             </span>
-            <span className="text-[9px] font-bold text-secondary uppercase tracking-widest">
+            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">
               Total Due
             </span>
-            <span className="text-secondary/25 mx-1 font-light">|</span>
-            <span className="text-[11px] text-secondary">
-              Fee: <span className="font-display font-medium">₹{item.price.toLocaleString()}</span>
+            <span className="text-neutral-300 mx-1 font-light">|</span>
+            <span className="text-[11px] text-neutral-600">
+              Fee:{' '}
+              <strong className="text-neutral-900 font-bold">₹{item.price.toLocaleString()}</strong>
             </span>
-            <span className="text-secondary/25 font-light">•</span>
-            <span className="text-[11px] text-primary font-bold">
-              Deposit:{' '}
-              <span className="font-display font-medium">
-                ₹{item.deposit?.toLocaleString() || 0}
-              </span>
+            <span className="text-neutral-300 font-light">•</span>
+            <span className="text-[11px] text-amber-700 font-bold">
+              Deposit: ₹{item.deposit?.toLocaleString() || 0}
             </span>
           </div>
 
           {/* Duration & Deposit details */}
-          <div className="flex flex-col gap-2 mt-0.5">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="text-[15px] text-primary shrink-0" strokeWidth={1.5} />
+          <div className="flex flex-col gap-1.5 mt-0.5 text-[10.5px]">
+            <div className="flex items-center gap-1.5">
+              <CalendarDays className="w-3.5 h-3.5 text-neutral-500 shrink-0" strokeWidth={2} />
               <span>
                 Duration:{' '}
-                <span className="font-extrabold text-primary uppercase text-[9.5px] tracking-wider ml-1">
-                  Select at checkout <ArrowRight className="w-3 h-3 inline-block ml-1 -mt-0.5" />
+                <span className="font-bold text-neutral-900 uppercase text-[9.5px] tracking-wider ml-1">
+                  Select at checkout <ArrowRight className="w-3 h-3 inline-block ml-0.5 -mt-0.5" />
                 </span>
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Lock className="text-[15px] text-[#8c7335] shrink-0" strokeWidth={1.5} />
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-neutral-500 shrink-0" strokeWidth={2} />
               <span>
                 Refundable Deposit:{' '}
-                <span className="font-display font-semibold text-on-surface text-[12px] ml-1">
+                <strong className="text-neutral-900 ml-1">
                   ₹{item.deposit?.toLocaleString() || 0}
-                </span>
+                </strong>
               </span>
             </div>
           </div>
@@ -419,13 +293,13 @@ export const CartItemRow = React.memo(function CartItemRow({
       )}
 
       {/* Wishlist Button inside Card */}
-      <div className="border-t border-outline-variant/30 mt-2 pt-2 text-center">
+      <div className="-mx-3 sm:-mx-3.5 -mb-3 sm:-mb-3.5 mt-2.5 border-t border-neutral-200 bg-neutral-50/70 hover:bg-neutral-100 transition-colors">
         <button
           onClick={() => handleMoveToWishlist(item)}
-          className="text-[9px] font-bold text-primary uppercase tracking-widest hover:opacity-80 transition-opacity flex items-center justify-center w-full gap-1.5 cursor-pointer"
+          className="text-[10px] sm:text-[10.5px] font-bold text-neutral-600 hover:text-black uppercase tracking-wider transition-colors flex items-center justify-center w-full gap-1.5 cursor-pointer py-2"
         >
-          <Heart className="text-[11px]" strokeWidth={1.5} />
-          Move to Wishlist
+          <Heart className="w-3.5 h-3.5" strokeWidth={1.8} />
+          <span>Save to Wishlist</span>
         </button>
       </div>
     </motion.div>

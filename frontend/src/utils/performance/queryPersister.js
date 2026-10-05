@@ -2,7 +2,7 @@ import { dehydrate, hydrate } from '@tanstack/react-query';
 import logger from '../core/logger';
 import { logCartTrace } from '../forensic/cartTrace';
 
-export const CACHE_KEY = 'siri_query_cache_v3';
+export const CACHE_KEY = 'akula_query_cache_v3';
 const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours expiration
 const MAX_PERSIST_SIZE_BYTES = 500 * 1024; // 500KB limit
 

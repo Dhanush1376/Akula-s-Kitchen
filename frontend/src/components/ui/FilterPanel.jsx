@@ -1,18 +1,18 @@
-import { Check, CheckCircle2, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useMobileDrawerEngine, DrawerDragHandle } from './drawer';
 
 const FilterSection = ({ title, id, children, activeSections, onToggle }) => (
-  <div className="mb-3 border-b border-outline-variant/10 pb-3 last:border-0 last:pb-0">
+  <div className="mb-3 border-b border-black/[0.06] pb-3 last:border-0 last:pb-0">
     <button
       onClick={() => onToggle(id)}
-      className="w-full flex justify-between items-center py-1 text-left font-label text-[12px] text-on-surface hover:text-primary transition-colors group min-h-0"
+      className="w-full flex justify-between items-center py-1.5 text-left font-sans text-[12px] sm:text-[13px] text-neutral-900 hover:text-black transition-colors group min-h-0"
     >
-      <span className="uppercase tracking-[0.15em] font-bold">{title}</span>
+      <span className="uppercase tracking-wider font-bold">{title}</span>
       <span
-        className={`material-symbols-outlined text-secondary text-[18px] transition-transform duration-500 ${activeSections[id] ? 'rotate-180' : ''}`}
+        className={`material-symbols-outlined text-neutral-500 text-[18px] transition-transform duration-300 ${activeSections[id] ? 'rotate-180 text-black' : ''}`}
       >
         expand_more
       </span>
@@ -23,10 +23,10 @@ const FilterSection = ({ title, id, children, activeSections, onToggle }) => (
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.4, ease: [0.2, 1, 0.2, 1] }}
+          transition={{ duration: 0.3, ease: [0.2, 1, 0.2, 1] }}
           className="overflow-hidden"
         >
-          <div className="mt-1 space-y-0 pl-1">{children}</div>
+          <div className="mt-1 space-y-0.5">{children}</div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -37,29 +37,29 @@ const Checkbox = ({ label, count, type, currentFilters, onToggleFilter, isChild 
   const isChecked = currentFilters[type]?.includes(label);
   return (
     <label
-      className={`flex items-center justify-between cursor-pointer group py-1 px-2 hover:bg-surface-container-low rounded-lg transition-all duration-300 ${isChild ? 'ml-6 border-l-2 border-outline-variant/30 pl-3' : ''}`}
+      className={`flex items-center justify-between cursor-pointer group py-1.5 px-2 hover:bg-neutral-100/70 rounded-xl transition-all duration-200 ${isChild ? 'ml-5 border-l-2 border-neutral-200 pl-2.5' : ''}`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <div className="relative flex items-center justify-center">
           <input
             type="checkbox"
             checked={isChecked}
             onChange={() => onToggleFilter(type, label)}
-            className="peer appearance-none h-4.5 w-4.5 border border-outline-variant/50 rounded bg-transparent checked:bg-primary checked:border-primary transition-all cursor-pointer focus:ring-2 focus:ring-primary/20"
+            className="peer appearance-none h-4.5 w-4.5 border border-neutral-300 rounded-md bg-white checked:bg-[#283618] checked:border-[#283618] transition-all cursor-pointer focus:ring-2 focus:ring-[#283618]/20"
           />
           <Check
             className="absolute text-white text-[13px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity font-bold"
-            strokeWidth={1.5}
+            strokeWidth={2.2}
           />
         </div>
         <span
-          className={`font-body text-[13px] lg:text-[14px] transition-colors ${isChecked ? 'text-primary font-semibold' : 'text-on-surface/70 group-hover:text-on-surface'}`}
+          className={`font-sans text-[13px] transition-colors ${isChecked ? 'text-black font-semibold' : 'text-neutral-700 group-hover:text-black'}`}
         >
           {label}
         </span>
       </div>
       {count !== null && (
-        <span className="font-label text-[10px] text-secondary/50 font-bold bg-surface-container border border-outline-variant/10 px-1.5 py-0.5 rounded-full">
+        <span className="font-sans text-[10px] text-neutral-500 font-bold bg-neutral-100 px-2 py-0.5 rounded-full">
           {count}
         </span>
       )}
@@ -222,26 +222,26 @@ export function FilterPanel({
 
   const panelContent = (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-outline-variant/30">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-black/[0.06]">
         <div className="flex flex-col">
-          <h2 className="font-serif-heading text-[22px] sm:text-[24px] text-on-surface font-normal leading-tight">
+          <h2 className="font-sans text-[20px] sm:text-[22px] text-neutral-900 font-bold leading-tight">
             Filters
           </h2>
           {isOpen && (
-            <span className="font-label text-[10px] text-primary uppercase tracking-[0.3em] mt-1">
+            <span className="font-sans text-[10px] text-neutral-500 uppercase tracking-widest font-semibold mt-0.5">
               {mobileSubtitle}
             </span>
           )}
         </div>
         <button
           onClick={onClearAll}
-          className="font-label text-[10px] uppercase tracking-widest text-secondary hover:text-primary transition-colors font-bold cursor-pointer underline underline-offset-4"
+          className="font-sans text-[11px] uppercase tracking-wider text-neutral-500 hover:text-black transition-colors font-bold cursor-pointer underline underline-offset-4"
         >
           Clear All
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar pr-2">
+      <div className="flex-1 overflow-y-auto no-scrollbar pr-1">
         <FilterSection
           title="Sort By"
           id="sort"
@@ -257,18 +257,17 @@ export function FilterPanel({
             <button
               key={opt.value}
               onClick={() => onSortChange(opt.value)}
-              className={`w-full flex items-center justify-between py-1 px-2 min-h-0 rounded-lg group transition-all duration-300 ${sortBy === opt.value ? 'bg-primary/5 text-primary' : 'text-on-surface/60 hover:bg-surface-container-low'}`}
+              className={`w-full flex items-center justify-between py-2 px-3 min-h-0 rounded-xl group transition-all duration-200 cursor-pointer ${
+                sortBy === opt.value
+                  ? 'bg-neutral-100 text-black font-semibold'
+                  : 'text-neutral-700 hover:bg-neutral-50'
+              }`}
             >
-              <span
-                className={`font-body text-[13px] lg:text-[14px] transition-colors ${sortBy === opt.value ? 'font-semibold' : 'group-hover:text-on-surface'}`}
-              >
-                {opt.label}
-              </span>
+              <span className="font-sans text-[13px]">{opt.label}</span>
               {sortBy === opt.value && (
-                <CheckCircle2
-                  className="text-[16px] text-primary animate-scale-in"
-                  strokeWidth={1.5}
-                />
+                <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center text-white">
+                  <Check size={12} strokeWidth={2.5} />
+                </div>
               )}
             </button>
           ))}
@@ -375,27 +374,31 @@ export function FilterPanel({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={onClose}
-                  className="fixed inset-0 bg-black/60 backdrop-blur-md pointer-events-auto"
+                  className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto"
                 />
 
-                {/* Bottom Sheet Shell */}
+                {/* Bottom Sheet Floating Shell */}
                 <motion.div
-                  initial={{ y: '100%' }}
-                  animate={{ y: 0 }}
-                  exit={{ y: '100%' }}
+                  initial={{ y: '100%', opacity: 0.5 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: '100%', opacity: 0 }}
                   transition={sheetTransition}
                   {...dragProps}
-                  className="fixed bottom-0 left-0 right-0 z-10 pointer-events-auto flex flex-col"
+                  className="fixed bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col max-w-[480px] mx-auto"
+                  style={{
+                    marginBottom: 'env(safe-area-inset-bottom, 0px)',
+                  }}
                 >
-                  <div className="relative w-full bg-surface rounded-t-[32px] p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] flex flex-col max-h-[88dvh] overflow-hidden border-t border-outline-variant/10 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[82dvh] overflow-hidden border border-black/[0.08]">
                     {/* Handlebar for bottom sheet feel */}
-                    <DrawerDragHandle onClick={onClose} />
+                    <DrawerDragHandle onClick={onClose} pillClassName="bg-neutral-300 w-10 h-1" />
 
                     <button
                       onClick={onClose}
-                      className="absolute top-5 right-5 w-9 h-9 min-h-0 rounded-full bg-black/5 flex items-center justify-center text-on-surface hover:bg-black/10 transition-all z-10 cursor-pointer"
+                      className="absolute top-4 right-4 w-9 h-9 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-10 cursor-pointer"
+                      aria-label="Close filters"
                     >
-                      <X className="text-[18px]" strokeWidth={1.5} />
+                      <X className="w-4 h-4 text-black" strokeWidth={2} />
                     </button>
 
                     <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-2">
@@ -403,10 +406,10 @@ export function FilterPanel({
                     </div>
 
                     {/* Bottom Action Bar */}
-                    <div className="mt-3 pt-4 border-t border-outline-variant/20">
+                    <div className="mt-3 pt-3 border-t border-black/[0.06]">
                       <button
                         onClick={onClose}
-                        className="w-full bg-on-surface-variant text-surface py-3.5 rounded-full font-label text-[11px] uppercase tracking-widest font-bold shadow-xl hover:bg-primary transition-all active:scale-[0.98]"
+                        className="w-full bg-[#283618] hover:bg-[#1f2b13] text-white py-3.5 rounded-full font-sans text-[12px] uppercase tracking-wider font-bold shadow-sm transition-all active:scale-[0.98] cursor-pointer"
                       >
                         Apply Filters
                       </button>

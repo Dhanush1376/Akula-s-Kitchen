@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { lazyWithRetry as lazy } from '../utils/performance/lazyWithRetry';
-import { Routes, Route, useLocation, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { logRouteDiagnostic } from '../utils/core/diagnostics';
 import { RouteSkeleton, getRouteSkeletonVariant } from '../components/ui/RouteSkeleton';
 import { MainLayout, MinimalLayout } from '../layouts/MainLayout';
@@ -23,11 +23,6 @@ function AppRouteFallback() {
   const location = useLocation();
   const variant = getRouteSkeletonVariant(location.pathname);
   return <RouteSkeleton variant={variant} />;
-}
-
-function RedirectToCustomOrder() {
-  const { productId } = useParams();
-  return <Navigate to={`/custom-orders?product=${productId}`} replace />;
 }
 
 const RouteDiagnostics = React.memo(function RouteDiagnostics() {
@@ -57,18 +52,6 @@ const Checkout = lazy(() => import('../pages/Checkout').then((m) => ({ default: 
 const OrderSuccess = lazy(() =>
   import('../pages/OrderSuccess').then((m) => ({ default: m.OrderSuccess })),
 );
-const About = lazy(() => import('../pages/About').then((m) => ({ default: m.About })));
-const CustomOrders = lazy(() =>
-  import('../pages/CustomOrders').then((m) => ({ default: m.CustomOrders })),
-);
-
-const MyCustomOrders = lazy(() =>
-  import('../pages/MyCustomOrders').then((m) => ({ default: m.MyCustomOrders })),
-);
-const Gallery = lazy(() => import('../pages/Gallery').then((m) => ({ default: m.Gallery })));
-const GalleryDetail = lazy(() =>
-  import('../pages/GalleryDetail').then((m) => ({ default: m.GalleryDetail })),
-);
 const Contact = lazy(() => import('../pages/Contact').then((m) => ({ default: m.Contact })));
 const Wishlist = lazy(() => import('../pages/Wishlist').then((m) => ({ default: m.Wishlist })));
 const CollectionDetail = lazy(() =>
@@ -78,24 +61,7 @@ const Dashboard = lazy(() => import('../pages/Dashboard').then((m) => ({ default
 const OrderTrackingPublic = lazy(() =>
   import('../pages/OrderTrackingPublic').then((m) => ({ default: m.OrderTrackingPublic })),
 );
-const EventCollections = lazy(() =>
-  import('../pages/EventCollections').then((m) => ({ default: m.EventCollections })),
-);
-const EventDetail = lazy(() =>
-  import('../pages/EventDetail').then((m) => ({ default: m.EventDetail })),
-);
-const EventBookingWizard = lazy(() =>
-  import('../pages/EventBookingWizard').then((m) => ({ default: m.EventBookingWizard })),
-);
-const EventBookingSuccess = lazy(() =>
-  import('../pages/EventBookingSuccess').then((m) => ({ default: m.EventBookingSuccess })),
-);
-const EventCustomerDashboard = lazy(() =>
-  import('../pages/EventCustomerDashboard').then((m) => ({ default: m.EventCustomerDashboard })),
-);
-const EventShowcases = lazy(() =>
-  import('../pages/EventShowcases').then((m) => ({ default: m.EventShowcases })),
-);
+
 const GenericPolicyPage = lazy(() =>
   import('../pages/GenericPolicyPage').then((m) => ({ default: m.GenericPolicyPage })),
 );
@@ -107,10 +73,6 @@ const BlogListing = lazy(() =>
   import('../pages/BlogListing').then((m) => ({ default: m.BlogListing })),
 );
 const BlogPost = lazy(() => import('../pages/BlogPost').then((m) => ({ default: m.BlogPost })));
-const LocationLanding = lazy(() =>
-  import('../pages/LocationLanding').then((m) => ({ default: m.LocationLanding })),
-);
-const Coupons = lazy(() => import('../pages/Coupons').then((m) => ({ default: m.Coupons })));
 
 // ─── Admin Portal (Lazy Loaded) ───
 const AdminLayout = lazy(() =>
@@ -140,26 +102,7 @@ const AdminOrders = lazy(() =>
 const AdminOrderDetail = lazy(() =>
   import('../admin/pages/AdminOrderDetail').then((m) => ({ default: m.AdminOrderDetail })),
 );
-const AdminReturnsHub = lazy(() => import('../admin/pages/returns/AdminReturnsHub'));
-const AdminReturnDetail = lazy(() =>
-  import('../admin/pages/returns/AdminReturnDetail').then((m) => ({
-    default: m.default || m.AdminReturnDetail,
-  })),
-);
-const AdminExchangeHub = lazy(() =>
-  import('../admin/pages/returns/AdminExchangeHub').then((m) => ({
-    default: m.default || m.AdminExchangeHub,
-  })),
-);
-const AdminAddEvent = lazy(() =>
-  import('../admin/pages/AdminAddEvent').then((m) => ({ default: m.AdminAddEvent })),
-);
-const AdminAddShowcase = lazy(() =>
-  import('../admin/pages/AdminAddShowcase').then((m) => ({ default: m.AdminAddShowcase })),
-);
-const AdminInquiries = lazy(() =>
-  import('../admin/pages/AdminInquiries').then((m) => ({ default: m.AdminInquiries })),
-);
+
 const AdminCustomers = lazy(() =>
   import('../admin/pages/AdminCustomers').then((m) => ({ default: m.AdminCustomers })),
 );
@@ -168,20 +111,7 @@ const AdminCatalogRegistry = lazy(() => import('../admin/pages/AdminCatalogRegis
 
 const AdminExecutiveDashboard = lazy(() => import('../admin/pages/ExecutiveDashboard'));
 // const CustomerProfile360 = lazy(() => import('../admin/pages/CustomerProfile360'));
-const AdminGallery = lazy(() =>
-  import('../admin/pages/AdminGallery').then((m) => ({ default: m.AdminGallery })),
-);
-const AdminAddGalleryItem = lazy(() =>
-  import('../admin/pages/AdminAddGalleryItem').then((m) => ({ default: m.AdminAddGalleryItem })),
-);
-const AdminEvents = lazy(() =>
-  import('../admin/pages/AdminEvents').then((m) => ({ default: m.AdminEvents })),
-);
-const AdminBookingDetail = lazy(() =>
-  import('../admin/pages/AdminBookingDetail/index').then((m) => ({
-    default: m.AdminBookingDetail,
-  })),
-);
+
 const AdminPolicies = lazy(() =>
   import('../admin/pages/AdminPolicies').then((m) => ({ default: m.AdminPolicies })),
 );
@@ -198,19 +128,6 @@ const AdminAnalytics = lazy(() =>
 );
 const AdminInventory = lazy(() =>
   import('../admin/pages/AdminInventory').then((m) => ({ default: m.AdminInventory })),
-);
-const AdminCoupons = lazy(() =>
-  import('../admin/pages/AdminCoupons').then((m) => ({ default: m.AdminCoupons })),
-);
-const AdminRentalsHub = lazy(() =>
-  import('../admin/pages/AdminRentalsHub').then((m) => ({ default: m.default })),
-);
-const AdminRentalDetail = lazy(() =>
-  import('../admin/pages/AdminRentalDetail').then((m) => ({ default: m.AdminRentalDetail })),
-);
-const AdminRentalPolicies = lazy(() => import('../admin/pages/AdminRentalPolicies'));
-const AdminCreateCoupon = lazy(() =>
-  import('../admin/pages/AdminCreateCoupon').then((m) => ({ default: m.AdminCreateCoupon })),
 );
 const AdminPayments = lazy(() =>
   import('../admin/pages/AdminPayments').then((m) => ({ default: m.AdminPayments })),
@@ -238,10 +155,7 @@ const AdminReviews = lazy(() =>
   import('../admin/pages/AdminReviews').then((m) => ({ default: m.AdminReviews })),
 );
 
-const AdminServiceAreas = lazy(() => import('../admin/pages/AdminServiceAreas'));
 const AdminServiceability = lazy(() => import('../admin/pages/AdminServiceability'));
-
-// Returns & Exchanges (Admin)
 
 const AdminSystemHub = lazy(() =>
   import('../admin/pages/AdminSystemHub').then((m) => ({ default: m.default })),
@@ -284,25 +198,13 @@ export function AppRoutes() {
                 <Route path="/" element={<Home />} />
                 <Route path="/blog" element={<BlogListing />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route
-                  path="/:city(wedding-decorations-hyderabad|event-decorators-telangana|event-decorators-secunderabad|event-decorators-ongole|wedding-decorations-ongole|handmade-gifts-ongole|event-decorators-vijayawada|event-decorators-guntur|wedding-decorations-bangalore|event-decorators-chennai)"
-                  element={<LocationLanding />}
-                />
                 <Route path="/collections" element={<ProductListing />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews" element={<ProductAllReviews />} />
                 <Route path="/product/:id/reviews/images" element={<ProductReviewImages />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/custom-orders" element={<CustomOrders />} />
-                <Route path="/customize/:productId" element={<RedirectToCustomOrder />} />
-                <Route
-                  path="/my-custom-orders"
-                  element={<Navigate to="/dashboard/custom-orders" replace />}
-                />
-                <Route path="/gallery" element={<Gallery />} />
-                <Route path="/gallery/:id" element={<GalleryDetail />} />
+                <Route path="/about" element={<Navigate to="/" replace />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/collection/:id" element={<CollectionDetail />} />
@@ -315,31 +217,14 @@ export function AppRoutes() {
                   }
                 />
                 <Route path="/track/:orderId" element={<OrderTrackingPublic />} />
-                <Route path="/events" element={<EventShowcases />} />
-                <Route path="/events/collections" element={<EventCollections />} />
-                <Route path="/events/:id" element={<EventDetail />} />
-                <Route path="/events/book" element={<EventBookingWizard />} />
-                <Route path="/booking-success/:id" element={<EventBookingSuccess />} />
-                <Route
-                  path="/events/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <EventCustomerDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/showcases" element={<EventShowcases />} />
+
                 <Route path="/policy/:slug" element={<GenericPolicyPage />} />
                 {/* Legacy routes redirect to dynamic paths */}
                 <Route
                   path="/shipping"
                   element={<Navigate to="/policy/shipping-policy" replace />}
                 />
-                <Route path="/returns" element={<Navigate to="/policy/return-policy" replace />} />
-                <Route
-                  path="/exchange"
-                  element={<Navigate to="/policy/exchange-policy" replace />}
-                />
+
                 <Route path="/refund" element={<Navigate to="/policy/refund-policy" replace />} />
                 <Route
                   path="/cancellation"
@@ -351,7 +236,6 @@ export function AppRoutes() {
                   element={<Navigate to="/policy/terms-and-conditions" replace />}
                 />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
-                <Route path="/coupons" element={<Coupons />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route element={<MinimalLayout />}>
@@ -386,27 +270,15 @@ export function AppRoutes() {
               <Route path="products/edit/:id" element={<AdminAddProduct />} />
               <Route path="orders/*" element={<AdminOrdersHub />} />
               <Route path="orders/:orderId" element={<AdminOrderDetail />} />
-              <Route path="rentals/*" element={<AdminRentalsHub />} />
-              <Route path="rentals/detail/:rentalId" element={<AdminRentalDetail />} />
-              <Route path="rental-policies" element={<AdminRentalPolicies />} />
-              <Route path="service-areas" element={<AdminServiceAreas />} />
+
               <Route path="serviceability" element={<AdminServiceability />} />
-              <Route path="custom-orders" element={<AdminInquiries />} />
               <Route path="customers" element={<AdminCustomers />} />
               <Route path="customers/:customerId" element={<AdminCustomers />} />
               <Route path="executive" element={<AdminExecutiveDashboard />} />
-              <Route path="gallery" element={<AdminGallery />} />
-              <Route path="gallery/add" element={<AdminAddGalleryItem />} />
-              <Route path="gallery/edit/:id" element={<AdminAddGalleryItem />} />
               <Route path="categories" element={<AdminCategories />} />
               <Route path="categories/add" element={<AdminCategories />} />
               <Route path="categories/edit/:id" element={<AdminCategories />} />
-              <Route path="events" element={<AdminEvents />} />
-              <Route path="events/add" element={<AdminAddEvent />} />
-              <Route path="events/edit/:id" element={<AdminAddEvent />} />
-              <Route path="showcases/add" element={<AdminAddShowcase />} />
-              <Route path="showcases/edit/:id" element={<AdminAddShowcase />} />
-              <Route path="events/:bookingId" element={<AdminBookingDetail />} />
+
               <Route path="search" element={<AdminEnterpriseSearch />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="analytics/operations" element={<AdminRecommendationAnalytics />} />
@@ -417,9 +289,6 @@ export function AppRoutes() {
               />
               <Route path="backup" element={<Navigate to="/admin/backup-center" replace />} />
 
-              <Route path="coupons" element={<AdminCoupons />} />
-              <Route path="coupons/create" element={<AdminCreateCoupon />} />
-              <Route path="coupons/edit/:id" element={<AdminCreateCoupon />} />
               <Route path="payments" element={<AdminPayments />} />
 
               <Route path="notifications" element={<AdminNotifications />} />
@@ -446,12 +315,6 @@ export function AppRoutes() {
                 path="system/recycle-bin"
                 element={<Navigate to="/admin/recycle-bin" replace />}
               />
-
-              <Route path="returns" element={<AdminReturnsHub />} />
-              <Route path="returns/requests/:id" element={<AdminReturnDetail />} />
-              <Route path="exchanges" element={<AdminExchangeHub />} />
-              <Route path="exchanges/requests/:id" element={<AdminReturnDetail />} />
-              <Route path="exchanges/:id" element={<AdminReturnDetail />} />
 
               <Route path="enterprise-search" element={<AdminEnterpriseSearch />} />
 

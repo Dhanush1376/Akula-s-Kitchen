@@ -12,7 +12,6 @@ import { persistentStorage } from '../utils/storage/persistentStorage';
 import toast from 'react-hot-toast';
 
 import { useCheckoutShipping } from './hooks/useCheckoutShipping';
-import { useCheckoutRentals } from './hooks/useCheckoutRentals';
 import { useCheckoutTotals } from './hooks/useCheckoutTotals';
 import { useCheckoutFlow } from './hooks/useCheckoutFlow';
 
@@ -30,21 +29,14 @@ export function useCheckout() {
 }
 
 export function CheckoutProvider({ children }) {
-  const {
-    purchaseCart,
-    rentalCart,
-    customCart,
-    clearCart,
-    removeItem,
-    claimedCoupon,
-    setClaimedCoupon,
-  } = useCart();
+  const { purchaseCart, customCart, clearCart, removeItem, claimedCoupon, setClaimedCoupon } =
+    useCart();
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const { processPayment } = useRazorpay();
   const navigate = useNavigate();
   const location = useLocation();
   const checkoutMode = location.state?.checkoutMode || 'purchase';
-  const hasRentalItems = checkoutMode === 'rental';
+  const hasRentalItems = false;
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -66,64 +58,32 @@ export function CheckoutProvider({ children }) {
   });
   const settings = settingsData || {};
 
-  const customOrder = location.state?.customOrder || null;
-
   const activeItems = React.useMemo(() => {
     try {
-      if (checkoutMode === 'custom' && customOrder) {
-        return [
-          {
-            productId: customOrder._id,
-            title: `Custom Design: ${customOrder.occasion || customOrder.productType || 'Decor'}`,
-            price: customOrder.quotation?.total || 0,
-            quantity: 1,
-            variant: 'Custom',
-            imageSrc:
-              customOrder.inspirationImages?.[0] ||
-              'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
-            type: 'custom',
-            category: 'CustomOrder',
-          },
-        ];
-      } else if (checkoutMode === 'custom') {
+      if (checkoutMode === 'custom') {
         return customCart?.items || [];
       }
-
-      const rawItems =
-        checkoutMode === 'rental' ? rentalCart?.items || [] : purchaseCart?.items || [];
-      return rawItems.filter((item) =>
-        checkoutMode === 'rental' ? item.type === 'rental' : item.type !== 'rental',
-      );
+      return purchaseCart?.items || [];
     } catch (e) {
       logger.warn('Failed to parse activeItems in checkout', e);
       return [];
     }
-  }, [checkoutMode, rentalCart?.items, purchaseCart?.items, customCart?.items, customOrder]);
+  }, [checkoutMode, purchaseCart?.items, customCart?.items]);
   const items = activeItems;
 
   const subtotal = React.useMemo(() => {
-    if (checkoutMode === 'custom' && customOrder) {
-      return customOrder.quotation?.total || 0;
-    } else if (checkoutMode === 'custom') {
+    if (checkoutMode === 'custom') {
       return customCart?.summary?.subtotal || 0;
     }
-    return checkoutMode === 'rental'
-      ? rentalCart?.summary?.subtotal || 0
-      : purchaseCart?.summary?.subtotal || 0;
-  }, [
-    checkoutMode,
-    customOrder,
-    rentalCart?.summary?.subtotal,
-    purchaseCart?.summary?.subtotal,
-    customCart?.summary?.subtotal,
-  ]);
+    return purchaseCart?.summary?.subtotal || 0;
+  }, [checkoutMode, purchaseCart?.summary?.subtotal, customCart?.summary?.subtotal]);
 
   // Empty line since we moved useEffect down
 
   const [activeStep, setActiveStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentOption, setPaymentOption] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_payment_option', {
+    return persistentStorage.getItem('akula_checkout_payment_option', {
       session: true,
       fallback: 'razorpay',
     });
@@ -143,12 +103,11 @@ export function CheckoutProvider({ children }) {
   }, [isRazorpayEnabled, isCodEnabled, paymentOption, settings?.payments]);
 
   React.useEffect(() => {
-    persistentStorage.setItem('siri_checkout_payment_option', paymentOption, { session: true });
+    persistentStorage.setItem('akula_checkout_payment_option', paymentOption, { session: true });
   }, [paymentOption]);
 
   // Domain specific Hooks
   const shipping = useCheckoutShipping({ isAuthenticated, user, setActiveStep, setIsProcessing });
-  const rentals = useCheckoutRentals();
   const totals = useCheckoutTotals({
     isAuthenticated,
     activeItems,
@@ -200,13 +159,11 @@ export function CheckoutProvider({ children }) {
     activeItems,
     orderType: checkoutMode,
     checkoutMode,
-    customOrder,
     removeItem,
     clearCart,
     navigate,
     processPayment,
     shipping,
-    rentals,
     totals,
     activeStep,
     setActiveStep,
@@ -323,7 +280,6 @@ export function CheckoutProvider({ children }) {
 
     // Decomposed Hooks Spread
     ...shipping,
-    ...rentals,
     ...totals,
   };
 

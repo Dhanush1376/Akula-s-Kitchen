@@ -65,18 +65,18 @@ export function ProductDetailSkeleton() {
         </div>
       </div>
 
-      <section className="pt-[68px] lg:pt-0 pb-12 lg:pb-20 lg:pb-24 max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop">
+      <section className="product-detail-section pb-12 lg:pb-20 lg:pb-24 max-w-max-width mx-auto px-2.5 sm:px-3 md:px-margin-mobile lg:px-margin-desktop">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20">
           {/* Left Column: Image Gallery & Extra Cards */}
           <div className="flex flex-col gap-6 lg:gap-10">
             {/* Main Image & Thumbnails */}
             <div className="space-y-4">
-              <Skeleton className="w-full aspect-[4/5] lg:aspect-square rounded-[24px] lg:rounded-[32px]" />
-              <div className="flex gap-4 overflow-x-hidden">
+              <Skeleton className="w-full aspect-[4/5] lg:aspect-square rounded-[12px] md:rounded-[24px] lg:rounded-[32px]" />
+              <div className="flex gap-3 overflow-x-hidden px-1 md:px-0">
                 {[...Array(4)].map((_, i) => (
                   <Skeleton
                     key={i}
-                    className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl flex-shrink-0"
+                    className="w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 rounded-[8px] lg:rounded-[10px] flex-shrink-0"
                   />
                 ))}
               </div>
@@ -89,7 +89,7 @@ export function ProductDetailSkeleton() {
           </div>
 
           {/* Right Column: Product Info */}
-          <div className="space-y-6 lg:space-y-8 mt-4 lg:mt-0">
+          <div className="space-y-6 lg:space-y-8 mt-4 lg:mt-0 px-1.5 md:px-0">
             {/* Title & Brand */}
             <div className="space-y-4">
               <Skeleton className="h-4 w-32" />

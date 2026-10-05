@@ -1,7 +1,7 @@
 import { persistentStorage } from '../storage/persistentStorage';
 
-export const SESSION_MARKER_KEY = 'siri_session_active';
-export const REFRESH_TOKEN_KEY = 'siri_refresh_token_fallback';
+export const SESSION_MARKER_KEY = 'akula_session_active';
+export const REFRESH_TOKEN_KEY = 'akula_refresh_token_fallback';
 
 export const hasSessionMarker = () => {
   const val = persistentStorage.getItem(SESSION_MARKER_KEY, { fallback: 'false' });

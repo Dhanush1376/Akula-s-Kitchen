@@ -5,10 +5,10 @@ import { Skeleton } from '../SkeletonBase';
 // ─── Address Bar Skeleton ───
 export function AddressBarSkeleton() {
   return (
-    <div className="w-full bg-[#fbf9f6] border-b border-black/10 relative py-3.5 hover:bg-[#f6f2ea] transition-colors">
+    <div className="w-full bg-[#ffffff] border-b border-black/10 relative py-3.5 hover:bg-[#f2f2f2] transition-colors">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-8 flex items-center justify-between md:justify-center">
         <div className="flex items-center gap-2.5 flex-1 md:flex-initial min-w-0 md:w-96">
-          <MapPin className="text-[18px] text-[#8c7335]/30 animate-pulse" strokeWidth={1.5} />
+          <MapPin className="text-[18px] text-[#000000]/30 animate-pulse" strokeWidth={1.5} />
           <Skeleton className="h-[12px] w-[50%] md:w-full rounded-md" />
         </div>
         <ChevronDown className="text-[18px] text-black/10 md:ml-4" strokeWidth={1.5} />
@@ -20,7 +20,7 @@ export function AddressBarSkeleton() {
 // ─── Verified Reviews Skeleton ───
 export function ReviewsSkeleton() {
   return (
-    <section className="relative py-16 lg:py-20 bg-[#FCFBF9] overflow-hidden border-t border-[#E8E2D5]/30">
+    <section className="relative py-16 lg:py-20 bg-[#FFFFFF] overflow-hidden border-t border-[#E8E2D5]/30">
       <div className="max-w-[1440px] mx-auto px-[18px] lg:px-[clamp(22px,4.5vw,72px)] space-y-12">
         {/* Header */}
         <div className="text-center max-w-xl mx-auto mb-6">
@@ -34,7 +34,7 @@ export function ReviewsSkeleton() {
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-[290px] xs:w-[320px] sm:w-[400px] lg:w-[450px] bg-white p-8 lg:p-10 rounded-[32px] border border-[#EBE6DD] flex flex-col justify-between"
+                className="flex-shrink-0 w-[290px] xs:w-[320px] sm:w-[400px] lg:w-[450px] bg-white p-8 lg:p-10 rounded-[32px] border border-[#EBEBEB] flex flex-col justify-between"
               >
                 <div className="space-y-6">
                   {/* Stars */}

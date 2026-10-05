@@ -17,11 +17,10 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { SEO } from '../components/seo/SEO';
-import { MandalaArtDecor } from '../components/ui/MandalaArtDecor';
 import { InvoiceTemplate, OrderSuccessSkeleton, OptimizedImage } from '../components/ui';
 import { useState, useEffect } from 'react';
 import { handleImageError } from '../utils/media/imageUtils';
-import { orderService, rentalService } from '../services/domainServices';
+import { orderService } from '../services/domainServices';
 import logger from '../utils/core/logger';
 import { useConfig } from '../context/ConfigContext';
 
@@ -152,7 +151,7 @@ const mapOrderData = (rawOrder) => {
             rawOrder.productTitle ||
             rawOrder.product?.title ||
             rawOrder.product?.name ||
-            'Artisanal Rental Decor Item',
+            'Rental Item',
           variant:
             rawOrder.variant ||
             (rawOrder.durationDays
@@ -162,7 +161,7 @@ const mapOrderData = (rawOrder) => {
             rawOrder.productImage ||
             rawOrder.product?.imageSrc ||
             rawOrder.product?.images?.[0]?.url ||
-            'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
+            '/MainLogo.png',
           type: 'rental',
           isRental: true,
           rentalInfo: {
@@ -200,11 +199,7 @@ const mapOrderData = (rawOrder) => {
 
   const rawPaymentMethod = (rawOrder.paymentMethod || '').toLowerCase();
   const paymentMode =
-    rawPaymentMethod === 'cod'
-      ? 'Cash on Delivery (COD)'
-      : rawPaymentMethod.includes('wallet')
-        ? 'Wallet Payment'
-        : 'Razorpay Secure Online';
+    rawPaymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Razorpay Secure Online';
 
   const addr = rawOrder.shippingAddress || rawOrder.deliveryAddress || {};
   const deliveryAddress = {
@@ -242,11 +237,10 @@ const mapOrderData = (rawOrder) => {
   const tax = typeof rawOrder.tax === 'number' ? rawOrder.tax : (rawOrder.tax?.totalTax ?? 0);
   const discount = rawOrder.discount ?? 0;
   const codFee = rawOrder.codFee ?? 0;
-  const walletDeduction = rawOrder.walletDeduction ?? 0;
   const totalAmount =
     rawOrder.totalAmount ??
     rawOrder.total ??
-    subtotal + depositTotal + shippingFee + tax + codFee - discount - walletDeduction;
+    subtotal + depositTotal + shippingFee + tax + codFee - discount;
 
   const rentalStartDate = rentalItems[0]?.rentalInfo?.startDate || rawOrder.rentalStartDate;
   const rentalEndDate = rentalItems[0]?.rentalInfo?.endDate || rawOrder.rentalEndDate;
@@ -273,7 +267,6 @@ const mapOrderData = (rawOrder) => {
     discount,
     codFee,
     tax,
-    walletDeduction,
     paymentMode,
     paymentStatus: rawOrder.paymentStatus || 'paid',
     needByDate: rawOrder.needByDate ? safeFormatDate(rawOrder.needByDate) : undefined,
@@ -326,7 +319,7 @@ export function OrderSuccess() {
     const defaults = {
       origin: { y: 0.7 },
       zIndex: 10000,
-      colors: ['var(--color-gold-dark)', '#d4af37', '#ffe088', '#ffffff'],
+      colors: ['var(--color-gold-dark)', '#f7bb0e', '#fef3cc', '#ffffff'],
     };
 
     import('canvas-confetti').then(({ default: confetti }) => {
@@ -365,50 +358,14 @@ export function OrderSuccess() {
         }
 
         let foundData = null;
-
-        // If orderId starts with 'RNT-' or 'rnt-', query rentalService first
-        if (
-          typeof orderId === 'string' &&
-          (orderId.startsWith('RNT-') || orderId.startsWith('rnt-'))
-        ) {
-          try {
-            const rentalRes = await rentalService.getDetail(orderId);
-            if (rentalRes.success && rentalRes.data) {
-              foundData = rentalRes.data;
-            }
-          } catch (rErr) {
-            logger.warn(
-              'Direct rental fetch by rentalOrderId failed, falling back to orderService:',
-              rErr,
-            );
+        try {
+          const res = await orderService.getById(orderId);
+          if (res.success && res.data) {
+            foundData = res.data;
           }
-        }
-
-        if (!foundData) {
-          try {
-            const res = await orderService.getById(orderId);
-            if (res.success && res.data) {
-              foundData = res.data;
-            }
-          } catch (err) {
-            // It might be a rental order instead of a purchase order
-            if (
-              err.response?.status === 404 ||
-              err.response?.status === 400 ||
-              err.response?.data?.message?.toLowerCase().includes('not found')
-            ) {
-              try {
-                const rentalRes = await rentalService.getDetail(orderId);
-                if (rentalRes.success && rentalRes.data) {
-                  foundData = rentalRes.data;
-                }
-              } catch (rentalErr) {
-                logger.error('Error fetching rental order details:', rentalErr);
-              }
-            } else {
-              throw err;
-            }
-          }
+        } catch (err) {
+          logger.error('Error fetching order details:', err);
+          throw err;
         }
 
         if (foundData) {
@@ -532,12 +489,6 @@ export function OrderSuccess() {
               animate={{ y: 0, opacity: 1 }}
               className="bg-surface-bright border border-outline-variant/40 rounded-lg p-8 lg:p-12 text-center shadow-xs overflow-hidden relative"
             >
-              <MandalaArtDecor
-                variant={1}
-                size={400}
-                className="-bottom-20 -right-20 opacity-[0.03]"
-              />
-
               <div className="w-20 h-20 rounded-full bg-green-50 text-green-600 flex items-center justify-center mx-auto mb-6 border border-green-100">
                 <CheckCircle2 className="text-[32px]" strokeWidth={1.5} />
               </div>
@@ -551,10 +502,10 @@ export function OrderSuccess() {
               </h2>
               <p className="text-xs text-secondary max-w-md mx-auto leading-relaxed mb-8">
                 {order.isMixed
-                  ? `Thank you for shopping & renting with ${storeName || 'Siri Arts & Crafts'}. Your purchased items and rental bookings have both been confirmed.`
+                  ? `Thank you for shopping with ${storeName || "Akula's Kitchen"}. Your purchased and rental items have both been confirmed.`
                   : order.isPureRental
-                    ? "Your artisanal decor rental has been successfully reserved. We've dispatched your booking confirmation and rental policy to your mobile contact and email address."
-                    : "Your artisanal journey has begun. We've sent the order details to your registered number and email address."}
+                    ? "Your rental has been successfully reserved. We've sent your confirmation and rental policy to your mobile contact and email address."
+                    : "Your order has been placed. We've sent the order details to your registered number and email address."}
               </p>
 
               <div className="w-full max-w-lg mx-auto bg-surface-container-low/40 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-4 text-left border border-outline-variant/20">
@@ -753,7 +704,7 @@ export function OrderSuccess() {
                       <OptimizedImage
                         onError={handleImageError}
                         src={item.imageSrc}
-                        alt={item.title || 'Artisanal event decor item'}
+                        alt={item.title || 'Culinary order item'}
                         className="w-full h-full object-cover"
                         sizes="(max-width: 640px) 96px, 128px"
                       />
@@ -807,14 +758,14 @@ export function OrderSuccess() {
                           );
 
                           return (
-                            <div className="mt-2.5 p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-[#faf8f4] via-[#fdfcf9] to-[#f7f4ec] border border-[#d4af37]/35 shadow-[0_2px_8px_rgba(180,140,60,0.06)] space-y-2">
+                            <div className="mt-2.5 p-2.5 sm:p-3 rounded-xl bg-white border border-[#283618]/15 shadow-xs space-y-2">
                               {/* Badges row */}
                               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                 <span
-                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#8c7335]/15 text-[#705b22] text-[9.5px] uppercase font-bold tracking-wider border border-[#8c7335]/25"
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#283618]/10 text-[#283618] text-[9.5px] uppercase font-bold tracking-wider border border-[#283618]/20"
                                   style={{ fontFamily: 'var(--font-label)' }}
                                 >
-                                  <Check className="w-3 h-3 text-[#8c7335]" strokeWidth={2.5} />
+                                  <Check className="w-3 h-3 text-[#283618]" strokeWidth={2.5} />
                                   Rental
                                 </span>
 
@@ -823,7 +774,7 @@ export function OrderSuccess() {
                                   style={{ fontFamily: 'var(--font-label)' }}
                                 >
                                   <Clock
-                                    className="w-3 h-3 text-[#8c7335] shrink-0"
+                                    className="w-3 h-3 text-[#000000] shrink-0"
                                     strokeWidth={1.8}
                                   />
                                   {durationLabel}
@@ -845,13 +796,13 @@ export function OrderSuccess() {
 
                               {/* Rental Period Timeline */}
                               {(startStr || endStr) && (
-                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] pt-2 border-t border-[#8c7335]/15">
+                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] pt-2 border-t border-[#283618]/15">
                                   <div
-                                    className="flex items-center gap-1 text-[#705b22] font-bold text-[10px] uppercase tracking-wider shrink-0"
+                                    className="flex items-center gap-1 text-[#283618] font-bold text-[10px] uppercase tracking-wider shrink-0"
                                     style={{ fontFamily: 'var(--font-label)' }}
                                   >
                                     <Calendar
-                                      className="w-3.5 h-3.5 text-[#8c7335]"
+                                      className="w-3.5 h-3.5 text-[#283618]"
                                       strokeWidth={1.8}
                                     />
                                     <span>Period:</span>
@@ -912,7 +863,7 @@ export function OrderSuccess() {
                       <span>₹{safeFormatNumber(order.purchaseSubtotal || 0)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Rental Decor Charges</span>
+                      <span>Rental Charges</span>
                       <span>₹{safeFormatNumber(order.rentalCharge || 0)}</span>
                     </div>
                   </>
@@ -956,7 +907,7 @@ export function OrderSuccess() {
                           (order.discount || 0) +
                           (order.depositTotal || order.securityDeposit || 0) +
                           (order.codFee || 0) -
-                          (order.totalAmount + (order.walletDeduction || 0)),
+                          order.totalAmount,
                       ) < 1,
                     );
                     return (
@@ -984,14 +935,7 @@ export function OrderSuccess() {
                     </span>
                   </div>
                 )}
-                {order.walletDeduction > 0 && (
-                  <div className="flex justify-between">
-                    <span>Wallet Deduction</span>
-                    <span className="text-green-700 font-medium">
-                      - ₹{safeFormatNumber(order.walletDeduction)}
-                    </span>
-                  </div>
-                )}
+
                 {order.codFee > 0 && (
                   <div className="flex justify-between">
                     <span>COD Collection Fee</span>
@@ -1098,7 +1042,7 @@ export function OrderSuccess() {
                 </div>
                 <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-secondary/80 leading-normal">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={2} />
-                  <span>Artisanal scheduling prioritized for this event date.</span>
+                  <span>Scheduling prioritized for this date.</span>
                 </div>
               </div>
             )}
@@ -1156,7 +1100,7 @@ export function OrderSuccess() {
                   Easy Returns
                 </span>
               </div>
-              <p className="font-medium tracking-wide">100% Authentic Artisanal Pieces</p>
+              <p className="font-medium tracking-wide">100% Homemade Goodness</p>
             </div>
           </div>
         </div>
@@ -1180,7 +1124,7 @@ export function OrderSuccess() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 250 }}
-              className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[28px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[28px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:translate-x-0 print:translate-y-0 print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
+              className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[18px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[18px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:translate-x-0 print:translate-y-0 print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
             >
               {/* PRINT STYLE SHEET DETACHED AND ISOLATED */}
               <style type="text/css" media="print">

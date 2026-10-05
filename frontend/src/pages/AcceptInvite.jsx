@@ -73,7 +73,7 @@ export function AcceptInvite() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#faf9f6] flex flex-col items-center justify-center py-20 px-4">
+      <div className="min-h-screen bg-[#ffffff] flex flex-col items-center justify-center py-20 px-4">
         <div className="skeleton-box inline-block w-12 h-12 rounded-md" />
         <p className="text-[13px] text-outline font-medium uppercase tracking-widest font-body">
           Authenticating invite key...
@@ -83,7 +83,7 @@ export function AcceptInvite() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] flex items-center justify-center py-20 px-4 font-body">
+    <div className="min-h-screen bg-[#ffffff] flex items-center justify-center py-20 px-4 font-body">
       <SEO title="Accept Invitation" noindex />
       <motion.div
         initial="hidden"
@@ -91,7 +91,7 @@ export function AcceptInvite() {
         variants={{ show: { transition: { staggerChildren: 0.1 } } }}
         className="max-w-[540px] w-full bg-white rounded-[2.5rem] p-10 lg:p-12 border border-surface-container-highest/60 shadow-xl shadow-primary/5 text-center relative overflow-hidden"
       >
-        {/* Decorative Heritage Frame Overlay */}
+        {/* Decorative Frame Overlay */}
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary-container via-primary to-primary-container" />
 
         {/* Logo/Branding Header */}
@@ -103,7 +103,7 @@ export function AcceptInvite() {
             {storeName}
           </h2>
           <p className="text-[10px] text-outline-variant font-bold tracking-[0.3em] uppercase mt-2">
-            Craft & Heritage Studio
+            Team Invitation
           </p>
           <div className="w-12 h-[1px] bg-primary/20 mx-auto mt-4" />
         </motion.div>
@@ -162,7 +162,7 @@ export function AcceptInvite() {
 
             <div className="space-y-3">
               <span className="px-3.5 py-1 bg-primary/10 text-primary border border-primary/10 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                JOIN THE ATELIER
+                JOIN THE TEAM
               </span>
               <h2 className="text-[20px] font-bold text-on-surface font-display leading-tight">
                 Join our Creative Team
@@ -178,7 +178,7 @@ export function AcceptInvite() {
             </div>
 
             {/* Email card lock */}
-            <div className="bg-[#fcfbf9] border border-surface-container-highest/50 rounded-2xl p-4 text-[12px] font-semibold text-outline-variant font-mono">
+            <div className="bg-[#ffffff] border border-surface-container-highest/50 rounded-2xl p-4 text-[12px] font-semibold text-outline-variant font-mono">
               Authorized Email:{' '}
               <span className="text-on-surface font-bold font-sans">{invite?.email}</span>
             </div>

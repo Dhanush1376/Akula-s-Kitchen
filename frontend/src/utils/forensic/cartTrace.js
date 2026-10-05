@@ -1,12 +1,12 @@
 // Cart forensic tracing is opt-in only. Enable by setting VITE_CART_TRACE=true at
-// build time, or localStorage 'siri_cart_trace'='true' in a browser session.
+// build time, or localStorage 'akula_cart_trace'='true' in a browser session.
 // When disabled (the default), logCartTrace is a no-op so production carts pay no
 // stack-capture or console cost.
 const isTraceEnabled = () => {
   try {
     if (import.meta.env?.VITE_CART_TRACE === 'true') return true;
     return (
-      typeof window !== 'undefined' && window.localStorage?.getItem('siri_cart_trace') === 'true'
+      typeof window !== 'undefined' && window.localStorage?.getItem('akula_cart_trace') === 'true'
     );
   } catch {
     return false;

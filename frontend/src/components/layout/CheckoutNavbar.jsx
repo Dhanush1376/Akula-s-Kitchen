@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { SiriLogo } from '../ui/SiriLogo';
+import { BrandLogo } from '../ui/BrandLogo';
 import { useConfig } from '../../context/ConfigContext';
 
 export function CheckoutNavbar() {
@@ -27,7 +27,7 @@ export function CheckoutNavbar() {
         {/* Center: Branding (Visible on sm+) */}
         <div className="hidden lg:block flex-1 text-center">
           <Link to="/" className="inline-block group">
-            <SiriLogo size="36px" showSubtitle={false} />
+            <BrandLogo size="36px" showSubtitle={false} />
           </Link>
         </div>
 

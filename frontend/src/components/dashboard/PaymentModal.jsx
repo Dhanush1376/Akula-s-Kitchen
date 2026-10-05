@@ -46,7 +46,7 @@ export function PaymentModal({
             }}
             transition={sheetTransition}
             {...dragProps}
-            className="bg-surface-bright rounded-t-3xl sm:rounded-2xl border border-outline-variant/30 shadow-2xl p-6 lg:p-8 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 w-full sm:max-w-md relative z-10 space-y-6 max-h-[88dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain touch-pan-y pointer-events-auto"
+            className="bg-surface-bright rounded-t-[18px] sm:rounded-2xl border border-outline-variant/30 shadow-2xl p-6 lg:p-8 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 w-full sm:max-w-md relative z-10 space-y-6 max-h-[88dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain touch-pan-y pointer-events-auto"
           >
             {isMobile && <DrawerDragHandle onClick={() => setIsPaymentModalOpen(false)} />}
             <div className="flex justify-between items-start border-b border-outline-variant/20 pb-3">
@@ -60,9 +60,10 @@ export function PaymentModal({
               </div>
               <button
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center active:scale-90 cursor-pointer"
+                className="w-8 h-8 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full bg-surface-container flex items-center justify-center active:scale-90 cursor-pointer"
+                aria-label="Close payment modal"
               >
-                <X className="text-[18px]" strokeWidth={1.5} />
+                <X className="w-4 h-4" strokeWidth={1.8} />
               </button>
             </div>
 

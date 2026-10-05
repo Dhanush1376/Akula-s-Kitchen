@@ -104,20 +104,8 @@ export function CartSkeleton() {
             </div>
           </div>
 
-          {/* Right Column Pane: Wallet, Coupons & Price Details */}
+          {/* Right Column Pane: Coupons & Price Details */}
           <div className="lg:col-span-5 xl:col-span-4 space-y-3">
-            {/* Wallet Balance box skeleton */}
-            <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <Skeleton variant="circle" className="w-5 h-5" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-2.5 w-32" />
-                </div>
-              </div>
-              <Skeleton variant="circle" className="w-5 h-5" />
-            </div>
-
             {/* Coupons Card skeleton */}
             <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
@@ -365,18 +353,6 @@ export function CheckoutStepSkeleton({ mode = 'address' }) {
 export function CheckoutSidebarSkeleton() {
   return (
     <div className="space-y-4" aria-busy="true" aria-label="Loading order summary">
-      {/* Wallet Balance card */}
-      <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
-          <Skeleton variant="circle" className="w-5 h-5" />
-          <div className="space-y-1.5 flex-1">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-2.5 w-32" />
-          </div>
-        </div>
-        <Skeleton variant="circle" className="w-5 h-5" />
-      </div>
-
       {/* Promo Coupon Card */}
       <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-4 shadow-xs space-y-3">
         <div className="flex justify-between items-center border-b border-outline-variant/40 pb-2">

@@ -150,7 +150,7 @@ function BaseOptimizedImage({
         style={aspectStyle}
       >
         {fallback || (
-          <div className="absolute inset-0 rounded-[inherit] flex flex-col items-center justify-center bg-[#f7f6f2] dark:bg-[#1a1917] text-[#8a877f] dark:text-[#9e9b93] select-none p-3 text-center border border-black/5 dark:border-white/5 z-10">
+          <div className="absolute inset-0 rounded-[inherit] flex flex-col items-center justify-center bg-[#f7f7f7] dark:bg-[#000000] text-[#737373] dark:text-[#8a8a8a] select-none p-3 text-center border border-black/5 dark:border-white/5 z-10">
             <div className="w-10 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center mb-1.5 shadow-xs">
               <ImageOff className="w-5 h-5 opacity-70" strokeWidth={1.75} />
             </div>
@@ -180,7 +180,7 @@ function BaseOptimizedImage({
       {/* Fallback if the image errored */}
       {hasError &&
         (fallback || (
-          <div className="absolute inset-0 rounded-[inherit] flex flex-col items-center justify-center bg-[#f7f6f2] dark:bg-[#1a1917] text-[#8a877f] dark:text-[#9e9b93] select-none p-3 text-center border border-black/5 dark:border-white/5 z-10">
+          <div className="absolute inset-0 rounded-[inherit] flex flex-col items-center justify-center bg-[#f7f7f7] dark:bg-[#000000] text-[#737373] dark:text-[#8a8a8a] select-none p-3 text-center border border-black/5 dark:border-white/5 z-10">
             <div className="w-10 h-10 rounded-full bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center mb-1.5 shadow-xs">
               <ImageOff className="w-5 h-5 opacity-70" strokeWidth={1.75} />
             </div>

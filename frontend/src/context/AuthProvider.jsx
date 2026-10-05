@@ -104,10 +104,6 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(false);
       setIntendedAction(null);
 
-      if (typeof window !== 'undefined') {
-        delete window.__siri_splash_shown;
-      }
-
       if (!silent) {
         toast.success('Logged out successfully');
       }

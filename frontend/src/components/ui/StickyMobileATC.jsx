@@ -3,6 +3,7 @@ import { m as motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { formatPrice } from '../../utils/ecommerce/priceUtils';
 
 export function StickyMobileATC({ product, triggerRef }) {
   const { addItem, setIsCartOpen } = useCart();
@@ -74,6 +75,9 @@ export function StickyMobileATC({ product, triggerRef }) {
     setTimeout(() => setAdded(false), 2000);
   };
 
+  const oldPrice =
+    product?.strikingPrice || product?.oldPrice || product?.originalPrice || product?.mrp;
+
   return (
     <AnimatePresence>
       {isVisible && !isScrollingDown && (
@@ -82,28 +86,25 @@ export function StickyMobileATC({ product, triggerRef }) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 150, opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-          className="sticky-mobile-atc fixed bottom-0 left-0 w-full h-[calc(72px+var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px)))] lg:h-[80px] z-[100] lg:hidden bg-white/95 backdrop-blur-xl border-t border-outline-variant/15 px-6 pb-[var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px))] flex items-center justify-between gap-3 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] select-none"
+          className="sticky-mobile-atc fixed bottom-0 left-0 w-full h-[calc(70px+var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px)))] z-[100] lg:hidden bg-white/95 backdrop-blur-xl border-t border-black/10 px-5 pb-[var(--safe-area-bottom,_env(safe-area-inset-bottom,_0px))] flex items-center justify-between gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] select-none"
         >
           <div className="flex flex-col truncate">
-            <span className="font-label text-[8px] uppercase tracking-[0.25em] text-stone-500 font-bold leading-none">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-neutral-400 font-extrabold leading-none">
               Price
             </span>
-            <div className="flex items-end gap-2 mt-1.5">
-              <p className="font-display text-[18px] text-black font-medium leading-none">
-                ₹{product?.price?.toLocaleString('en-IN')}
+            <div className="flex items-baseline gap-2 mt-1">
+              <p
+                className="font-serif-heading font-extrabold text-[19px] text-neutral-950 leading-none"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                ₹{formatPrice(product?.price)}
               </p>
-              {(product?.strikingPrice ||
-                product?.oldPrice ||
-                product?.originalPrice ||
-                product?.mrp) && (
-                <p className="font-display text-[12px] text-stone-400 line-through leading-none mb-0.5">
-                  ₹
-                  {(
-                    product?.strikingPrice ||
-                    product?.oldPrice ||
-                    product?.originalPrice ||
-                    product?.mrp
-                  )?.toLocaleString('en-IN')}
+              {oldPrice > 0 && oldPrice > product?.price && (
+                <p
+                  className="font-serif-heading font-medium text-[12px] text-neutral-400 line-through leading-none"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  ₹{formatPrice(oldPrice)}
                 </p>
               )}
             </div>
@@ -113,10 +114,10 @@ export function StickyMobileATC({ product, triggerRef }) {
             type="button"
             onClick={added ? undefined : handleAddToCart}
             disabled={added}
-            className={`h-10 px-5 rounded-full font-label text-[10px] uppercase tracking-widest font-bold shadow-lg active:scale-[0.96] transition-all flex items-center justify-center gap-1.5 shrink-0 border-none ${
+            className={`h-11 px-5 rounded-full text-[11px] uppercase tracking-wider font-extrabold shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)] active:scale-[0.97] transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer border-[1.5px] ${
               added
-                ? 'bg-[#e0d6b8] text-[#1a1c1a] cursor-default'
-                : 'bg-black text-white cursor-pointer'
+                ? 'bg-black text-[#f7bb0e] border-black'
+                : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[#f7bb0e]'
             }`}
             aria-label={`Add ${product?.title || 'product'} to bag`}
           >
@@ -129,7 +130,7 @@ export function StickyMobileATC({ product, triggerRef }) {
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="flex items-center gap-1.5"
                 >
-                  <Check className="text-[15px]" strokeWidth={1.5} />
+                  <Check className="w-4 h-4 text-[#f7bb0e]" strokeWidth={2.5} />
                   <span>Added</span>
                 </motion.span>
               ) : (
@@ -140,7 +141,7 @@ export function StickyMobileATC({ product, triggerRef }) {
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="flex items-center gap-1.5"
                 >
-                  <ShoppingBag className="text-[15px]" strokeWidth={1.5} />
+                  <ShoppingBag className="w-4 h-4" strokeWidth={2} />
                   <span>Add to Bag</span>
                 </motion.span>
               )}

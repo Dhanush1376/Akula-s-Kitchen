@@ -127,7 +127,7 @@ export function RecommendationCarousel({
                 disabled={!canScrollLeft}
                 className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 backdrop-blur-md ${
                   canScrollLeft
-                    ? 'bg-white/80 border border-black/10 hover:bg-[#1A1C1A] hover:border-[#1A1C1A] text-black hover:text-white shadow-sm hover:shadow-xl'
+                    ? 'bg-white/80 border border-black/10 hover:bg-[#000000] hover:border-[#000000] text-black hover:text-white shadow-sm hover:shadow-xl'
                     : 'bg-white/40 border border-black/5 text-black/20 cursor-not-allowed'
                 }`}
                 aria-label="Scroll left"
@@ -139,7 +139,7 @@ export function RecommendationCarousel({
                 disabled={!canScrollRight}
                 className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 backdrop-blur-md ${
                   canScrollRight
-                    ? 'bg-white/80 border border-black/10 hover:bg-[#1A1C1A] hover:border-[#1A1C1A] text-black hover:text-white shadow-sm hover:shadow-xl'
+                    ? 'bg-white/80 border border-black/10 hover:bg-[#000000] hover:border-[#000000] text-black hover:text-white shadow-sm hover:shadow-xl'
                     : 'bg-white/40 border border-black/5 text-black/20 cursor-not-allowed'
                 }`}
                 aria-label="Scroll right"

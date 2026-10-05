@@ -44,9 +44,7 @@ export interface OrderPricingSummary {
   platformFee: number;
   discount: number;
   tax?: number;
-  walletDebited?: number;
-  couponCode?: string;
-  couponDiscount?: number;
+
   total: number;
 }
 
@@ -73,7 +71,7 @@ export interface Order {
   shippingAddress: UserAddress;
   billingAddress?: UserAddress;
   pricing: OrderPricingSummary;
-  paymentMethod: 'razorpay' | 'cod' | 'wallet' | 'offline';
+  paymentMethod: 'razorpay' | 'cod' | 'offline';
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   statusHistory: OrderTimelineEvent[];

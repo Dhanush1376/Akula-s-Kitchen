@@ -41,7 +41,7 @@ export function SearchSuggestionsList({
 
     displaySuggestions.forEach((item) => {
       if (item.type === 'category') groups[0].items.push(item);
-      else if (item.type === 'event' || item.type === 'gallery') groups[1].items.push(item);
+      else if (item.type === 'event') groups[1].items.push(item);
       else if (item.type === 'product') groups[2].items.push(item);
       else groups[3].items.push(item);
     });
@@ -206,7 +206,7 @@ export function SearchSuggestionsList({
           className={`${
             isMobile
               ? 'px-5 py-3.5 bg-primary/5 text-[13px] border-b border-stone-100'
-              : 'px-6 lg:px-8.5 py-3.5 bg-primary/5 text-[13px] border-b border-[#d0c5af]/15'
+              : 'px-6 lg:px-8.5 py-3.5 bg-primary/5 text-[13px] border-b border-[#d9d9d9]/15'
           } text-primary font-medium flex items-center gap-2`}
         >
           <span className="material-symbols-outlined text-[16px] text-primary animate-bounce">

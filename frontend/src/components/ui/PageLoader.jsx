@@ -12,7 +12,7 @@ export const PageLoader = () => (
     <div
       className="h-full w-1/3"
       style={{
-        background: 'var(--color-gold, #d4af37)',
+        background: 'var(--color-gold, #f7bb0e)',
         animation: 'loader-shimmer 1.5s linear infinite',
       }}
     />

@@ -29,8 +29,6 @@ export const getRequestDescription = (config) => {
   if (url.includes('/users/cart')) return 'Update Shopping Cart';
   if (url.includes('/users/wishlist')) return 'Update Wishlist';
   if (url.includes('/inquiries')) return 'Submit Custom Inquiry';
-  if (url.includes('/custom-orders')) return 'Submit Custom Order Inquiry';
-  if (url.includes('/event-bookings')) return 'Book Event Consultation';
   if (url.includes('/reviews')) return 'Submit Product Review';
   return `${method} request to ${url.split('/').pop()}`;
 };
@@ -40,11 +38,7 @@ export const isPathProtected = (path, method = 'get') => {
 
   const m = method.toLowerCase();
   if (MUTATING_METHODS.has(m)) {
-    if (
-      path.includes('/products') || 
-      path.includes('/gallery') || 
-      (path.includes('/events') && !path.includes('/analytics/events'))
-    ) {
+    if (path.includes('/products')) {
       return true;
     }
   }
@@ -58,11 +52,6 @@ export const isPathProtected = (path, method = 'get') => {
     path.includes('/users/team') ||
     path.includes('/orders') ||
     path.includes('/admin/') ||
-    (path.includes('/custom-orders') &&
-      (!path.includes('/custom-orders/config') ||
-        path.includes('/config/admin') ||
-        path.includes('/config/draft') ||
-        path.includes('/config/publish'))) ||
     (path.includes('/notifications') &&
       !path.includes('/notifications/consent') &&
       !path.includes('/notifications/unsubscribe')) ||

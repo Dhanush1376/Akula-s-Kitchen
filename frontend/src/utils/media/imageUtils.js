@@ -1,7 +1,7 @@
 import cloudImageMappings from '../../assets/cloud_image_mappings.json';
 
 /**
- * Resolve a legacy local public path (e.g. /mandala_hero_art.png) to its Cloudinary URL.
+ * Resolve a legacy local public path (e.g. /hero_background.png) to its Cloudinary URL.
  * Falls back to the original path when no mapping exists (dev without CDN upload).
  */
 export const resolveStaticAssetUrl = (localPath) => {
@@ -35,7 +35,6 @@ export const MEDIA_PRESETS = {
   ADMIN_TABLE_THUMBNAIL: { w: 80, q: 'auto:eco', c: 'fill' },
   CATEGORY_CARD: { w: 600, q: 'auto:good', c: 'limit' },
   EVENT_GALLERY_PREVIEW: { w: 400, q: 'auto:good', c: 'limit' },
-  CUSTOM_ORDER_PREVIEW: { w: 400, q: 'auto:good', c: 'limit' },
 };
 
 const urlCache = new Map();
@@ -250,7 +249,7 @@ export const getImageUnavailableSvg = (width = 400, height = 300) => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="100%" height="100%">
     <defs>
       <linearGradient id="unavail_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#f8f7f4" />
+        <stop offset="0%" stop-color="#f7f7f7" />
         <stop offset="100%" stop-color="#eceae4" />
       </linearGradient>
     </defs>

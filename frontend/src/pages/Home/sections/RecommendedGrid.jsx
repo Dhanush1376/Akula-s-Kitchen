@@ -1,6 +1,5 @@
 import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { ProductCard } from '../../../components/shared/ProductCard';
-import { MandalaElement } from '../../../components/ui/MandalaElement';
 import { useProducts } from '../../../hooks/useProductQueries';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
 import React from 'react';
@@ -30,22 +29,6 @@ export function RecommendedGrid({ previewContent }) {
   if (isPending || loading) {
     return (
       <section className="h1-section relative isolate" id="h1-recommended">
-        {/* Background glow gradients behind mandalas */}
-        <div className="absolute -top-40 -left-40 w-[300px] h-[300px] bg-primary-container/15 rounded-full blur-[80px] pointer-events-none z-[-1]" />
-        <div className="absolute -bottom-40 -right-40 w-[300px] h-[300px] bg-primary-container/15 rounded-full blur-[80px] pointer-events-none z-[-1]" />
-
-        <MandalaElement
-          className="absolute top-4 -left-32 opacity-[0.05] z-[-1]"
-          size={450}
-          duration={170}
-          variant={3}
-        />
-        <MandalaElement
-          className="absolute -bottom-32 -right-32 opacity-[0.05] z-[-1]"
-          size={500}
-          duration={170}
-          variant={3}
-        />
         <div className="h1-container relative z-10 animate-pulse">
           <div className="flex justify-between items-end mb-8 lg:mb-10">
             <div>
@@ -78,25 +61,10 @@ export function RecommendedGrid({ previewContent }) {
 
   return (
     <section className="h1-section relative isolate" id="h1-recommended">
-      {/* Background glow gradients behind mandalas */}
-      <div className="absolute -top-40 -left-40 w-[300px] h-[300px] bg-primary-container/15 rounded-full blur-[80px] pointer-events-none z-[-1]" />
-      <div className="absolute -bottom-40 -right-40 w-[300px] h-[300px] bg-primary-container/15 rounded-full blur-[80px] pointer-events-none z-[-1]" />
-      <MandalaElement
-        className="absolute top-4 -left-32 opacity-[0.05] z-[-1]"
-        size={450}
-        duration={170}
-        variant={3}
-      />
-      <MandalaElement
-        className="absolute -bottom-32 -right-32 opacity-[0.05] z-[-1]"
-        size={500}
-        duration={170}
-        variant={3}
-      />
       <div className="h1-container relative z-10">
         <SectionHeader
           kicker={config.sectionSubtitle !== undefined ? config.sectionSubtitle : config.kicker}
-          title={config.sectionTitle || 'Recommended For You'}
+          title={config.sectionTitle || 'Picked for you'}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>

@@ -3,21 +3,18 @@ import { m as motion, AnimatePresence } from 'framer-motion';
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
-import '../../styles/visual-search.css';
 import logger from '../../utils/core/logger';
 
 import { SearchInputHeader } from './SearchInputHeader';
 import { SearchSuggestionsList } from './SearchSuggestionsList';
 import { SearchDiscovery } from './SearchDiscovery';
 import { SearchProductPreview } from './SearchProductPreview';
-import { VisualSearchPanel } from './VisualSearchPanel';
 
 /**
  * IntelligentSearchOverlay — premium luxury search portal experience.
  */
 export function IntelligentSearchOverlay({
   isOpen,
-  initialMode = 'text',
   query,
   setQuery,
   suggestions,
@@ -35,28 +32,14 @@ export function IntelligentSearchOverlay({
   onRemoveRecent,
   onClearRecent,
   correctedQuery,
-  visualSearch,
 }) {
   const isMobile = useMediaQuery('(max-width: 767px)');
   const handleClose = onClose;
 
-  const handleVisualImageSelectAndRedirect = useCallback(
-    (file) => {
-      if (!file) return;
-      visualSearch.open();
-      visualSearch.handleImageSelect(file, 'upload');
-    },
-    [visualSearch],
-  );
-
   const inputRef = useRef(null);
   const listRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  const [searchMode, setSearchMode] = useState('text'); // 'text' | 'visual'
-  const [_isDragging, setIsDragging] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
   // Toggle voice search recording
@@ -114,12 +97,9 @@ export function IntelligentSearchOverlay({
   useEffect(() => {
     let focusTimer;
     if (isOpen) {
-      setSearchMode(initialMode);
-      if (initialMode === 'text') {
-        focusTimer = setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
-      }
+      focusTimer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
 
       // Focus Trap
       const overlayElement = document.querySelector('[role="dialog"][aria-label="Search Portal"]');
@@ -147,54 +127,7 @@ export function IntelligentSearchOverlay({
         window.removeEventListener('keydown', handleTab);
       };
     }
-  }, [isOpen, initialMode]);
-
-  // Handle drag events
-  const handleDragEnter = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      const file = e.dataTransfer.files?.[0];
-      if (file && file.type.startsWith('image/')) {
-        handleVisualImageSelectAndRedirect(file);
-      }
-    },
-    [handleVisualImageSelectAndRedirect],
-  );
-
-  const startCamera = useCallback(async () => {
-    const isMobileDevice =
-      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
-
-    if (isMobileDevice || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      if (cameraInputRef.current) {
-        cameraInputRef.current.click();
-      }
-      return;
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  }, []);
+  }, [isOpen]);
 
   // Scroll active item into view
   useEffect(() => {
@@ -225,33 +158,8 @@ export function IntelligentSearchOverlay({
             aria-modal="true"
             aria-label="Search Portal"
           >
-            {/* Hidden File Inputs for Visual Search */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleVisualImageSelectAndRedirect(file);
-              }}
-              className="hidden"
-            />
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleVisualImageSelectAndRedirect(file);
-              }}
-              className="hidden"
-            />
-
             <SearchInputHeader
               isMobile={isMobile}
-              searchMode={searchMode}
-              setSearchMode={setSearchMode}
               onClose={onClose}
               query={query}
               setQuery={setQuery}
@@ -260,75 +168,62 @@ export function IntelligentSearchOverlay({
               loading={loading}
               isRecording={isRecording}
               toggleVoiceSearch={toggleVoiceSearch}
-              visualSearch={visualSearch}
               showSuggestions={showSuggestions}
             />
 
             {/* Mobile Body Content Area */}
-            {searchMode === 'visual' ? (
-              <VisualSearchPanel
-                handleDragEnter={handleDragEnter}
-                handleDragOver={handleDragOver}
-                handleDragLeave={handleDragLeave}
-                handleDrop={handleDrop}
-                fileInputRef={fileInputRef}
-                startCamera={startCamera}
+            <div
+              ref={listRef}
+              id="search-suggestions-list"
+              role="listbox"
+              className="flex-1 overflow-y-auto bg-white flex flex-col overscroll-contain min-h-0 touch-pan-y"
+            >
+              {predictedCategories.length > 0 && query.trim().length >= 1 && (
+                <div className="px-5 py-2.5 bg-stone-50 border-b border-stone-200/40 flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mr-1">
+                    Categories:
+                  </span>
+                  {predictedCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() =>
+                        onSelectSuggestion({ id: `cat:${cat}`, title: cat, type: 'category' })
+                      }
+                      className="px-3.5 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-bold uppercase tracking-wider border border-primary/10"
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <SearchSuggestionsList
+                query={query}
+                setQuery={setQuery}
+                correctedQuery={correctedQuery}
+                suggestions={suggestions}
+                loading={loading}
+                activeIndex={activeIndex}
+                setActiveIndex={setActiveIndex}
+                onSelectSuggestion={onSelectSuggestion}
+                onExecuteSearch={onExecuteSearch}
                 isMobile={true}
               />
-            ) : (
-              <div
-                ref={listRef}
-                id="search-suggestions-list"
-                role="listbox"
-                className="flex-1 overflow-y-auto bg-white flex flex-col overscroll-contain min-h-0 touch-pan-y"
-              >
-                {predictedCategories.length > 0 && query.trim().length >= 1 && (
-                  <div className="px-5 py-2.5 bg-stone-50 border-b border-stone-200/40 flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mr-1">
-                      Categories:
-                    </span>
-                    {predictedCategories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() =>
-                          onSelectSuggestion({ id: `cat:${cat}`, title: cat, type: 'category' })
-                        }
-                        className="px-3.5 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-bold uppercase tracking-wider border border-primary/10"
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                )}
 
-                <SearchSuggestionsList
-                  query={query}
+              {showEmptyState && (
+                <SearchDiscovery
+                  discoveryData={discoveryData}
+                  trendingSearches={trendingSearches}
+                  recentSearches={recentSearches}
                   setQuery={setQuery}
-                  correctedQuery={correctedQuery}
-                  suggestions={suggestions}
-                  loading={loading}
-                  activeIndex={activeIndex}
-                  setActiveIndex={setActiveIndex}
-                  onSelectSuggestion={onSelectSuggestion}
                   onExecuteSearch={onExecuteSearch}
+                  onRemoveRecent={onRemoveRecent}
+                  onClearRecent={onClearRecent}
+                  handleClose={handleClose}
                   isMobile={true}
                 />
-
-                {showEmptyState && (
-                  <SearchDiscovery
-                    discoveryData={discoveryData}
-                    trendingSearches={trendingSearches}
-                    recentSearches={recentSearches}
-                    setQuery={setQuery}
-                    onExecuteSearch={onExecuteSearch}
-                    onRemoveRecent={onRemoveRecent}
-                    onClearRecent={onClearRecent}
-                    handleClose={handleClose}
-                    isMobile={true}
-                  />
-                )}
-              </div>
-            )}
+              )}
+            </div>
 
             {/* iOS Safari/Chrome keyboard bottom gap cover */}
             <div className="absolute top-full left-0 right-0 h-[600px] bg-white pointer-events-none" />
@@ -368,36 +263,12 @@ export function IntelligentSearchOverlay({
               exit={{ opacity: 0, y: -16, scale: 0.98 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className={`relative z-10 w-full mx-auto mt-[8vh] lg:mt-[12vh] px-4 transition-all duration-500 ease-out ${
-                showSuggestions && searchMode === 'text' ? 'max-w-5xl' : 'max-w-2xl'
+                showSuggestions ? 'max-w-5xl' : 'max-w-2xl'
               }`}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleVisualImageSelectAndRedirect(file);
-                }}
-                className="hidden"
-              />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleVisualImageSelectAndRedirect(file);
-                }}
-                className="hidden"
-              />
-
-              <div className="bg-[#fcfbf9]/95 border-none rounded-[32px] shadow-[0_32px_80px_-10px_rgba(27,24,20,0.18)] focus-within:shadow-[0_32px_80px_-10px_rgba(184,157,112,0.12)] transition-all duration-500 overflow-hidden">
+              <div className="bg-[#ffffff]/95 border-none rounded-[32px] shadow-[0_32px_80px_-10px_rgba(27,24,20,0.18)] focus-within:shadow-[0_32px_80px_-10px_rgba(184,157,112,0.12)] transition-all duration-500 overflow-hidden">
                 <SearchInputHeader
                   isMobile={false}
-                  searchMode={searchMode}
-                  setSearchMode={setSearchMode}
                   onClose={onClose}
                   query={query}
                   setQuery={setQuery}
@@ -406,34 +277,31 @@ export function IntelligentSearchOverlay({
                   loading={loading}
                   isRecording={isRecording}
                   toggleVoiceSearch={toggleVoiceSearch}
-                  visualSearch={visualSearch}
                   showSuggestions={showSuggestions}
                 />
 
                 {/* Category Prediction Pills */}
-                {searchMode === 'text' &&
-                  predictedCategories.length > 0 &&
-                  query.trim().length >= 1 && (
-                    <div className="px-6 lg:px-8.5 pb-4 flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mr-1">
-                        Matching Category:
-                      </span>
-                      {predictedCategories.map((cat) => (
-                        <button
-                          key={cat}
-                          onClick={() =>
-                            onSelectSuggestion({ id: `cat:${cat}`, title: cat, type: 'category' })
-                          }
-                          className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border border-primary/10 cursor-pointer"
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                {predictedCategories.length > 0 && query.trim().length >= 1 && (
+                  <div className="px-6 lg:px-8.5 pb-4 flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest mr-1">
+                      Matching Category:
+                    </span>
+                    {predictedCategories.map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() =>
+                          onSelectSuggestion({ id: `cat:${cat}`, title: cat, type: 'category' })
+                        }
+                        className="px-3.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 border border-primary/10 cursor-pointer"
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Divider */}
-                {searchMode === 'text' && (showSuggestions || showEmptyState || showNoResults) && (
+                {(showSuggestions || showEmptyState || showNoResults) && (
                   <div className="mx-6 lg:mx-8.5 h-[1px] bg-stone-200/50" />
                 )}
 
@@ -441,76 +309,62 @@ export function IntelligentSearchOverlay({
                   ref={listRef}
                   id="search-suggestions-list"
                   role="listbox"
-                  className={`max-h-[55vh] overflow-y-auto overflow-x-hidden overscroll-contain pb-2 ${showSuggestions && searchMode === 'text' ? 'flex' : ''}`}
+                  className={`max-h-[55vh] overflow-y-auto overflow-x-hidden overscroll-contain pb-2 ${showSuggestions ? 'flex' : ''}`}
                 >
-                  {searchMode === 'visual' ? (
-                    <VisualSearchPanel
-                      handleDragEnter={handleDragEnter}
-                      handleDragOver={handleDragOver}
-                      handleDragLeave={handleDragLeave}
-                      handleDrop={handleDrop}
-                      fileInputRef={fileInputRef}
-                      startCamera={startCamera}
+                  <div
+                    className={
+                      showSuggestions
+                        ? 'w-[55%] flex-shrink-0 border-r border-stone-200/50'
+                        : 'w-full'
+                    }
+                  >
+                    <SearchSuggestionsList
+                      query={query}
+                      setQuery={setQuery}
+                      correctedQuery={correctedQuery}
+                      suggestions={suggestions}
+                      loading={loading}
+                      activeIndex={activeIndex}
+                      setActiveIndex={setActiveIndex}
+                      onSelectSuggestion={onSelectSuggestion}
+                      onExecuteSearch={onExecuteSearch}
                       isMobile={false}
                     />
-                  ) : (
-                    <>
-                      <div
-                        className={
-                          showSuggestions
-                            ? 'w-[55%] flex-shrink-0 border-r border-stone-200/50'
-                            : 'w-full'
-                        }
-                      >
-                        <SearchSuggestionsList
-                          query={query}
-                          setQuery={setQuery}
-                          correctedQuery={correctedQuery}
-                          suggestions={suggestions}
-                          loading={loading}
-                          activeIndex={activeIndex}
-                          setActiveIndex={setActiveIndex}
-                          onSelectSuggestion={onSelectSuggestion}
-                          onExecuteSearch={onExecuteSearch}
-                          isMobile={false}
-                        />
-                      </div>
+                  </div>
 
-                      {showSuggestions && (
-                        <div className="w-[45%] p-5 bg-stone-50/30 flex-shrink-0">
-                          {activeIndex >= 0 && suggestions[activeIndex]?.type === 'product' ? (
-                            <SearchProductPreview
-                              product={suggestions[activeIndex]}
-                              onClose={handleClose}
-                            />
-                          ) : suggestions.find((s) => s.type === 'product') ? (
-                            <SearchProductPreview
-                              product={suggestions.find((s) => s.type === 'product')}
-                              onClose={handleClose}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 p-8 text-center space-y-3 bg-stone-50/50 rounded-2xl border border-stone-200/50 border-dashed">
-                              <Search className="text-[48px] text-stone-200" strokeWidth={1.5} />
-                              <p className="text-[13px]">Select a product to view details</p>
-                            </div>
-                          )}
+                  {showSuggestions && (
+                    <div className="w-[45%] p-5 bg-stone-50/30 flex-shrink-0">
+                      {activeIndex >= 0 && suggestions[activeIndex]?.type === 'product' ? (
+                        <SearchProductPreview
+                          product={suggestions[activeIndex]}
+                          onClose={handleClose}
+                        />
+                      ) : suggestions.find((s) => s.type === 'product') ? (
+                        <SearchProductPreview
+                          product={suggestions.find((s) => s.type === 'product')}
+                          onClose={handleClose}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-stone-400 p-8 text-center space-y-3 bg-stone-50/50 rounded-2xl border border-stone-200/50 border-dashed">
+                          <Search className="text-[48px] text-stone-200" strokeWidth={1.5} />
+                          <p className="text-[13px]">Select a product to view details</p>
                         </div>
                       )}
+                    </div>
+                  )}
 
-                      {showEmptyState && (
-                        <SearchDiscovery
-                          discoveryData={discoveryData}
-                          trendingSearches={trendingSearches}
-                          recentSearches={recentSearches}
-                          setQuery={setQuery}
-                          onExecuteSearch={onExecuteSearch}
-                          onRemoveRecent={onRemoveRecent}
-                          onClearRecent={onClearRecent}
-                          handleClose={handleClose}
-                          isMobile={false}
-                        />
-                      )}
-                    </>
+                  {showEmptyState && (
+                    <SearchDiscovery
+                      discoveryData={discoveryData}
+                      trendingSearches={trendingSearches}
+                      recentSearches={recentSearches}
+                      setQuery={setQuery}
+                      onExecuteSearch={onExecuteSearch}
+                      onRemoveRecent={onRemoveRecent}
+                      onClearRecent={onClearRecent}
+                      handleClose={handleClose}
+                      isMobile={false}
+                    />
                   )}
                 </div>
               </div>

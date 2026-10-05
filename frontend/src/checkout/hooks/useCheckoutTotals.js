@@ -1,45 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { persistentStorage } from '../../utils/storage/persistentStorage';
-import { orderService, couponService } from '../../services/domainServices';
+import { orderService } from '../../services/domainServices';
 import logger from '../../utils/core/logger';
 
-export function useCheckoutTotals({
-  isAuthenticated,
-  activeItems,
-  paymentOption,
-  location,
-  claimedCoupon,
-  setClaimedCoupon,
-}) {
-  const [couponInput, setCouponInput] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_coupon_input', { session: true, fallback: '' });
-  });
-  const [appliedCoupon, setAppliedCoupon] = useState(() => {
-    if (location?.state && 'couponCode' in location.state) {
-      return location.state.couponCode || '';
-    }
-    return persistentStorage.getItem('siri_checkout_applied_coupon', {
-      session: true,
-      fallback: '',
-    });
-  });
-
-  useEffect(() => {
-    persistentStorage.setItem('siri_checkout_coupon_input', couponInput, { session: true });
-  }, [couponInput]);
-
-  useEffect(() => {
-    persistentStorage.setItem('siri_checkout_applied_coupon', appliedCoupon, { session: true });
-  }, [appliedCoupon]);
-
-  const [couponValid, setCouponValid] = useState(false);
-  const [couponMessage, setCouponMessage] = useState('');
-  const [availableCoupons, setAvailableCoupons] = useState([]);
-  const [loadingCoupons, setLoadingCoupons] = useState(false);
+export function useCheckoutTotals({ isAuthenticated, activeItems, paymentOption, location }) {
   const [backendTotals, setBackendTotals] = useState({
     subtotal: 0,
-    discount: 0,
     shippingFee: 0,
     platformFee: 0,
     total: 0,
@@ -47,164 +13,56 @@ export function useCheckoutTotals({
   const [isTotalsLoading, setIsTotalsLoading] = useState(false);
   const [totalsError, setTotalsError] = useState(null);
 
-  const [useWallet, setUseWallet] = useState(() => {
-    return persistentStorage.getItem('siri_checkout_use_wallet', {
-      session: true,
-      fallback: false,
-    });
-  });
-
-  useEffect(() => {
-    persistentStorage.setItem('siri_checkout_use_wallet', useWallet, { session: true });
-  }, [useWallet]);
-
   const totalsRequestRef = useRef(0);
-  const autoApplyAttemptedRef = useRef(false);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const timer = setTimeout(() => {
-        setLoadingCoupons(true);
-      }, 0);
-      couponService
-        .getAll()
-        .then((res) => {
-          if (res.success && res.data) {
-            const list =
-              res.data.data || res.data.items || (Array.isArray(res.data) ? res.data : []);
-            const activeList = list.filter((c) => {
-              const isExpired = new Date() > new Date(c.expiryDate);
-              return c.isActive && !isExpired && (!c.usageLimit || c.usedCount < c.usageLimit);
-            });
+  const fetchBackendTotals = useCallback(async () => {
+    if (!activeItems || activeItems.length === 0) return;
+    const requestId = totalsRequestRef.current + 1;
+    totalsRequestRef.current = requestId;
 
-            // Deduplicate dynamically generated coupons (like WELCOME-XXXX)
-            const uniqueCoupons = [];
-            const seenPrefixes = new Set();
-            for (const c of activeList) {
-              const prefixMatch = c.code.match(/^([A-Z]+)-[A-Z0-9]+$/);
-              const prefix = prefixMatch ? prefixMatch[1] : c.code;
+    setIsTotalsLoading(true);
+    setTotalsError(null);
+    try {
+      const itemsPayload = activeItems.map((item) => ({
+        productId: item.id || item._id || item.productId,
+        quantity: item.quantity,
+        type: item.type,
+      }));
 
-              if (!seenPrefixes.has(prefix)) {
-                seenPrefixes.add(prefix);
-                uniqueCoupons.push(c);
-              }
-            }
+      const res = await orderService.validateTotals({
+        items: itemsPayload,
+        paymentMethod: paymentOption,
+      });
 
-            setAvailableCoupons(uniqueCoupons);
-          }
-        })
-        .catch((err) => {
-          logger.error('Failed to load active coupons:', err);
-        })
-        .finally(() => {
-          setLoadingCoupons(false);
-        });
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated]);
-
-  // Auto-apply feature removed per user request
-
-  const fetchBackendTotals = useCallback(
-    async (couponToApply = '', showToast = false) => {
-      if (!activeItems || activeItems.length === 0) return;
-      const requestId = totalsRequestRef.current + 1;
-      totalsRequestRef.current = requestId;
-
-      setIsTotalsLoading(true);
-      setTotalsError(null);
-      try {
-        const itemsPayload = activeItems.map((item) => ({
-          productId: item.id || item._id || item.productId,
-          quantity: item.quantity,
-          type: item.type,
-        }));
-
-        const res = await orderService.validateTotals({
-          items: itemsPayload,
-          couponCode: couponToApply || undefined,
-          paymentMethod: paymentOption,
-          useWallet,
-        });
-
-        if (res.success && res.data) {
-          if (requestId !== totalsRequestRef.current) return;
-          setBackendTotals(res.data);
-          setTotalsError(null);
-          if (couponToApply) {
-            setCouponValid(res.data.couponValid);
-            setCouponMessage(res.data.couponMessage);
-            if (res.data.couponValid) {
-              setAppliedCoupon(couponToApply);
-              if (showToast) {
-                toast.success(res.data.couponMessage || 'Coupon applied successfully!');
-              }
-            } else {
-              setAppliedCoupon('');
-              if (showToast) {
-                toast.error(res.data.couponMessage || 'Invalid or expired coupon');
-              }
-            }
-          }
-        }
-      } catch (err) {
-        logger.error('Failed to validate checkout totals:', err);
-        const errMsg =
-          err.response?.data?.message || err.message || 'Failed to calculate order totals';
-        setTotalsError(errMsg);
-        toast.error(errMsg);
-      } finally {
-        if (requestId === totalsRequestRef.current) {
-          setIsTotalsLoading(false);
-        }
+      if (res.success && res.data) {
+        if (requestId !== totalsRequestRef.current) return;
+        setBackendTotals(res.data);
+        setTotalsError(null);
       }
-    },
-    [activeItems, paymentOption, useWallet],
-  );
+    } catch (err) {
+      logger.error('Failed to validate checkout totals:', err);
+      const errMsg =
+        err.response?.data?.message || err.message || 'Failed to calculate order totals';
+      setTotalsError(errMsg);
+      toast.error(errMsg);
+    } finally {
+      if (requestId === totalsRequestRef.current) {
+        setIsTotalsLoading(false);
+      }
+    }
+  }, [activeItems, paymentOption]);
 
   useEffect(() => {
-    fetchBackendTotals(appliedCoupon);
-  }, [appliedCoupon, fetchBackendTotals]);
-
-  const handleApplyCoupon = () => {
-    if (!couponInput.trim()) {
-      toast.error('Please enter a coupon code');
-      return;
-    }
-    fetchBackendTotals(couponInput.trim(), true);
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon('');
-    setCouponInput('');
-    setCouponMessage('');
-    setCouponValid(false);
-    fetchBackendTotals('');
-  };
+    fetchBackendTotals();
+  }, [fetchBackendTotals]);
 
   return {
-    couponInput,
-    setCouponInput,
-    appliedCoupon,
-    setAppliedCoupon,
-    couponValid,
-    setCouponValid,
-    couponMessage,
-    setCouponMessage,
-    availableCoupons,
-    setAvailableCoupons,
-    loadingCoupons,
-    setLoadingCoupons,
     backendTotals,
     setBackendTotals,
     isTotalsLoading,
     setIsTotalsLoading,
     totalsError,
     setTotalsError,
-    useWallet,
-    setUseWallet,
     fetchBackendTotals,
-    handleApplyCoupon,
-    handleRemoveCoupon,
   };
 }

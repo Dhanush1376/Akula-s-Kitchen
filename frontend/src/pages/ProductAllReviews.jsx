@@ -23,8 +23,8 @@ function StarRating({ value = 0, max = 5, size = 15 }) {
             width={size}
             height={size}
             viewBox="0 0 24 24"
-            fill={filled ? '#D4AF37' : 'none'}
-            stroke={filled ? '#D4AF37' : '#E5DFD3'}
+            fill={filled ? '#F7BB0E' : 'none'}
+            stroke={filled ? '#F7BB0E' : '#E3E3E3'}
             strokeWidth="1.5"
             className="transition-transform hover:scale-110 duration-200"
           >
@@ -203,7 +203,7 @@ export function ProductAllReviews() {
 
   const renderCTA = () => {
     const buttonClass =
-      'text-[#8C7000] hover:text-[#D4AF37] transition-all cursor-pointer flex items-center justify-center shrink-0 p-1 -mt-0.5';
+      'text-[#000000] hover:text-black transition-all cursor-pointer flex items-center justify-center shrink-0 p-1 -mt-0.5';
 
     if (!isAuthenticated) {
       return (
@@ -226,26 +226,26 @@ export function ProductAllReviews() {
 
   if (productLoading || (loading && reviews.length === 0)) {
     return (
-      <div className="min-h-screen pt-32 pb-16 bg-[#FAF9F6] flex items-center justify-center">
+      <div className="min-h-screen pt-32 pb-16 bg-[#FFFFFF] flex items-center justify-center">
         <div className="w-16 h-16 border-[1px] border-primary/30 border-t-primary rounded-full animate-spin duration-1000 ease-linear" />
       </div>
     );
   }
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-16 sm:pt-20 lg:pt-22 pb-14 relative overflow-hidden">
+    <div className="bg-[#FFFFFF] min-h-screen pt-16 sm:pt-20 lg:pt-22 pb-14 relative overflow-hidden">
       <SEO
-        title={`Reviews - ${product?.title || 'Artisanal Masterpiece'}`}
+        title={`Reviews - ${product?.title || 'Product'}`}
         description={`Read verified customer feedback and ratings for ${product?.title}`}
       />
 
       <div className="max-w-[1280px] mx-auto px-margin-mobile lg:px-margin-desktop space-y-4 sm:space-y-5 relative z-10">
         {/* Navigation Breadcrumb Header */}
         <div className="flex flex-col gap-1.5">
-          <h1 className="font-display text-xl sm:text-2xl lg:text-3xl text-[#2D2B29] font-light tracking-tight">
+          <h1 className="font-display text-xl sm:text-2xl lg:text-3xl text-[#3D3D3D] font-light tracking-tight">
             Customer Testimonials
           </h1>
-          <div className="w-10 h-[1px] bg-[#D4AF37]/40" />
+          <div className="w-10 h-[1px] bg-[#F7BB0E]/40" />
         </div>
 
         {/* Unified Top Dashboard */}
@@ -262,15 +262,15 @@ export function ProductAllReviews() {
                 />
               </div>
               <div className="flex-1 text-left min-w-0 space-y-1.5 flex flex-col items-start">
-                <span className="font-label text-[8px] uppercase tracking-widest text-[#8C7000] font-bold block">
+                <span className="font-label text-[8px] uppercase tracking-widest text-[#000000] font-bold block">
                   {product.category || 'Heritage Piece'}
                 </span>
-                <h2 className="font-display text-sm lg:text-base text-[#2D2B29] font-medium leading-tight line-clamp-2">
+                <h2 className="font-display text-sm lg:text-base text-[#3D3D3D] font-medium leading-tight line-clamp-2">
                   {product.title}
                 </h2>
                 <div className="flex items-center gap-1.5 pt-0.5">
                   <StarRating value={avgRating} size={11} />
-                  <span className="font-label text-[9px] font-bold text-[#685c57]/60 uppercase tracking-wider flex items-center gap-1">
+                  <span className="font-label text-[9px] font-bold text-[#525252]/60 uppercase tracking-wider flex items-center gap-1">
                     {reviews.length} Stories
                     {renderCTA()}
                   </span>
@@ -282,12 +282,12 @@ export function ProductAllReviews() {
           {/* Column 2: Score Card */}
           <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-stretch gap-5 lg:gap-6 justify-center">
             {/* Big Score */}
-            <div className="flex flex-col items-center justify-center p-4 bg-[#FAF9F6] border border-[#EBE6DD]/60 rounded-[16px] text-center w-full sm:w-32 shrink-0 shadow-inner">
-              <span className="font-display text-4xl lg:text-5xl font-light text-[#2D2B29] leading-none mb-2">
+            <div className="flex flex-col items-center justify-center p-4 bg-[#FFFFFF] border border-[#EBEBEB]/60 rounded-[16px] text-center w-full sm:w-32 shrink-0 shadow-inner">
+              <span className="font-display text-4xl lg:text-5xl font-light text-[#3D3D3D] leading-none mb-2">
                 {avgRating.toFixed(1)}
               </span>
               <StarRating value={avgRating} size={13} />
-              <p className="font-label text-[8px] uppercase tracking-widest text-[#685c57]/50 font-bold mt-1.5">
+              <p className="font-label text-[8px] uppercase tracking-widest text-[#525252]/50 font-bold mt-1.5">
                 Average Rating
               </p>
             </div>
@@ -298,17 +298,17 @@ export function ProductAllReviews() {
                 const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
                 return (
                   <div key={star} className="flex items-center gap-2">
-                    <span className="font-label text-[10px] font-bold text-[#2D2B29]/60 w-3 shrink-0 text-center">
+                    <span className="font-label text-[10px] font-bold text-[#3D3D3D]/60 w-3 shrink-0 text-center">
                       {star}
                     </span>
-                    <Star className="w-3 h-3 fill-current text-[#D4AF37] shrink-0" />
+                    <Star className="w-3 h-3 fill-current text-[#F7BB0E] shrink-0" />
                     <div className="flex-1 h-1 bg-[#F3EFE7] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#D4AF37] rounded-full"
+                        className="h-full bg-[#F7BB0E] rounded-full"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="font-label text-[9px] text-[#685c57]/50 font-bold w-6 text-right">
+                    <span className="font-label text-[9px] text-[#525252]/50 font-bold w-6 text-right">
                       {pct}%
                     </span>
                   </div>
@@ -320,10 +320,10 @@ export function ProductAllReviews() {
 
         {/* Toolbar: Filters and Search */}
         {reviews.length > 0 && (
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 border-b border-[#EBE6DD] pb-6">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 border-b border-[#EBEBEB] pb-6">
             {/* Filter Pills */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <span className="font-label text-[9px] font-bold text-[#685c57] uppercase tracking-widest">
+              <span className="font-label text-[9px] font-bold text-[#525252] uppercase tracking-widest">
                 Filter by rating
               </span>
               <div className="flex flex-wrap gap-2">
@@ -333,8 +333,8 @@ export function ProductAllReviews() {
                     onClick={() => setStarFilter(star)}
                     className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       starFilter === star
-                        ? 'bg-[#8C7000] border-[#8C7000] text-white shadow-xs'
-                        : 'bg-white border-[#E2DACB] text-[#685c57] hover:border-[#8C7000] hover:text-[#8C7000]'
+                        ? 'bg-[#000000] border-[#000000] text-white shadow-xs'
+                        : 'bg-white border-[#E2DACB] text-[#525252] hover:border-[#000000] hover:text-[#000000]'
                     }`}
                   >
                     {star === 'all' ? 'All Ratings' : `${star} Star`}
@@ -362,13 +362,13 @@ export function ProductAllReviews() {
 
         {/* Results Showcase Grid */}
         {filteredReviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-[24px] border border-[#EBE6DD] shadow-sm p-8">
-            <span className="material-symbols-outlined text-4xl text-[#D4AF37]/35 mb-3 block">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-[24px] border border-[#EBEBEB] shadow-sm p-8">
+            <span className="material-symbols-outlined text-4xl text-[#F7BB0E]/35 mb-3 block">
               rate_review
             </span>
-            <h4 className="text-base font-display font-medium text-[#2d2b29]">No Matches Found</h4>
-            <p className="text-xs text-[#685c57]/60 max-w-xs mx-auto mt-1.5 leading-relaxed font-body">
-              There are no celebration reviews matching your star filter or search text.
+            <h4 className="text-base font-display font-medium text-[#3d3d3d]">No Matches Found</h4>
+            <p className="text-xs text-[#525252]/60 max-w-xs mx-auto mt-1.5 leading-relaxed font-body">
+              There are no reviews matching your star filter or search text.
             </p>
           </div>
         ) : (
@@ -385,10 +385,10 @@ export function ProductAllReviews() {
             <button
               onClick={() => fetchReviews(page + 1)}
               disabled={loading}
-              className="px-8 py-3.5 rounded-full border border-[#E2DACB] font-label text-[10px] uppercase tracking-widest font-bold text-[#685c57] hover:border-[#8C7000] hover:text-[#8C7000] transition-all flex items-center justify-center gap-2 cursor-pointer bg-white"
+              className="px-8 py-3.5 rounded-full border border-[#E2DACB] font-label text-[10px] uppercase tracking-widest font-bold text-[#525252] hover:border-[#000000] hover:text-[#000000] transition-all flex items-center justify-center gap-2 cursor-pointer bg-white"
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-[#8C7000] border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
               ) : (
                 'Load More Testimonials'
               )}

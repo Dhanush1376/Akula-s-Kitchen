@@ -1,56 +1,70 @@
 import React from 'react';
-import { Map } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 
 const GPSMap = React.lazy(() => import('../../../pages/GPSMapLazy'));
 
 /**
- * Split panel showing the verified shipping destination address and synced GPS location preview.
+ * Clean split panel showing delivery destination and synced GPS map.
  */
 export default function OrderDeliveryAddressCard({ shippingAddress }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 font-sans text-left">
       {/* Address Card */}
-      <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 shadow-xs">
-        <div className="pb-4 mb-4 border-b border-outline-variant/20">
-          <h2 className="text-[9px] font-bold uppercase tracking-widest text-secondary flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[14px]">pin_drop</span>
-            Shipping Destination
-          </h2>
+      <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm">
+        <div className="pb-3 mb-3 border-b border-neutral-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-neutral-800" strokeWidth={2} />
+            <span className="text-[13px] font-semibold text-neutral-900 tracking-normal">
+              Delivery Address
+            </span>
+          </div>
+          {shippingAddress?.tag && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 border border-neutral-200">
+              {shippingAddress.tag}
+            </span>
+          )}
         </div>
+
         {shippingAddress ? (
-          <div className="p-3 border border-outline-variant/30 rounded-lg bg-surface-container-lowest text-[11px]">
-            <p className="font-bold text-on-surface uppercase tracking-wider">
+          <div className="text-[12px] space-y-1">
+            <p className="font-bold text-neutral-950 text-[13px] capitalize">
               {shippingAddress.name}
             </p>
-            <p className="text-secondary mt-1 leading-relaxed">
-              {shippingAddress.addressString || shippingAddress.address}, {shippingAddress.locality}
+            <p className="text-neutral-600 leading-relaxed">
+              {shippingAddress.addressString || shippingAddress.address}
+              {shippingAddress.locality ? `, ${shippingAddress.locality}` : ''}
               <br />
-              {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pincode}
+              {shippingAddress.city}, {shippingAddress.state} -{' '}
+              <strong className="text-neutral-900 font-semibold">{shippingAddress.pincode}</strong>
             </p>
-            <p className="text-[9px] text-secondary mt-2 tracking-widest uppercase font-medium">
-              Phone: {shippingAddress.phone}
-            </p>
+            {shippingAddress.phone && (
+              <p className="text-[11.5px] text-neutral-600 pt-1.5 flex items-center gap-1.5">
+                <span>Phone:</span>
+                <strong className="text-neutral-900 font-semibold">{shippingAddress.phone}</strong>
+              </p>
+            )}
           </div>
         ) : (
-          <div className="text-[9px] text-secondary italic tracking-wider">
-            Address details currently unavailable.
-          </div>
+          <div className="text-[12px] text-neutral-400 italic">Address details unavailable.</div>
         )}
       </div>
 
-      {/* Coordinate Map Panel */}
-      <div className="bg-surface-bright border border-outline-variant/40 rounded-lg p-5 shadow-xs flex flex-col">
-        <div className="pb-4 mb-4 border-b border-outline-variant/20 flex justify-between items-center">
-          <h2 className="text-[9px] font-bold uppercase tracking-widest text-secondary flex items-center gap-1.5">
-            <Map className="text-[14px]" strokeWidth={1.5} />
-            Destination GPS
-          </h2>
-          <span className="text-[8px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded uppercase tracking-widest border border-emerald-200">
-            Synced
+      {/* GPS Coordinate Map Panel */}
+      <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm flex flex-col">
+        <div className="pb-3 mb-3 border-b border-neutral-200 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4 text-neutral-800" strokeWidth={2} />
+            <span className="text-[13px] font-semibold text-neutral-900 tracking-normal">
+              Destination Location
+            </span>
+          </div>
+          <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            GPS Synced
           </span>
         </div>
-        <div className="relative flex-1 rounded-lg bg-surface-container overflow-hidden border border-outline-variant/20 z-0 min-h-[120px]">
-          <React.Suspense fallback={<div className="h-full bg-surface-container animate-pulse" />}>
+
+        <div className="relative flex-1 rounded-md bg-neutral-100 overflow-hidden border border-neutral-200 min-h-[120px]">
+          <React.Suspense fallback={<div className="h-full w-full bg-neutral-100 animate-pulse" />}>
             <GPSMap address={shippingAddress} />
           </React.Suspense>
         </div>

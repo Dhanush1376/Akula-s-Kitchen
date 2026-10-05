@@ -14,7 +14,7 @@ export const ConfigProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [storeSettings, setStoreSettings] = useState(() => {
     try {
-      const cached = localStorage.getItem('siri_public_settings');
+      const cached = localStorage.getItem('akula_public_settings');
       if (cached) return JSON.parse(cached);
     } catch (_e) {}
     return null;
@@ -50,7 +50,7 @@ export const ConfigProvider = ({ children }) => {
 
     let settingsBroadcast = null;
     try {
-      settingsBroadcast = new BroadcastChannel('siri_store_settings');
+      settingsBroadcast = new BroadcastChannel('akula_store_settings');
       settingsBroadcast.onmessage = (event) => {
         if (event.data?.type === 'SETTINGS_UPDATED' && isMounted) {
           const { section, sectionData, fullSettings } = event.data;
@@ -97,7 +97,7 @@ export const ConfigProvider = ({ children }) => {
 
     window.addEventListener('store-settings-updated', handleSettingsSync);
     const handleStorageEvent = (e) => {
-      if (e.key === 'store_settings_sync_time' || e.key === 'siri_store_name') {
+      if (e.key === 'store_settings_sync_time' || e.key === 'akula_store_name') {
         handleSettingsSync();
       }
     };
@@ -153,13 +153,15 @@ export const ConfigProvider = ({ children }) => {
     return (
       storeSettings?.general?.storeName?.trim() ||
       import.meta.env.VITE_SITE_NAME ||
-      'Siri Arts & Crafts'
+      "Akula's Kitchen"
     );
   }, [storeSettings]);
 
   const storeNameUpper = useMemo(() => storeName.toUpperCase(), [storeName]);
   const storeTagline =
-    storeSettings?.general?.tagline?.trim() || BRAND.tagline || 'Handcrafted Heritage & Artistry';
+    storeSettings?.general?.tagline?.trim() ||
+    BRAND.tagline ||
+    'Authentic Flavors & Culinary Excellence';
   const supportEmail =
     storeSettings?.general?.supportEmail?.trim() ||
     storeSettings?.contact?.email?.trim() ||
@@ -172,12 +174,11 @@ export const ConfigProvider = ({ children }) => {
 
   const storeAddress = storeSettings?.contact?.address?.trim() || BRAND.address || '';
 
-  const storeCity = storeSettings?.contact?.city?.trim() || BRAND.city || 'Ongole';
+  const storeCity = storeSettings?.contact?.city?.trim() || BRAND.city || '';
 
   const storeState = storeSettings?.contact?.state?.trim() || BRAND.state || 'Andhra Pradesh';
 
-  const storePostalCode =
-    storeSettings?.contact?.postalCode?.trim() || BRAND.postalCode || '523001';
+  const storePostalCode = storeSettings?.contact?.postalCode?.trim() || BRAND.postalCode || '';
 
   const storeCountry = storeSettings?.contact?.country?.trim() || BRAND.country || 'India';
 

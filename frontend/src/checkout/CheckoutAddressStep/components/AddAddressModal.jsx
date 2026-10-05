@@ -245,7 +245,7 @@ export function AddAddressModal({
             exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 16 }}
             transition={sheetTransition}
             {...dragProps}
-            className="pointer-events-auto relative z-10 bg-surface-bright dark:bg-surface-container-low rounded-t-3xl lg:rounded-2xl w-full max-w-[760px] max-h-[95dvh] lg:max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-outline-variant/20 modern-sans-headings font-body"
+            className="pointer-events-auto relative z-10 bg-surface-bright dark:bg-surface-container-low rounded-t-[18px] lg:rounded-lg w-full max-w-[760px] max-h-[95dvh] lg:max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-outline-variant/20 modern-sans-headings font-body"
           >
             {isMobile && (
               <DrawerDragHandle
@@ -620,7 +620,7 @@ export function AddAddressModal({
                       </div>
 
                       <div>
-                        <label className="form-label">Landmark (Optional)</label>
+                        <label className="form-label">Landmark </label>
                         <input
                           type="text"
                           placeholder="e.g. Near Apollo Hospital"
@@ -687,7 +687,6 @@ export function AddAddressModal({
                         >
                           <option value="Home">Home</option>
                           <option value="Work">Work</option>
-                          <option value="Venue">Venue</option>
                           <option value="Warehouse">Warehouse</option>
                         </select>
                       </div>
@@ -748,7 +747,7 @@ export function AddAddressModal({
                 <button
                   type="button"
                   onClick={() => setIsAddingNewAddress(false)}
-                  className="flex-1 bg-surface-container-low hover:bg-surface-container text-on-surface font-bold uppercase tracking-widest text-[11px] py-3 rounded-xl border border-outline-variant/30 transition-all cursor-pointer"
+                  className="flex-1 bg-surface-container-low hover:bg-surface-container text-on-surface font-bold uppercase tracking-widest text-[11px] py-3 rounded-lg border border-outline-variant/30 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -756,7 +755,7 @@ export function AddAddressModal({
                   form="address-form"
                   type="submit"
                   disabled={isProcessing}
-                  className="flex-1 bg-neutral-900 hover:bg-black text-white py-3 rounded-xl font-bold uppercase tracking-widest text-[11px] shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-70 cursor-pointer active:scale-[0.99]"
+                  className="flex-1 bg-neutral-900 hover:bg-black text-white py-3 rounded-lg font-bold uppercase tracking-widest text-[11px] shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-70 cursor-pointer active:scale-[0.99]"
                 >
                   {isProcessing ? (
                     <>

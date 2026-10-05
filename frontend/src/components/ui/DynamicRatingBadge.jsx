@@ -18,8 +18,8 @@ function StarRating({ value = 0, size = 12 }) {
             width={size}
             height={size}
             viewBox="0 0 24 24"
-            fill={filled ? '#D4A853' : 'none'}
-            stroke={filled ? '#D4A853' : '#d1c4a8'}
+            fill={filled ? '#F7BB0E' : 'none'}
+            stroke={filled ? '#F7BB0E' : '#d1c4a8'}
             strokeWidth="1.5"
           >
             <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
@@ -159,12 +159,7 @@ export function DynamicRatingBadge({
     if (hasFetched || isLoading) return;
     setIsLoading(true);
     try {
-      let res;
-      if (itemType === 'event') {
-        res = await reviewService.getShowcaseReviews(itemId, { page: 1, limit: 10 });
-      } else {
-        res = await reviewService.getProductReviews(itemId, { page: 1, limit: 10 });
-      }
+      const res = await reviewService.getProductReviews(itemId, { page: 1, limit: 10 });
 
       if (res && res.success) {
         const data = res.data;
@@ -338,10 +333,10 @@ export function DynamicRatingBadge({
                               e.stopPropagation();
                               setIsOpen(false);
                             }}
-                            className="w-5 h-5 rounded-full flex items-center justify-center text-black/40 hover:text-black hover:bg-black/5 transition-colors cursor-pointer"
+                            className="w-5 h-5 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full flex items-center justify-center text-black/40 hover:text-black hover:bg-black/5 transition-colors cursor-pointer"
                             aria-label="Close review details"
                           >
-                            <X size={14} />
+                            <X size={12} strokeWidth={2} />
                           </button>
                         </div>
                       </div>
@@ -362,7 +357,7 @@ export function DynamicRatingBadge({
                                   initial={{ width: 0 }}
                                   animate={{ width: `${pct}%` }}
                                   transition={{ duration: 0.4 }}
-                                  className="h-full bg-[#D4A853] rounded-full"
+                                  className="h-full bg-[#F7BB0E] rounded-full"
                                 />
                               </div>
                               <span className="font-label text-[8px] text-black/30 w-5 text-right">

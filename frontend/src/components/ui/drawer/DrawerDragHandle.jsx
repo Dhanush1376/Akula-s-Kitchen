@@ -26,7 +26,7 @@ export function DrawerDragHandle({
       }}
     >
       <div
-        className={`w-10 h-1 rounded-full bg-stone-300 dark:bg-stone-700 opacity-70 transition-opacity hover:opacity-100 ${pillClassName}`}
+        className={`w-12 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500 transition-opacity hover:opacity-100 ${pillClassName}`}
       />
     </div>
   );

@@ -1,7 +1,6 @@
 import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { CarouselWrapper } from '../../../components/shared/CarouselWrapper';
 import { ProductCard } from '../../../components/shared/ProductCard';
-import { MandalaElement } from '../../../components/ui/MandalaElement';
 import { useProducts } from '../../../hooks/useProductQueries';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
 
@@ -60,18 +59,10 @@ export function BestSellers({ previewContent }) {
 
   return (
     <section className="h1-section relative isolate" id="h1-new-arrivals">
-      {/* Background glow gradient behind mandala */}
-      <div className="absolute -top-32 -right-32 w-[250px] h-[250px] bg-primary-container/15 rounded-full blur-[70px] pointer-events-none z-[-1]" />
-      <MandalaElement
-        className="absolute top-0 -right-32 opacity-[0.04] z-[-1]"
-        size={500}
-        duration={150}
-        variant={1}
-      />
       <div className="h1-container relative z-10">
         <SectionHeader
           kicker={config.kicker}
-          title={config.sectionTitle}
+          title={config.sectionTitle || 'Bestsellers'}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>

@@ -9,15 +9,15 @@ import { toast } from 'react-hot-toast';
 const getIconForType = (type) => {
   switch (type) {
     case 'order':
-      return <Box className="w-4 h-4 text-[#8c7335]" strokeWidth={1.5} />;
+      return <Box className="w-4 h-4 text-[#000000]" strokeWidth={1.5} />;
     case 'booking':
-      return <Calendar className="w-4 h-4 text-[#8c7335]" strokeWidth={1.5} />;
+      return <Calendar className="w-4 h-4 text-[#000000]" strokeWidth={1.5} />;
     case 'payment':
-      return <CreditCard className="w-4 h-4 text-[#8c7335]" strokeWidth={1.5} />;
+      return <CreditCard className="w-4 h-4 text-[#000000]" strokeWidth={1.5} />;
     case 'system':
       return <Settings className="w-4 h-4 text-gray-500" strokeWidth={1.5} />;
     default:
-      return <Bell className="w-4 h-4 text-[#8c7335]" strokeWidth={1.5} />;
+      return <Bell className="w-4 h-4 text-[#000000]" strokeWidth={1.5} />;
   }
 };
 
@@ -105,7 +105,7 @@ export function NotificationsSection() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
 
-  const tabs = ['All', 'Unread', 'Orders', 'Bookings', 'Payments'];
+  const tabs = ['All', 'Unread', 'Orders', 'Payments'];
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -167,7 +167,6 @@ export function NotificationsSection() {
     if (activeTab === 'All') return true;
     if (activeTab === 'Unread') return !n.read;
     if (activeTab === 'Orders') return n.type === 'order';
-    if (activeTab === 'Bookings') return n.type === 'booking';
     if (activeTab === 'Payments') return n.type === 'payment';
     return true;
   });
@@ -189,7 +188,7 @@ export function NotificationsSection() {
         </div>
         <button
           onClick={handleMarkAllAsRead}
-          className="text-[10px] font-bold uppercase tracking-widest text-[#8c7335] hover:opacity-70 transition-colors flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          className="text-[10px] font-bold uppercase tracking-widest text-[#000000] hover:opacity-70 transition-colors flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
           disabled={!notifications.some((n) => !n.read)}
         >
           <span className="material-symbols-outlined text-[15px] leading-none">done_all</span>
@@ -205,15 +204,15 @@ export function NotificationsSection() {
             onClick={() => setActiveTab(tab)}
             className={`pb-2 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors relative ${
               activeTab === tab
-                ? 'text-[#1a1a1a]'
-                : 'text-on-surface-variant/50 hover:text-[#1a1a1a]'
+                ? 'text-[#000000]'
+                : 'text-on-surface-variant/50 hover:text-[#000000]'
             }`}
           >
             {tab}
             {activeTab === tab && (
               <motion.div
                 layoutId="activeNotifTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#1a1a1a]"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#000000]"
               />
             )}
           </button>
@@ -233,15 +232,15 @@ export function NotificationsSection() {
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="bg-surface-bright rounded-lg p-8 text-center shadow-sm flex flex-col items-center justify-center min-h-[35vh] relative overflow-hidden border border-black/5">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#8c7335]/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#000000]/5 rounded-full blur-3xl pointer-events-none" />
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="w-16 h-16 rounded-full bg-[#8c7335]/5 text-[#8c7335] flex items-center justify-center mb-5 relative"
+              className="w-16 h-16 rounded-full bg-[#000000]/5 text-[#000000] flex items-center justify-center mb-5 relative"
             >
               <div
-                className="absolute inset-0 rounded-full border border-[#8c7335]/20 animate-ping"
+                className="absolute inset-0 rounded-full border border-[#000000]/20 animate-ping"
                 style={{ animationDuration: '3s' }}
               />
               <Bell className="text-[24px] relative z-10" strokeWidth={1.5} />
@@ -251,8 +250,7 @@ export function NotificationsSection() {
               No Notifications Found
             </h3>
             <p className="text-[11px] text-black/40 max-w-[280px] mb-6 leading-normal">
-              You are all caught up! We'll notify you when there's an update on your orders or
-              bookings.
+              You are all caught up! We'll notify you when there's an update on your orders.
             </p>
           </div>
         ) : (
@@ -267,19 +265,19 @@ export function NotificationsSection() {
                   onClick={() => handleNotificationClick(notification)}
                   className={`relative overflow-hidden p-4 lg:p-5 rounded-lg border transition-all cursor-pointer flex gap-4 lg:gap-5 items-start group ${
                     !notification.read
-                      ? 'bg-[#8c7335]/[0.02] border-[#8c7335]/20 hover:border-[#8c7335]/40'
+                      ? 'bg-[#000000]/[0.02] border-[#000000]/20 hover:border-[#000000]/40'
                       : 'bg-surface-bright border-black/5 hover:border-black/10'
                   }`}
                 >
                   {/* Unread Left Border Thick Line */}
                   {!notification.read && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#8c7335]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#000000]" />
                   )}
 
                   {/* Icon or Image */}
                   {notification.metadata?.imageSrc ? (
                     <div
-                      className={`w-14 h-14 lg:w-16 lg:h-16 rounded-lg shrink-0 flex items-center justify-center overflow-hidden bg-white shadow-sm border border-[#8c7335]/10`}
+                      className={`w-14 h-14 lg:w-16 lg:h-16 rounded-lg shrink-0 flex items-center justify-center overflow-hidden bg-white shadow-sm border border-[#000000]/10`}
                     >
                       <img
                         src={resolveImageUrl(notification.metadata.imageSrc)}
@@ -292,7 +290,7 @@ export function NotificationsSection() {
                     </div>
                   ) : (
                     <div
-                      className={`w-11 h-11 lg:w-12 lg:h-12 rounded-full shrink-0 flex items-center justify-center ${!notification.read ? 'bg-white shadow-sm border border-[#8c7335]/10' : 'bg-surface-container/50'}`}
+                      className={`w-11 h-11 lg:w-12 lg:h-12 rounded-full shrink-0 flex items-center justify-center ${!notification.read ? 'bg-white shadow-sm border border-[#000000]/10' : 'bg-surface-container/50'}`}
                     >
                       {getIconForType(notification.type)}
                     </div>
@@ -303,7 +301,7 @@ export function NotificationsSection() {
                     <div className="flex items-start justify-between gap-2.5 mb-1.5 w-full min-w-0">
                       <div className="flex-1 min-w-0 overflow-hidden">
                         <h4
-                          className={`text-[12px] lg:text-[13px] truncate min-w-0 ${!notification.read ? 'text-[#1a1a1a] font-bold' : 'text-[#1a1a1a] font-medium'}`}
+                          className={`text-[12px] lg:text-[13px] truncate min-w-0 ${!notification.read ? 'text-[#000000] font-bold' : 'text-[#000000] font-medium'}`}
                           title={notification.title}
                         >
                           {notification.title}
@@ -315,7 +313,7 @@ export function NotificationsSection() {
                       </span>
                     </div>
                     <p
-                      className={`text-[11px] leading-relaxed line-clamp-2 ${!notification.read ? 'text-[#1a1a1a]/80' : 'text-[#1a1a1a]/60'}`}
+                      className={`text-[11px] leading-relaxed line-clamp-2 ${!notification.read ? 'text-[#000000]/80' : 'text-[#000000]/60'}`}
                     >
                       {notification.parsedMessage}
                     </p>
@@ -324,7 +322,7 @@ export function NotificationsSection() {
                   {/* Action arrow */}
                   {notification.actionUrl && (
                     <div className="shrink-0 self-center opacity-30 group-hover:opacity-100 transition-all group-hover:translate-x-1 transform duration-300">
-                      <ArrowRight className="w-4 h-4 text-[#8c7335]" strokeWidth={2} />
+                      <ArrowRight className="w-4 h-4 text-[#000000]" strokeWidth={2} />
                     </div>
                   )}
                 </motion.div>

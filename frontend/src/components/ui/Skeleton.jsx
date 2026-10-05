@@ -23,30 +23,17 @@ export {
   OrdersListSkeleton,
 } from './skeletons/CartCheckoutSkeletons';
 export {
-  EventCollectionsSkeleton,
-  EventShowcasesSkeleton,
-  EventDetailSkeleton,
-  BookingWizardSkeleton,
-} from './skeletons/EventSkeletons';
-export {
   HomeSkeleton,
   HeroSkeleton,
   NavigationHubSkeleton,
   BestsellerSkeleton,
-  StorySkeleton,
   CollectionSkeleton,
   WishlistPageSkeleton,
   BlogListingSkeleton,
   BlogPostSkeleton,
-  LocationLandingSkeleton,
-  AboutSkeleton,
   ContactSkeleton,
-  GallerySkeleton,
-  GalleryDetailSkeleton,
-  CustomOrdersSkeleton,
   DashboardSkeleton,
   FAQSkeleton,
-  LoyaltySkeleton,
   AuthSkeleton,
 } from './skeletons/PageSkeletons';
 export {

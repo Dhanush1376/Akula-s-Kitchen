@@ -7,7 +7,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useCartDispatch } from '../../context/CartContext';
 import { useWishlistState, useWishlistDispatch } from '../../context/WishlistContext';
 import { useQuickView } from '../../context/QuickViewContext';
-import { useConfig } from '../../context/ConfigContext';
 
 export const PremiumRecommendationCard = React.memo(function PremiumRecommendationCard({
   item,
@@ -23,10 +22,6 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
   const [isHovered, setIsHovered] = useState(false);
   const [added, setAdded] = useState(false);
   const { openQuickView } = useQuickView();
-  const { storeSettings, hideGallerySection } = useConfig();
-  const isGalleryHidden = Boolean(
-    hideGallerySection || storeSettings?.storefront?.hideGallerySection,
-  );
 
   const handleQuickViewAction = (e, data) => {
     if (onQuickView) {
@@ -41,7 +36,7 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
       <div className="flex flex-col gap-5 animate-pulse w-full">
         <div className="aspect-[3/4] w-full bg-surface-container-high rounded-2xl overflow-hidden" />
         <div className="space-y-4 px-2">
-          <div className="h-3 w-1/4 bg-surface-container rounded-full" />
+          <div className="h-3 w-4 bg-surface-container rounded-full" />
           <div className="h-5 w-3/4 bg-surface-container rounded-lg" />
           <div className="h-5 w-1/3 bg-surface-container rounded-lg" />
         </div>
@@ -58,16 +53,9 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
   const score = item.score;
 
   const targetType = item.targetType || item.type || 'product';
-  if (targetType === 'gallery' && isGalleryHidden) {
-    return null;
-  }
 
   const link =
-    targetType === 'event'
-      ? `/events/${item.slug || id}`
-      : targetType === 'gallery'
-        ? `/gallery/${id}`
-        : `/product/${item.slug || id}`;
+    targetType === 'event' ? `/events/${item.slug || id}` : `/product/${item.slug || id}`;
 
   const wishlisted = isWishlisted(id);
 
@@ -123,7 +111,7 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
       transition={{ type: 'spring', stiffness: 70, damping: 15 }}
     >
       {/* Visual Canvas */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#FAF9F6] border border-black/5 shadow-sm transition-all duration-700 ease-out group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#FFFFFF] border border-black/5 shadow-sm transition-all duration-700 ease-out group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
         <Link to={link} className="block w-full h-full">
           {image ? (
             <CloudinaryImage
@@ -197,8 +185,8 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
                 onClick={handleAddToCart}
                 className={`flex-1 py-3.5 rounded-xl font-label text-[10px] uppercase tracking-[0.2em] font-bold shadow-xl transition-all flex items-center justify-center gap-2 backdrop-blur-lg border ${
                   added
-                    ? 'bg-[#D0C5AF] text-[#1a1c1a] border-[#D0C5AF]'
-                    : 'bg-white/95 text-black hover:bg-[#1a1c1a] hover:text-white border-white/20'
+                    ? 'bg-[#D9D9D9] text-[#000000] border-[#D9D9D9]'
+                    : 'bg-white/95 text-black hover:bg-[#000000] hover:text-white border-white/20'
                 }`}
               >
                 {added ? (
@@ -207,8 +195,6 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
                   </>
                 ) : targetType === 'event' ? (
                   'View Event'
-                ) : targetType === 'gallery' ? (
-                  'View Inspiration'
                 ) : (
                   'Add to Bag'
                 )}
@@ -235,16 +221,12 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
             onClick={handleAddToCart}
             className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all border ${
               added
-                ? 'bg-[#D0C5AF] text-[#1a1c1a] border-[#D0C5AF]'
+                ? 'bg-[#D9D9D9] text-[#000000] border-[#D9D9D9]'
                 : 'bg-white/95 text-black border-white/20'
             }`}
           >
             <span className="material-symbols-outlined text-[20px]">
-              {added
-                ? 'check'
-                : targetType === 'event' || targetType === 'gallery'
-                  ? 'arrow_forward'
-                  : 'add'}
+              {added ? 'check' : targetType === 'event' ? 'arrow_forward' : 'add'}
             </span>
           </button>
         </div>
@@ -276,18 +258,16 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
           </div>
         )}
 
-        {targetType !== 'gallery' && (
-          <div className="mt-auto pt-3 flex items-baseline gap-2.5">
-            <span className="font-display text-[18px] lg:text-[24px] text-[#1A1C1A] leading-none">
-              ₹{formatPrice(price)}
+        <div className="mt-auto pt-3 flex items-baseline gap-2.5">
+          <span className="font-display text-[18px] lg:text-[24px] text-[#000000] leading-none">
+            ₹{formatPrice(price)}
+          </span>
+          {oldPrice && (
+            <span className="font-body text-[12px] lg:text-[13px] text-on-surface-variant/50 line-through">
+              ₹{formatPrice(oldPrice)}
             </span>
-            {oldPrice && (
-              <span className="font-body text-[12px] lg:text-[13px] text-on-surface-variant/50 line-through">
-                ₹{formatPrice(oldPrice)}
-              </span>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </motion.div>
   );
