@@ -1,0 +1,24 @@
+import { Router } from 'express';
+import {
+  getLoyaltyDashboard,
+  getAdminReviews,
+  moderateReview,
+  updateReviewImages,
+  getLoyaltyTiers,
+  adjustWalletBalance,
+} from '../../controllers/users/loyaltyController';
+import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
+
+const router = Router();
+
+// Loyalty Dashboard
+router.get('/tiers', getLoyaltyTiers);
+router.get('/dashboard', requireAuth, getLoyaltyDashboard);
+
+// Admin review moderation and loyalty payouts
+router.get('/admin/reviews', requireAuth, requireAdmin, getAdminReviews);
+router.post('/admin/moderate-review', requireAuth, requireAdmin, moderateReview);
+router.post('/admin/review-images', requireAuth, requireAdmin, updateReviewImages);
+router.post('/admin/wallet-adjustment', requireAuth, requireAdmin, adjustWalletBalance);
+
+export default router;
