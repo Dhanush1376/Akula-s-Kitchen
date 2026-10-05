@@ -226,8 +226,8 @@ export function AdminReviews() {
     const statusVal = r.status || 'pending';
     const matchesFilter = filter === 'all' || statusVal === filter;
 
-    const customer = r.customerName || r.customer?.name || 'Bespoke Customer';
-    const product = r.product?.title || 'Handcrafted Product';
+    const customer = r.customerName || r.customer?.name || 'Customer';
+    const product = r.product?.title || 'Product';
     const comment = r.comment || '';
 
     const matchesSearch =
@@ -395,8 +395,8 @@ export function AdminReviews() {
                 cardExpansionOverrides[rId] !== undefined
                   ? cardExpansionOverrides[rId]
                   : status !== 'approved';
-              const customer = r.customerName || r.customer?.name || 'Bespoke Customer';
-              const product = r.product?.title || 'Handcrafted Decor Product';
+              const customer = r.customerName || r.customer?.name || 'Customer';
+              const product = r.product?.title || 'Product';
               const comment = r.comment || '';
               const rating = r.rating || 5;
               const dateStr = new Date(r.createdAt).toLocaleDateString('en-IN', {
@@ -954,7 +954,7 @@ export function AdminReviews() {
                 <div className="flex items-start gap-3.5">
                   <div className="w-11 h-11 rounded-[6px] bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-[22px] text-emerald-600 dark:text-emerald-400">
-                      wallet
+                      card_giftcard
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1010,7 +1010,7 @@ export function AdminReviews() {
                   <p className="text-[10.5px] text-stone-500 dark:text-stone-400 leading-relaxed mt-1">
                     {rewardModal.review?.rewardPaid > 0
                       ? `Already credited ₹${rewardModal.review.rewardPaid}. Leave as 0 to re-approve without paying again.`
-                      : 'Enter the amount to credit to their wallet. Leave as 0 to just approve without a custom reward.'}
+                      : 'Enter reward amount to credit. Leave as 0 to just approve without a custom reward.'}
                   </p>
                 </div>
               </div>

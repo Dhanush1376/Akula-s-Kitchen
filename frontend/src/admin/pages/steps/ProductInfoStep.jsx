@@ -255,21 +255,6 @@ export function ProductInfoStep({
           </div>
         </div>
 
-        <div className="col-span-2 sm:col-span-1">
-          <div className="flex items-center h-5 mb-1.5">
-            <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
-              Dimensions (L x W x H)
-            </label>
-          </div>
-          <input
-            type="text"
-            value={formData.dimensions}
-            onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
-            placeholder='Dimensions (e.g. 18" x 4" x 24")'
-            className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-          />
-        </div>
-
         <div className="col-span-2">
           <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
             Product Description
@@ -425,138 +410,118 @@ export function ProductInfoStep({
         )}
       </div>
 
-      {/* Product Notes & Complimentary Gift Information */}
-      <div
-        className={`p-4 bg-[var(--admin-bg-subtle)] border rounded-[4px] space-y-4 mt-6 transition-all duration-300 ${focusedField === 'customerNote' ? 'border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/50' : 'border-[var(--admin-border)]'}`}
-      >
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--admin-text-primary)] mb-0.5">
-            Customer Note / Important Information
-          </p>
-          <p className="text-[10.5px] text-[var(--admin-text-secondary)] mb-2">
-            Displays on the product page as a Designer's Note
-          </p>
-          <textarea
-            rows={3}
-            value={formData.customerNote || ''}
-            onChange={(e) => setFormData({ ...formData, customerNote: e.target.value })}
-            placeholder="e.g. Crafted with pure brass... Please note that slight color variations may occur."
-            className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] p-3 text-[12.5px] outline-none transition-all resize-none"
+      {/* Complimentary Gift Information */}
+      <div className="p-4 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] space-y-4 mt-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--admin-text-primary)]">
+              Complimentary Gift Included
+            </p>
+            <p className="text-[10.5px] text-[var(--admin-text-secondary)] mt-0.5">
+              Offer a free gift with this product purchase
+            </p>
+          </div>
+          <AdminToggle
+            checked={formData.complimentaryGift?.enabled || false}
+            onChange={() =>
+              setFormData((prev) => ({
+                ...prev,
+                complimentaryGift: {
+                  ...prev.complimentaryGift,
+                  enabled: !prev.complimentaryGift?.enabled,
+                },
+              }))
+            }
           />
         </div>
 
-        <div className="pt-4 border-t border-[var(--admin-border)]">
-          <div className="flex justify-between items-start mb-4">
+        {formData.complimentaryGift?.enabled && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--admin-text-primary)]">
-                Complimentary Gift Included
-              </p>
-              <p className="text-[10.5px] text-[var(--admin-text-secondary)] mt-0.5">
-                Offer a free gift with this product purchase
-              </p>
+              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
+                Gift Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Welcome Chocolate Gift"
+                value={formData.complimentaryGift?.name || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    complimentaryGift: {
+                      ...prev.complimentaryGift,
+                      name: e.target.value,
+                    },
+                  }))
+                }
+                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
+              />
             </div>
-            <AdminToggle
-              checked={formData.complimentaryGift?.enabled || false}
-              onChange={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  complimentaryGift: {
-                    ...prev.complimentaryGift,
-                    enabled: !prev.complimentaryGift?.enabled,
-                  },
-                }))
-              }
-            />
+
+            <div>
+              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
+                Quantity
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={formData.complimentaryGift?.quantity || 1}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    complimentaryGift: {
+                      ...prev.complimentaryGift,
+                      quantity: parseInt(e.target.value, 10) || 1,
+                    },
+                  }))
+                }
+                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
+                Gift Description (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Premium assorted Belgian chocolates."
+                value={formData.complimentaryGift?.description || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    complimentaryGift: {
+                      ...prev.complimentaryGift,
+                      description: e.target.value,
+                    },
+                  }))
+                }
+                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
+                Display Badge (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. FREE GIFT"
+                value={formData.complimentaryGift?.displayBadge || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    complimentaryGift: {
+                      ...prev.complimentaryGift,
+                      displayBadge: e.target.value,
+                    },
+                  }))
+                }
+                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
+              />
+            </div>
           </div>
-
-          {formData.complimentaryGift?.enabled && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Gift Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Welcome Chocolate Gift"
-                  value={formData.complimentaryGift?.name || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      complimentaryGift: {
-                        ...prev.complimentaryGift,
-                        name: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.complimentaryGift?.quantity || 1}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      complimentaryGift: {
-                        ...prev.complimentaryGift,
-                        quantity: parseInt(e.target.value, 10) || 1,
-                      },
-                    }))
-                  }
-                  className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Gift Description (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Premium assorted Belgian chocolates."
-                  value={formData.complimentaryGift?.description || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      complimentaryGift: {
-                        ...prev.complimentaryGift,
-                        description: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Display Badge (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. FREE GIFT"
-                  value={formData.complimentaryGift?.displayBadge || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      complimentaryGift: {
-                        ...prev.complimentaryGift,
-                        displayBadge: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

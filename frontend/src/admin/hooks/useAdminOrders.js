@@ -28,23 +28,20 @@ const mapDbOrderToFrontend = (o) => {
 
   const mappedItems = Array.isArray(o.items)
     ? o.items.map((item) => ({
-        name: item.title || item.name || 'Handcrafted Piece',
+        name: item.title || item.name || 'Item',
         qty: item.quantity || item.qty || 1,
         price: item.price || 0,
         type: item.type || 'purchase',
         rentalInfo: item.rentalInfo || null,
         deposit: item.deposit || 0,
         image:
-          (o.isCustomOrder && o.customOrderId?.productSnapshot?.imageSrc) ||
-          (o.isCustomOrder && o.customOrderId?.inspirationImages?.[0]) ||
-          (o.isCustomOrder && o.customOrderId?.referenceImages?.[0]) ||
           item.imageSrc ||
           item.image ||
           item.images?.[0] ||
           item.thumbnail ||
           item.product?.images?.[0] ||
           item.product?.image ||
-          'https://res.cloudinary.com/drxgnnzeb/image/upload/v1785779448/siri-arts-crafts/zqqwwbsrjpb7bqcrl24l.png',
+          '/MainLogo.png',
       }))
     : [];
 
@@ -91,7 +88,7 @@ const mapDbOrderToFrontend = (o) => {
     date: dateStr,
     address: o.shippingAddress
       ? `${o.shippingAddress.address}, ${o.shippingAddress.city}, ${o.shippingAddress.state} - ${o.shippingAddress.pincode}`
-      : 'Ongole',
+      : '',
     rawOrder: o,
     courierCharges: o.courierCharges,
     collectedAmount: o.collectedAmount,
@@ -109,11 +106,8 @@ const mapDbOrderToFrontend = (o) => {
     orderType: o.orderType || 'purchase',
     rentalInfo: o.rentalInfo || null,
     depositTotal: o.depositTotal || 0,
-    isCustomOrder: o.isCustomOrder || false,
-    customOrderId: o.customOrderId || null,
+
     cardState: o.cardState || 'normal',
-    returns: o.returns || [],
-    exchanges: o.exchanges || [],
   };
 };
 

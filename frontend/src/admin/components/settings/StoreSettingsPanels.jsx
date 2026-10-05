@@ -451,7 +451,7 @@ export const ShippingOrdersPanel = ({ formData, handleChange, handleSave, saving
             name="originPincode"
             value={formData.originPincode}
             onChange={handleChange}
-            placeholder="e.g. 523001"
+            placeholder="6-digit PIN code"
           />
         </FormGroup>
         <FormGroup label="Primary Courier Partner">
@@ -907,7 +907,7 @@ export const LoyaltySettingsPanel = ({
         <h4 className="font-bold text-[var(--admin-text-primary)] mb-1">Earnings</h4>
         <hr className="border-[var(--admin-border-subtle)] mb-4" />
       </div>
-      <FormGroup label="Siri Coins per ₹1 Spent">
+      <FormGroup label="Reward Coins per ₹1 Spent">
         <Input
           type="number"
           step="0.01"
@@ -916,7 +916,7 @@ export const LoyaltySettingsPanel = ({
           onChange={handleChange}
         />
       </FormGroup>
-      <FormGroup label="Welcome Bonus (Wallet Cash)">
+      <FormGroup label="Welcome Bonus (Coins)">
         <Input
           type="number"
           name="welcomeBonus"
@@ -953,7 +953,7 @@ export const LoyaltySettingsPanel = ({
           onChange={handleChange}
         />
       </FormGroup>
-      <FormGroup label="Review Siri Coins Bonus">
+      <FormGroup label="Review Reward Coins Bonus">
         <Input
           type="number"
           name="reviewCoinsBonus"
@@ -1169,12 +1169,7 @@ export const ContactSettingsPanel = ({ formData, handleChange, handleSave, savin
         </FormGroup>
       </div>
       <FormGroup label="City">
-        <Input
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          placeholder="e.g. Ongole"
-        />
+        <Input name="city" value={formData.city} onChange={handleChange} placeholder="City" />
       </FormGroup>
       <FormGroup label="State">
         <Input
@@ -1189,7 +1184,7 @@ export const ContactSettingsPanel = ({ formData, handleChange, handleSave, savin
           name="postalCode"
           value={formData.postalCode}
           onChange={handleChange}
-          placeholder="e.g. 523001"
+          placeholder="6-digit PIN code"
         />
       </FormGroup>
       <FormGroup label="Country">
@@ -1218,7 +1213,7 @@ export const LegalSettingsPanel = ({ formData, handleChange, handleSave, saving 
           name="legalCompanyName"
           value={formData.legalCompanyName}
           onChange={handleChange}
-          placeholder="e.g. Siri Arts and Crafts Private Limited"
+          placeholder="e.g. Akula's Kitchen Private Limited"
         />
       </FormGroup>
       <FormGroup label="CIN (Corporate Identification Number)">

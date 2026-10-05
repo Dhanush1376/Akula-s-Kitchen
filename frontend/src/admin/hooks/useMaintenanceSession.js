@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { maintenanceService } from '../../services/api/maintenanceService';
 
-const STORAGE_KEY = 'siri_maintenance_session';
+const STORAGE_KEY = 'akula_maintenance_session';
 
 export function useMaintenanceSession() {
   const [session, setSession] = useState(() => {

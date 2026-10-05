@@ -314,8 +314,6 @@ export function AdminCustomerDetailDrawer({
       ? resolvedOrders.reduce((sum, o) => sum + (o.total || o.totalAmount || 0), 0)
       : 0);
 
-  const walletBalance = identity.walletBalance ?? rawCustomer.walletBalance ?? 0;
-  const siriCoins = identity.siriCoins ?? rawCustomer.siriCoins ?? 0;
   const isVerified = identity.isVerified ?? rawCustomer.isVerified ?? false;
   const marketingEligible =
     journeyCustomer.promotionsSubscribed ??
@@ -432,7 +430,7 @@ export function AdminCustomerDetailDrawer({
         aria-modal="true"
         aria-labelledby="customer-profile-name"
         className={`admin-section-root relative z-[9999] pointer-events-auto bg-white dark:bg-[#1a1815] shadow-2xl flex flex-col border border-stone-200 dark:border-stone-800
-          w-full h-[88dvh] max-h-[88dvh] rounded-t-[24px] rounded-b-none border-b-0 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]
+          w-full h-[88dvh] max-h-[88dvh] rounded-t-[18px] rounded-b-none border-b-0 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]
           md:w-[860px] md:max-w-[92vw] md:h-[660px] md:max-h-[88vh] md:rounded-[14px] md:border md:pb-0 md:overflow-hidden
         `}
         style={{
@@ -441,7 +439,7 @@ export function AdminCustomerDetailDrawer({
       >
         {/* Mobile Pull Drag Handle (always top visible on mobile) */}
         <div className="w-full flex md:hidden justify-center pt-3 pb-1.5 bg-white dark:bg-[#1a1815] shrink-0 cursor-grab active:cursor-grabbing">
-          <div className="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="w-12 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500" />
         </div>
 
         {/* Subtle top sync progress line */}
@@ -564,7 +562,7 @@ export function AdminCustomerDetailDrawer({
               <div className="px-4 md:px-6 py-2.5 md:py-3 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between shrink-0 bg-white dark:bg-[#211f1b] gap-3">
                 {/* Left: Customer Monogram + Name & Contact */}
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 md:w-10 md:h-10 rounded-[8px] bg-gradient-to-br from-[#8d6a3b] via-[var(--admin-accent,#826237)] to-[#6e532f] text-white font-black text-[14px] flex items-center justify-center shrink-0 shadow-xs tracking-wider ring-1 ring-black/5 dark:ring-white/10">
+                  <div className="w-10 h-10 md:w-10 md:h-10 rounded-[8px] bg-[var(--admin-accent,#D4A41C)] text-black font-black text-[14px] flex items-center justify-center shrink-0 shadow-xs tracking-wider ring-1 ring-black/5 dark:ring-white/10">
                     {initials}
                   </div>
 
@@ -665,7 +663,7 @@ export function AdminCustomerDetailDrawer({
                   <span
                     className={`material-symbols-outlined text-[15px] md:text-[16px] leading-none shrink-0 ${
                       isActive
-                        ? 'text-[var(--admin-accent,#826237)]'
+                        ? 'text-[var(--admin-accent,#D4A41C)]'
                         : 'text-stone-400 dark:text-stone-500'
                     }`}
                   >
@@ -678,7 +676,7 @@ export function AdminCustomerDetailDrawer({
                     <span
                       className={`min-w-[15px] h-[15px] sm:min-w-[17px] sm:h-[17px] px-1 rounded-full text-[8.5px] sm:text-[9.5px] font-bold flex items-center justify-center leading-none shrink-0 ${
                         isActive
-                          ? 'bg-[var(--admin-accent,#826237)] text-white'
+                          ? 'bg-[var(--admin-accent,#D4A41C)] text-black'
                           : 'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300'
                       }`}
                     >
@@ -704,17 +702,12 @@ export function AdminCustomerDetailDrawer({
           {/* ═══════════════════════════════════════════════════════════ */}
           {activeTab === 'overview' && (
             <div className="space-y-3.5 sm:space-y-4">
-              {/* 4 Symmetrical Financial Metric Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              {/* Symmetrical Financial Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
                 {[
                   { label: 'Lifetime Spend', value: formatCurrency(totalSpent), icon: 'payments' },
                   { label: 'Total Orders', value: totalOrders, icon: 'receipt_long' },
-                  {
-                    label: 'Wallet Balance',
-                    value: formatCurrency(walletBalance),
-                    icon: 'account_balance_wallet',
-                  },
-                  { label: 'Reward Coins', value: siriCoins, icon: 'stars' },
+                  { label: 'Loyalty Tier', value: loyaltyTier, icon: 'verified' },
                 ].map((metric, idx) => (
                   <div
                     key={idx}
@@ -900,8 +893,7 @@ export function AdminCustomerDetailDrawer({
                         ci.imageSrc ||
                         ci.image ||
                         ci.product?.images?.[0];
-                      const itemTitle =
-                        ci.product?.title || ci.product?.name || ci.title || 'Decor Item';
+                      const itemTitle = ci.product?.title || ci.product?.name || ci.title || 'Item';
                       const itemPrice = ci.product?.price || ci.price || 0;
                       const itemQty = ci.quantity || ci.qty || 1;
 
@@ -1221,7 +1213,7 @@ export function AdminCustomerDetailDrawer({
                   <div className="text-[9.5px] uppercase text-stone-500 dark:text-stone-400 font-bold">
                     Spend
                   </div>
-                  <div className="text-[13px] font-bold font-mono text-[var(--admin-accent,#826237)] mt-0.5">
+                  <div className="text-[13px] font-bold font-mono text-[var(--admin-accent,#D4A41C)] mt-0.5">
                     {formatCurrency(totalSpent)}
                   </div>
                 </div>

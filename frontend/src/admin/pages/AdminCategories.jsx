@@ -220,12 +220,6 @@ export function AdminCategories() {
           label: 'Product',
           cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
         };
-      case 'gallery':
-        return {
-          icon: 'photo_library',
-          label: 'Gallery',
-          cls: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-        };
       case 'event':
         return {
           icon: 'celebration',
@@ -304,7 +298,7 @@ export function AdminCategories() {
 
             {/* Desktop Scope Segmented Pill Switcher */}
             <div className="hidden sm:flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border">
-              {['All', 'product', 'gallery', 'event'].map((t) => (
+              {['All', 'product', 'event'].map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -369,7 +363,6 @@ export function AdminCategories() {
                   >
                     <option value="All">All Types</option>
                     <option value="product">Product</option>
-                    <option value="gallery">Gallery</option>
                     <option value="event">Event</option>
                   </select>
                 </div>

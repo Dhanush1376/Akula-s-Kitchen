@@ -81,10 +81,13 @@ export function MobileFilterDrawer({ isOpen, onClose, title = 'Filters', childre
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-[1010] bg-[var(--admin-surface)] rounded-t-[var(--admin-radius-2xl)] shadow-2xl flex flex-col max-h-[85vh] md:hidden border-t border-[var(--admin-border)] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[1010] bg-[var(--admin-surface)] rounded-t-[18px] shadow-2xl flex flex-col max-h-[85vh] md:hidden border-t border-[var(--admin-border)] overflow-hidden"
           >
-            <div className="w-full flex justify-center pt-3 pb-1 shrink-0" onClick={onClose}>
-              <div className="w-12 h-1.5 rounded-full bg-[var(--admin-border-strong)]" />
+            <div
+              className="w-full flex justify-center pt-3 pb-1 shrink-0 cursor-pointer"
+              onClick={onClose}
+            >
+              <div className="w-12 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500" />
             </div>
             <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--admin-border-subtle)] shrink-0">
               <h3 className="text-[16px] font-bold text-[var(--admin-text-primary)]">{title}</h3>

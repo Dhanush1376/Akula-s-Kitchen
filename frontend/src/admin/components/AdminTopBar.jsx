@@ -6,14 +6,11 @@ import { useAdmin } from '../context/AdminContext';
 import { useAuth } from '../../context/AuthContext';
 
 const ROUTE_LABELS = {
-  exchanges: 'Exchanges',
-  returns: 'Returns & Exchanges',
   orders: 'All Orders',
   rentals: 'Rentals',
-  'custom-orders': 'Custom Orders',
+
   homepage: 'Edit Website',
   policies: 'Policies',
-  gallery: 'Photo Gallery',
   payments: 'Payments',
   products: 'Products',
   categories: 'Categories',
@@ -27,9 +24,7 @@ const ROUTE_LABELS = {
   settings: 'Settings',
   audit: 'Audit History',
   'recycle-bin': 'Recycle Bin',
-  coupons: 'Discount Coupons',
   reviews: 'Reviews',
-  events: 'Events & Bookings',
   add: 'Add New',
   edit: 'Edit',
   new: 'Create',
@@ -43,13 +38,11 @@ const getBreadcrumbLabel = (segment, index, arr) => {
   // Check if segment is genuinely an ID (MongoDB ObjectId, order code, or numeric ID)
   const isHexId = /^[0-9a-fA-F]{24}$/.test(segment);
   const isNumericId = /^[0-9]+$/.test(segment);
-  const isPrefixCode = /^(ORD|RET|EXC|BKG|CUST|RENT)-/i.test(segment);
+  const isPrefixCode = /^(ORD|BKG|CUST|RENT)-/i.test(segment);
   const isLikelyId = isHexId || isNumericId || isPrefixCode;
 
   if (isLikelyId) {
     const parent = arr[index - 1] || arr[0];
-    if (parent === 'exchanges') return 'Exchange Details';
-    if (parent === 'returns') return 'Return Details';
     if (parent === 'orders') return 'Order Details';
     if (parent === 'rentals') return 'Rental Details';
     return `#${segment.slice(-6).toUpperCase()}`;
@@ -426,7 +419,7 @@ export function AdminTopBar() {
                           {user?.name || 'Administrator'}
                         </p>
                         <p className="text-[10.5px] text-[var(--admin-text-tertiary)] truncate">
-                          {user?.email || 'admin@siriartsandcrafts.com'}
+                          {user?.email || 'admin@akulas.kitchen'}
                         </p>
                       </div>
                     </div>

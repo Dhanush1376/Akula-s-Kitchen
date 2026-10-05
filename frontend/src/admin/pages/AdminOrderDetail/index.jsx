@@ -10,8 +10,7 @@ import { OrderStatusTimeline } from './OrderStatusTimeline';
 import { OrderSettlement } from './OrderSettlement';
 import { OrderItems } from './OrderItems';
 import { OrderShipping } from './OrderShipping';
-import { OrderRentalActions, OrderCancelCard } from './OrderRentalActions';
-import { OrderReturnCard } from './OrderReturnCard';
+import { OrderCancelCard } from './OrderCancelCard';
 import { orderService } from '../../../services/domainServices';
 import { useOrderScanner } from './hooks/useOrderScanner';
 
@@ -55,7 +54,7 @@ export function AdminOrderDetail() {
             date: raw.createdAt ? new Date(raw.createdAt).toLocaleDateString() : '',
             rawOrder: raw,
             items: (raw.items || []).map((item) => ({
-              name: item.title || item.name || 'Decor Item',
+              name: item.title || item.name || 'Item',
               qty: item.quantity || item.qty || 1,
               price: item.price || 0,
               type: item.type || 'purchase',
@@ -210,12 +209,6 @@ export function AdminOrderDetail() {
             <div className="xl:col-span-1 flex flex-col gap-3 sm:gap-6 lg:gap-8 sticky top-[88px]">
               {/* Order Shipping / Customer Profile */}
               <OrderShipping order={order} />
-
-              {/* Order Return Card */}
-              <OrderReturnCard order={order} />
-
-              {/* Rental Actions */}
-              <OrderRentalActions order={order} updateOrderStatus={updateOrderStatus} />
 
               {/* Financials & Settlement */}
               <OrderSettlement

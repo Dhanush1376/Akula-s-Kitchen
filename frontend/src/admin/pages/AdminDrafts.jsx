@@ -97,7 +97,6 @@ export function AdminDrafts() {
       Events: 'text-blue-600 bg-blue-50 border-blue-200',
       Categories: 'text-emerald-600 bg-emerald-50 border-emerald-200',
       Coupons: 'text-amber-600 bg-amber-50 border-amber-200',
-      Gallery: 'text-rose-600 bg-rose-50 border-rose-200',
       Settings: 'text-slate-600 bg-slate-50 border-slate-200',
     };
     return colors[moduleName] || 'text-gray-600 bg-gray-50 border-gray-200';

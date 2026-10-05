@@ -19,7 +19,6 @@ import { AdminDashboardStats } from '../components/dashboard/AdminDashboardStats
 export function AdminDashboard() {
   const {
     orders,
-    eventBookings,
     products,
     dashboardStats,
     customers,
@@ -134,19 +133,13 @@ export function AdminDashboard() {
       icon: 'inventory_2',
       label: 'Catalog',
       path: '/admin/products',
-      color: '#826237',
+      color: '#D4A41C',
     },
     {
       icon: 'stream',
       label: 'Live Activity',
       path: '/admin/analytics/operations',
       color: '#58856b',
-    },
-    {
-      icon: 'sell',
-      label: 'Coupons',
-      path: '/admin/coupons',
-      color: '#c2944b',
     },
   ];
 
@@ -235,11 +228,10 @@ export function AdminDashboard() {
         }
       />
 
-      {/* ─── 4-Column Connected Financial & Operational Telemetry Ledger ─── */}
+      {/* ─── 3-Column Connected Financial & Operational Telemetry Ledger ─── */}
       <AdminDashboardStats
         dashboardStats={dashboardStats}
         pendingOrders={pendingOrders}
-        eventBookings={eventBookings}
         customers={customers}
       />
 
@@ -262,11 +254,7 @@ export function AdminDashboard() {
       />
 
       {/* ─── Recents & Catalog Row ─── */}
-      <AdminDashboardRecents
-        orders={orders}
-        eventBookings={eventBookings}
-        trendingProducts={trendingProducts}
-      />
+      <AdminDashboardRecents orders={orders} trendingProducts={trendingProducts} />
     </motion.div>
   );
 }

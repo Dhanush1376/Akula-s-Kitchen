@@ -100,7 +100,7 @@ export function AdminNotifications({ hideHeader = false }) {
     let list = notifications;
     if (activeTab === 'unread') {
       list = list.filter((n) => !n.read);
-    } else if (activeTab === 'booking') {
+    } else if (activeTab === 'inquiry') {
       list = list.filter(
         (n) => n.type === 'booking' || n.type === 'custom_request' || n.type === 'inquiry',
       );
@@ -125,7 +125,7 @@ export function AdminNotifications({ hideHeader = false }) {
       all: notifications.length,
       unread: unreadCount,
       order: notifications.filter((n) => n.type === 'order').length,
-      booking: notifications.filter(
+      inquiry: notifications.filter(
         (n) => n.type === 'booking' || n.type === 'custom_request' || n.type === 'inquiry',
       ).length,
       payment: notifications.filter((n) => n.type === 'payment').length,
@@ -200,7 +200,7 @@ export function AdminNotifications({ hideHeader = false }) {
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Category Segmented Pill Switcher (Desktop & Tablet) */}
             <div className="hidden lg:flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border">
-              {['all', 'unread', 'order', 'booking', 'payment', 'system'].map((tab) => {
+              {['all', 'unread', 'order', 'inquiry', 'payment', 'system'].map((tab) => {
                 const isActive = activeTab === tab;
                 const count = notifCounts[tab] || 0;
                 const label = tab === 'all' ? 'All' : tab.charAt(0).toUpperCase() + tab.slice(1);
@@ -240,7 +240,7 @@ export function AdminNotifications({ hideHeader = false }) {
                 onChange={(e) => setActiveTab(e.target.value)}
                 className="h-[42px] px-2.5 bg-[var(--admin-surface-muted)] text-[var(--admin-text-primary)] border border-[var(--admin-border)] rounded-[4px] text-[12px] font-semibold outline-none cursor-pointer capitalize"
               >
-                {['all', 'unread', 'order', 'booking', 'payment', 'system'].map((tab) => (
+                {['all', 'unread', 'order', 'inquiry', 'payment', 'system'].map((tab) => (
                   <option key={tab} value={tab}>
                     {tab === 'all' ? 'All' : tab.charAt(0).toUpperCase() + tab.slice(1)} (
                     {notifCounts[tab] || 0})

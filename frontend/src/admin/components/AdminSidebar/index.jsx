@@ -25,15 +25,10 @@ export function AdminSidebar() {
   } else if (effectiveRole === 'production') {
     fabActions = [{ label: 'Start QA', icon: 'fact_check', path: '/admin/production/qa' }];
   } else if (effectiveRole === 'support') {
-    fabActions = [
-      { label: 'Find Order', icon: 'search', path: '/admin/enterprise-search' },
-      { label: 'New Return', icon: 'assignment_return', path: '/admin/returns/new' },
-    ];
+    fabActions = [{ label: 'Find Order', icon: 'search', path: '/admin/enterprise-search' }];
   } else {
     fabActions = [
       { label: 'Product', icon: 'inventory_2', path: '/admin/products/add' },
-      { label: 'Showcase', icon: 'view_carousel', path: '/admin/showcases/add' },
-      { label: 'Coupon', icon: 'sell', path: '/admin/coupons/create' },
       { label: 'Invite', icon: 'person_add', path: '/admin/team?invite=true' },
       { label: 'Category', icon: 'category', path: '/admin/categories/add' },
       { label: 'Policy', icon: 'policy', path: '/admin/policies/add' },
@@ -76,7 +71,7 @@ export function AdminSidebar() {
         return { ...section, items: sectionMatches ? section.items : matchedItems };
       })
       .filter((section) => section.items.length > 0);
-  }, [sidebarSearch, navSections]);
+  }, [sidebarSearch]);
 
   // Recently edited products
   const recentlyEdited = useMemo(() => {

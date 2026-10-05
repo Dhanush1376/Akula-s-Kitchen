@@ -45,7 +45,7 @@ export function AdminDashboardSkeleton() {
         {/* Top Accent Stripe */}
         <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--admin-border-strong)] z-10" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 bg-[var(--admin-surface)] divide-y sm:divide-y-0 divide-x divide-[var(--admin-border-subtle)]">
+        <div className="grid grid-cols-2 lg:grid-cols-3 bg-[var(--admin-surface)] divide-y sm:divide-y-0 divide-x divide-[var(--admin-border-subtle)]">
           {/* Metric 1: Total Revenue */}
           <div className="p-3 sm:p-5 space-y-1 sm:space-y-1.5 border-r border-b lg:border-b-0 border-[var(--admin-border-subtle)]">
             <div className="flex items-center justify-between gap-1 min-w-0">
@@ -76,22 +76,7 @@ export function AdminDashboardSkeleton() {
             </div>
           </div>
 
-          {/* Metric 3: Active Bookings */}
-          <div className="p-3 sm:p-5 space-y-1 sm:space-y-1.5 border-r border-b lg:border-b-0 border-[var(--admin-border-subtle)]">
-            <div className="flex items-center justify-between gap-1 min-w-0">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <AdminSkeleton className="w-3.5 h-3.5 rounded-[2px] shrink-0" />
-                <AdminSkeleton className="w-24 sm:w-28 h-3 rounded" />
-              </div>
-            </div>
-            <AdminSkeleton className="w-10 sm:w-14 h-6 sm:h-7 rounded-[4px]" />
-            <div className="flex items-center justify-between mt-0.5 sm:mt-1">
-              <AdminSkeleton className="w-16 sm:w-20 h-3 rounded" />
-              <AdminSkeleton className="w-10 sm:w-12 h-3 rounded" />
-            </div>
-          </div>
-
-          {/* Metric 4: Total Customers */}
+          {/* Metric 3: Total Customers */}
           <div className="p-3 sm:p-5 space-y-1 sm:space-y-1.5">
             <div className="flex items-center justify-between gap-1 min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
@@ -221,7 +206,7 @@ export function AdminDashboardSkeleton() {
       </div>
 
       {/* ─── Recents & Catalog Row (3 columns) ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
         <div className="admin-card p-4 sm:p-5 !rounded-[4px] border border-[var(--admin-border)] shadow-xs flex flex-col">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--admin-border-subtle)]">
@@ -250,35 +235,7 @@ export function AdminDashboardSkeleton() {
           </div>
         </div>
 
-        {/* Active Bookings */}
-        <div className="admin-card p-4 sm:p-5 !rounded-[4px] border border-[var(--admin-border)] shadow-xs flex flex-col">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--admin-border-subtle)]">
-            <div className="space-y-1">
-              <AdminSkeleton className="w-32 h-4.5 rounded" />
-              <AdminSkeleton className="w-44 h-3 rounded" />
-            </div>
-            <AdminSkeleton className="w-14 h-3 rounded" />
-          </div>
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between p-2 rounded bg-[var(--admin-surface-muted)]"
-              >
-                <div className="flex items-center gap-2.5">
-                  <AdminSkeleton className="w-8 h-8 rounded-[4px] shrink-0" />
-                  <div className="space-y-1">
-                    <AdminSkeleton className="w-24 h-3.5 rounded" />
-                    <AdminSkeleton className="w-28 h-2.5 rounded" />
-                  </div>
-                </div>
-                <AdminSkeleton className="w-14 h-5 rounded-[4px]" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trending Decor */}
+        {/* Trending Products */}
         <div className="admin-card p-4 sm:p-5 !rounded-[4px] border border-[var(--admin-border)] shadow-xs flex flex-col">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--admin-border-subtle)]">
             <div className="space-y-1">

@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { maintenanceService } from '../../services/api/maintenanceService';
 import { useMaintenanceSession } from '../hooks/useMaintenanceSession';
 import { useAuth } from '../../context/AuthContext';
-import { SiriLogo } from '../../components/ui/SiriLogo';
+import { BrandLogo } from '../../components/ui/BrandLogo';
 
 export function MaintenanceGateway() {
   const [step, setStep] = useState(1); // 1: Credentials, 2: OTP
@@ -72,7 +72,7 @@ export function MaintenanceGateway() {
         >
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4 opacity-80 grayscale invert">
-              <SiriLogo size="40px" />
+              <BrandLogo size="40px" />
             </div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-widest mb-4">
               <span className="material-symbols-outlined text-[14px]">gpp_maybe</span>
@@ -101,7 +101,7 @@ export function MaintenanceGateway() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500/50 transition-colors"
-                    placeholder="admin@siriarts.com"
+                    placeholder="Admin email"
                     required
                   />
                 </div>

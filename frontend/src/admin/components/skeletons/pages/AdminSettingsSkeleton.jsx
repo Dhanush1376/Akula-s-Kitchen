@@ -42,7 +42,7 @@ export function AdminSettingsSkeleton({ hideHeader = false } = {}) {
               'Returns & Exchanges',
               'Loyalty & Rewards',
               'Storefront & Customer Auth',
-              'AI & Visual Search',
+              'Global AI Platform',
               'Security & Operations',
             ].map((name, idx) => (
               <div

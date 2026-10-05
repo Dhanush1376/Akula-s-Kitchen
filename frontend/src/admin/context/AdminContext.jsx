@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import {
   analyticsService,
   reviewService,
-  eventService,
   notificationService,
   loyaltyService,
 } from '../../services/domainServices';
@@ -48,31 +47,6 @@ const mapDbNotificationToFrontend = (n) => ({
   image: n.metadata?.image || null,
   rawNotification: n,
 });
-
-// Customer mock function removed - Customers are now fetched dynamically on demand
-
-const mapDbEventToFrontend = (e) => {
-  if (!e) return null;
-
-  const dateStr = e.date
-    ? new Date(e.date).toISOString().split('T')[0]
-    : e.createdAt
-      ? new Date(e.createdAt).toISOString().split('T')[0]
-      : 'Unknown Date';
-
-  return {
-    id: e.bookingId || e._id || e.id || 'UNKNOWN',
-    eventType: e.eventType || e.title || 'Unknown Event',
-    customer: e.user?.name || e.user?.email || 'Customer',
-    status: e.status || (e.isActive ? 'Confirmed' : 'Pending'),
-    date: dateStr,
-    venue: e.venue?.city || e.venue?.address || 'Location TBD',
-    amount: e.pricing?.totalPrice || 0,
-    payment: e.pricing?.paymentStatus || 'unpaid',
-    staff: e.assignedTeam ? e.assignedTeam.map((t) => t.name) : [],
-    rawEvent: e,
-  };
-};
 
 // Persist AdminContext instance across Vite HMR to avoid Fast Refresh context desync
 const AdminContext =
@@ -125,7 +99,6 @@ export function AdminProvider({ children }) {
   const [dashboardStats, setDashboardStats] = useState(null);
   // customers removed for dynamic fetching
   const [reviews, setReviews] = useState([]);
-  const [eventBookings, setEventBookings] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,15 +109,12 @@ export function AdminProvider({ children }) {
     const fetchAdminData = async () => {
       setDataLoading(true);
       try {
-        const [reviewsRes, statsRes, eventsRes, auditLogsRes, alertsRes] = await Promise.allSettled(
-          [
-            reviewService.getAll({ limit: 999999 }),
-            analyticsService.getDashboardStats(),
-            eventService.getAll({ limit: 999999 }),
-            analyticsService.getAuditLogs({ limit: 999999 }),
-            notificationService.getAdminAlerts(),
-          ],
-        );
+        const [reviewsRes, statsRes, auditLogsRes, alertsRes] = await Promise.allSettled([
+          reviewService.getAll({ limit: 999999 }),
+          analyticsService.getDashboardStats(),
+          analyticsService.getAuditLogs({ limit: 999999 }),
+          notificationService.getAdminAlerts(),
+        ]);
 
         // Trigger fetches in hooks
         await Promise.all([productsHook.refreshProducts(), ordersHook.refreshOrders()]);
@@ -156,15 +126,6 @@ export function AdminProvider({ children }) {
         }
         if (statsRes.status === 'fulfilled' && statsRes.value?.success) {
           setDashboardStats(statsRes.value.data);
-        }
-        if (eventsRes.status === 'fulfilled' && eventsRes.value?.success) {
-          const evData = eventsRes.value.data;
-          const list =
-            evData?.events ||
-            evData?.items ||
-            evData?.data ||
-            (Array.isArray(evData) ? evData : []);
-          setEventBookings((Array.isArray(list) ? list : []).map(mapDbEventToFrontend));
         }
         if (auditLogsRes.status === 'fulfilled' && auditLogsRes.value?.success) {
           const rawLogs = auditLogsRes.value.data?.data || auditLogsRes.value.data || [];
@@ -290,19 +251,6 @@ export function AdminProvider({ children }) {
     }
   }, []);
 
-  const refreshEvents = useCallback(async () => {
-    try {
-      const res = await eventService.getAll({ limit: 999999 });
-      if (res.success) {
-        const evData = res.data;
-        const list = evData?.data || evData?.items || (Array.isArray(evData) ? evData : []);
-        setEventBookings(list.map(mapDbEventToFrontend));
-      }
-    } catch (_err) {
-      /* silent */
-    }
-  }, []);
-
   const refreshReviews = useCallback(async () => {
     try {
       const res = await reviewService.getAll({ limit: 999999 });
@@ -327,7 +275,6 @@ export function AdminProvider({ children }) {
     // most one refetch every few seconds instead of a storm of API refreshes.
     const debouncedDashboard = debounce(() => refreshDashboard(), 3000, { maxWait: 8000 });
     const debouncedOrders = debounce(() => ordersHook.refreshOrders(), 3000, { maxWait: 8000 });
-    const debouncedEvents = debounce(() => refreshEvents(), 3000, { maxWait: 8000 });
     const debouncedReviews = debounce(() => refreshReviews(), 3000, { maxWait: 8000 });
     const debouncedProducts = debounce(() => productsHook.refreshProducts(), 3000, {
       maxWait: 8000,
@@ -373,23 +320,11 @@ export function AdminProvider({ children }) {
     const onStockUpdate = () => {
       debouncedProducts();
     };
-    const onBookingUpdate = () => {
-      debouncedEvents();
-      debouncedDashboard();
-    };
     const onTimelineUpdate = () => {
       debouncedOrders();
       debouncedDashboard();
     };
-    const onCustomOrderUpdate = () => {
-      // No dedicated custom-order refresh in this context; refresh the events and
-      // dashboard, which surface related data.
-      debouncedEvents();
-      debouncedDashboard();
-    };
-    const onRentalUpdate = () => {
-      debouncedDashboard();
-    };
+
     const onReviewUpdate = () => {
       debouncedReviews();
       debouncedDashboard();
@@ -398,24 +333,17 @@ export function AdminProvider({ children }) {
     socket.on('new_notification', onNewNotification);
     socket.on('order_update', onOrderUpdate);
     socket.on('stock_update', onStockUpdate);
-    socket.on('booking_update', onBookingUpdate);
     socket.on('timeline_update', onTimelineUpdate);
-    socket.on('custom_order_update', onCustomOrderUpdate);
-    socket.on('rental_update', onRentalUpdate);
     socket.on('review_update', onReviewUpdate);
 
     return () => {
       socket.off('new_notification', onNewNotification);
       socket.off('order_update', onOrderUpdate);
       socket.off('stock_update', onStockUpdate);
-      socket.off('booking_update', onBookingUpdate);
       socket.off('timeline_update', onTimelineUpdate);
-      socket.off('custom_order_update', onCustomOrderUpdate);
-      socket.off('rental_update', onRentalUpdate);
       socket.off('review_update', onReviewUpdate);
       debouncedDashboard.cancel();
       debouncedOrders.cancel();
-      debouncedEvents.cancel();
       debouncedReviews.cancel();
       debouncedProducts.cancel();
       releaseAdminSocket();
@@ -477,8 +405,6 @@ export function AdminProvider({ children }) {
         setSidebarMobileOpen,
         toggleMobileSidebar,
         // customers removed
-        eventBookings,
-        refreshEvents,
         reviews,
         approveReview,
         refreshReviews,

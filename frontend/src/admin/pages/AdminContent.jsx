@@ -8,12 +8,8 @@ import { useAdmin } from '../context/AdminContext';
 import { useDraft } from '../hooks/useDraft';
 import { AdminContentSkeleton, PublishBar, PageHeader } from '../components/AdminUIKit';
 import { HomePageControllerEditor } from '../components/cms/HomePageControllerEditor';
-import { GalleryPortfolioEditor } from '../components/cms/GalleryPortfolioEditor';
-import { AboutPageDetailsEditor } from '../components/cms/AboutPageDetailsEditor';
 import { ShopPageEditor } from '../components/cms/ShopPageEditor';
-import { EventsPageEditor } from '../components/cms/EventsPageEditor';
 import { ContactInfoEditor } from '../components/cms/ContactInfoEditor';
-import { CustomOrdersEditor } from '../components/cms/CustomOrdersEditor';
 import { SEOCenterEditor } from '../components/cms/SEOCenterEditor';
 import { NavigationFooterEditor } from '../components/cms/NavigationFooterEditor';
 import { PublisherVersionsEditor } from '../components/cms/PublisherVersionsEditor';
@@ -47,34 +43,14 @@ const CMS_SIDEBAR = [
     title: 'Pages',
     items: [
       {
-        id: 'gallery',
-        label: 'Gallery Portfolio',
-        icon: 'photo_library',
-      },
-      {
-        id: 'about',
-        label: 'About Page',
-        icon: 'info',
-      },
-      {
         id: 'shop-page',
         label: 'Shop Page',
         icon: 'storefront',
       },
       {
-        id: 'events-page',
-        label: 'Events Page',
-        icon: 'celebration',
-      },
-      {
         id: 'contact',
         label: 'Contact Info',
         icon: 'contact_page',
-      },
-      {
-        id: 'custom-orders',
-        label: 'Custom Orders',
-        icon: 'design_services',
       },
     ],
   },
@@ -534,30 +510,13 @@ export function AdminContent() {
                   onUpdate={handleUpdateContent}
                 />
               )}
-              {activeSection === 'gallery' && (
-                <GalleryPortfolioEditor content={activeContent} onUpdate={handleUpdateContent} />
-              )}
-              {activeSection === 'about' && (
-                <AboutPageDetailsEditor
-                  content={activeContent.aboutPage}
-                  onUpdate={handleUpdateContent}
-                />
-              )}
               {activeSection === 'shop-page' && (
                 <ShopPageEditor content={activeContent.shopPage} onUpdate={handleUpdateContent} />
-              )}
-              {activeSection === 'events-page' && (
-                <EventsPageEditor
-                  content={activeContent.eventsPage}
-                  onUpdate={handleUpdateContent}
-                />
               )}
               {activeSection === 'contact' && (
                 <ContactInfoEditor content={activeContent.contact} onUpdate={handleUpdateContent} />
               )}
-              {activeSection === 'custom-orders' && (
-                <CustomOrdersEditor content={activeContent} onUpdate={handleUpdateContent} />
-              )}
+
               {activeSection === 'seo-center' && (
                 <SEOCenterEditor content={activeContent} onUpdate={handleUpdateContent} />
               )}

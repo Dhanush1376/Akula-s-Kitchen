@@ -353,8 +353,7 @@ export function AdminPaymentBadge({
       (isPaid && !isCod));
 
   if (isOnlinePaid) {
-    const isWallet = m.includes('wallet');
-    const badgeText = isWallet ? 'PAID (WALLET)' : 'PAID (ONLINE)';
+    const badgeText = 'PAID (ONLINE)';
     return (
       <span
         title="Payment completed and verified via payment gateway"

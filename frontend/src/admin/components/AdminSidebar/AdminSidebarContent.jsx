@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { m as motion, AnimatePresence } from 'framer-motion';
-import { SiriLogo } from '../../../components/ui/SiriLogo';
+import { BrandLogo } from '../../../components/ui/BrandLogo';
 import { useAuth } from '../../../context/AuthContext';
 import { useAdmin } from '../../context/AdminContext';
 import { useConfig } from '../../../context/ConfigContext';
@@ -52,7 +52,7 @@ export function AdminSidebarContent({
             title={`${storeName} Dashboard`}
             aria-label={`${storeName} Dashboard`}
           >
-            <SiriLogo size="44px" showSubtitle={false} className="shrink-0" />
+            <BrandLogo size="44px" showSubtitle={false} className="shrink-0" />
           </button>
         </div>
 
@@ -276,7 +276,7 @@ export function AdminSidebarContent({
       >
         <NavLink
           to="/"
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-[var(--admin-radius-md)] text-[13px] font-bold text-white bg-[var(--admin-accent)] hover:brightness-110 shadow-sm transition-all min-h-[36px] ${
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-[var(--admin-radius-md)] text-[13px] font-bold text-black bg-[#D4A41C] hover:bg-[#B88A0F] shadow-sm transition-all min-h-[36px] ${
             !sidebarOpen ? 'justify-center px-1' : ''
           }`}
         >

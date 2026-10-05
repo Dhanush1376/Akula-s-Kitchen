@@ -28,7 +28,7 @@ import {
   getRelativeTime,
 } from '../components/AdminUIKit';
 
-// Curated Luxury Multi-Color Palette (Tuned to Cream & Ivory decor theme)
+// Curated Luxury Multi-Color Palette (Tuned to Cream & Ivory theme)
 const VIBRANT_MULTI_COLORS = [
   '#5a7d9a', // Warm Slate Blue (matches theme slate)
   '#7d6899', // Muted Royal Amethyst
@@ -51,7 +51,7 @@ const VIBRANT_MULTI_COLORS = [
 // Rich human-understandable metadata for recommendation sources tuned to theme shades
 const RECOMMENDATION_SOURCE_META = {
   trending: {
-    name: 'Trending Decor',
+    name: 'Trending Products',
     location: 'Homepage & Top Curations',
     description: 'Visitors discovering popular catalog pieces',
     color: '#5a7d9a', // Warm Slate Blue
@@ -70,8 +70,8 @@ const RECOMMENDATION_SOURCE_META = {
   },
   seasonal: {
     name: 'Festive & Seasonal',
-    location: 'Festival Collections & Occasions',
-    description: 'Seasonal celebration collections',
+    location: 'Seasonal Collections',
+    description: 'Seasonal & festive collections',
     color: '#c2944b', // Warm Heritage Gold / Ochre
   },
 };
@@ -229,41 +229,9 @@ export function AdminRecommendationAnalytics() {
     }
   }, [searchParams]);
 
-  const KNOWN_EVENT_CATEGORIES = useMemo(
-    () => [
-      'South Indian Wedding',
-      'Traditional Indian Festival',
-      'Engagement Ceremony',
-      'Sankranthi Festive Decor',
-      'Ganesh Pooja Backdrops',
-      'Butta Decoration',
-      'Indian Wedding Gifts',
-      'Reception & Sangeet',
-      'Haldi & Mehendi Decor',
-      'Baby Shower & Seemantham',
-      'Birthday & Milestone Celebrations',
-      'Event Packages',
-      'Event Showcase',
-    ],
-    [],
-  );
+  const KNOWN_EVENT_CATEGORIES = useMemo(() => [], []);
 
-  const KNOWN_PRODUCT_CATEGORIES = useMemo(
-    () => [
-      'Bangle Trays',
-      'Pooja Decoration Sets',
-      'Tray Decorations',
-      'Jewellery Trays',
-      'Kobbari Chippalu',
-      'Gift Hampers',
-      'Coconut Decorations',
-      'Return Gifts',
-      'Props & Backdrops',
-      'Decor Products',
-      'Order Checkout',
-    ],
-    [],
-  );
+  const KNOWN_PRODUCT_CATEGORIES = useMemo(() => ['Order Checkout'], []);
 
   // Dynamically collect all available product & event categories from live logs and affinities
   const { productCategoriesList, eventCategoriesList } = useMemo(() => {
@@ -279,23 +247,7 @@ export function AdminRecommendationAnalytics() {
       )
         return;
       const clean = catName.trim();
-      const lower = clean.toLowerCase();
-      const isEvent =
-        dom === 'event' ||
-        [
-          'wedding',
-          'festival',
-          'engagement',
-          'sankranthi',
-          'ganesh',
-          'haldi',
-          'mehendi',
-          'shower',
-          'birthday',
-          'reception',
-          'ceremony',
-          'event',
-        ].some((k) => lower.includes(k));
+      const isEvent = dom === 'event';
 
       if (isEvent) {
         evtSet.add(clean);
@@ -1119,8 +1071,8 @@ export function AdminRecommendationAnalytics() {
                 <AreaChart data={stats.engagementMetrics.interactionsByDay}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#826237" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#826237" stopOpacity={0.02} />
+                      <stop offset="5%" stopColor="#D4A41C" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#D4A41C" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -1143,7 +1095,7 @@ export function AdminRecommendationAnalytics() {
                   <Area
                     type="monotone"
                     dataKey="count"
-                    stroke="#826237"
+                    stroke="#D4A41C"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorCount)"
@@ -1389,7 +1341,7 @@ export function AdminRecommendationAnalytics() {
         {/* Active Profile Affinities with Vibrant Multi-Colors */}
         <ChartCard
           title="User Top Affinities"
-          subtitle="Top decor themes and categories customers are interested in"
+          subtitle="Top categories customers are interested in"
         >
           <div className="min-h-[380px] sm:h-[480px] flex flex-col justify-center">
             {formattedAffinities.length === 0 ? (

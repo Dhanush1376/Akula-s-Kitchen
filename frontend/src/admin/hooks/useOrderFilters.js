@@ -166,7 +166,10 @@ export function useOrderFilters(orders = [], searchQuery = '') {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `EventDecor_Orders_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute(
+      'download',
+      `AkulasKitchen_Orders_${new Date().toISOString().slice(0, 10)}.csv`,
+    );
     link.click();
     toast.success('Orders CSV Export ready');
   };

@@ -24,13 +24,12 @@ export function AdminCustomerProfileModalSkeleton() {
         <SkeletonBox width="32px" height="32px" rounded="sm" />
       </div>
 
-      {/* 2. 4 Top KPI Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* 2. Top KPI Metrics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
           { label: 'Total Spent', width: '90px' },
           { label: 'Orders Placed', width: '40px' },
-          { label: 'Wallet Balance', width: '70px' },
-          { label: 'Siri Coins', width: '50px' },
+          { label: 'Loyalty Tier', width: '70px' },
         ].map((kpi, idx) => (
           <div
             key={idx}

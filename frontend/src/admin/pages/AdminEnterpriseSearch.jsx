@@ -524,14 +524,6 @@ export default function AdminEnterpriseSearch() {
                                 toggle_on
                               </span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-[var(--admin-surface-muted)] rounded-lg border border-[var(--admin-border)]">
-                              <span className="text-sm font-medium text-[var(--admin-text-secondary)]">
-                                Visual Image Search
-                              </span>
-                              <span className="text-green-500 material-symbols-outlined text-[18px]">
-                                toggle_on
-                              </span>
-                            </div>
                           </div>
                         </div>
                       </div>

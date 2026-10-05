@@ -27,13 +27,6 @@ const NAV_ITEMS = [
     keywords: 'cms, policy, settings, shipping, footer, headers',
   },
   {
-    label: 'Heritage Photo Gallery',
-    path: '/admin/gallery',
-    category: 'Navigation',
-    icon: 'photo_library',
-    keywords: 'gallery, media, designs, blueprint, curations',
-  },
-  {
     label: 'Catalog Products',
     path: '/admin/products',
     category: 'Navigation',
@@ -68,13 +61,7 @@ const NAV_ITEMS = [
     icon: 'shopping_bag',
     keywords: 'orders, sales, shipping, packages, deliveries',
   },
-  {
-    label: 'Custom Blueprints & Inquiries',
-    path: '/admin/custom-orders',
-    category: 'Navigation',
-    icon: 'architecture',
-    keywords: 'blueprints, custom, consultations, requests, event decor',
-  },
+
   {
     label: 'Customer Relationship CRM',
     path: '/admin/customers',
@@ -83,25 +70,11 @@ const NAV_ITEMS = [
     keywords: 'users, customers, profile, vip, list',
   },
   {
-    label: 'Coupons & Discounts',
-    path: '/admin/coupons',
-    category: 'Navigation',
-    icon: 'sell',
-    keywords: 'discounts, offers, coupons, voucher, active offers',
-  },
-  {
     label: 'Payments & Invoices',
     path: '/admin/payments',
     category: 'Navigation',
     icon: 'payments',
     keywords: 'invoices, razorpay, cod, transaction history',
-  },
-  {
-    label: 'Event Bookings & Themes',
-    path: '/admin/events',
-    category: 'Navigation',
-    icon: 'event',
-    keywords: 'events, setups, venue, active bookings',
   },
   {
     label: 'Platform Analytics',
@@ -128,7 +101,7 @@ const NAV_ITEMS = [
 
 export function GlobalSearchPalette({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { products, orders, customers, eventBookings, setSearchQuery } = useAdmin();
+  const { products, orders, customers, setSearchQuery } = useAdmin();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -244,26 +217,6 @@ export function GlobalSearchPalette({ isOpen, onClose }) {
         });
       }
 
-      // 5. Event Bookings Match
-      if (eventBookings) {
-        eventBookings.forEach((e) => {
-          if (
-            e.eventType.toLowerCase().includes(q) ||
-            e.customer.toLowerCase().includes(q) ||
-            (e.venue && e.venue.toLowerCase().includes(q))
-          ) {
-            matches.push({
-              id: `evt-${e.id}`,
-              label: e.eventType,
-              sub: `Event Setup • Client: ${e.customer} • Venue: ${e.venue} • Status: ${e.status}`,
-              category: 'Events',
-              icon: 'celebration',
-              path: `/admin/events`,
-            });
-          }
-        });
-      }
-
       setResults(matches.slice(0, 15)); // Limit to top 15 results for performance
       setActiveIndex(0);
     }, 0);
@@ -272,7 +225,7 @@ export function GlobalSearchPalette({ isOpen, onClose }) {
       active = false;
       clearTimeout(timer);
     };
-  }, [query, products, orders, customers, eventBookings, navigate, setSearchQuery]);
+  }, [query, products, orders, customers, navigate, setSearchQuery]);
 
   // Scroll active item into view inside the command list
   useEffect(() => {

@@ -16,13 +16,9 @@ const ENTITY_TYPE_CONFIG = {
   Category: { label: 'Categories', icon: 'category', variant: 'neutral' },
   Order: { label: 'Orders', icon: 'shopping_bag', variant: 'primary' },
   RentalOrder: { label: 'Rentals', icon: 'car_rental', variant: 'info' },
-  ReturnRequest: { label: 'Returns', icon: 'assignment_return', variant: 'warning' },
-  ExchangeRequest: { label: 'Exchanges', icon: 'sync_alt', variant: 'neutral' },
-  CustomOrder: { label: 'Custom Orders', icon: 'palette', variant: 'primary' },
   EventJob: { label: 'Bookings', icon: 'celebration', variant: 'warning' },
   User: { label: 'Customers', icon: 'person', variant: 'success' },
   Review: { label: 'Reviews', icon: 'rate_review', variant: 'warning' },
-  Gallery: { label: 'Gallery', icon: 'photo_library', variant: 'neutral' },
 };
 
 const getThumbnail = (item) => {
@@ -345,13 +341,9 @@ export default function AdminRecycleBin() {
                       <option value="Category">Categories</option>
                       <option value="Order">Orders</option>
                       <option value="RentalOrder">Rentals</option>
-                      <option value="CustomOrder">Custom Orders</option>
                       <option value="EventJob">Bookings</option>
-                      <option value="ReturnRequest">Returns</option>
-                      <option value="ExchangeRequest">Exchanges</option>
                       <option value="User">Customers</option>
                       <option value="Review">Reviews</option>
-                      <option value="Gallery">Gallery</option>
                     </select>
                   </div>
 

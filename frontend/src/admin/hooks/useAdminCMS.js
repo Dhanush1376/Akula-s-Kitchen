@@ -402,20 +402,6 @@ export function useAdminCMS({
       if (response.success && response.data && Object.keys(response.data).length > 0) {
         setWebsiteContent((prev) => {
           const merged = { ...initialWebsiteContent, ...response.data };
-          if (response.data.eventsPage) {
-            merged.eventsPage = {
-              ...initialWebsiteContent.eventsPage,
-              ...response.data.eventsPage,
-              hero: {
-                ...initialWebsiteContent.eventsPage.hero,
-                ...(response.data.eventsPage.hero || {}),
-              },
-              promo: {
-                ...initialWebsiteContent.eventsPage.promo,
-                ...(response.data.eventsPage.promo || {}),
-              },
-            };
-          }
           Object.keys(prev).forEach((key) => {
             if (prev[key]?.status === 'modified') {
               merged[key] = prev[key];

@@ -163,18 +163,6 @@ export function ProductReviewStep({ formData, setFormData }) {
               </span>
             </div>
 
-            {/* New Added Fields */}
-            {formData.customerNote && (
-              <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">
-                <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
-                  Customer Note
-                </span>
-                <span className="font-bold text-[var(--admin-text-primary)] sm:text-right max-w-[200px] truncate">
-                  {formData.customerNote}
-                </span>
-              </div>
-            )}
-
             <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">
               <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
                 Personalization

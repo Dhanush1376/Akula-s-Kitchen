@@ -9,8 +9,6 @@ import { useMobileDrawerEngine, DrawerDragHandle } from '../../../components/ui/
 
 const SCOPES = [
   { id: 'product', label: 'Product Catalog', icon: 'inventory_2' },
-  { id: 'event', label: 'Real Events', icon: 'celebration' },
-  { id: 'gallery', label: 'Inspiration Gallery', icon: 'photo_library' },
   { id: 'global', label: 'Global Scope', icon: 'public' },
 ];
 
@@ -140,7 +138,7 @@ export function CategoryModalDrawer({ isOpen, onClose, category = null, onSucces
             }}
             transition={sheetTransition}
             {...dragProps}
-            className="pointer-events-auto relative w-full sm:max-w-md md:max-w-lg bg-[var(--admin-surface)] rounded-t-2xl sm:rounded-[4px] shadow-2xl border-t sm:border border-[var(--admin-border)] flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden z-10"
+            className="pointer-events-auto relative w-full sm:max-w-md md:max-w-lg bg-[var(--admin-surface)] rounded-t-[18px] sm:rounded-[4px] shadow-2xl border-t sm:border border-[var(--admin-border)] flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden z-10"
             onClick={(e) => e.stopPropagation()}
           >
             {isMobile && <DrawerDragHandle onClick={!submitting ? onClose : undefined} />}
@@ -179,7 +177,7 @@ export function CategoryModalDrawer({ isOpen, onClose, category = null, onSucces
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Traditional Mandaps"
+                    placeholder="e.g. Pickles"
                     value={name}
                     onChange={handleNameChange}
                     className="w-full h-9 rounded-[4px] bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] px-3 text-[13px] text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] font-medium outline-none transition-colors"

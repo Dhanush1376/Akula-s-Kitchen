@@ -281,7 +281,7 @@ export function AdminOrders({ hideHeader = false }) {
                 {/* 4. Placement Date (Strictly on Created Date) */}
                 <div>
                   <label className="text-[10px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider mb-1.5 block">
-                    Date Placed (Booking Created)
+                    Date Placed
                   </label>
                   <select
                     value={filterState.placementDate}

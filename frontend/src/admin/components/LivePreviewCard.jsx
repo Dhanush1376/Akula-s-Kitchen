@@ -5,18 +5,18 @@ export function LivePreviewCard({ formData, mobileTab, categoriesList = [] }) {
   const resolvedCategory = useMemo(() => {
     const cat = formData.primaryCategory || formData.category;
     if (typeof cat === 'object' && cat !== null) {
-      return cat.name || 'General Decor';
+      return cat.name || 'General';
     }
     if (typeof cat === 'string' && cat.trim()) {
       if (/^[a-fA-F0-9]{24}$/.test(cat)) {
         const found = categoriesList.find((c) => (typeof c === 'object' ? c._id === cat : false));
-        if (found) return found.name || found.title || 'General Decor';
+        if (found) return found.name || found.title || 'General';
       }
       if (cat.toLowerCase() !== 'category') {
         return cat;
       }
     }
-    return 'General Decor';
+    return 'General';
   }, [formData.primaryCategory, formData.category, categoriesList]);
 
   return (

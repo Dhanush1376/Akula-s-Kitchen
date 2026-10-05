@@ -6,13 +6,13 @@ export function PublisherVersionsEditor() {
     {
       id: 4,
       tag: 'v2.4',
-      desc: 'Pre-Diwali Launch Curation - by Sirisha',
+      desc: 'Pre-Diwali Launch Curation - by Sirisha Akula',
       time: 'May 17, 2026 19:30',
     },
     {
       id: 3,
       tag: 'v2.3',
-      desc: 'Summer Wedding Collections - by Balaji',
+      desc: 'Seasonal Catalog Update - by Balaji',
       time: 'May 10, 2026 14:15',
     },
   ];

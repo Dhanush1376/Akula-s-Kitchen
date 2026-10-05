@@ -9,18 +9,13 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
   const exploreLinks =
     footer.exploreLinks?.length > 0
       ? footer.exploreLinks
-      : [
-          { label: 'Collections', href: '/collections' },
-          { label: 'Events', href: '/events' },
-          { label: 'Gallery', href: '/gallery' },
-        ];
+      : [{ label: 'Collections', href: '/collections' }];
 
   const studioLinks =
     footer.studioLinks?.length > 0
       ? footer.studioLinks
       : [
-          { label: 'Our Story', href: '/about' },
-          { label: 'Custom Orders', href: '/custom-orders' },
+          { label: 'Collections', href: '/collections' },
           { label: 'Contact', href: '/contact' },
         ];
 
@@ -42,7 +37,7 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
       ? footer.trustBadges
       : [
           { label: 'Secure Checkout', href: 'lock' },
-          { label: '100% Handcrafted', href: 'draw' },
+          { label: '100% Homemade', href: 'draw' },
           { label: 'Fast Delivery', href: 'local_shipping' },
           { label: 'Simple Returns', href: 'refresh' },
         ];

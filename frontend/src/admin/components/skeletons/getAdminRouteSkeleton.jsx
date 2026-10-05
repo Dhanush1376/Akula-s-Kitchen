@@ -5,17 +5,7 @@ import {
   AdminProductWizardSkeleton,
   AdminOrdersSkeleton,
   AdminOrderDetailSkeleton,
-  AdminRentalsSkeleton,
-  AdminRentalDetailSkeleton,
-  AdminRentalPoliciesSkeleton,
-  AdminCustomOrdersSkeleton,
   AdminCustomersSkeleton,
-  AdminEventsSkeleton,
-  AdminBookingDetailSkeleton,
-  AdminAddEventSkeleton,
-  AdminAddShowcaseSkeleton,
-  AdminGallerySkeleton,
-  AdminAddGallerySkeleton,
   AdminCategoriesSkeleton,
   AdminPoliciesSkeleton,
   AdminInventorySkeleton,
@@ -23,16 +13,11 @@ import {
   AdminAnalyticsSkeleton,
   AdminPaymentsSkeleton,
   AdminNotificationsSkeleton,
-  AdminCouponsSkeleton,
-  AdminCreateCouponSkeleton,
   AdminContentSkeleton,
   AdminTeamSkeleton,
   AdminSettingsSkeleton,
   AdminReviewsSkeleton,
-  AdminReturnsHubSkeleton,
-  AdminReturnDetailSkeleton,
   AdminRecycleBinSkeleton,
-  AdminServiceAreasSkeleton,
   AdminServiceabilitySkeleton,
   AdminDraftsSkeleton,
   AdminEnterpriseSearchSkeleton,
@@ -100,65 +85,24 @@ export function getAdminRouteSkeleton(pathname = '') {
     return <AdminOrdersSkeleton />;
   }
 
-  // 8. Rentals
-  if (cleanPath.startsWith('/admin/rentals/detail/')) {
-    return <AdminRentalDetailSkeleton />;
-  }
-  if (cleanPath === '/admin/rental-policies') {
-    return <AdminRentalPoliciesSkeleton />;
-  }
-  if (cleanPath.startsWith('/admin/rentals')) {
-    return <AdminRentalsSkeleton />;
-  }
-
-  // 9. Service Areas & Serviceability
-  if (cleanPath === '/admin/service-areas') {
-    return <AdminServiceAreasSkeleton />;
-  }
+  // 8. Serviceability
   if (cleanPath === '/admin/serviceability') {
     return <AdminServiceabilitySkeleton />;
   }
 
-  // 10. Custom Orders & Inquiries
-  if (cleanPath === '/admin/custom-orders') {
-    return <AdminCustomOrdersSkeleton />;
-  }
-
-  // 11. Customers
+  // 9. Customers
   if (cleanPath === '/admin/customers') {
     return <AdminCustomersSkeleton />;
   }
 
-  // 12. Executive Summary
+  // 10. Executive Summary
   if (cleanPath === '/admin/executive') {
     return <AdminExecutiveDashboardSkeleton />;
   }
 
-  // 13. Gallery
-  if (cleanPath === '/admin/gallery/add' || cleanPath.startsWith('/admin/gallery/edit/')) {
-    return <AdminAddGallerySkeleton />;
-  }
-  if (cleanPath === '/admin/gallery') {
-    return <AdminGallerySkeleton />;
-  }
-
-  // 14. Categories
+  // 11. Categories
   if (cleanPath.startsWith('/admin/categories')) {
     return <AdminCategoriesSkeleton />;
-  }
-
-  // 15. Events, Showcases & Bookings
-  if (cleanPath === '/admin/events/add' || cleanPath.startsWith('/admin/events/edit/')) {
-    return <AdminAddEventSkeleton />;
-  }
-  if (cleanPath === '/admin/showcases/add' || cleanPath.startsWith('/admin/showcases/edit/')) {
-    return <AdminAddShowcaseSkeleton />;
-  }
-  if (cleanPath.match(/^\/admin\/events\/[^/]+$/)) {
-    return <AdminBookingDetailSkeleton />;
-  }
-  if (cleanPath.startsWith('/admin/events')) {
-    return <AdminEventsSkeleton />;
   }
 
   // 16. Search
@@ -172,14 +116,6 @@ export function getAdminRouteSkeleton(pathname = '') {
   }
   if (cleanPath === '/admin/analytics') {
     return <AdminAnalyticsSkeleton />;
-  }
-
-  // 18. Coupons
-  if (cleanPath === '/admin/coupons/create' || cleanPath.startsWith('/admin/coupons/edit/')) {
-    return <AdminCreateCouponSkeleton />;
-  }
-  if (cleanPath === '/admin/coupons') {
-    return <AdminCouponsSkeleton />;
   }
 
   // 19. Payments
@@ -215,19 +151,6 @@ export function getAdminRouteSkeleton(pathname = '') {
     cleanPath.endsWith('/recycle-bin')
   ) {
     return <AdminRecycleBinSkeleton />;
-  }
-
-  // 29. Returns & Exchanges
-  if (
-    cleanPath.startsWith('/admin/returns/requests/') ||
-    cleanPath.match(/^\/admin\/returns\/[^/]+$/) ||
-    cleanPath.startsWith('/admin/exchanges/requests/') ||
-    cleanPath.match(/^\/admin\/exchanges\/[^/]+$/)
-  ) {
-    return <AdminReturnDetailSkeleton />;
-  }
-  if (cleanPath === '/admin/returns' || cleanPath === '/admin/exchanges') {
-    return <AdminReturnsHubSkeleton />;
   }
 
   // 30. Backup Center

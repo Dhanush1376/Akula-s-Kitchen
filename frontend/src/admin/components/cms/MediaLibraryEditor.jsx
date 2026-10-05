@@ -1,22 +1,8 @@
 import React from 'react';
 import toast from 'react-hot-toast';
-import { PLACEHOLDER_IMAGES } from '../../../constants/placeholderImages';
 
 export function MediaLibraryEditor() {
-  const mediaFiles = [
-    {
-      id: 1,
-      name: 'temple_style_mandap.png',
-      size: '1.4 MB',
-      url: PLACEHOLDER_IMAGES.collectionWedding,
-    },
-    {
-      id: 2,
-      name: 'luxury_royal_wedding.png',
-      size: '2.1 MB',
-      url: PLACEHOLDER_IMAGES.mandalaHero,
-    },
-  ];
+  const mediaFiles = [];
 
   return (
     <div className="space-y-8">

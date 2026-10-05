@@ -26,12 +26,12 @@ import {
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
 
-// ─── Cream & Ivory SaaS Palette ───
+// ─── Akula's Kitchen Brand Palette (Logo Matched) ───
 const THEME = {
-  gold: '#826237',
-  goldHover: '#664b28',
-  goldMuted: 'rgba(130, 98, 55, 0.12)',
-  goldSubtle: 'rgba(130, 98, 55, 0.05)',
+  gold: '#D4A41C',
+  goldHover: '#B88A0F',
+  goldMuted: 'rgba(212, 164, 28, 0.15)',
+  goldSubtle: 'rgba(212, 164, 28, 0.06)',
   slate: '#6b8ead',
   slateMuted: 'rgba(107, 142, 173, 0.15)',
   sage: '#7a8b76',
@@ -212,7 +212,6 @@ export function AdminAnalytics() {
   const {
     dashboardStats,
     orders = [],
-    eventBookings = [],
     dataLoading,
     refreshDashboard,
     refreshOrders,
@@ -462,45 +461,31 @@ export function AdminAnalytics() {
     };
   }, [orders, selectedPeriod, dashboardStats]);
 
-  // ─── Revenue Streams Breakdown (Products vs Event Rentals vs Custom) ───
+  // ─── Revenue Streams Breakdown (Products vs Rentals) ───
   const revenueStreams = useMemo(() => {
     let productSales = 0;
     let productCount = 0;
     let rentalSales = 0;
     let rentalCount = 0;
-    let customSales = 0;
-    let customCount = 0;
 
     // From Orders
     orders.forEach((o) => {
       const tot = Number(o.total || 0);
-      if (o.isCustomOrder || o.rawOrder?.isCustomOrder) {
-        customSales += tot;
-        customCount += 1;
+      const hasRentalItem = Array.isArray(o.items) && o.items.some((it) => it.type === 'rental');
+      if (hasRentalItem) {
+        rentalSales += tot;
+        rentalCount += 1;
       } else {
-        const hasRentalItem = Array.isArray(o.items) && o.items.some((it) => it.type === 'rental');
-        if (hasRentalItem) {
-          rentalSales += tot;
-          rentalCount += 1;
-        } else {
-          productSales += tot;
-          productCount += 1;
-        }
+        productSales += tot;
+        productCount += 1;
       }
     });
 
-    // From EventBookings
-    eventBookings.forEach((eb) => {
-      const amount = Number(eb.amount || eb.rawEvent?.pricing?.totalPrice || 0);
-      rentalSales += amount;
-      rentalCount += 1;
-    });
-
-    const grandTotal = productSales + rentalSales + customSales || 1;
+    const grandTotal = productSales + rentalSales || 1;
 
     return [
       {
-        name: 'Storefront Decor Sales',
+        name: 'Storefront Sales',
         revenue: productSales,
         orders: productCount,
         percentage: Math.round((productSales / grandTotal) * 100),
@@ -508,23 +493,15 @@ export function AdminAnalytics() {
         icon: 'storefront',
       },
       {
-        name: 'Event Bookings & Rentals',
+        name: 'Rentals',
         revenue: rentalSales,
         orders: rentalCount,
         percentage: Math.round((rentalSales / grandTotal) * 100),
         color: THEME.slate,
         icon: 'celebration',
       },
-      {
-        name: 'Custom Bespoke Orders',
-        revenue: customSales,
-        orders: customCount,
-        percentage: Math.round((customSales / grandTotal) * 100),
-        color: THEME.sage,
-        icon: 'design_services',
-      },
     ];
-  }, [orders, eventBookings]);
+  }, [orders]);
 
   // ─── Top Revenue Generating Products ───
   const topRevenueProducts = useMemo(() => {
@@ -533,12 +510,12 @@ export function AdminAnalytics() {
     orders.forEach((o) => {
       if (Array.isArray(o.items)) {
         o.items.forEach((it) => {
-          const key = it.name || 'Decor Item';
+          const key = it.name || 'Item';
           if (!productMap[key]) {
             productMap[key] = {
               name: key,
               image: it.image || null,
-              category: it.category || 'Handcrafted',
+              category: it.category || 'Uncategorized',
               units: 0,
               revenue: 0,
             };
@@ -622,7 +599,7 @@ export function AdminAnalytics() {
       const percentage = Math.round((count / safeTotal) * 100);
       const color = CATEGORY_PALETTE[idx % CATEGORY_PALETTE.length];
       return {
-        name: item.name || 'Decor & Crafts',
+        name: item.name || 'Uncategorized',
         value: count,
         percentage,
         fill: color,
@@ -993,7 +970,7 @@ export function AdminAnalytics() {
                 No Sales Recorded For This Period
               </p>
               <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-0.5">
-                Completed customer checkouts and rental bookings will populate this chart.
+                Completed customer checkouts will populate this chart.
               </p>
             </div>
           ) : salesView === 'revenue' ? (
@@ -1166,8 +1143,7 @@ export function AdminAnalytics() {
               </span>
             </div>
             <p className="hidden sm:block text-[12px] text-[var(--admin-text-tertiary)] mb-4">
-              Financial performance segmented across retail decor purchases, event bookings, and
-              bespoke orders
+              Financial performance segmented across storefront purchases and rentals
             </p>
 
             <div className="space-y-2.5 sm:space-y-3.5 mt-2 sm:mt-0">
@@ -1194,13 +1170,7 @@ export function AdminAnalytics() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[12px] sm:text-[13px] font-bold text-[var(--admin-text-primary)] truncate">
-                          {stream.name === 'Storefront Decor Sales'
-                            ? 'Storefront Decor'
-                            : stream.name === 'Event Bookings & Rentals'
-                              ? 'Event Rentals'
-                              : stream.name === 'Custom Bespoke Orders'
-                                ? 'Custom Bespoke'
-                                : stream.name}
+                          {stream.name}
                         </p>
                         <p className="text-[10.5px] sm:text-[11px] text-[var(--admin-text-tertiary)]">
                           {stream.orders} {stream.orders === 1 ? 'order' : 'orders'}
@@ -1285,7 +1255,7 @@ export function AdminAnalytics() {
               </div>
             </div>
             <p className="hidden sm:block text-[12px] text-[var(--admin-text-tertiary)] mb-4">
-              Breakdown of decor items purchased across catalog departments
+              Breakdown of items purchased across catalog categories
             </p>
 
             {categoryStats.list.length === 0 ? (
@@ -1438,7 +1408,7 @@ export function AdminAnalytics() {
               </span>
             </div>
             <p className="hidden sm:block text-[12px] text-[var(--admin-text-tertiary)] mb-3">
-              Best-selling decor centerpieces and rental inventory driving store revenue
+              Best-selling products driving store revenue
             </p>
 
             {topRevenueProducts.length === 0 ? (

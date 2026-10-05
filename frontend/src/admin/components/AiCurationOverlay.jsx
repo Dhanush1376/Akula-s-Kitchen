@@ -113,7 +113,7 @@ export function AiCurationOverlay({
             }}
             transition={sheetTransition}
             {...dragProps}
-            className="pointer-events-auto relative z-10 bg-[var(--admin-surface)] border-t sm:border border-[var(--admin-border)] w-full sm:max-w-2xl lg:max-w-3xl rounded-t-2xl sm:rounded-xl shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[86vh] overflow-hidden"
+            className="pointer-events-auto relative z-10 bg-[var(--admin-surface)] border-t sm:border border-[var(--admin-border)] w-full sm:max-w-2xl lg:max-w-3xl rounded-t-[18px] sm:rounded-xl shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[86vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {isMobile && (
@@ -179,7 +179,7 @@ export function AiCurationOverlay({
                     type="text"
                     value={aiAnalysisResult.detected_object || ''}
                     onChange={(e) => updateField('detected_object', e.target.value)}
-                    placeholder="Detected object class (e.g. Coconut Decor)"
+                    placeholder="Detected object class (e.g. Mango Pickle)"
                     className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-8 pr-2.5 py-1.5 text-[13px] font-bold text-[var(--admin-text-primary)] focus:border-[var(--admin-accent)] outline-none transition-all"
                   />
                 </div>
@@ -332,10 +332,10 @@ export function AiCurationOverlay({
                 </div>
               </div>
 
-              {/* Craft Materials */}
+              {/* Ingredients */}
               <div className="p-3 sm:p-3.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] space-y-2">
                 <span className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block">
-                  Detected Craft Materials
+                  Detected Ingredients
                 </span>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {(aiAnalysisResult.materials || []).map((m, idx) => (

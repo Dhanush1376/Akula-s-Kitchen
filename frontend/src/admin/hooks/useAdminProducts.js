@@ -13,7 +13,7 @@ const mapDbProductToFrontend = (p) => {
 
   return {
     id: p._id || p.id || 'PRD-UNKNOWN',
-    name: p.title || p.name || 'Handcrafted Decor Piece',
+    name: p.title || p.name || 'Product',
     nameTE: p.teluguTitle || p.nameTE || '',
     category: p.primaryCategory?.name || p.primaryCategory || 'Uncategorized',
     price: p.price || 0,

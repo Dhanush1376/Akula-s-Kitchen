@@ -14,10 +14,10 @@ import {
 } from 'recharts';
 import { ChartTooltip, formatCurrency } from '../AdminUIKit';
 
-// Curated Luxury Cream & Ivory Decor Palette
+// Curated Luxury Cream & Ivory Palette
 const PALETTE = [
   '#5a7d9a', // Warm Slate Blue
-  '#826237', // Heritage Gold
+  '#D4A41C', // Akula's Kitchen Logo Gold
   '#58856b', // Deep Sage Olive
   '#b8647c', // Dusty Antique Rose
   '#c2944b', // Warm Ochre
@@ -203,7 +203,7 @@ export function AdminDashboardCharts({
               Orders Placed
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-[2px] bg-[#826237]" />
+              <span className="w-2.5 h-2.5 rounded-[2px] bg-[#D4A41C]" />
               Products Sold
             </span>
           </div>
@@ -236,7 +236,7 @@ export function AdminDashboardCharts({
             />
             <Tooltip content={<ChartTooltip />} />
             <Bar dataKey="ordersCount" fill="#5a7d9a" radius={[3, 3, 0, 0]} name="Orders Placed" />
-            <Bar dataKey="itemsCount" fill="#826237" radius={[3, 3, 0, 0]} name="Products Sold" />
+            <Bar dataKey="itemsCount" fill="#D4A41C" radius={[3, 3, 0, 0]} name="Products Sold" />
           </BarChart>
         </ResponsiveContainer>
       </div>

@@ -5,7 +5,6 @@ import { ProductInfoStep } from './steps/ProductInfoStep';
 import { ProductVariantsStep } from './steps/ProductVariantsStep';
 import { ProductSeoStep } from './steps/ProductSeoStep';
 import { ProductPricingStep } from './steps/ProductPricingStep';
-import { ProductReturnStep } from './steps/ProductReturnStep';
 import { ProductReviewStep } from './steps/ProductReviewStep';
 import { SkeletonWizard } from '../components/AdminUIKit';
 import { LivePreviewCard } from '../components/LivePreviewCard';
@@ -37,7 +36,6 @@ const WIZARD_STEPS = [
   { id: 'basics', label: 'Basic Info', icon: 'info' },
   { id: 'variants', label: 'Variants', icon: 'style' },
   { id: 'pricing', label: 'Pricing', icon: 'payments' },
-  { id: 'policies', label: 'Policies', icon: 'assignment_return' },
   { id: 'seo', label: 'SEO', icon: 'search' },
   { id: 'review', label: 'Publish', icon: 'publish' },
 ];
@@ -489,13 +487,8 @@ export function AdminAddProduct({ editId }) {
                   />
                 )}
 
-                {/* STEP 4: RETURN POLICIES */}
+                {/* STEP 4: SEO */}
                 {currentStep === 4 && (
-                  <ProductReturnStep formData={formData} setFormData={setFormData} />
-                )}
-
-                {/* STEP 5: SEO */}
-                {currentStep === 5 && (
                   <ProductSeoStep
                     formData={formData}
                     setFormData={setFormData}
@@ -505,8 +498,8 @@ export function AdminAddProduct({ editId }) {
                   />
                 )}
 
-                {/* STEP 6: REVIEW */}
-                {currentStep === 6 && (
+                {/* STEP 5: REVIEW */}
+                {currentStep === 5 && (
                   <ProductReviewStep formData={formData} setFormData={setFormData} />
                 )}
               </motion.div>

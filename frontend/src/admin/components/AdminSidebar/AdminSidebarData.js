@@ -25,13 +25,6 @@ export const navSections = [
         keywords: 'policy, terms, legal, privacy',
         domain: 'settings',
       },
-      {
-        label: 'Photo Gallery',
-        icon: 'photo_library',
-        path: '/admin/gallery',
-        keywords: 'photos, heritage, images',
-        domain: 'settings',
-      },
     ],
   },
   {
@@ -44,28 +37,6 @@ export const navSections = [
         icon: 'shopping_bag',
         path: '/admin/orders',
         keywords: 'sales, checkout, delivery',
-        domain: 'orders',
-      },
-      {
-        label: 'Rentals',
-        icon: 'car_rental',
-        path: '/admin/rentals',
-        keywords: 'rentals, leases, active, orders',
-        domain: 'orders',
-      },
-      {
-        label: 'Custom Orders',
-        icon: 'architecture',
-        path: '/admin/custom-orders',
-        keywords: 'customization, consultation, bespoke',
-        domain: 'orders',
-      },
-      {
-        label: 'Returns & Exchanges',
-        icon: 'assignment_return',
-        path: '/admin/returns',
-        matchPaths: ['/admin/returns', '/admin/exchanges'],
-        keywords: 'returns, refunds, exchanges, replacement, dashboard',
         domain: 'orders',
       },
       {
@@ -95,55 +66,6 @@ export const navSections = [
         path: '/admin/categories',
         keywords: 'taxonomy, tags, labels',
         domain: 'products',
-      },
-    ],
-  },
-  {
-    label: 'Events & Bookings',
-    subtitle: 'Manage setups and event clients',
-    roles: ['owner', 'manager', 'support'],
-    items: [
-      {
-        label: 'Overview',
-        icon: 'dashboard',
-        path: '/admin/events?tab=dashboard',
-        keywords: 'booking, setups, dates, showcases, clients',
-        domain: 'orders',
-      },
-      {
-        label: 'Calendar',
-        icon: 'calendar_month',
-        path: '/admin/events?tab=calendar',
-        keywords: 'calendar, schedule, dates, events, bookings',
-        domain: 'orders',
-      },
-      {
-        label: 'Bookings',
-        icon: 'assignment',
-        path: '/admin/events?tab=bookings',
-        keywords: 'bookings, reservations, active, upcoming',
-        domain: 'orders',
-      },
-      {
-        label: 'Showcase',
-        icon: 'redeem',
-        path: '/admin/events?tab=showcases',
-        keywords: 'showcase, gallery, portfolio, past events',
-        domain: 'orders',
-      },
-    ],
-  },
-
-  {
-    label: 'Promotions',
-    subtitle: 'Manage discount coupons and promotional offers',
-    items: [
-      {
-        label: 'Discount Coupons',
-        icon: 'local_offer',
-        path: '/admin/coupons',
-        keywords: 'promo, discount, sale, coupon, vouchers, discount coupons, offers',
-        domain: 'orders',
       },
     ],
   },

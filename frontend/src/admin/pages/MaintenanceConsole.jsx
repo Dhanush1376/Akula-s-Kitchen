@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useMaintenanceSession } from '../hooks/useMaintenanceSession';
 import { maintenanceService } from '../../services/api/maintenanceService';
-import { SiriLogo } from '../../components/ui/SiriLogo';
+import { BrandLogo } from '../../components/ui/BrandLogo';
 import { useConfirm } from '../../context/ConfirmProvider';
 import { AdminMaintenanceConsoleSkeleton } from '../components/AdminUIKit';
 
@@ -112,7 +112,7 @@ export function MaintenanceConsole() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#141414] p-6 rounded-2xl border border-white/5 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="opacity-80 grayscale invert hidden sm:block">
-              <SiriLogo size="40px" />
+              <BrandLogo size="40px" />
             </div>
             <div>
               <h1 className="text-2xl font-bold">Super Admin Console</h1>

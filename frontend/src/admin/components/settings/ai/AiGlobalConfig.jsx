@@ -106,7 +106,7 @@ const AiGlobalConfig = ({ settings, providers, onRefresh }) => {
         </h2>
         <p className="text-sm text-gray-500 mt-1">
           Configure which AI provider handles platform-wide tasks (e.g. Product generation,
-          Autofill). Visual Search operates entirely independently.
+          Autofill).
         </p>
       </div>
 

@@ -2,7 +2,7 @@ import { m as motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency, fadeUp } from '../AdminUIKit';
 
-export function AdminDashboardStats({ dashboardStats, pendingOrders, eventBookings, customers }) {
+export function AdminDashboardStats({ dashboardStats, pendingOrders, customers }) {
   const navigate = useNavigate();
 
   const totalSales =
@@ -12,11 +12,6 @@ export function AdminDashboardStats({ dashboardStats, pendingOrders, eventBookin
     dashboardStats?.stats?.pendingOrders !== undefined
       ? dashboardStats.stats.pendingOrders
       : pendingOrders;
-  const activeBookings =
-    dashboardStats?.stats?.totalEvents !== undefined
-      ? dashboardStats.stats.totalEvents
-      : eventBookings?.filter((b) => b.status !== 'Cancelled').length || 0;
-  const eventsChange = dashboardStats?.stats?.eventsChange;
   const totalCustomers =
     dashboardStats?.stats?.totalCustomers !== undefined
       ? dashboardStats.stats.totalCustomers
@@ -31,7 +26,7 @@ export function AdminDashboardStats({ dashboardStats, pendingOrders, eventBookin
       {/* Top Accent Stripe */}
       <div className="absolute top-0 left-0 w-full h-[3px] bg-[var(--admin-border-strong)] z-10" />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 bg-[var(--admin-surface)]">
+      <div className="grid grid-cols-2 lg:grid-cols-3 bg-[var(--admin-surface)]">
         {/* Metric 1: Total Revenue */}
         <div
           onClick={() => navigate('/admin/payments')}
@@ -106,50 +101,7 @@ export function AdminDashboardStats({ dashboardStats, pendingOrders, eventBookin
           </div>
         </div>
 
-        {/* Metric 3: Active Bookings */}
-        <div
-          onClick={() => navigate('/admin/events')}
-          className="p-3 sm:p-5 space-y-1 sm:space-y-1.5 border-r border-[var(--admin-border-subtle)] hover:bg-[var(--admin-surface-hover)] transition-colors cursor-pointer group"
-          title="Click to view event setups & bookings"
-        >
-          <div className="flex items-center justify-between gap-1 min-w-0">
-            <span className="text-[10px] sm:text-[10.5px] text-[var(--admin-text-tertiary)] font-bold uppercase tracking-wide sm:tracking-wider flex items-center gap-1 sm:gap-1.5 min-w-0 truncate">
-              <span className="material-symbols-outlined text-[14px] text-purple-600 dark:text-purple-400 shrink-0">
-                event
-              </span>
-              <span className="truncate">Active Bookings</span>
-            </span>
-            <span className="hidden sm:block material-symbols-outlined text-[13px] text-[var(--admin-text-placeholder)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-              arrow_forward
-            </span>
-          </div>
-          <p className="text-[18px] sm:text-[22px] font-bold text-[var(--admin-text-primary)] tracking-tight font-mono">
-            {activeBookings}
-          </p>
-          <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-[var(--admin-text-secondary)] mt-0.5 sm:mt-1">
-            <span className="truncate">Decor & event jobs</span>
-            {eventsChange !== undefined && eventsChange !== null ? (
-              <span
-                className={`font-bold shrink-0 ml-1 inline-flex items-center gap-0.5 ${
-                  Number(eventsChange) >= 0
-                    ? 'text-emerald-700 dark:text-emerald-400'
-                    : 'text-rose-600 dark:text-rose-400'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[11px]">
-                  {Number(eventsChange) >= 0 ? 'trending_up' : 'trending_down'}
-                </span>
-                {Number(eventsChange) >= 0 ? `+${eventsChange}%` : `${eventsChange}%`}
-              </span>
-            ) : (
-              <span className="text-[10px] text-[var(--admin-text-tertiary)] font-medium">
-                Confirmed
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Metric 4: Total Customers */}
+        {/* Metric 3: Total Customers */}
         <div
           onClick={() => navigate('/admin/customers')}
           className="p-3 sm:p-5 space-y-1 sm:space-y-1.5 hover:bg-[var(--admin-surface-hover)] transition-colors cursor-pointer group"

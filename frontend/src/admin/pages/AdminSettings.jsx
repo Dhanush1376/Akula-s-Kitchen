@@ -19,19 +19,17 @@ import { ProfilePanel } from '../components/settings/ProfilePanel';
 import AiSettingsPanel from '../components/settings/AiSettingsPanel';
 import { SecurityPanel } from '../components/settings/SecurityPanel';
 import {
-  ReturnSettingsPanel,
   LoyaltySettingsPanel,
   StorefrontSettingsPanel,
   StoreDetailsLegalPanel,
   ShippingOrdersPanel,
   PaymentsTaxesPanel,
 } from '../components/settings/StoreSettingsPanels';
-import { VisualSearchPanel } from '../components/settings/VisualSearchPanel';
 
 const DEFAULT_STORE_SETTINGS = {
   general: {
-    storeName: 'Siri Arts & Crafts',
-    tagline: 'Handcrafted Heritage & Artistry',
+    storeName: "Akula's Kitchen",
+    tagline: 'Authentic Flavors & Culinary Excellence',
     supportEmail: '',
     phone: '',
     alternatePhone: '',
@@ -49,7 +47,7 @@ const DEFAULT_STORE_SETTINGS = {
     packagingFee: 15,
     estimatedDeliveryDays: '4-6',
     enableLocalDelivery: true,
-    originPincode: '523001',
+    originPincode: '',
     defaultCourierPartner: 'BlueDart Express',
   },
   payments: {
@@ -59,7 +57,6 @@ const DEFAULT_STORE_SETTINGS = {
     codMaxOrder: 50000,
     codOtpChannel: 'phone',
     enableRazorpay: true,
-    enableWallet: true,
     enableUPI: true,
     enableNetBanking: true,
     enableCards: true,
@@ -80,11 +77,9 @@ const DEFAULT_STORE_SETTINGS = {
     allowCancellation: false,
     cancellationWindowHours: 0,
     refundTimeline: '5-7 business days',
-    walletRefund: false,
     originalPaymentRefund: false,
   },
   loyalty: {
-    walletEnabled: true,
     referralProgramEnabled: true,
     reviewRewardsEnabled: true,
     welcomeBonusEnabled: true,
@@ -127,8 +122,8 @@ const DEFAULT_STORE_SETTINGS = {
     invoiceFooter: '',
   },
   storefront: {
-    seoTitle: 'Siri Arts and Crafts',
-    seoDescription: 'Premium Handicrafts and Luxury Event Decor',
+    seoTitle: "Akula's Kitchen",
+    seoDescription: 'Authentic Flavors and Premium Culinary Experiences',
     hideGallerySection: false,
     hideProductsFromGallery: false,
     customerAuthMethod: 'both',
@@ -140,7 +135,7 @@ const DEFAULT_STORE_SETTINGS = {
     supportHours: 'Mon - Sat, 10 AM to 6 PM',
     address: '',
     whatsappNumber: '',
-    whatsappMessage: 'Hello! Thank you for reaching Siri Arts & Crafts.',
+    whatsappMessage: "Hello! Thank you for reaching Akula's Kitchen.",
     googleMapsUrl: '',
     instagram: '',
     facebook: '',
@@ -148,14 +143,14 @@ const DEFAULT_STORE_SETTINGS = {
     youtube: '',
     addressLine1: '',
     addressLine2: '',
-    city: 'Ongole',
+    city: '',
     state: 'Andhra Pradesh',
     country: 'India',
     postalCode: '',
   },
   legal: {
-    companyName: 'Siri Arts & Crafts',
-    legalCompanyName: 'Siri Arts and Crafts Private Limited',
+    companyName: "Akula's Kitchen",
+    legalCompanyName: "Akula's Kitchen Private Limited",
     registeredAddress: '',
     cin: '',
   },
@@ -272,7 +267,7 @@ export function AdminSettings({ hideHeader = false }) {
       secondaryColor: '#F8F9FB',
       fontFamily: 'Playfair Display + Inter',
       whatsappNumber: '',
-      whatsappMessage: 'Hello! Thank you for reaching Siri Arts & Crafts.',
+      whatsappMessage: "Hello! Thank you for reaching Akula's Kitchen.",
     },
     enabled: true,
   });
@@ -295,7 +290,7 @@ export function AdminSettings({ hideHeader = false }) {
         );
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `siri_catalog_db_backup_${Date.now()}.json`);
+      downloadAnchor.setAttribute('download', `akula_catalog_db_backup_${Date.now()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -715,12 +710,7 @@ export function AdminSettings({ hideHeader = false }) {
         'rates',
       ],
     },
-    {
-      id: 'policies',
-      title: 'Returns & Exchanges',
-      icon: 'sync',
-      keywords: ['returns', 'exchanges', 'refund', 'policy', 'return window'],
-    },
+
     { id: 'loyalty', title: 'Loyalty & Rewards', icon: 'card_giftcard' },
     {
       id: 'storefront',
@@ -730,12 +720,9 @@ export function AdminSettings({ hideHeader = false }) {
     },
     {
       id: 'aiSearch',
-      title: 'AI & Visual Search',
+      title: 'Global AI Platform',
       icon: 'auto_awesome',
-      subTabs: [
-        { id: 'visualSearch', label: 'AI Visual Search', icon: 'image_search' },
-        { id: 'aiPlatform', label: 'Global AI Platform', icon: 'memory' },
-      ],
+      keywords: ['ai', 'platform', 'gemini', 'anthropic', 'openai', 'llm', 'provider'],
     },
     { id: 'security', title: 'Security & Operations', icon: 'shield' },
   ];
@@ -1004,15 +991,6 @@ export function AdminSettings({ hideHeader = false }) {
               />
             )}
 
-            {sectionsList[activeSection].id === 'policies' && (
-              <ReturnSettingsPanel
-                formData={storeSettings.returnsExchanges || {}}
-                handleChange={handleStoreSettingsChange('returnsExchanges')}
-                handleSave={handleStoreSettingsSave('returnsExchanges')}
-                saving={saving}
-              />
-            )}
-
             {sectionsList[activeSection].id === 'loyalty' && (
               <LoyaltySettingsPanel
                 formData={storeSettings.loyalty || {}}
@@ -1034,15 +1012,7 @@ export function AdminSettings({ hideHeader = false }) {
 
             {sectionsList[activeSection].id === 'aiSearch' && (
               <div>
-                <SubTabBar
-                  tabs={sectionsList[activeSection].subTabs}
-                  activeTab={activeSubTabs.aiSearch || 'visualSearch'}
-                  onChange={(tabId) => setSubTabForSection('aiSearch', tabId)}
-                />
-                {(activeSubTabs.aiSearch || 'visualSearch') === 'visualSearch' && (
-                  <VisualSearchPanel />
-                )}
-                {activeSubTabs.aiSearch === 'aiPlatform' && <AiSettingsPanel />}
+                <AiSettingsPanel />
               </div>
             )}
 

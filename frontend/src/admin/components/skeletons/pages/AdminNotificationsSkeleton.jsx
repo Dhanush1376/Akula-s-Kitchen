@@ -28,7 +28,7 @@ export function AdminNotificationsSkeleton({ hideHeader = false } = {}) {
 
           {/* Segmented Category Pills (Desktop & Tablet) */}
           <div className="hidden lg:flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px]">
-            {['All', 'Unread', 'Orders', 'Bookings', 'Payments', 'System'].map((_, idx) => (
+            {['All', 'Unread', 'Orders', 'Inquiry', 'Payments', 'System'].map((_, idx) => (
               <SkeletonBox key={idx} width="65px" height="32px" rounded="sm" />
             ))}
           </div>

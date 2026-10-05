@@ -35,7 +35,7 @@ export function AdminMobileBottomNav({ isFabOpen, setIsFabOpen, fabActions }) {
       { label: 'Orders', icon: 'shopping_bag', path: '/admin/orders' },
       { label: 'Search', icon: 'search', path: '/admin/enterprise-search', isAction: true },
       { label: 'Customers', icon: 'group', path: '/admin/customers' },
-      { label: 'Returns', icon: 'assignment_return', path: '/admin/returns' },
+      { label: 'Payments', icon: 'payments', path: '/admin/payments' },
     ];
   } else {
     // Owner / Manager
@@ -71,14 +71,14 @@ export function AdminMobileBottomNav({ isFabOpen, setIsFabOpen, fabActions }) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-[38] lg:hidden bg-white rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.12)] pt-7 pb-[calc(var(--admin-bottom-nav-height,60px)+24px)] px-6 border-t border-black/5"
+            className="fixed bottom-0 left-0 right-0 z-[38] lg:hidden bg-white rounded-t-[18px] shadow-[0_-12px_40px_rgba(0,0,0,0.12)] pt-7 pb-[calc(var(--admin-bottom-nav-height,60px)+24px)] px-6 border-t border-black/5"
             style={
               {
                 // Add a tiny bit of padding to the top for the drag handle
               }
             }
           >
-            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 opacity-80" />
+            <div className="w-12 h-1.5 bg-neutral-400 rounded-full mx-auto mb-6" />
 
             <h3 className="text-center font-bold text-[var(--admin-text-primary)] mb-6 text-[12px] uppercase tracking-[0.15em] opacity-80">
               Create New

@@ -81,7 +81,7 @@ export function ContactInfoEditor({ content, onUpdate }) {
               <AdminInput
                 value={
                   c.mapEmbed ||
-                  'https://www.google.com/maps/place/Siri+Arts+%26+Crafts/@15.5024512,80.0450481,17z/data=!3m1!4b1!4m6!3m5!1s0x3a4b01495510d675:0xe98014cae349dbea!8m2!3d15.502446!4d80.047623!16s%2Fg%2F11scb6jg5_'
+                  'https://www.google.com/maps/place/Akula%27s+Kitchen/@15.5024512,80.0450481,17z/data=!3m1!4b1!4m6!3m5!1s0x3a4b01495510d675:0xe98014cae349dbea!8m2!3d15.502446!4d80.047623!16s%2Fg%2F11scb6jg5_'
                 }
                 onChange={(e) => onUpdate('contact', { mapEmbed: e.target.value })}
                 placeholder="e.g. https://maps.google.com/?q=..."
@@ -115,8 +115,8 @@ export function ContactInfoEditor({ content, onUpdate }) {
             </AdminField>
             <div className="p-4 bg-[var(--admin-surface-muted)] rounded-md border border-[var(--admin-border-subtle)] flex items-center justify-center text-center">
               <span className="text-[12px] text-[var(--admin-text-tertiary)] font-normal leading-relaxed">
-                These hours are automatically synchronized across the responsive mobile helpline and
-                bespoke consultation intake panels.
+                These hours are automatically synchronized across the mobile helpline and contact
+                page.
               </span>
             </div>
           </div>

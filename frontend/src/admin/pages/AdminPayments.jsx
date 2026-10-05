@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAdmin } from '../context/AdminContext';
-import { bookingService, customOrderService } from '../../services/domainServices';
-import rentalService from '../../services/api/rentalService';
-import { returnService } from '../../services/api/returnService';
-import logger from '../../utils/core/logger';
 import {
   PageHeader,
   ChartTooltip,
@@ -23,22 +19,6 @@ export function AdminPayments() {
   const navigate = useNavigate();
   const { orders = [], dataLoading: ordersLoading, refreshOrders } = useAdmin();
 
-  // Multi-stream data states
-  const [bookings, setBookings] = useState([]);
-  const [bookingsLoading, setBookingsLoading] = useState(true);
-
-  const [rentals, setRentals] = useState([]);
-  const [rentalsLoading, setRentalsLoading] = useState(true);
-
-  const [customOrders, setCustomOrders] = useState([]);
-  const [customOrdersLoading, setCustomOrdersLoading] = useState(true);
-
-  const [returns, setReturns] = useState([]);
-  const [returnsLoading, setReturnsLoading] = useState(true);
-
-  const [exchanges, setExchanges] = useState([]);
-  const [exchangesLoading, setExchangesLoading] = useState(true);
-
   // Filters & Controls
   const [typeFilter, setTypeFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('All Time');
@@ -49,115 +29,14 @@ export function AdminPayments() {
   const [showChart, setShowChart] = useState(true);
   const [showFiltersMenu, setShowFiltersMenu] = useState(false);
 
-  // 1. Fetch Event Bookings
-  const fetchBookings = useCallback(async () => {
-    try {
-      setBookingsLoading(true);
-      const res = await bookingService.adminGetAll({ limit: 999999 });
-      if (res?.success) {
-        const payload = res.data;
-        const list = Array.isArray(payload)
-          ? payload
-          : payload?.data || payload?.items || payload?.bookings || [];
-        setBookings(list);
-      }
-    } catch (err) {
-      logger.error('Failed to load event bookings in payments:', err);
-    } finally {
-      setBookingsLoading(false);
-    }
-  }, []);
-
-  // 2. Fetch Rentals
-  const fetchRentals = useCallback(async () => {
-    try {
-      setRentalsLoading(true);
-      const res = await rentalService.adminGetAll();
-      if (res?.success) {
-        const payload = res.data ?? [];
-        const list = Array.isArray(payload) ? payload : payload.rentals || payload.data || [];
-        setRentals(list);
-      }
-    } catch (err) {
-      logger.error('Failed to load rentals in payments:', err);
-    } finally {
-      setRentalsLoading(false);
-    }
-  }, []);
-
-  // 3. Fetch Custom Orders
-  const fetchCustomOrders = useCallback(async () => {
-    try {
-      setCustomOrdersLoading(true);
-      const res = await customOrderService.adminGetAll({ limit: 999999, archived: 'false' });
-      const payload = res?.data ?? res ?? [];
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.items || payload.orders || payload.data || [];
-      setCustomOrders(list);
-    } catch (err) {
-      logger.error('Failed to load custom orders in payments:', err);
-    } finally {
-      setCustomOrdersLoading(false);
-    }
-  }, []);
-
-  // 4. Fetch Returns
-  const fetchReturns = useCallback(async () => {
-    try {
-      setReturnsLoading(true);
-      const res = await returnService.getAllReturns({ page: 1, limit: 999999 });
-      const payload = res?.data?.data || res?.data || res;
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.returns || payload.items || payload.data || [];
-      setReturns(list);
-    } catch (err) {
-      logger.error('Failed to load returns in payments:', err);
-    } finally {
-      setReturnsLoading(false);
-    }
-  }, []);
-
-  // 5. Fetch Exchanges
-  const fetchExchanges = useCallback(async () => {
-    try {
-      setExchangesLoading(true);
-      const res = await returnService.getAllExchanges({ page: 1, limit: 999999 });
-      const payload = res?.data?.data || res?.data || res;
-      const list = Array.isArray(payload)
-        ? payload
-        : payload.exchanges || payload.items || payload.data || [];
-      setExchanges(list);
-    } catch (err) {
-      logger.error('Failed to load exchanges in payments:', err);
-    } finally {
-      setExchangesLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchBookings();
-    fetchRentals();
-    fetchCustomOrders();
-    fetchReturns();
-    fetchExchanges();
-  }, [fetchBookings, fetchRentals, fetchCustomOrders, fetchReturns, fetchExchanges]);
-
-  // Auto-refresh all sources every 60 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       refreshOrders();
-      fetchBookings();
-      fetchRentals();
-      fetchCustomOrders();
-      fetchReturns();
-      fetchExchanges();
     }, 60000);
     return () => clearInterval(interval);
-  }, [refreshOrders, fetchBookings, fetchRentals, fetchCustomOrders, fetchReturns, fetchExchanges]);
+  }, [refreshOrders]);
 
-  const initialLoading = ordersLoading && bookingsLoading && rentalsLoading && customOrdersLoading;
+  const initialLoading = ordersLoading;
 
   // ─── AGGREGATE ALL STREAMS INTO UNIFIED TRANSACTIONS & METRICS ───
   const metrics = useMemo(() => {
@@ -286,446 +165,6 @@ export function AdminPayments() {
       });
     });
 
-    // ──────────────────────────────────────────────
-    // 2. EVENT BOOKINGS
-    // ──────────────────────────────────────────────
-    bookings.forEach((b) => {
-      const bId = b._id || b.id || b.bookingId;
-      const bookingRef =
-        b.bookingId || (bId && bId.length > 8 ? bId.slice(-6).toUpperCase() : bId || 'EVENT');
-      const customerName = b.user?.name || b.customerName || b.customer || 'Customer';
-      const isCancelled = b.status === 'cancelled' || b.status === 'failed';
-
-      const successfulPayments = (b.payments || []).filter((p) => p.status === 'success');
-      const totalPaid = successfulPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-      const totalPrice = Number(b.pricing?.totalPrice || b.amount || 0);
-      const balanceDue = Math.max(0, totalPrice - totalPaid);
-
-      if (successfulPayments.length > 0) {
-        successfulPayments.forEach((p, idx) => {
-          const pAmount = Number(p.amount) || 0;
-          const pDate = p.date
-            ? new Date(p.date)
-            : b.createdAt
-              ? new Date(b.createdAt)
-              : new Date();
-
-          recordRevenue(pAmount, pDate);
-
-          const rawTxn = p.transactionId || b.razorpayPaymentId;
-          const txnId = rawTxn
-            ? rawTxn.startsWith('TXN-')
-              ? rawTxn
-              : `TXN-${rawTxn.slice(-8).toUpperCase()}`
-            : null;
-
-          const method = (p.paymentMethod || 'UPI').toUpperCase();
-
-          transactions.push({
-            id: bId,
-            uniqueKey: `evt-${bId}-pmt-${p.transactionId || idx}`,
-            type: 'booking',
-            order: bookingRef,
-            referenceText: `#EVT-${bookingRef}`,
-            txnId,
-            isOnline: p.source !== 'manual' && Boolean(txnId),
-            customer: customerName,
-            amount: pAmount,
-            method: method.includes('CASH') ? 'CASH' : method,
-            status: 'Completed',
-            pendingDirection: null,
-            pendingAmount: 0,
-            date: pDate.toISOString().split('T')[0],
-            rawDate: pDate,
-            targetUrl: `/admin/events/${bId}`,
-            subtitle: p.note || b.eventType || b.title || 'Event Decor',
-          });
-        });
-
-        if (balanceDue > 0 && !isCancelled) {
-          const bDate = b.date
-            ? new Date(b.date)
-            : b.createdAt
-              ? new Date(b.createdAt)
-              : new Date();
-          const withinFilter = isWithinPeriod(bDate, dateFilter);
-          if (withinFilter) pending += balanceDue;
-
-          transactions.push({
-            id: bId,
-            uniqueKey: `evt-${bId}-bal`,
-            type: 'booking',
-            order: bookingRef,
-            referenceText: `#EVT-${bookingRef}`,
-            txnId: null,
-            isOnline: false,
-            customer: customerName,
-            amount: balanceDue,
-            method: 'PENDING',
-            status: 'Pending',
-            pendingDirection: 'customer_owes',
-            pendingAmount: balanceDue,
-            date: bDate.toISOString().split('T')[0],
-            rawDate: bDate,
-            targetUrl: `/admin/events/${bId}`,
-            subtitle: `Balance Due • ${b.eventType || b.title || 'Event Decor'}`,
-          });
-        }
-      } else {
-        const bDate = b.date ? new Date(b.date) : b.createdAt ? new Date(b.createdAt) : new Date();
-        const withinFilter = isWithinPeriod(bDate, dateFilter);
-
-        let statusLabel = 'Pending';
-        let pendingDir = null;
-        let pendingAmt = 0;
-
-        if (isCancelled) {
-          statusLabel = 'Refunded';
-          if (withinFilter) refunded += totalPrice;
-        } else if (b.pricing?.paymentStatus === 'paid' || b.status === 'completed') {
-          statusLabel = 'Completed';
-          recordRevenue(totalPrice, bDate);
-        } else {
-          statusLabel = 'Pending';
-          pendingDir = 'customer_owes';
-          pendingAmt = totalPrice;
-          if (withinFilter) pending += totalPrice;
-        }
-
-        const rawTxn = b.razorpayPaymentId;
-        const txnId = rawTxn
-          ? rawTxn.startsWith('TXN-')
-            ? rawTxn
-            : `TXN-${rawTxn.slice(-8).toUpperCase()}`
-          : null;
-
-        transactions.push({
-          id: bId,
-          uniqueKey: `evt-${bId}-initial`,
-          type: 'booking',
-          order: bookingRef,
-          referenceText: `#EVT-${bookingRef}`,
-          txnId,
-          isOnline: Boolean(txnId),
-          customer: customerName,
-          amount: totalPrice,
-          method: (b.pricing?.paymentMethod || 'UPI').toUpperCase(),
-          status: statusLabel,
-          pendingDirection: pendingDir,
-          pendingAmount: pendingAmt,
-          date: bDate.toISOString().split('T')[0],
-          rawDate: bDate,
-          targetUrl: `/admin/events/${bId}`,
-          subtitle: b.eventType || b.title || 'Event Decor',
-        });
-      }
-    });
-
-    // ──────────────────────────────────────────────
-    // 3. RENTALS (Rental Charges, Security Deposits & Returns)
-    // ──────────────────────────────────────────────
-    rentals.forEach((r) => {
-      const rId = r._id || r.id;
-      const rentalRef =
-        r.rentalNumber || (rId && rId.length > 8 ? rId.slice(-6).toUpperCase() : rId || 'RENT');
-      const customerName =
-        r.customer?.name ||
-        r.customerName ||
-        r.shippingAddress?.fullName ||
-        r.user?.name ||
-        'Customer';
-      const rentalCharge = Number(r.rentalCharge || r.totalAmount || 0);
-      const securityDeposit = Number(r.securityDeposit || 0);
-      const totalAmount = Number(r.totalAmount || rentalCharge + securityDeposit);
-      const rDate = r.createdAt
-        ? new Date(r.createdAt)
-        : r.startDate
-          ? new Date(r.startDate)
-          : new Date();
-      const withinFilter = isWithinPeriod(rDate, dateFilter);
-
-      const isPaid =
-        r.paymentStatus === 'paid' || r.paymentStatus === 'completed' || r.status === 'active';
-      const isCancelled = r.status === 'cancelled';
-      const isReturned = r.status === 'returned' || r.status === 'completed';
-      const depositHeld = r.depositStatus === 'held' || r.depositStatus === 'pending_refund';
-      const depositRefunded = r.depositStatus === 'refunded';
-
-      let statusLabel = 'Pending';
-      let pendingDir = null;
-      let pendingAmt = 0;
-      let subtitleText = `Rental Fee (₹${rentalCharge}) + Deposit (₹${securityDeposit})`;
-
-      if (isCancelled) {
-        statusLabel = 'Refunded';
-        if (withinFilter) refunded += totalAmount;
-      } else if (isPaid) {
-        statusLabel = 'Completed';
-        recordRevenue(rentalCharge, rDate);
-
-        // Check if admin owes customer the security deposit
-        if (isReturned && depositHeld && securityDeposit > 0) {
-          statusLabel = 'Refund Due';
-          pendingDir = 'admin_owes';
-          pendingAmt = securityDeposit;
-          if (withinFilter) pendingRefunds += securityDeposit;
-          subtitleText = `Rental Settled • Security Deposit Refund Due to Customer (₹${securityDeposit})`;
-        } else if (depositRefunded && securityDeposit > 0) {
-          if (withinFilter) refunded += securityDeposit;
-          subtitleText = `Rental Settled • Deposit Refunded to Customer (₹${securityDeposit})`;
-        } else {
-          subtitleText = `Rental Settled • Security Deposit Held (₹${securityDeposit})`;
-        }
-      } else {
-        statusLabel = 'Pending';
-        pendingDir = 'customer_owes';
-        pendingAmt = totalAmount;
-        if (withinFilter) pending += totalAmount;
-        subtitleText = `Payment Due • Rental Charges (₹${rentalCharge}) + Deposit`;
-      }
-
-      transactions.push({
-        id: rId,
-        uniqueKey: `rnt-${rId}-${rentalRef}`,
-        type: 'rental',
-        order: rentalRef,
-        referenceText: `#RNT-${rentalRef}`,
-        txnId: r.razorpayPaymentId
-          ? `TXN-${r.razorpayPaymentId.slice(-8).toUpperCase()}`
-          : r.paymentId || null,
-        isOnline: Boolean(r.razorpayPaymentId),
-        customer: customerName,
-        amount: totalAmount,
-        method: (r.paymentMethod || 'UPI').toUpperCase(),
-        status: statusLabel,
-        pendingDirection: pendingDir,
-        pendingAmount: pendingAmt,
-        date: rDate.toISOString().split('T')[0],
-        rawDate: rDate,
-        targetUrl: `/admin/rentals/detail/${rId}`,
-        subtitle: subtitleText,
-      });
-    });
-
-    // ──────────────────────────────────────────────
-    // 4. CUSTOM ORDERS (Milestones & Quotations)
-    // ──────────────────────────────────────────────
-    customOrders.forEach((co) => {
-      const coId = co._id || co.id;
-      const orderRef =
-        co.customOrderNumber ||
-        (coId && coId.length > 8 ? coId.slice(-6).toUpperCase() : coId || 'CUSTOM');
-      const customerName =
-        co.user?.name || co.customerName || co.contact?.name || co.contact?.phone || 'Customer';
-      const totalQuote = Number(co.quotation?.total || co.totalAmount || 0);
-      const totalPaid = Number(
-        co.paymentSchedule?.totalPaid ?? (co.status === 'completed' ? totalQuote : 0),
-      );
-      const remainingBalance = Math.max(
-        0,
-        Number(co.paymentSchedule?.remainingBalance ?? totalQuote - totalPaid),
-      );
-      const coDate = co.createdAt ? new Date(co.createdAt) : new Date();
-      const withinFilter = isWithinPeriod(coDate, dateFilter);
-
-      let statusLabel = 'Pending';
-      let pendingDir = null;
-      let pendingAmt = 0;
-      let subtitleText = co.title || co.category || 'Custom Commission';
-
-      if (co.status === 'cancelled') {
-        statusLabel = 'Refunded';
-        if (withinFilter) refunded += totalPaid > 0 ? totalPaid : totalQuote;
-      } else if (totalPaid > 0) {
-        recordRevenue(totalPaid, coDate);
-        if (remainingBalance > 0) {
-          statusLabel = 'Pending';
-          pendingDir = 'customer_owes';
-          pendingAmt = remainingBalance;
-          if (withinFilter) pending += remainingBalance;
-          subtitleText = `Paid: ₹${totalPaid} • Remaining Balance Due: ₹${remainingBalance}`;
-        } else {
-          statusLabel = 'Completed';
-          subtitleText = `Fully Paid • ${co.title || 'Custom Commission'}`;
-        }
-      } else if (totalQuote > 0) {
-        statusLabel = 'Pending';
-        pendingDir = 'customer_owes';
-        pendingAmt = totalQuote;
-        if (withinFilter) pending += totalQuote;
-        subtitleText = `Quotation Total Due • ${co.title || 'Custom Commission'}`;
-      } else {
-        subtitleText = `Inquiry / Draft • ${co.status || 'Pending Quotation'}`;
-      }
-
-      transactions.push({
-        id: coId,
-        uniqueKey: `cust-${coId}-${orderRef}`,
-        type: 'custom_order',
-        order: orderRef,
-        referenceText: `#CUST-${orderRef}`,
-        txnId: co.paymentInfo?.razorpayPaymentId
-          ? `TXN-${co.paymentInfo.razorpayPaymentId.slice(-8).toUpperCase()}`
-          : null,
-        isOnline: Boolean(co.paymentInfo?.razorpayPaymentId),
-        customer: customerName,
-        amount: totalQuote || totalPaid || 0,
-        method: (co.paymentMethod || 'UPI').toUpperCase(),
-        status: statusLabel,
-        pendingDirection: pendingDir,
-        pendingAmount: pendingAmt,
-        date: coDate.toISOString().split('T')[0],
-        rawDate: coDate,
-        targetUrl: `/admin/inquiries?orderId=${coId}`,
-        subtitle: subtitleText,
-      });
-    });
-
-    // ──────────────────────────────────────────────
-    // 5. RETURNS (Deductions & Money Cuts)
-    // ──────────────────────────────────────────────
-    returns.forEach((ret) => {
-      const retId = ret._id || ret.id;
-      const returnRef =
-        ret.returnNumber ||
-        (retId && retId.length > 8 ? retId.slice(-6).toUpperCase() : retId || 'RET');
-      const customerName = ret.user?.name || ret.customer?.name || ret.customerName || 'Customer';
-      const refundAmount = Number(
-        ret.refundBreakdown?.grandTotal ??
-          (ret.refundAmount || ret.totalRefundAmount || ret.refundBreakdown?.amount || 0),
-      );
-      const retDate = ret.createdAt ? new Date(ret.createdAt) : new Date();
-      const withinFilter = isWithinPeriod(retDate, dateFilter);
-
-      const refundStatus = (ret.refundStatus || '').toLowerCase();
-      const isSettled =
-        refundStatus === 'settled' || refundStatus === 'refunded' || refundStatus === 'completed';
-      const isApprovedOrPending =
-        ret.status === 'approved' ||
-        ret.status === 'inspected' ||
-        ret.status === 'item_received' ||
-        refundStatus === 'pending' ||
-        refundStatus === 'approved';
-
-      let statusLabel = 'Pending';
-      let pendingDir = null;
-      let pendingAmt = 0;
-      let subtitleText = `Return Deductions • ${ret.reason || 'Item Return'}`;
-
-      if (isSettled) {
-        statusLabel = 'Refunded';
-        if (withinFilter) refunded += refundAmount;
-        subtitleText = `Money Deducted / Refund Settled (₹${refundAmount}) • ${ret.reason || 'Return'}`;
-      } else if (isApprovedOrPending) {
-        statusLabel = 'Refund Due';
-        pendingDir = 'admin_owes';
-        pendingAmt = refundAmount;
-        if (withinFilter) pendingRefunds += refundAmount;
-        subtitleText = `Admin Refund Due to Customer (₹${refundAmount}) • ${ret.reason || 'Return'}`;
-      } else {
-        statusLabel = 'Pending';
-        subtitleText = `Return Pending Inspection • ${ret.reason || 'Return'}`;
-      }
-
-      transactions.push({
-        id: retId,
-        uniqueKey: `ret-${retId}-${returnRef}`,
-        type: 'return',
-        order: returnRef,
-        referenceText: `#RET-${returnRef}`,
-        txnId: ret.refundTransactionId
-          ? `TXN-${ret.refundTransactionId.slice(-8).toUpperCase()}`
-          : null,
-        isOnline: Boolean(ret.refundTransactionId),
-        customer: customerName,
-        amount: refundAmount,
-        method: (ret.refundMethod || 'Original Method').toUpperCase(),
-        status: statusLabel,
-        pendingDirection: pendingDir,
-        pendingAmount: pendingAmt,
-        date: retDate.toISOString().split('T')[0],
-        rawDate: retDate,
-        targetUrl: `/admin/returns?returnId=${retId}`,
-        subtitle: subtitleText,
-      });
-    });
-
-    // ──────────────────────────────────────────────
-    // 6. EXCHANGES (Price Differences & Replacements)
-    // ──────────────────────────────────────────────
-    exchanges.forEach((ex) => {
-      const exId = ex._id || ex.id;
-      const exRef =
-        ex.exchangeNumber ||
-        (exId && exId.length > 8 ? exId.slice(-6).toUpperCase() : exId || 'EXCH');
-      const customerName = ex.user?.name || ex.customer?.name || ex.customerName || 'Customer';
-      const diff = Number(ex.priceDifference || 0);
-      const absDiff = Math.abs(diff);
-      const exDate = ex.createdAt ? new Date(ex.createdAt) : new Date();
-      const withinFilter = isWithinPeriod(exDate, dateFilter);
-
-      let statusLabel = 'Completed';
-      let pendingDir = null;
-      let pendingAmt = 0;
-      let subtitleText = `Item Exchange • ${ex.replacementItem?.title || 'Replacement'}`;
-
-      if (diff > 0) {
-        // Customer upgrades -> pays difference
-        const isPaid = ex.paymentStatus === 'paid' || ex.status === 'completed';
-        if (isPaid) {
-          statusLabel = 'Completed';
-          recordRevenue(diff, exDate);
-          subtitleText = `Upgrade Difference Settled (+₹${diff}) • ${ex.replacementItem?.title || 'Exchange'}`;
-        } else {
-          statusLabel = 'Pending';
-          pendingDir = 'customer_owes';
-          pendingAmt = diff;
-          if (withinFilter) pending += diff;
-          subtitleText = `Customer Owes Upgrade Diff (+₹${diff}) • ${ex.replacementItem?.title || 'Exchange'}`;
-        }
-      } else if (diff < 0) {
-        // Customer downgrades -> store owes customer refund
-        const isSettled = ex.refundStatus === 'settled' || ex.refundStatus === 'refunded';
-        if (isSettled) {
-          statusLabel = 'Refunded';
-          if (withinFilter) refunded += absDiff;
-          subtitleText = `Downgrade Refund Settled (-₹${absDiff}) • ${ex.replacementItem?.title || 'Exchange'}`;
-        } else {
-          statusLabel = 'Refund Due';
-          pendingDir = 'admin_owes';
-          pendingAmt = absDiff;
-          if (withinFilter) pendingRefunds += absDiff;
-          subtitleText = `Admin Owes Refund to Customer (-₹${absDiff}) • ${ex.replacementItem?.title || 'Exchange'}`;
-        }
-      } else {
-        // Even exchange
-        statusLabel = 'Completed';
-        subtitleText = `Even Exchange (₹0 Diff) • ${ex.replacementItem?.title || 'Replacement'}`;
-      }
-
-      transactions.push({
-        id: exId,
-        uniqueKey: `exch-${exId}-${exRef}`,
-        type: 'exchange',
-        order: exRef,
-        referenceText: `#EXCH-${exRef}`,
-        txnId: ex.paymentInfo?.razorpayPaymentId
-          ? `TXN-${ex.paymentInfo.razorpayPaymentId.slice(-8).toUpperCase()}`
-          : null,
-        isOnline: Boolean(ex.paymentInfo?.razorpayPaymentId),
-        customer: customerName,
-        amount: absDiff,
-        method: (ex.paymentMethod || 'UPI').toUpperCase(),
-        status: statusLabel,
-        pendingDirection: pendingDir,
-        pendingAmount: pendingAmt,
-        date: exDate.toISOString().split('T')[0],
-        rawDate: exDate,
-        targetUrl: `/admin/returns?tab=exchanges&exchangeId=${exId}`,
-        subtitle: subtitleText,
-      });
-    });
-
     const chartData = Object.keys(monthlyMap).map((m) => ({
       month: m,
       amount: monthlyMap[m],
@@ -740,7 +179,7 @@ export function AdminPayments() {
       chartData,
       transactions,
     };
-  }, [orders, bookings, rentals, customOrders, returns, exchanges, dateFilter]);
+  }, [orders, dateFilter]);
 
   // ─── FILTERED & SORTED TRANSACTIONS ───
   const filteredTransactions = useMemo(() => {
@@ -809,11 +248,6 @@ export function AdminPayments() {
     return {
       All: metrics.transactions.length,
       Orders: metrics.transactions.filter((t) => t.type === 'order').length,
-      Rentals: metrics.transactions.filter((t) => t.type === 'rental').length,
-      Custom: metrics.transactions.filter((t) => t.type === 'custom_order').length,
-      Events: metrics.transactions.filter((t) => t.type === 'booking').length,
-      Returns: metrics.transactions.filter((t) => t.type === 'return').length,
-      Exchanges: metrics.transactions.filter((t) => t.type === 'exchange').length,
     };
   }, [metrics.transactions]);
 
@@ -947,41 +381,6 @@ export function AdminPayments() {
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-800 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-300">
             <span className="material-symbols-outlined text-[12px]">shopping_bag</span>
             Order
-          </span>
-        );
-      case 'rental':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-[10px] font-bold uppercase tracking-wider bg-teal-50 text-teal-800 border border-teal-200/80 dark:bg-teal-950/40 dark:text-teal-300">
-            <span className="material-symbols-outlined text-[12px]">event_available</span>
-            Rental
-          </span>
-        );
-      case 'custom_order':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-800 border border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300">
-            <span className="material-symbols-outlined text-[12px]">palette</span>
-            Custom
-          </span>
-        );
-      case 'booking':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300">
-            <span className="material-symbols-outlined text-[12px]">celebration</span>
-            Event
-          </span>
-        );
-      case 'return':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-800 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300">
-            <span className="material-symbols-outlined text-[12px]">assignment_return</span>
-            Return
-          </span>
-        );
-      case 'exchange':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[3px] text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300">
-            <span className="material-symbols-outlined text-[12px]">sync_alt</span>
-            Exchange
           </span>
         );
       default:
@@ -1146,7 +545,7 @@ export function AdminPayments() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by order #, rental, return, customer..."
+              placeholder="Search by order #, customer..."
               className="bg-transparent border-none outline-none w-full text-[13px] text-[var(--admin-text-primary)] placeholder-[var(--admin-text-tertiary)] font-medium px-2 h-full min-w-0"
             />
             {searchQuery && (
@@ -1247,13 +646,6 @@ export function AdminPayments() {
                   >
                     <option value="All">All Types ({typeCounts.All})</option>
                     <option value="order">Product Orders ({typeCounts.Orders})</option>
-                    <option value="rental">Rentals & Deposits ({typeCounts.Rentals})</option>
-                    <option value="custom_order">Custom Orders ({typeCounts.Custom})</option>
-                    <option value="booking">Event Bookings ({typeCounts.Events})</option>
-                    <option value="return">Returns & Deductions ({typeCounts.Returns})</option>
-                    <option value="exchange">
-                      Exchanges & Differences ({typeCounts.Exchanges})
-                    </option>
                   </select>
                 </div>
 

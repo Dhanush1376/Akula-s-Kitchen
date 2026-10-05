@@ -30,11 +30,11 @@ const getStatusIndicatorColor = (status) => {
   }
 };
 
-export function AdminDashboardRecents({ orders, eventBookings, trendingProducts }) {
+export function AdminDashboardRecents({ orders, trendingProducts }) {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Recent Orders */}
       <motion.div
         variants={fadeUp}
@@ -152,78 +152,6 @@ export function AdminDashboardRecents({ orders, eventBookings, trendingProducts 
         )}
       </motion.div>
 
-      {/* Upcoming Bookings */}
-      <motion.div
-        variants={fadeUp}
-        className="admin-card p-4 sm:p-5 !rounded-[4px] border border-[var(--admin-border)] shadow-xs flex flex-col"
-      >
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--admin-border-subtle)]">
-          <div>
-            <h3 className="text-[13.5px] sm:text-[14px] font-bold text-[var(--admin-text-primary)]">
-              Upcoming Bookings
-            </h3>
-            <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-0.5">
-              Scheduled decor jobs & celebrations
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/admin/events')}
-            className="text-[11px] font-bold text-[var(--admin-accent)] hover:underline cursor-pointer min-h-0"
-          >
-            View All
-          </button>
-        </div>
-
-        {eventBookings.filter((b) => b.status !== 'Cancelled').length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] p-6 text-center">
-            <div className="w-8 h-8 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[var(--admin-text-tertiary)] flex items-center justify-center mb-2">
-              <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-            </div>
-            <span className="text-[11px] uppercase font-bold tracking-wider text-[var(--admin-text-secondary)]">
-              No Bookings Found
-            </span>
-            <p className="text-[10px] text-[var(--admin-text-tertiary)] mt-0.5 font-medium">
-              No upcoming events scheduled.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {eventBookings
-              .filter((b) => b.status !== 'Cancelled')
-              .slice(0, 4)
-              .map((b, i) => (
-                <motion.div
-                  key={i}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate('/admin/events')}
-                  className="relative flex items-center gap-2.5 p-2.5 rounded-[4px] border border-[var(--admin-border-subtle)] hover:bg-[var(--admin-surface-hover)] transition-all cursor-pointer bg-[var(--admin-surface)] pl-3.5 overflow-hidden"
-                >
-                  <span
-                    className={`absolute left-0 top-0 bottom-0 w-1 ${getStatusIndicatorColor(b.status)}`}
-                    aria-hidden="true"
-                  />
-
-                  <div className="w-7 h-7 rounded-full bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-center shrink-0 text-[9.5px] font-bold text-[var(--admin-text-secondary)]">
-                    {getInitials(b.customer)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11.5px] font-bold text-[var(--admin-text-primary)] truncate">
-                      {b.eventType}
-                    </p>
-                    <p className="text-[9.5px] text-[var(--admin-text-tertiary)] font-medium truncate">
-                      {b.customer} · {b.date}
-                    </p>
-                  </div>
-                  <StatusBadge
-                    status={b.status}
-                    className="text-[8px] px-1.5 py-0.2 font-bold shrink-0 ml-2"
-                  />
-                </motion.div>
-              ))}
-          </div>
-        )}
-      </motion.div>
-
       {/* Trending Products */}
       <motion.div
         variants={fadeUp}
@@ -235,7 +163,7 @@ export function AdminDashboardRecents({ orders, eventBookings, trendingProducts 
               Trending Catalog
             </h3>
             <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-0.5">
-              Most viewed & purchased decor items
+              Most viewed & purchased items
             </p>
           </div>
           <button

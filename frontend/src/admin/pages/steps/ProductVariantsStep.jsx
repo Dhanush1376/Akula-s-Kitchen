@@ -106,22 +106,19 @@ const PRESET_ATTRIBUTES = [
 const PRESET_BADGES = [
   'Trending',
   'Best Seller',
-  'Heritage Craft',
-  'Handmade',
+  'Homemade',
   'New Arrival',
   'Limited Edition',
   'Eco-Friendly',
 ];
 
 const PRESET_TAGS = [
-  'Wedding',
-  'Pooja',
-  'Diwali',
-  'Temple Decor',
-  'Housewarming',
-  'Handcrafted',
-  'Brass Decor',
-  'Return Gifts',
+  'Batters',
+  'Chutneys',
+  'Pickles',
+  'Podis & Masalas',
+  'Namkeen',
+  'Cashews',
   'Festive',
 ];
 
@@ -462,7 +459,7 @@ export function ProductVariantsStep({
                       <span className="text-[13px] font-bold text-[var(--admin-text-primary)]">
                         {attrName}
                       </span>
-                      <span className="text-[10px] text-white font-bold bg-[var(--admin-accent)] px-1.5 py-0.5 rounded-[3px] border border-[var(--admin-accent-hover,#664b28)] whitespace-nowrap shadow-2xs">
+                      <span className="text-[10px] text-black font-bold bg-[var(--admin-accent)] px-1.5 py-0.5 rounded-[3px] border border-[var(--admin-accent-hover,#B88A0F)] whitespace-nowrap shadow-2xs">
                         {options.length} {options.length === 1 ? 'choice' : 'choices'}
                       </span>
                     </div>
@@ -495,9 +492,9 @@ export function ProductVariantsStep({
                           return (
                             <div
                               key={v.id || `${v.name}-${v.value}`}
-                              className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[var(--admin-accent)] border border-[var(--admin-accent-hover,#664b28)] hover:brightness-105 rounded-[3px] text-[11px] font-medium text-white shadow-2xs transition-all group leading-tight"
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[var(--admin-accent)] border border-[var(--admin-accent-hover,#B88A0F)] hover:brightness-95 rounded-[3px] text-[11px] font-semibold text-black shadow-2xs transition-all group leading-tight"
                             >
-                              <span className="font-semibold text-white">{v.value}</span>
+                              <span className="font-bold text-black">{v.value}</span>
 
                               {/* Price badge (hidden for Color & Size, or if price delta is 0) */}
                               {!isNoPriceAttr && priceNum !== 0 && (
@@ -641,16 +638,16 @@ export function ProductVariantsStep({
                   {parsedBadges.map((badge) => (
                     <span
                       key={badge}
-                      className="px-2 py-0.5 text-[10.5px] rounded-[3px] border border-[var(--admin-accent-hover,#664b28)] bg-[var(--admin-accent)] text-white font-medium shadow-2xs flex items-center gap-1 leading-tight"
+                      className="px-2 py-0.5 text-[10.5px] rounded-[3px] border border-[var(--admin-accent-hover,#B88A0F)] bg-[var(--admin-accent)] text-black font-semibold shadow-2xs flex items-center gap-1 leading-tight"
                     >
-                      <span className="material-symbols-outlined text-[11px] text-white/90">
+                      <span className="material-symbols-outlined text-[11px] text-black/80">
                         check
                       </span>
                       <span>{badge}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveBadge(badge)}
-                        className="text-white/70 hover:text-white cursor-pointer flex items-center justify-center p-0 ml-0.5"
+                        className="text-black/60 hover:text-black cursor-pointer flex items-center justify-center p-0 ml-0.5"
                         title="Remove badge"
                       >
                         <span className="material-symbols-outlined text-[11px]">close</span>
@@ -714,7 +711,7 @@ export function ProductVariantsStep({
           <div className="p-3.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider">
-                Tags / Occasions
+                Tags
               </label>
               <span className="text-[10px] text-[var(--admin-text-secondary)] font-medium bg-[var(--admin-surface-muted)] px-1.5 py-0.5 rounded-[3px] border border-[var(--admin-border)] whitespace-nowrap">
                 {parsedTags.length} {parsedTags.length === 1 ? 'tag' : 'tags'}
@@ -732,13 +729,13 @@ export function ProductVariantsStep({
                   {parsedTags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2 py-0.5 text-[10.5px] rounded-[3px] border border-[var(--admin-accent-hover,#664b28)] bg-[var(--admin-accent)] text-white font-medium shadow-2xs flex items-center gap-1 leading-tight"
+                      className="px-2 py-0.5 text-[10.5px] rounded-[3px] border border-[var(--admin-accent-hover,#B88A0F)] bg-[var(--admin-accent)] text-black font-semibold shadow-2xs flex items-center gap-1 leading-tight"
                     >
                       <span>{tag}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
-                        className="text-white/70 hover:text-white cursor-pointer flex items-center justify-center p-0 ml-0.5"
+                        className="text-black/60 hover:text-black cursor-pointer flex items-center justify-center p-0 ml-0.5"
                         title="Remove tag"
                       >
                         <span className="material-symbols-outlined text-[11px]">close</span>
@@ -752,7 +749,7 @@ export function ProductVariantsStep({
             {/* Suggested Popular Tags */}
             <div className="pt-2 border-t border-[var(--admin-border-subtle)] space-y-1.5">
               <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block">
-                Popular Occasions:
+                Popular Tags:
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {PRESET_TAGS.filter(
@@ -783,7 +780,7 @@ export function ProductVariantsStep({
             >
               <input
                 type="text"
-                placeholder="Add custom tag (e.g. Return Gift, Brass Pooja)"
+                placeholder="Add custom tag (e.g. Spicy, Breakfast)"
                 value={customTagInput}
                 onChange={(e) => setCustomTagInput(e.target.value)}
                 className={`w-full bg-[var(--admin-surface)] rounded-[4px] px-3 h-8 text-[11.5px] outline-none transition-all placeholder:text-[var(--admin-text-tertiary)] ${

@@ -1,10 +1,10 @@
 import React from 'react';
 import { AdminField, AdminInput, AdminTextarea } from '../AdminUIKit';
-const DEFAULT_TITLE = 'Siri Arts & Crafts | Wedding Decor, Handmade Gifts & Event Decor';
+const DEFAULT_TITLE = "Akula's Kitchen | Authentic Flavors & Premium Culinary Experiences";
 const DEFAULT_DESC =
-  'Premium handcrafted wedding decor, pooja essentials, floral decorations, event decor, and customized gifts.';
+  "Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen.";
 const DEFAULT_KEYWORDS =
-  'wedding decor, pooja essentials, floral decorations, event decor, customized gifts';
+  "Akula's Kitchen, gourmet, authentic recipes, kitchen, food, catering, culinary";
 
 export function SEOCenterEditor({ content, onUpdate }) {
   const seo = content.seo || {};
@@ -70,12 +70,12 @@ export function SEOCenterEditor({ content, onUpdate }) {
             <div className="border border-[#dadce0] rounded-md bg-white p-5 max-w-2xl font-sans shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3 mb-2 text-[#4d5156]">
                 <div className="w-[28px] h-[28px] bg-[#f1f3f4] rounded-full flex items-center justify-center border border-[#dadce0] overflow-hidden">
-                  <span className="text-[10px] font-bold text-gray-500">Siri</span>
+                  <span className="text-[10px] font-bold text-gray-500">Akula</span>
                 </div>
                 <div className="flex flex-col leading-tight">
-                  <span className="text-[14px] text-[#202124]">siriartsandcrafts.com</span>
+                  <span className="text-[14px] text-[#202124]">akulas.kitchen</span>
                   <span className="text-[12px] text-[#4d5156] flex items-center gap-1">
-                    https://siriartsandcrafts.com
+                    https://akulas.kitchen
                     <span className="material-symbols-outlined text-[14px]">more_vert</span>
                   </span>
                 </div>

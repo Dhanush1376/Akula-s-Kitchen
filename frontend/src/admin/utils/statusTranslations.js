@@ -37,7 +37,7 @@ export const OrderStatusTranslations = {
 };
 
 export const ProductionStageTranslations = {
-  not_started: { label: 'Not Started', description: 'Waiting for artisan', tone: 'neutral' },
+  not_started: { label: 'Not Started', description: 'Waiting to start', tone: 'neutral' },
   painting: { label: 'Painting', description: 'Currently being painted', tone: 'warning' },
   drying: { label: 'Drying', description: 'Drying before QA', tone: 'info' },
   quality_check: {

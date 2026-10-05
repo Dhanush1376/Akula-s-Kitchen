@@ -241,7 +241,7 @@ export function PolicyModalDrawer({ isOpen, onClose, policy = null, onSuccess })
             }}
             transition={sheetTransition}
             {...dragProps}
-            className="pointer-events-auto relative w-full sm:max-w-xl md:max-w-2xl bg-[var(--admin-surface)] rounded-t-2xl sm:rounded-[4px] shadow-2xl border-t sm:border border-[var(--admin-border)] flex flex-col max-h-[90dvh] sm:max-h-[88vh] overflow-hidden z-10"
+            className="pointer-events-auto relative w-full sm:max-w-xl md:max-w-2xl bg-[var(--admin-surface)] rounded-t-[18px] sm:rounded-[4px] shadow-2xl border-t sm:border border-[var(--admin-border)] flex flex-col max-h-[90dvh] sm:max-h-[88vh] overflow-hidden z-10"
             onClick={(e) => e.stopPropagation()}
           >
             {isMobile && <DrawerDragHandle onClick={!submitting ? onClose : undefined} />}
