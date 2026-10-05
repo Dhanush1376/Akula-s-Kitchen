@@ -1,0 +1,131 @@
+const HUMAN_ERROR_MAP = {
+  'Network Error': 'Please check your internet connection.',
+  timeout: 'The request timed out. Please try again.',
+  ECONNREFUSED: 'Our servers are temporarily unreachable.',
+  401: 'Please log in again to continue.',
+  403: 'You do not have permission for this action.',
+  404: 'We could not find what you were looking for.',
+  429: 'You are doing that too fast. Please slow down.',
+  500: 'Our servers are taking a quick break. Try again shortly.',
+  502: 'Our servers are taking a quick break. Try again shortly.',
+  503: 'Our servers are taking a quick break. Try again shortly.',
+  504: 'Our servers are taking a quick break. Try again shortly.',
+  'duplicate key': 'This information is already in use.',
+  'invalid token': 'Your session has expired.',
+  'jwt expired': 'Your session has expired. Please log in again.',
+};
+
+/**
+ * Extracts the most meaningful error message from any error object.
+ * Priority order:
+ *   1. Backend API response message (err.response.data.message)
+ *   2. Normalized API error message (err.normalized.message)
+ *   3. Native error message (err.message)
+ *   4. Provided fallback string
+ *
+ * @param {unknown} err - The caught error object
+ * @param {string} [fallback='Something went wrong. Please try again.'] - Fallback message
+ * @returns {string} The best available human-readable error message
+ */
+export const getErrorMessage = (err, fallback = 'Something went wrong. Please try again.') => {
+  if (!err) return fallback;
+
+  // Function to check if a string contains technical jargon or code
+  const isTechnical = (str) => {
+    if (!str || typeof str !== 'string') return false;
+
+    // Check for common technical indicators
+    const technicalPatterns = [
+      /<html/i,
+      /<body/i,
+      /<!DOCTYPE/i,
+      /<script/i, // HTML content
+      /Unexpected token/i,
+      /JSON at position/i, // JSON parsing errors
+      /ECONNREFUSED/i,
+      /ETIMEDOUT/i,
+      /ENOTFOUND/i, // Network errors
+      /TypeError:/i,
+      /ReferenceError:/i,
+      /SyntaxError:/i, // JS errors
+      /SQL syntax/i,
+      /database/i,
+      /MongoError/i,
+      /Cast to ObjectId/i, // DB errors
+      /stack trace/i,
+      /at Array\./i,
+      /at Object\./i, // Stack traces
+      /failed to fetch/i, // Fetch generic error
+      /Request failed with status code/i, // Axios generic error
+      /E11000 duplicate key error/i, // MongoDB dup error
+      /AxiosError/i,
+      /Network Error/i,
+    ];
+
+    // If it's suspiciously long, it might be a stack trace or HTML dump
+    if (str.length > 150) return true;
+
+    return technicalPatterns.some((pattern) => pattern.test(str));
+  };
+
+  let candidate = null;
+
+  // 1. Backend structured API error response
+  const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
+  if (serverMsg && typeof serverMsg === 'string') {
+    candidate = serverMsg;
+  }
+
+  // 2. Normalized error from Axios interceptor
+  if (!candidate && err?.normalized?.message && typeof err.normalized.message === 'string') {
+    candidate = err.normalized.message;
+  }
+
+  // 3. Native JS error message
+  if (!candidate && err?.message && typeof err.message === 'string') {
+    candidate = err.message;
+  }
+
+  // Map candidate against human readable messages
+  if (candidate) {
+    const candidateLower = candidate.toLowerCase();
+    for (const [key, value] of Object.entries(HUMAN_ERROR_MAP)) {
+      if (candidateLower.includes(key.toLowerCase())) {
+        return value;
+      }
+    }
+
+    // Check status codes if present in candidate string
+    const statusMatch = candidate.match(/status code (\d{3})/i);
+    if (statusMatch && HUMAN_ERROR_MAP[statusMatch[1]]) {
+      return HUMAN_ERROR_MAP[statusMatch[1]];
+    }
+  }
+
+  // Verify candidate is not technical
+  if (candidate && !isTechnical(candidate)) {
+    return candidate;
+  }
+
+  return fallback;
+};
+
+import toast from 'react-hot-toast';
+
+export const patchToastError = () => {
+  const originalError = toast.error;
+  toast.error = (msg, options) => {
+    let sanitizedMsg = msg;
+
+    // If msg is an Error or AxiosError object
+    if (typeof msg === 'object' && msg !== null) {
+      sanitizedMsg = getErrorMessage(msg, 'An unexpected error occurred.');
+    }
+    // If it's a string, sanitize it using our logic
+    else if (typeof msg === 'string') {
+      sanitizedMsg = getErrorMessage({ message: msg }, 'An unexpected error occurred.');
+    }
+
+    return originalError(sanitizedMsg, options);
+  };
+};
