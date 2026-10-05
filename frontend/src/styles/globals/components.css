@@ -114,7 +114,7 @@
 
   select option {
     background-color: #ffffff;
-    color: #1a1a1a;
+    color: #000000;
     padding: 8px 12px;
   }
 
@@ -249,9 +249,9 @@ input[type='date']::-webkit-calendar-picker-indicator {
 /* ─── Global Image Fallback Styling ─── */
 img.image-fallback-active {
   object-fit: cover !important;
-  background-color: #f7f6f2 !important;
+  background-color: #f7f7f7 !important;
 }
 
 .dark img.image-fallback-active {
-  background-color: #1a1917 !important;
+  background-color: #000000 !important;
 }

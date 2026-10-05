@@ -61,7 +61,7 @@
   box-shadow: var(--shadow-md);
 
   &:hover {
-    @apply bg-[#8c7335] text-white;
+    @apply bg-[#000000] text-white;
     box-shadow: var(--shadow-lg);
   }
 }
@@ -106,7 +106,7 @@
 }
 
 @utility text-gold {
-  @apply bg-clip-text text-transparent bg-gradient-to-tr from-primary-container via-[#f1d592] to-primary-container;
+  @apply bg-clip-text text-transparent bg-gradient-to-tr from-primary-container via-[#fef3cc] to-primary-container;
 }
 
 @utility animate-shimmer {
@@ -179,11 +179,11 @@
 
 /* Typography Utilities */
 @utility font-display {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-display);
 }
 
 @utility font-serif {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-display);
 }
 
 @utility font-headline-xl {
@@ -438,12 +438,6 @@ body.filters-open footer {
   display: none !important;
 }
 
-body.filters-open img[src*='mandala'] {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 0.2s ease-out !important;
-}
-
 /* ─── Gallery Detail — Pinterest-Style Layout ─── */
 .gallery-detail-grid {
   display: none;
@@ -477,160 +471,9 @@ body.filters-open img[src*='mandala'] {
   /* Tailwind classes handle the sticky positioning */
 }
 
-/* Discovery masonry feed */
-.discovery-masonry {
-  columns: 2;
-  column-gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .discovery-masonry {
-    columns: 3;
-    column-gap: 1.25rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .discovery-masonry {
-    columns: 4;
-    column-gap: 1.25rem;
-  }
-}
-
-.discovery-masonry > * {
-  break-inside: avoid;
-  margin-bottom: 1rem;
-}
-
-@media (min-width: 768px) {
-  .discovery-masonry > * {
-    margin-bottom: 1.25rem;
-  }
-}
-
-/* Color palette swatches */
-.color-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.12),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
-  transition:
-    transform 0.3s var(--ease-luxury),
-    box-shadow 0.3s ease;
-  cursor: default;
-  flex-shrink: 0;
-}
-
-.color-swatch:hover {
-  transform: scale(1.25);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.18),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-/* Glassmorphic CTA card */
-.glass-cta {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow:
-    0 8px 32px rgba(115, 92, 0, 0.06),
-    0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-/* Floating action pill */
-.gallery-action-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.3s ease;
-}
-
-.gallery-action-pill:hover {
-  box-shadow:
-    0 6px 28px rgba(0, 0, 0, 0.14),
-    0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-
-.gallery-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: transparent;
-  transition:
-    background 0.2s ease,
-    transform 0.2s var(--ease-bounce);
-  cursor: pointer;
-  color: #1a1817;
-  border: none;
-  outline: none;
-}
-
-.gallery-action-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.gallery-action-btn:active {
-  transform: scale(0.92);
-}
-
-/* Linked product card */
-.linked-product-card {
-  min-width: 140px;
-  max-width: 180px;
-  border-radius: 1rem;
-  overflow: hidden;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition:
-    transform 0.4s var(--ease-luxury),
-    box-shadow 0.4s ease;
-  flex-shrink: 0;
-}
-
-.linked-product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(115, 92, 0, 0.1);
-}
-
-/* Horizontal scroll for linked products */
-.linked-products-scroll {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 0.5rem;
-}
-
-.linked-products-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.linked-products-scroll > * {
-  scroll-snap-align: start;
-}
-
 /* ─── Custom Global Overrides ─── */
 @utility bg-black {
-  background-color: #2a2825 !important;
+  background-color: #000000;
 }
 
 /* ─── Keyboard Aware Utilities ─── */

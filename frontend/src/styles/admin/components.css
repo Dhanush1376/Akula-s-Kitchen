@@ -133,7 +133,7 @@
 /* Primary */
 .admin-section-root .admin-btn-primary {
   background: var(--admin-accent);
-  color: #ffffff;
+  color: var(--admin-accent-text, #000000);
   border-color: var(--admin-accent);
 }
 

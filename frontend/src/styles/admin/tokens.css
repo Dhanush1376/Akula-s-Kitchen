@@ -33,33 +33,34 @@
     Arial,
     sans-serif !important;
 
-  /* ── Color Palette: Cream & Ivory Theme ── */
-  --admin-bg: #fdfbf7; /* Light Ivory */
-  --admin-bg-subtle: #f6f4eb; /* Soft Cream */
-  --admin-surface: #ffffff; /* Pure white cards for crisp contrast */
-  --admin-surface-hover: #faf7f0; /* Cream hover */
-  --admin-surface-muted: #f2efe5; /* Darker cream for inputs */
+  /* ── Color Palette: Akula's Kitchen Brand Theme ── */
+  /* Logo Colors: Mustard Gold #D4A41C · Black #000000 · White #FFFFFF */
+  --admin-bg: #ffffff; /* Pure White */
+  --admin-bg-subtle: #f9f8f6; /* Warm near-white */
+  --admin-surface: #ffffff; /* Pure white cards */
+  --admin-surface-hover: #f9f8f5; /* Warm hover */
+  --admin-surface-muted: #f3f1ed; /* Warm muted */
   --admin-surface-raised: #ffffff;
-  --admin-surface-overlay: rgba(60, 54, 42, 0.4); /* Warm overlay */
+  --admin-surface-overlay: rgba(0, 0, 0, 0.45); /* Neutral overlay */
 
-  --admin-border: #e8e4d9; /* Warm border */
-  --admin-border-subtle: #f2efe5;
-  --admin-border-strong: #d4cebb;
-  --admin-border-focus: #826237; /* Custom Theme Gold */
+  --admin-border: #e5e2db; /* Warm neutral border */
+  --admin-border-subtle: #f0eee9;
+  --admin-border-strong: #d1cdc4;
+  --admin-border-focus: #d4a41c; /* Logo Mustard Gold */
 
-  --admin-text-primary: #000000; /* Pure Black */
-  --admin-text-secondary: #5c564b;
-  --admin-text-tertiary: #78716c;
-  --admin-text-placeholder: #a8a29e;
+  --admin-text-primary: #000000; /* Pure Black (Logo) */
+  --admin-text-secondary: #1a1a1a; /* Near Black */
+  --admin-text-tertiary: #333333; /* Dark Grey */
+  --admin-text-placeholder: #666666;
   --admin-text-inverse: #ffffff;
 
-  /* Accent: Warm Elegant Gold/Brown */
-  --admin-accent: #826237; /* Accessible Dark Gold */
-  --admin-accent-hover: #664b28; /* Deeper Gold */
-  --admin-accent-light: #f4f0e6; /* Warm Accent Bg */
-  --admin-accent-muted: rgba(130, 98, 55, 0.12);
-  --admin-accent-subtle: rgba(130, 98, 55, 0.05);
-  --admin-accent-text: #ffffff;
+  /* Accent: Logo Mustard Gold */
+  --admin-accent: #d4a41c; /* Akula's Kitchen Logo Gold */
+  --admin-accent-hover: #b88a0f; /* Darker Gold hover */
+  --admin-accent-light: #fdf6e0; /* Light Gold tint */
+  --admin-accent-muted: rgba(212, 164, 28, 0.15);
+  --admin-accent-subtle: rgba(212, 164, 28, 0.06);
+  --admin-accent-text: #000000; /* Black text on gold (Logo match) */
 
   /* Semantic Colors (High-Contrast & WCAG Compliant) */
   --admin-success: #047857; /* Rich Emerald */
@@ -82,8 +83,8 @@
   --admin-domain-orders-bg: #f0f4f8;
   --admin-domain-products: #9b82a3; /* Muted Mauve */
   --admin-domain-products-bg: #f5f2f7;
-  --admin-domain-users: #c29b62;
-  --admin-domain-users-bg: #f9f6f0;
+  --admin-domain-users: #d4a41c; /* Logo Gold */
+  --admin-domain-users-bg: #fdf8ec;
   --admin-domain-settings: #8a816f;
   --admin-domain-settings-bg: #f7f6f2;
   --admin-domain-marketing: #d97706; /* Warm Amber */
@@ -126,7 +127,7 @@
   --admin-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
   --admin-shadow-2xl: 0 40px 60px -15px rgba(0, 0, 0, 0.16);
   --admin-shadow-overlay: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 25px 50px -12px rgba(0, 0, 0, 0.2);
-  --admin-shadow-ring: 0 0 0 3px rgba(51, 65, 85, 0.12);
+  --admin-shadow-ring: 0 0 0 3px rgba(212, 164, 28, 0.2);
 
   /* ── Radii ── */
   --admin-radius-sm: 4px;
@@ -152,13 +153,13 @@
   --admin-transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
   --admin-transition-slow: 250ms cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* ── Chart Colors (Modern SaaS Palette) ── */
-  --admin-chart-1: #3c362a; /* Deep Brown */
-  --admin-chart-2: #826237; /* Custom Gold */
-  --admin-chart-3: #7a8b76; /* Sage */
-  --admin-chart-4: #bc6c5c; /* Terracotta */
-  --admin-chart-5: #c29b62; /* Ochre */
-  --admin-chart-6: #6b8ead; /* Slate Blue */
+  /* ── Chart Colors (Brand-Tuned Palette) ── */
+  --admin-chart-1: #1a1a1a; /* Black (Logo) */
+  --admin-chart-2: #d4a41c; /* Mustard Gold (Logo) */
+  --admin-chart-3: #5a7d9a; /* Slate Blue */
+  --admin-chart-4: #7a8b76; /* Sage */
+  --admin-chart-5: #bc6c5c; /* Terracotta */
+  --admin-chart-6: #6b8ead; /* Lake Blue */
   --admin-chart-7: #9b82a3; /* Mauve */
   --admin-chart-8: #8a816f; /* Warm Grey */
 

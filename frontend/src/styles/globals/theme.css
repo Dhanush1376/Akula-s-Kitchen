@@ -23,16 +23,17 @@
   --radius-3xl: 40px;
   --radius-full: 9999px;
 
-  /* ─── Shadow Scale (warm luxury undertones) ─── */
-  --shadow-xs: 0 1px 2px rgba(115, 92, 0, 0.04);
-  --shadow-sm: 0 2px 4px rgba(115, 92, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 4px 12px rgba(115, 92, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 8px 24px rgba(115, 92, 0, 0.07), 0 4px 8px rgba(0, 0, 0, 0.03);
-  --shadow-xl: 0 16px 40px rgba(115, 92, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 24px 60px rgba(115, 92, 0, 0.1), 0 12px 24px rgba(0, 0, 0, 0.05);
-  --shadow-luxury:
-    0 30px 60px -12px rgba(115, 92, 0, 0.08), 0 18px 36px -18px rgba(115, 92, 0, 0.1);
-  --shadow-glow: 0 0 30px rgba(212, 175, 55, 0.15);
+  /* ─── Shadow Scale (neutral, used sparingly) ─── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 18px 44px rgba(0, 0, 0, 0.12);
+  --shadow-2xl: 0 26px 60px rgba(0, 0, 0, 0.14);
+  --shadow-luxury: 0 22px 50px -14px rgba(0, 0, 0, 0.18);
+  --shadow-glow: 0 0 0 3px rgba(247, 187, 14, 0.45);
+  /* Hard offset shadow — echoes the logo's thick outline */
+  --shadow-brand: 4px 4px 0 0 #000000;
 
   /* ─── Transition Presets ─── */
   --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
@@ -43,16 +44,16 @@
   --duration-slow: 500ms;
   --duration-slower: 700ms;
 
-  /* ─── Semantic Surface Colors (aliases for scattered hex values) ─── */
-  --color-surface-warm: #f8f7f4;
-  --color-surface-ivory: #fcfbf9;
-  --color-surface-cream: #fdfbf7;
-  --color-surface-dark: #0f0e0c;
-  --color-surface-dark-alt: #1c1a17;
-  --color-gold: #d4af37;
-  --color-gold-light: #f1d592;
-  --color-gold-dark: #735c00;
-  --color-gold-darker: #594700;
+  /* ─── Semantic Surface Colors (legacy aliases → brand palette) ─── */
+  --color-surface-warm: #ffffff;
+  --color-surface-ivory: #ffffff;
+  --color-surface-cream: #ffffff;
+  --color-surface-dark: #000000;
+  --color-surface-dark-alt: #141414;
+  --color-gold: #f7bb0e;
+  --color-gold-light: #fef3cc;
+  --color-gold-dark: #7a5a00;
+  --color-gold-darker: #5c4400;
 
   /* ─── Layout Measurements ─── */
   --navbar-height: 60px;
@@ -61,55 +62,67 @@
 }
 
 @theme {
-  /* Luxury Design Palette - Digital Studio */
-  --color-primary: #735c00;
-  --color-primary-container: #d4af37;
-  --color-primary-fixed: #ffe088;
-  --color-primary-fixed-dim: #e9c349;
-  --color-on-primary: #1a1c1a;
+  /* ─── Akula's Kitchen brand palette ───
+     Yellow      #F7BB0E  logo inner disc — accents, badges, active states
+     Mustard     #C89611  logo outer ring — hover / pressed yellow
+     Olive Green #283618  headings, fills, brand primary
+     White       #FFFFFF  primary surface
+     Deep mustard #7A5A00 — the only yellow-family tone safe for text on white (AA)
+  */
+  --color-brand-yellow: #f7bb0e;
+  --color-brand-mustard: #c89611;
+  --color-brand-deep: #7a5a00;
+  --color-brand-tint: #fef3cc;
+  --color-brand-black: #283618;
+  --color-brand-white: #ffffff;
+  --color-brand-olive: #283618;
 
-  --color-secondary: #685c57;
-  --color-secondary-container: #f0dfd9;
+  /* Role tokens (existing components read these) */
+  --color-primary: #283618;
+  --color-primary-container: #f7bb0e;
+  --color-primary-fixed: #fef3cc;
+  --color-primary-fixed-dim: #f7bb0e;
+  --color-on-primary: #ffffff;
 
-  --color-tertiary: #5c624c;
-  /* Olive/Moss Green for Heritage vibe */
-  --color-error: #ba1a1a;
+  --color-secondary: #525252;
+  --color-secondary-container: #f5f5f5;
 
-  --color-on-primary-container: #1a1c1a;
-  --color-on-secondary-container: #211a18;
+  --color-tertiary: #7a5a00;
+  --color-error: #c4161c;
 
-  --color-surface: #faf9f6;
-  /* Ivory */
+  --color-on-primary-container: #283618;
+  --color-on-secondary-container: #283618;
+
+  --color-surface: #ffffff;
   --color-surface-bright: #ffffff;
-  --color-surface-dim: #dbdad7;
+  --color-surface-dim: #f4f4f4;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f4f3f1;
-  /* Soft Beige */
-  --color-surface-container: #efeeeb;
-  --color-surface-container-high: #e9e8e5;
-  --color-surface-container-highest: #e3e2e0;
-  /* Warm Beige */
+  --color-surface-container-low: #ffffff;
+  --color-surface-container: #ffffff;
+  --color-surface-container-high: #ffffff;
+  --color-surface-container-highest: #f4f4f4;
 
-  --color-on-surface: #000000;
-  --color-on-surface-variant: #2d2b29;
-  /* Refined dark grey for depth */
+  --color-on-surface: #1f2937;
+  --color-on-surface-variant: #4b5563;
 
-  --color-outline: #7f7663;
-  --color-outline-variant: #d0c5af;
+  --color-outline: #283618;
+  --color-outline-variant: #ede8e1;
 
-  /* Additional Luxury Tones */
-  --color-gold-metallic: linear-gradient(135deg, #d4af37 0%, #f1d592 50%, #d4af37 100%);
-  --color-champagne: #f7e7ce;
+  --color-gold-metallic: #f7bb0e;
+  --color-champagne: #fef3cc;
 
-  /* Fonts */
-  --font-display: 'Playfair Display', serif;
-  --font-headline: 'Playfair Display', serif;
-  --font-body: 'Inter', sans-serif;
-  --font-label: 'Inter', sans-serif;
+  /* Fonts — modern UI typography */
+  --font-sans:
+    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body:
+    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-headline: 'Archivo', system-ui, sans-serif;
+  --font-label: 'Inter', system-ui, sans-serif;
 
   /* Spacing & Breakpoints */
   --spacing-margin-desktop: clamp(22px, 4.5vw, 72px);
-  --spacing-margin-mobile: 14px;
+  --spacing-margin-mobile: 16px;
   --spacing-gutter: 22px;
   --spacing-max-width: 1440px;
   --bottom-nav-height: 64px;

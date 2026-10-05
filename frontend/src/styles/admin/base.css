@@ -192,3 +192,26 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOGO BRAND ACCENT (MUSTARD GOLD #D4A41C) CONTRAST & READABILITY
+   Enforces crisp black text (#000000) on all brand accent backgrounds.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.admin-section-root [class*='bg-[var(--admin-accent)'],
+.admin-section-root [style*='--admin-accent'],
+.admin-section-root .bg-\[var\(--admin-accent\)\],
+.admin-section-root .admin-btn-primary {
+  color: #000000 !important;
+}
+
+.admin-section-root
+  [class*='bg-[var(--admin-accent)']
+  span:not([class*='bg-']):not([class*='text-']),
+.admin-section-root .bg-\[var\(--admin-accent\)\] span:not([class*='bg-']):not([class*='text-']),
+.admin-section-root .bg-\[var\(--admin-accent\)\] .text-white {
+  color: #000000 !important;
+}
+
+.admin-section-root .bg-\[var\(--admin-accent\)\] .material-symbols-outlined {
+  color: #000000 !important;
+}

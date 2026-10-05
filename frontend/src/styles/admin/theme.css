@@ -16,7 +16,7 @@
   --admin-border: rgba(255, 255, 255, 0.08);
   --admin-border-subtle: rgba(255, 255, 255, 0.04);
   --admin-border-strong: rgba(255, 255, 255, 0.15);
-  --admin-border-focus: #826237;
+  --admin-border-focus: #d4a41c;
 
   --admin-text-primary: #f4efe6; /* Ivory text */
   --admin-text-secondary: #bdb5a6;
@@ -24,12 +24,12 @@
   --admin-text-placeholder: #666157;
   --admin-text-inverse: #1a1815;
 
-  --admin-accent: #826237; /* Soft Gold */
-  --admin-accent-hover: #b3976b;
-  --admin-accent-light: rgba(196, 168, 124, 0.12);
-  --admin-accent-muted: rgba(196, 168, 124, 0.1);
-  --admin-accent-subtle: rgba(196, 168, 124, 0.05);
-  --admin-accent-text: #f4efe6;
+  --admin-accent: #d4a41c; /* Logo Mustard Gold */
+  --admin-accent-hover: #e8b82e;
+  --admin-accent-light: rgba(212, 164, 28, 0.15);
+  --admin-accent-muted: rgba(212, 164, 28, 0.12);
+  --admin-accent-subtle: rgba(212, 164, 28, 0.06);
+  --admin-accent-text: #000000;
 
   --admin-success: #34d399;
   --admin-success-light: rgba(6, 78, 59, 0.4);
@@ -367,4 +367,21 @@
 
 .admin-section-root.dark .bg-surface {
   background-color: var(--admin-surface) !important;
+}
+
+/* Dark: Ensure black text on brand mustard gold accent */
+.admin-section-root.dark [class*='bg-[var(--admin-accent)'],
+.admin-section-root.dark .bg-\[var\(--admin-accent\)\],
+.admin-section-root.dark .admin-btn-primary {
+  color: #000000 !important;
+}
+
+.admin-section-root.dark [class*='bg-[var(--admin-accent)'] *,
+.admin-section-root.dark .bg-\[var\(--admin-accent\)\] * {
+  color: #000000 !important;
+}
+
+/* Admin keeps its warm charcoal for bg-black (storefront uses pure brand black) */
+.admin-section-root .bg-black {
+  background-color: #2a2825;
 }
