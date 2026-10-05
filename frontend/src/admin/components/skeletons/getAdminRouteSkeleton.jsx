@@ -1,0 +1,174 @@
+import React from 'react';
+import {
+  AdminDashboardSkeleton,
+  AdminProductsSkeleton,
+  AdminProductWizardSkeleton,
+  AdminOrdersSkeleton,
+  AdminOrderDetailSkeleton,
+  AdminCustomersSkeleton,
+  AdminCategoriesSkeleton,
+  AdminPoliciesSkeleton,
+  AdminInventorySkeleton,
+  AdminCatalogRegistrySkeleton,
+  AdminAnalyticsSkeleton,
+  AdminPaymentsSkeleton,
+  AdminNotificationsSkeleton,
+  AdminContentSkeleton,
+  AdminTeamSkeleton,
+  AdminSettingsSkeleton,
+  AdminReviewsSkeleton,
+  AdminRecycleBinSkeleton,
+  AdminServiceabilitySkeleton,
+  AdminDraftsSkeleton,
+  AdminEnterpriseSearchSkeleton,
+  AdminExecutiveDashboardSkeleton,
+  AdminMaintenanceConsoleSkeleton,
+  AdminBackupCenterSkeleton,
+  AdminRecommendationAnalyticsSkeleton,
+} from './pages';
+
+/**
+ * Route-aware skeleton resolver for the admin panel.
+ * Inspects any pathname and returns the exact matching wireframe skeleton
+ * mirroring the page about to load.
+ *
+ * @param {string} pathname
+ * @returns {React.ReactElement}
+ */
+export function getAdminRouteSkeleton(pathname = '') {
+  const cleanPath = (pathname || '').split('?')[0].replace(/\/+$/, '');
+
+  // 1. Dashboard & Root
+  if (cleanPath === '/admin' || cleanPath === '') {
+    return <AdminDashboardSkeleton />;
+  }
+
+  // 2. Drafts
+  if (cleanPath === '/admin/drafts') {
+    return <AdminDraftsSkeleton />;
+  }
+
+  // 3. Homepage & Content Management
+  if (cleanPath === '/admin/homepage' || cleanPath === '/admin/content') {
+    return <AdminContentSkeleton />;
+  }
+
+  // 4. Products & Catalog
+  if (cleanPath === '/admin/products/add' || cleanPath.startsWith('/admin/products/edit/')) {
+    return <AdminProductWizardSkeleton />;
+  }
+  if (cleanPath === '/admin/products') {
+    return <AdminProductsSkeleton />;
+  }
+  if (cleanPath === '/admin/catalog-registry') {
+    return <AdminCatalogRegistrySkeleton />;
+  }
+  if (cleanPath === '/admin/inventory') {
+    return <AdminInventorySkeleton />;
+  }
+
+  // 5. Settings
+  if (cleanPath === '/admin/settings') {
+    return <AdminSettingsSkeleton />;
+  }
+
+  // 6. Policies
+  if (cleanPath.startsWith('/admin/policies')) {
+    return <AdminPoliciesSkeleton />;
+  }
+
+  // 7. Orders & Order Details
+  if (cleanPath.match(/^\/admin\/orders\/[^/]+$/) && !cleanPath.endsWith('/all')) {
+    return <AdminOrderDetailSkeleton />;
+  }
+  if (cleanPath.startsWith('/admin/orders')) {
+    return <AdminOrdersSkeleton />;
+  }
+
+  // 8. Serviceability
+  if (cleanPath === '/admin/serviceability') {
+    return <AdminServiceabilitySkeleton />;
+  }
+
+  // 9. Customers
+  if (cleanPath === '/admin/customers') {
+    return <AdminCustomersSkeleton />;
+  }
+
+  // 10. Executive Summary
+  if (cleanPath === '/admin/executive') {
+    return <AdminExecutiveDashboardSkeleton />;
+  }
+
+  // 11. Categories
+  if (cleanPath.startsWith('/admin/categories')) {
+    return <AdminCategoriesSkeleton />;
+  }
+
+  // 16. Search
+  if (cleanPath === '/admin/search' || cleanPath === '/admin/enterprise-search') {
+    return <AdminEnterpriseSearchSkeleton />;
+  }
+
+  // 17. Analytics
+  if (cleanPath === '/admin/analytics/operations') {
+    return <AdminRecommendationAnalyticsSkeleton />;
+  }
+  if (cleanPath === '/admin/analytics') {
+    return <AdminAnalyticsSkeleton />;
+  }
+
+  // 19. Payments
+  if (cleanPath === '/admin/payments') {
+    return <AdminPaymentsSkeleton />;
+  }
+
+  // 20. Notifications
+  if (cleanPath === '/admin/notifications') {
+    return <AdminNotificationsSkeleton />;
+  }
+
+  // 22. Team
+  if (cleanPath === '/admin/team') {
+    return <AdminTeamSkeleton />;
+  }
+
+  // 23. Reviews
+  if (cleanPath === '/admin/reviews') {
+    return <AdminReviewsSkeleton />;
+  }
+
+  // 27. System Hub
+  if (cleanPath.startsWith('/admin/system')) {
+    return <AdminCatalogRegistrySkeleton />;
+  }
+
+  // 28. Recycle Bin & Trash
+  if (
+    cleanPath === '/admin/recycle-bin' ||
+    cleanPath === '/admin/trash' ||
+    cleanPath.endsWith('/trash') ||
+    cleanPath.endsWith('/recycle-bin')
+  ) {
+    return <AdminRecycleBinSkeleton />;
+  }
+
+  // 30. Backup Center
+  if (cleanPath.startsWith('/admin/backup-center') || cleanPath === '/admin/backup') {
+    return <AdminBackupCenterSkeleton />;
+  }
+
+  // 31. Maintenance
+  if (
+    cleanPath === '/admin/maintenance' ||
+    cleanPath === '/admin/maintenance-console' ||
+    cleanPath === '/admin/maintenance-gateway'
+  ) {
+    return <AdminMaintenanceConsoleSkeleton />;
+  }
+
+  // Default fallback for any unspecified admin path
+  return <AdminDashboardSkeleton />;
+}
+
+export default getAdminRouteSkeleton;

@@ -1,0 +1,321 @@
+import { useState } from 'react';
+import { productService } from '../../services/domainServices';
+import toast from 'react-hot-toast';
+import logger from '../../utils/core/logger';
+
+export function useProductSubmission({
+  formData,
+  setFormData,
+  isEditMode,
+  id,
+  deleteDraft,
+  queryClient,
+  refreshProducts,
+  handleSuccessAction,
+  setIsLoading,
+}) {
+  const [newVariant, setNewVariant] = useState({ name: '', value: '', price: '', stock: '' });
+
+  const _swapPrimaryImage = (index) => {
+    const newImages = [...formData.images];
+    const oldPrimary = formData.imageSrc;
+    const newPrimary = newImages[index];
+
+    if (newPrimary) {
+      newImages[index] = oldPrimary;
+      setFormData({
+        ...formData,
+        imageSrc: newPrimary,
+        images: newImages.filter(Boolean),
+      });
+      toast.success('Updated primary listing image');
+    }
+  };
+
+  // Add Variants with duplicate prevention and clean pricing
+  const handleAddVariant = () => {
+    const trimmedName = (newVariant.name || '').trim();
+    const trimmedValue = (newVariant.value || '').trim();
+
+    if (!trimmedName || !trimmedValue) {
+      return toast.error('Please specify both Variant attribute name & value');
+    }
+
+    const isDuplicate = formData.variants?.some(
+      (v) =>
+        v.name?.trim().toLowerCase() === trimmedName.toLowerCase() &&
+        v.value?.trim().toLowerCase() === trimmedValue.toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      return toast.error(`Variant "${trimmedName}: ${trimmedValue}" is already added.`);
+    }
+
+    const priceNum =
+      newVariant.price !== '' && !isNaN(Number(newVariant.price)) ? Number(newVariant.price) : 0;
+
+    setFormData((prev) => ({
+      ...prev,
+      variants: [
+        ...(prev.variants || []),
+        {
+          ...newVariant,
+          name: trimmedName,
+          value: trimmedValue,
+          price: priceNum,
+          id: Date.now(),
+        },
+      ],
+    }));
+
+    // Keep the current attribute name so the user can quickly add another option for the same attribute!
+    setNewVariant({ name: trimmedName, value: '', price: '', stock: '' });
+    toast.success(`Added ${trimmedName}: ${trimmedValue}`);
+  };
+
+  const handleRemoveVariant = (vid) => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: (prev.variants || []).filter((v) => v.id !== vid),
+    }));
+  };
+
+  const handleRemoveAttributeGroup = (attributeName) => {
+    if (!attributeName) return;
+    setFormData((prev) => ({
+      ...prev,
+      variants: (prev.variants || []).filter(
+        (v) => v.name?.trim().toLowerCase() !== attributeName.trim().toLowerCase(),
+      ),
+    }));
+    toast.success(`Removed all ${attributeName} options`);
+  };
+
+  // Submit Handler
+  const handleSubmit = async (e, options = { stayOnPage: false }) => {
+    if (e) e.preventDefault();
+    if (formData.images.length > 0 && !formData.imageSrc) {
+      setFormData((prev) => ({ ...prev, imageSrc: prev.images[0] }));
+      formData.imageSrc = formData.images[0]; // also set locally for the check below
+    }
+    if (
+      !formData.title ||
+      !formData.price ||
+      (!formData.category && !formData.primaryCategory) ||
+      !formData.imageSrc
+    ) {
+      return toast.error('Please fill in all mandatory fields before publishing');
+    }
+
+    setIsLoading(true);
+    try {
+      let finalImageSrc = formData.imageSrc;
+      let finalImages = [...formData.images].filter(Boolean);
+
+      // Upload pending local images and remote URLs
+      if (formData.pendingUploads && formData.pendingUploads.length > 0) {
+        toast.loading('Uploading images...', { id: 'upload-toast' });
+        // Include http/https to catch newly added pending remote URLs
+        const activeLocalUrls = [finalImageSrc, ...finalImages].filter(
+          (url) => url && (url.startsWith('blob:') || url.startsWith('http')),
+        );
+
+        const uploadData = new FormData();
+        const localUrlMap = {};
+        let uploadIndex = 0;
+
+        try {
+          for (const url of activeLocalUrls) {
+            const pending = formData.pendingUploads.find((p) => p.localUrl === url);
+            if (pending) {
+              if (localUrlMap[url] === undefined) {
+                uploadData.append('file', pending.file);
+                localUrlMap[url] = uploadIndex++;
+              }
+            }
+          }
+
+          // Upload all pending files and remote URLs directly to Cloudinary (bypassing backend limits)
+          let uploadedImages = [];
+          if (uploadIndex > 0) {
+            const { uploadDirectToCloudinary } = await import('../../services/api/_shared');
+            const res = await uploadDirectToCloudinary(uploadData, false, 'products');
+
+            if (res.success && res.images) {
+              uploadedImages = res.images;
+            } else {
+              throw new Error('Failed to upload images');
+            }
+          }
+
+          // Replace local blob URLs and pending remote URLs with the uploaded Cloudinary URLs
+          if (finalImageSrc && localUrlMap[finalImageSrc] !== undefined) {
+            finalImageSrc = uploadedImages[localUrlMap[finalImageSrc]];
+          }
+
+          for (let i = 0; i < finalImages.length; i++) {
+            if (finalImages[i] && localUrlMap[finalImages[i]] !== undefined) {
+              finalImages[i] = uploadedImages[localUrlMap[finalImages[i]]];
+            }
+          }
+        } catch (error) {
+          import('../../utils/core/logger').then(({ default: logger }) => {
+            logger.error('Failed to upload pending images:', error);
+          });
+          toast.error(error.message || 'Failed to upload images. Please try again.');
+          return null; // Return null instead of re-throwing to handle gracefully
+        }
+        toast.dismiss('upload-toast');
+      }
+
+      const payload = {
+        title: formData.title,
+        teluguTitle: formData.teluguTitle || undefined,
+        customerNote: formData.customerNote || undefined,
+        complimentaryGift: formData.complimentaryGift?.enabled
+          ? {
+              enabled: true,
+              name: formData.complimentaryGift.name || undefined,
+              quantity: Number(formData.complimentaryGift.quantity) || 1,
+              description: formData.complimentaryGift.description || undefined,
+              displayBadge: formData.complimentaryGift.displayBadge || undefined,
+            }
+          : { enabled: false },
+        slug:
+          formData.slug ||
+          formData.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, ''),
+        category: formData.primaryCategory || formData.category,
+        material: formData.material || undefined,
+        tags:
+          typeof formData.tags === 'string'
+            ? formData.tags
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : formData.tags,
+        price: Number(formData.price),
+        oldPrice: formData.oldPrice ? Number(formData.oldPrice) : undefined,
+        stock: Number(formData.stock),
+        imageSrc: finalImageSrc,
+        images: Array.from(new Set([finalImageSrc, ...finalImages].filter(Boolean))),
+        badges:
+          typeof formData.badges === 'string'
+            ? formData.badges
+                .split(',')
+                .map((b) => b.trim())
+                .filter(Boolean)
+            : formData.badges,
+        description: formData.description,
+        dimensions: formData.dimensions || undefined,
+        weight: formData.weight || undefined,
+        seoTitle: formData.seoTitle || undefined,
+        seoDescription: formData.seoDescription || undefined,
+        featured: Boolean(formData.featured),
+        isActive: Boolean(formData.isActive),
+        isNonRefundable: !formData.returnSettings?.isReturnable,
+        showInGallery: Boolean(formData.showInGallery),
+        variants: formData.variants,
+        // Rental fields
+        rentalEnabled: Boolean(formData.rentalEnabled),
+        availabilityMode: formData.availabilityMode || 'purchase_only',
+        rentalPricing: {
+          rentalPrice: Number(formData.rentalPricing?.rentalPrice) || 0,
+          rentalDurationDays: Number(formData.rentalPricing?.rentalDurationDays) || 1,
+        },
+        securityDeposit: Number(formData.securityDeposit) || 0,
+        isDepositRefundable:
+          formData.isDepositRefundable !== undefined ? Boolean(formData.isDepositRefundable) : true,
+        rentalStock: Number(formData.rentalStock) || Number(formData.stock) || 0,
+        rentalMinDays: Number(formData.rentalMinDays) || 1,
+        rentalMaxDays: Number(formData.rentalMaxDays) || 365,
+        customizationConfig: {
+          enabled: Boolean(formData.customizationConfig?.enabled),
+          required: Boolean(formData.customizationConfig?.required),
+          label: formData.customizationConfig?.label || 'Customization Note',
+          placeholder: formData.customizationConfig?.placeholder || 'Enter customization details',
+          maxLength: Number(formData.customizationConfig?.maxLength) || 500,
+          helperText: formData.customizationConfig?.helperText || '',
+        },
+        returnSettings: formData.returnSettings
+          ? {
+              returnWindow: Number(formData.returnSettings.returnWindowDays) || 0,
+              exchangeWindow: Number(formData.returnSettings.exchangeWindowDays) || 0,
+              restockingFeePercent: Number(formData.returnSettings.restockingFeePercentage) || 0,
+              inspectionRequired: formData.returnSettings.requiresInspection,
+            }
+          : undefined,
+      };
+
+      const idempotencyKey = `product_${isEditMode ? 'update' : 'create'}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+      const res = isEditMode
+        ? await productService.update(
+            id,
+            { ...payload, __v: formData.__v },
+            { headers: { 'X-Idempotency-Key': idempotencyKey } },
+          )
+        : await productService.create(payload, {
+            headers: { 'X-Idempotency-Key': idempotencyKey },
+          });
+
+      if (res.success) {
+        await deleteDraft(); // Delete draft on success
+        toast.success(
+          isEditMode
+            ? 'Product updated (Changes may take 1-2 mins to reflect)'
+            : 'Product published (Changes may take 1-2 mins to reflect)',
+        );
+
+        // Use the server-returned entity to update the cache directly
+        const returnedProduct = res.data?.product || res.data;
+        if (returnedProduct?._id) {
+          queryClient.setQueryData(['product', returnedProduct._id], returnedProduct);
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        queryClient.invalidateQueries({ queryKey: ['product_categories'] });
+        queryClient.invalidateQueries({ queryKey: ['gallery'] });
+        queryClient.invalidateQueries({ queryKey: ['showcases'] });
+        if (refreshProducts) {
+          try {
+            await refreshProducts();
+          } catch (err) {
+            logger.error('Failed to refresh products state', err);
+          }
+        }
+        if (!options.stayOnPage) {
+          handleSuccessAction();
+        } else {
+          // If staying on page, update formData with the real Cloudinary URLs and clear pendingUploads
+          setFormData((prev) => ({
+            ...prev,
+            imageSrc: finalImageSrc,
+            images: Array.from(new Set([finalImageSrc, ...finalImages].filter(Boolean))),
+            pendingUploads: [],
+            __v: returnedProduct.__v || prev.__v + 1,
+          }));
+          if (!isEditMode && res.data?.product?._id) {
+            window.history.replaceState(null, '', `/admin/products/edit/${res.data.product._id}`);
+          }
+        }
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to save product listing');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    _swapPrimaryImage,
+    handleAddVariant,
+    handleRemoveVariant,
+    handleRemoveAttributeGroup,
+    handleSubmit,
+    newVariant,
+    setNewVariant,
+  };
+}
