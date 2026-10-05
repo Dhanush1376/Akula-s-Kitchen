@@ -1,0 +1,181 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN DESIGN SYSTEM v2.0
+   Production-grade SaaS dashboard tokens, utilities & component styles
+   Inspired by: Linear, Vercel, Stripe, Shopify Admin
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── DESIGN TOKENS ─── */
+.admin-section-root {
+  /* Font System: Strictly 1 Single Default Normal Font (Inter) */
+  --font-display:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-headline:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-label:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-label-sm:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-signature:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-body:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-mono:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif !important;
+
+  /* ── Color Palette: Akula's Kitchen Brand Theme ── */
+  /* Logo Colors: Mustard Gold #D4A41C · Black #000000 · White #FFFFFF */
+  --admin-bg: #ffffff; /* Pure White */
+  --admin-bg-subtle: #f9f8f6; /* Warm near-white */
+  --admin-surface: #ffffff; /* Pure white cards */
+  --admin-surface-hover: #f9f8f5; /* Warm hover */
+  --admin-surface-muted: #f3f1ed; /* Warm muted */
+  --admin-surface-raised: #ffffff;
+  --admin-surface-overlay: rgba(0, 0, 0, 0.45); /* Neutral overlay */
+
+  --admin-border: #e5e2db; /* Warm neutral border */
+  --admin-border-subtle: #f0eee9;
+  --admin-border-strong: #d1cdc4;
+  --admin-border-focus: #d4a41c; /* Logo Mustard Gold */
+
+  --admin-text-primary: #000000; /* Pure Black (Logo) */
+  --admin-text-secondary: #1a1a1a; /* Near Black */
+  --admin-text-tertiary: #333333; /* Dark Grey */
+  --admin-text-placeholder: #666666;
+  --admin-text-inverse: #ffffff;
+
+  /* Accent: Logo Mustard Gold */
+  --admin-accent: #d4a41c; /* Akula's Kitchen Logo Gold */
+  --admin-accent-hover: #b88a0f; /* Darker Gold hover */
+  --admin-accent-light: #fdf6e0; /* Light Gold tint */
+  --admin-accent-muted: rgba(212, 164, 28, 0.15);
+  --admin-accent-subtle: rgba(212, 164, 28, 0.06);
+  --admin-accent-text: #000000; /* Black text on gold (Logo match) */
+
+  /* Semantic Colors (High-Contrast & WCAG Compliant) */
+  --admin-success: #047857; /* Rich Emerald */
+  --admin-success-light: #ecfdf5;
+  --admin-success-border: #a7f3d0;
+  --admin-warning: #b45309; /* Warm Amber */
+  --admin-warning-light: #fffbeb;
+  --admin-warning-border: #fde68a;
+  --admin-error: #be123c; /* Vivid Rose */
+  --admin-error-light: #fff1f2;
+  --admin-error-border: #fecdd3;
+  --admin-info: #1d4ed8; /* Vivid Blue */
+  --admin-info-light: #eff6ff;
+  --admin-info-border: #bfdbfe;
+
+  /* ── Domain Colors (Visual Hierarchy) ── */
+  --admin-domain-revenue: #7a8b76;
+  --admin-domain-revenue-bg: #f2f5f0;
+  --admin-domain-orders: #6b8ead;
+  --admin-domain-orders-bg: #f0f4f8;
+  --admin-domain-products: #9b82a3; /* Muted Mauve */
+  --admin-domain-products-bg: #f5f2f7;
+  --admin-domain-users: #d4a41c; /* Logo Gold */
+  --admin-domain-users-bg: #fdf8ec;
+  --admin-domain-settings: #8a816f;
+  --admin-domain-settings-bg: #f7f6f2;
+  --admin-domain-marketing: #d97706; /* Warm Amber */
+  --admin-domain-marketing-bg: #fffbeb;
+  --admin-domain-danger: #bc6c5c;
+  --admin-domain-danger-bg: #f9f2f0;
+
+  /* ── Typography Scale ── */
+  --admin-text-xs: 11px;
+  --admin-text-sm: 12px;
+  --admin-text-base: 13px;
+  --admin-text-md: 14px;
+  --admin-text-lg: 16px;
+  --admin-text-xl: 18px;
+  --admin-text-2xl: 22px;
+  --admin-text-3xl: 28px;
+  --admin-text-4xl: 36px;
+  --admin-text-metric: 28px;
+
+  /* ── Spacing Scale (4px base) ── */
+  --admin-space-0: 0px;
+  --admin-space-0_5: 2px;
+  --admin-space-1: 4px;
+  --admin-space-1_5: 6px;
+  --admin-space-2: 8px;
+  --admin-space-3: 12px;
+  --admin-space-4: 16px;
+  --admin-space-5: 20px;
+  --admin-space-6: 24px;
+  --admin-space-8: 32px;
+  --admin-space-10: 40px;
+  --admin-space-12: 48px;
+  --admin-space-16: 64px;
+
+  /* ── Shadows (Premium Soft SaaS Elevation) ── */
+  --admin-shadow-xs: 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --admin-shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+  --admin-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+  --admin-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --admin-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+  --admin-shadow-2xl: 0 40px 60px -15px rgba(0, 0, 0, 0.16);
+  --admin-shadow-overlay: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  --admin-shadow-ring: 0 0 0 3px rgba(212, 164, 28, 0.2);
+
+  /* ── Radii ── */
+  --admin-radius-sm: 4px;
+  --admin-radius-md: 6px;
+  --admin-radius-lg: 8px;
+  --admin-radius-xl: 12px;
+  --admin-radius-2xl: 16px;
+  --admin-radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --admin-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --admin-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-ease-bounce: cubic-bezier(
+    0.16,
+    1,
+    0.3,
+    1
+  ); /* Deprecated: aliased to smooth curve to eliminate bounce */
+  --admin-duration-fast: 120ms;
+  --admin-duration-normal: 200ms;
+  --admin-duration-slow: 300ms;
+  --admin-transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-transition-slow: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── Chart Colors (Brand-Tuned Palette) ── */
+  --admin-chart-1: #1a1a1a; /* Black (Logo) */
+  --admin-chart-2: #d4a41c; /* Mustard Gold (Logo) */
+  --admin-chart-3: #5a7d9a; /* Slate Blue */
+  --admin-chart-4: #7a8b76; /* Sage */
+  --admin-chart-5: #bc6c5c; /* Terracotta */
+  --admin-chart-6: #6b8ead; /* Lake Blue */
+  --admin-chart-7: #9b82a3; /* Mauve */
+  --admin-chart-8: #8a816f; /* Warm Grey */
+
+  /* ── Layout ── */
+  --admin-sidebar-width: 260px;
+  --admin-sidebar-collapsed: 72px;
+  --admin-topbar-height: 56px;
+  --admin-max-content-width: 1600px;
+  --admin-bottom-nav-height: 60px;
+
+  /* Map Tailwind v4 design tokens */
+  --color-on-surface: var(--admin-text-primary) !important;
+  --color-on-surface-variant: var(--admin-text-secondary) !important;
+  --color-surface: var(--admin-surface) !important;
+  --color-surface-bright: var(--admin-surface) !important;
+  --color-surface-dim: var(--admin-bg) !important;
+  --color-outline: var(--admin-text-secondary) !important;
+  --color-outline-variant: var(--admin-border) !important;
+}
