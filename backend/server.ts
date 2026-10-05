@@ -1,0 +1,319 @@
+import './src/config/loadEnv'; // Load & validate environment variables before any other imports resolve!
+import dns from 'dns';
+
+dns.setDefaultResultOrder('ipv4first');
+try {
+  // Only override system DNS if explicitly configured (prevents ETIMEOUT when ISPs block port 53 to 8.8.8.8)
+  if (process.env.USE_PUBLIC_DNS === 'true') {
+    dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+  }
+} catch {
+  // Ignore in environments where setting DNS servers is not permitted
+}
+
+import logger from './src/config/logger';
+
+// Early diagnostic output (secure) - Removed Database ID and raw Order ID from admin templates
+logger.info(`[STARTUP] NODE_ENV=${process.env.NODE_ENV}`);
+logger.info(`[STARTUP] PORT=${process.env.PORT || '(not set, defaulting to 5000)'}`);
+logger.info(`[STARTUP] MONGO_URI=${process.env.MONGO_URI ? 'SET' : 'NOT SET'}`);
+
+// Verify email provider configuration
+if (process.env.BREVO_API_KEY) {
+  logger.info('[Email] Brevo API key configured ✓');
+} else if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  logger.info('[Email] SMTP credentials configured ✓');
+} else {
+  logger.warn('[Email] ⚠ No email provider configured! Emails will use Ethereal (dev only).');
+}
+import { auditEnvOnStartup } from './src/config/secretAudit';
+auditEnvOnStartup();
+import { runStartupValidation } from './src/config/startupValidator';
+runStartupValidation();
+import app from './src/app';
+import connectDB from './src/config/db';
+import { ensureIndexes } from './src/config/ensureIndexes';
+import { generateSitemap } from './src/utils/sitemapGenerator';
+import { initSocket, getIO, emitAdminNotification, clearBroadcastInterval } from './src/socket';
+import { initJobs } from './src/jobs/cronJobs';
+import { initRedis, closeRedisConnections, setRedisAlertHandler } from './src/utils/cache/redis';
+import { initWorkers, closeWorkers } from './src/jobs/workers';
+import { initQueues, closeQueues } from './src/jobs/queues';
+import { initRecommendationSystem } from './src/services/recommendation/recommendationEngine';
+import { startDbAuditor } from './src/config/dbAuditor';
+import { AlertingService, setAlertingNotificationHandlers } from './src/services/AlertingService';
+import {
+  sendDirectEmail,
+  createAdminNotification,
+  setSocketNotificationHandler,
+} from './src/services/notificationService';
+import { initStoreConfig } from './src/config/storeConfig';
+
+// Wire up circular dependencies
+setAlertingNotificationHandlers(sendDirectEmail, createAdminNotification);
+setSocketNotificationHandler(emitAdminNotification);
+import * as Sentry from '@sentry/node';
+import mongoose from 'mongoose';
+
+import { Server } from 'http';
+
+let server: Server;
+
+const handleFatalError = async (error: Error, source: string) => {
+  logger.error(`[PROCESS] Critical error [${source}]: ${error.message}`, { stack: error.stack });
+
+  if (process.env.SENTRY_DSN) {
+    try {
+      Sentry.captureException(error);
+    } catch {
+      // Ignored if sentry loading fails
+    }
+  }
+
+  if (server) {
+    try {
+      server.close(() => {
+        logger.info('HTTP server closed on critical process crash.');
+      });
+    } catch (err) {
+      logger.error('Failed to close HTTP server during critical crash:', err);
+    }
+  }
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close();
+      logger.info('MongoDB connection closed on critical process crash.');
+    }
+  } catch (err) {
+    logger.error('Failed to close MongoDB during critical crash:', err);
+  }
+
+  // Allow sentry traces up to 2 seconds to flush, then exit
+  try {
+    if (process.env.SENTRY_DSN) {
+      await Sentry.flush(2000);
+    }
+  } catch (err) {
+    // Ignore flush errors
+  }
+
+  // Allow log buffers a brief moment, then exit
+  setTimeout(() => {
+    process.exit(1);
+  }, 500);
+};
+
+process.on('uncaughtException', (err) => {
+  handleFatalError(err, 'uncaughtException');
+});
+
+process.on('unhandledRejection', (reason: any) => {
+  const error = reason instanceof Error ? reason : new Error(String(reason));
+
+  // Ignore harmless Redis connection closed errors that occur when gracefully disconnecting from a rate-limited or unavailable provider
+  if (
+    error.message.includes('Connection is closed') ||
+    error.message.includes('Socket already setup') ||
+    error.message.includes('Max retries reached')
+  ) {
+    logger.warn(`[PROCESS] Ignored unhandledRejection (Redis/Socket issue): ${error.message}`);
+    return;
+  }
+
+  handleFatalError(error, 'unhandledRejection');
+});
+
+const PORT = parseInt(process.env.PORT || '5000', 10);
+
+const initializeNonCriticalServices = async (httpServer: Server) => {
+  try {
+    const bootStartTime = performance.now();
+
+    // 1.a Start Forensic Database Auditor
+    startDbAuditor();
+
+    // 2. Build indexes in background
+    if (process.env.SKIP_INDEX_BUILD !== 'true') {
+      ensureIndexes()
+        .then(() => logger.info('[DATABASE] Background index verification finished'))
+        .catch((err) => {
+          logger.error('[DATABASE] CRITICAL ALERT: Background index verification failed!', err);
+          if (process.env.SENTRY_DSN) Sentry.captureException(err);
+        });
+    } else {
+      logger.warn('[DATABASE] SKIP_INDEX_BUILD=true — skipping background index build');
+    }
+
+    // 3. Initialize Redis (graceful fallback if REQUIRE_REDIS=false)
+    logger.info('[STARTUP] Progressive Init: Initializing Redis...');
+    let redisReady = false;
+    // 3. Connect Cache & Queues (Redis -> BullMQ)
+    // Inject dependency to break circular imports between Redis and Alerting
+    setRedisAlertHandler(AlertingService.databaseAlert.bind(AlertingService));
+    try {
+      await initRedis();
+      redisReady = true;
+      logger.info('[STARTUP] Redis initialized successfully');
+    } catch (err: any) {
+      logger.error(`[REDIS] Initialization error: ${err.message}`);
+      if (process.env.REQUIRE_REDIS === 'true') {
+        throw new Error(`CRITICAL: Redis is required but failed to initialize: ${err.message}`);
+      }
+    }
+
+    // 4. Initialize Socket.io (now that Redis connection is ready or failed, it can bind its adapter)
+    try {
+      initSocket(httpServer);
+      logger.info('[STARTUP] Socket.io initialized successfully');
+    } catch (err: any) {
+      logger.error(`[SOCKET.IO] Initialization error: ${err.message}`);
+    }
+
+    // 5. Initialize BullMQ Queues and Workers
+    if (redisReady) {
+      try {
+        await initQueues();
+        await initWorkers();
+        logger.info('[STARTUP] BullMQ queues and workers initialized');
+      } catch (err: any) {
+        logger.error(`[BULLMQ] Initialization error: ${err.message}`);
+        if (process.env.REQUIRE_REDIS === 'true') {
+          throw err;
+        }
+      }
+    } else {
+      logger.info('[STARTUP] Redis is not ready; BullMQ queues and workers skipped');
+    }
+
+    // 6. Initialize Recommendation System (warm caches — non-blocking, non-fatal)
+    initRecommendationSystem().catch((err: any) => {
+      logger.warn(`[RECO] Recommendation system init skipped: ${err.message}`);
+    });
+
+    // 7. Initialize Background Cron/Jobs
+    try {
+      initJobs();
+      logger.info('[STARTUP] Background cron/jobs initialized');
+    } catch (err: any) {
+      logger.error(`[STARTUP] Jobs initialization error: ${err.message}`);
+    }
+
+    // 7.a Seed Serviceability data
+    try {
+      const { seedServiceability } = require('./src/scripts/seedServiceability');
+      await seedServiceability();
+    } catch (err: any) {
+      logger.error(`[STARTUP] Serviceability seeding error: ${err.message}`);
+    }
+
+    // 8. Auto-generate sitemap
+    generateSitemap().catch((err: any) =>
+      logger.error(`[BOOT SITEMAP] Initial sitemap generation failed: ${err.message}`),
+    );
+
+    const bootEndTime = performance.now();
+    logger.info(
+      `[STARTUP] Progressive boot sequence completed in ${((bootEndTime - bootStartTime) / 1000).toFixed(2)}s`,
+    );
+  } catch (error: any) {
+    logger.error('[STARTUP] Critical service initialization error:', error);
+    // Trigger fatal error shutdown handling
+    handleFatalError(error, 'progressiveInitialization');
+  }
+};
+
+const startServer = async () => {
+  try {
+    // 1. Connect to MongoDB FIRST — server must not accept traffic until DB is ready
+    logger.info('[STARTUP] Connecting to MongoDB before accepting traffic...');
+    await connectDB();
+    logger.info('[STARTUP] MongoDB connected successfully');
+
+    // Prime store identity configuration cache
+    await initStoreConfig();
+
+    // 2. Start Express Server
+    server = app.listen(PORT, '0.0.0.0', () => {
+      logger.info(
+        `[STARTUP] Server listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`,
+      );
+      if (typeof process.send === 'function') {
+        process.send('ready');
+      }
+
+      // Kick off non-critical initialization AFTER port is bound and DB is ready
+      initializeNonCriticalServices(server);
+    });
+
+    // 1b. Prevent Slowloris and resource exhaustion attacks
+    // Ensure timeout is slightly higher than the load balancer's timeout (Render has 100s default, but 65s is safe for internal)
+    server.keepAliveTimeout = 65000; // 65 seconds
+    server.headersTimeout = 66000; // 66 seconds
+    server.requestTimeout = 120000; // 120 seconds — hard cap on entire request lifecycle (defense-in-depth)
+    server.maxConnections = parseInt(process.env.MAX_CONNECTIONS || '10000', 10); // Prevent FD exhaustion
+    // 5. Graceful Shutdown Handling
+    const shutdown = async (signal: string) => {
+      logger.info(`Received ${signal}. Starting graceful shutdown...`);
+
+      // Force shutdown if it takes too long
+      const forceTimeout = setTimeout(() => {
+        logger.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+      }, 10000);
+      forceTimeout.unref();
+
+      try {
+        // 1. Close Socket.io connections first
+        try {
+          clearBroadcastInterval();
+          const io = getIO();
+          io.close();
+          logger.info('Socket.io connections closed.');
+        } catch {
+          // Socket.io may not be initialized
+        }
+
+        // 2. Stop accepting new HTTP connections
+        await new Promise<void>((resolve) => {
+          server.close(() => {
+            logger.info('HTTP server closed.');
+            resolve();
+          });
+        });
+
+        // 2.b Flush view counters to DB before closing Redis
+        try {
+          const { default: ProductService } = require('./src/services/productService');
+          await ProductService.flushAllViewCounters();
+        } catch (err) {
+          logger.error('Failed to flush view counters during shutdown:', err);
+        }
+
+        // 3. Close Redis connections
+        await closeWorkers();
+        await closeQueues();
+        await closeRedisConnections();
+
+        // 4. Close MongoDB connection
+        await mongoose.connection.close();
+        logger.info('MongoDB connection closed.');
+
+        clearTimeout(forceTimeout);
+        process.exit(0);
+      } catch (err) {
+        logger.error('Error during shutdown:', err);
+        process.exit(1);
+      }
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
+// Trigger restart
