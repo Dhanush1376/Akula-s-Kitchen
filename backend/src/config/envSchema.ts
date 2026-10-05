@@ -1,0 +1,172 @@
+import { z } from 'zod';
+
+/**
+ * Define the environment variable schema.
+ * This provides type safety and runtime validation for configuration.
+ */
+const envSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'staging', 'production', 'test']).default('development'),
+    PORT: z.coerce.number().int().min(1).max(65535).default(5000),
+
+    // Database
+    MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
+    MONGO_POOL_SIZE: z.coerce.number().int().min(1).default(20),
+    SKIP_INDEX_BUILD: z.string().optional(),
+
+    // Auth & Encryption (Supports comma-separated keys for rotation)
+    JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+    FIELD_ENCRYPTION_KEY: z.string().min(32, 'FIELD_ENCRYPTION_KEY must be at least 32 characters'),
+    JWT_EXPIRES_IN: z.string().default('15m'),
+    REFRESH_TOKEN_EXPIRES_DAYS: z.coerce.number().int().default(30),
+
+    // Admin Defaults
+    ADMIN_EMAIL: z.string().email('Invalid ADMIN_EMAIL format'),
+    ADMIN_PASSWORD: z.string().min(8, 'ADMIN_PASSWORD must be at least 8 characters'),
+    SUPER_ADMIN_EMAIL: z.string().email().optional().or(z.literal('')),
+
+    // Email
+    BREVO_API_KEY: z.string().optional(),
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().optional(),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
+    SMTP_FROM_EMAIL: z.string().email('Invalid SMTP_FROM_EMAIL format'),
+    SMTP_FROM_NAME: z.string().default("Akula's Kitchen"),
+
+    // Payments
+    RAZORPAY_KEY_ID: z.string().min(1, 'RAZORPAY_KEY_ID is required'),
+    RAZORPAY_KEY_SECRET: z.string().min(1, 'RAZORPAY_KEY_SECRET is required'),
+    RAZORPAY_WEBHOOK_SECRET: z.string().min(1, 'RAZORPAY_WEBHOOK_SECRET is required'),
+
+    // Media / CDN
+    CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
+    CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
+    CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
+
+    // URLs & Domains
+    FRONTEND_URL: z.string().url('FRONTEND_URL must be a valid URL').optional(),
+    ADMIN_FRONTEND_URL: z.string().url('ADMIN_FRONTEND_URL must be a valid URL').optional(),
+    FRONTEND_URLS: z.string().optional(),
+    BACKEND_URL: z.string().min(1, 'BACKEND_URL is required'),
+    COOKIE_DOMAIN: z.string().optional(),
+
+    // Infrastructure
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+    REDIS_URL: z.string().optional(),
+    REQUIRE_REDIS: z.string().default('false'),
+    ADMIN_ANALYTICS_CACHE_TTL: z.coerce.number().default(300),
+
+    // APIs
+    GROQ_API_KEY: z.string().optional(),
+    SENTRY_DSN: z.string().optional(),
+
+    // Logging
+    LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+    LOG_API_SUCCESS: z.string().default('false'),
+    SLOW_REQUEST_LOG_MS: z.coerce.number().default(3000),
+    LOG_REDACTION: z.string().default('true'),
+
+    // Security / Dev Flags
+    TEST_RATE_LIMIT: z.string().optional(),
+    SECRET_ROTATION_REMINDER: z.string().optional(),
+
+    // Google OAuth
+    GOOGLE_CLIENT_ID: z.string().optional(),
+
+    // WhatsApp Automation
+    WA_PHONE_ID: z.string().optional(),
+    WA_TOKEN: z.string().optional(),
+    WA_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
+    WA_APP_SECRET: z.string().optional(),
+    WA_API_VERSION: z.string().default('v21.0'),
+    WHATSAPP_PROVIDER: z
+      .enum(['meta_cloud', 'twilio', 'gupshup', 'messagebird'])
+      .default('meta_cloud'),
+    WHATSAPP_INLINE_EXECUTION: z.string().default('false'),
+    WA_DISPATCH_CONCURRENCY: z.coerce.number().int().default(5),
+    WA_RETRY_CONCURRENCY: z.coerce.number().int().default(2),
+    WA_MEDIA_CONCURRENCY: z.coerce.number().int().default(3),
+    WA_RATE_LIMIT_PER_SECOND: z.coerce.number().int().default(80),
+    WA_SANDBOX_MODE: z.string().default('false'),
+
+    // Third Party Providers
+    TWILIO_ACCOUNT_SID: z.string().optional(),
+    TWILIO_AUTH_TOKEN: z.string().optional(),
+    TWILIO_WHATSAPP_NUMBER: z.string().optional(),
+    GUPSHUP_API_KEY: z.string().optional(),
+    GUPSHUP_APP_NAME: z.string().optional(),
+    GUPSHUP_SOURCE_NUMBER: z.string().optional(),
+    MESSAGEBIRD_API_KEY: z.string().optional(),
+    MESSAGEBIRD_CHANNEL_ID: z.string().optional(),
+    MESSAGEBIRD_TEMPLATE_NAMESPACE: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.NODE_ENV === 'production') {
+        // Prevent default dev credentials in prod
+        if (data.JWT_SECRET.includes('change_me')) return false;
+        if (data.FIELD_ENCRYPTION_KEY.includes('change_me')) return false;
+
+        // Require SRV connection in prod
+        if (data.MONGO_URI.includes('localhost') || data.MONGO_URI.includes('127.0.0.1'))
+          return false;
+
+        // Razorpay webhook must be strong
+        if (
+          data.RAZORPAY_WEBHOOK_SECRET.length < 32 ||
+          /^[a-z_]+$/i.test(data.RAZORPAY_WEBHOOK_SECRET)
+        )
+          return false;
+
+        // Redis should be required in prod
+        if (data.REQUIRE_REDIS === 'true' && !data.REDIS_URL) return false;
+
+        // Dev flags must be off
+        if (data.SKIP_INDEX_BUILD === 'true') return false;
+        if (data.TEST_RATE_LIMIT === 'true') return false;
+
+        // Enforce strong admin password in production (12+ characters)
+        if (data.ADMIN_PASSWORD.length < 12) return false;
+      }
+      return true;
+    },
+    {
+      message:
+        "Production security checks failed. Ensure no 'change_me' secrets, use MongoDB Atlas (no localhost), strong webhook secrets, secure Redis, admin password 12+ chars, and disabled dev-only flags.",
+    },
+  )
+  .refine(
+    (data) => {
+      // Warn-level: SENTRY_DSN should be set in production for observability
+      if (data.NODE_ENV === 'production' && !data.SENTRY_DSN) {
+        // Use process.stderr instead of returning false — we want a warning, not a hard failure
+        process.stderr.write(
+          '⚠️  WARNING: SENTRY_DSN is not set in production. Error tracking will be disabled.\n',
+        );
+      }
+      return true;
+    },
+    { message: '' },
+  );
+
+/**
+ * Validate and export environment variables.
+ * Call this early in startup.
+ */
+export const validateEnv = () => {
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    process.stderr.write(
+      `❌ Invalid environment variables: ${JSON.stringify(result.error.format(), null, 2)}\n`,
+    );
+    process.exit(1);
+  }
+
+  return result.data;
+};
+
+// Export typed env for use in the app (can replace process.env over time)
+// Use partial to allow process.env.NODE_ENV fallback during initialization
+export const env = process.env as Partial<z.infer<typeof envSchema>>;
