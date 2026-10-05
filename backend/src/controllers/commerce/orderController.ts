@@ -1,0 +1,289 @@
+import { Request, Response } from 'express';
+import logger from '../../config/logger';
+import { OrderQueryService } from '../../services/orders/OrderQueryService';
+import { OrderCheckoutService } from '../../services/orders/OrderCheckoutService';
+import { OrderFulfillmentService } from '../../services/orders/OrderFulfillmentService';
+import { OrderValidationService } from '../../services/orderValidation';
+import { LogisticsService } from '../../services/logisticsService';
+import { PaymentWebhookService } from '../../services/PaymentWebhookService';
+import { PaymentVerificationService } from '../../services/PaymentVerificationService';
+import OtpAuthService from '../../services/OtpAuthService';
+import asyncHandler from '../../utils/asyncHandler';
+import ApiError from '../../utils/ApiError';
+import ApiResponse from '../../utils/ApiResponse';
+import storeSettingsService from '../../services/StoreSettingsService';
+import Order from '../../models/Order';
+import { STAFF_ROLES } from '../../config/adminConfig';
+import { AdminAuditService } from '../../services/AdminAuditService';
+import { OrderTimelineService } from '../../services/orders/OrderTimelineService';
+
+export const createOrder = asyncHandler(async (req: Request, res: Response) => {
+  const idempotencyKey = (req.headers['idempotency-key'] ||
+    req.headers['x-idempotency-key'] ||
+    req.body?.idempotencyKey) as string;
+  if (!idempotencyKey) {
+    throw new ApiError(400, 'Idempotency-Key header is required for order creation');
+  }
+
+  const userId = req.user!.id;
+  const orderData = { ...req.body, idempotencyKey };
+
+  const result = await OrderCheckoutService.createOrder(userId, orderData);
+
+  res.status(201).json(new ApiResponse(true, 'Order created and payment initiated', result));
+});
+
+export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+  const order = await PaymentVerificationService.verifyPayment(
+    req.body,
+    req.user!.id,
+    req.user!.role,
+  );
+  res.status(200).json(new ApiResponse(true, 'Payment verified successfully', order));
+});
+
+export const validateTotals = asyncHandler(async (req: Request, res: Response) => {
+  const result = await OrderValidationService.validateTotals(req.user!.id, req.body);
+  res.status(200).json(new ApiResponse(true, 'Checkout calculations validated securely', result));
+});
+
+export const getOrderById = asyncHandler(async (req: Request, res: Response) => {
+  const order = await Order.findById(req.params.id).populate('items.productId');
+  if (!order) throw new ApiError(404, 'Order not found');
+
+  if (
+    order.user.toString() !== req.user!.id &&
+    !(STAFF_ROLES as readonly string[]).includes(req.user!.role)
+  ) {
+    throw new ApiError(403, 'You are not authorized to view this order');
+  }
+
+  res.status(200).json(new ApiResponse(true, 'Order fetched successfully', order));
+});
+
+export const getMyOrders = asyncHandler(async (req: Request, res: Response) => {
+  const paginatedOrders = await OrderQueryService.getMyOrders(req.user!.id, req.query);
+  res
+    .status(200)
+    .json(new ApiResponse(true, 'Your orders retrieved successfully', paginatedOrders));
+});
+
+export const getAllOrders = asyncHandler(async (req: Request, res: Response) => {
+  const result = await OrderQueryService.getAllOrders(req.query);
+  res.status(200).json(new ApiResponse(true, 'All orders fetched', result));
+});
+
+export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
+  const { status, note, courierCharges, collectedAmount } = req.body;
+
+  // We need the previous status for the audit log
+  const Order = require('../../models/Order').default;
+  const existingOrder = await Order.findById(req.params.id).lean();
+  const previousStatus = existingOrder ? existingOrder.orderStatus : 'unknown';
+
+  const order = await OrderFulfillmentService.updateOrderStatus(
+    req.params.id as string,
+    status,
+    note,
+    courierCharges,
+    true,
+    collectedAmount,
+  );
+
+  // If performed by an admin, log it
+  if (
+    req.user &&
+    ['super_admin', 'main_admin', 'admin', 'moderator', 'order_manager'].includes(req.user.role)
+  ) {
+    const { AdminAuditService } = require('../../services/AdminAuditService');
+    await AdminAuditService.logOrderStatusChange(
+      req.user.id,
+      req.user.email || 'unknown',
+      order._id.toString(),
+      previousStatus,
+      status,
+      note,
+    );
+  }
+
+  res.status(200).json(new ApiResponse(true, 'Order status updated', order));
+});
+
+export const getOrderPublicTrack = asyncHandler(async (req: Request, res: Response) => {
+  const trackingToken = String(req.query.token || '').trim();
+  if (!trackingToken) {
+    throw new ApiError(401, 'Valid tracking token is required');
+  }
+
+  const order = await LogisticsService.verifyTrackingTokenAndGetOrder(trackingToken);
+  const trackingData = await LogisticsService.formatPublicTrackingData(order);
+
+  res.status(200).json(new ApiResponse(true, 'Order public tracking fetched', trackingData));
+});
+
+export const updateOrderPublicStatus = asyncHandler(async (req: Request, res: Response) => {
+  const { status, note } = req.body;
+
+  // Customers/Unauthenticated clients with publicTrackingToken are only allowed to self-cancel or return
+  const allowedPublicStatuses = ['Cancelled', 'Returned'];
+  const isPrivileged =
+    (req.user && (STAFF_ROLES as readonly string[]).includes(req.user.role)) ||
+    (req as any).isLogisticsToken;
+
+  if (!isPrivileged && !allowedPublicStatuses.includes(status)) {
+    throw new ApiError(
+      400,
+      `Logistics tracking only permits self-cancellation or returns. Target status '${status}' is disallowed.`,
+    );
+  }
+
+  const order = await OrderFulfillmentService.updateOrderStatus(
+    req.params.id as string,
+    status,
+    note,
+    undefined,
+    isPrivileged,
+  );
+  res
+    .status(200)
+    .json(new ApiResponse(true, 'Order status updated via public logistics endpoint', order));
+});
+
+export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Response) => {
+  const signature = req.headers['x-razorpay-signature'] as string;
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET?.trim();
+
+  if (!webhookSecret) {
+    logger.error('FATAL: RAZORPAY_WEBHOOK_SECRET is not set. Webhook verification disabled.');
+    throw new ApiError(503, 'Payment webhook verification is not configured');
+  }
+
+  if (!signature) {
+    logger.warn('Webhook verification aborted: Missing x-razorpay-signature header.');
+    throw new ApiError(400, 'Webhook signature missing');
+  }
+
+  const rawBody = (req as any).rawBody as Buffer | undefined;
+  if (!rawBody) {
+    logger.error(
+      '[SECURITY CRITICAL][WEBHOOK_ERROR] Webhook received without raw body - middleware misconfiguration!',
+    );
+    throw new ApiError(500, 'Webhook processing error');
+  }
+
+  if (!PaymentWebhookService.verifyWebhookSignature(signature, rawBody, webhookSecret)) {
+    logger.error(
+      '[SECURITY CRITICAL][WEBHOOK_ERROR] Invalid Razorpay webhook signature detected!',
+      { ip: req.ip },
+    );
+    throw new ApiError(400, 'Invalid webhook signature');
+  }
+
+  const eventId = (req.headers['x-razorpay-event-id'] as string) || `evt_${Date.now()}`;
+  const result = await PaymentWebhookService.processRazorpayWebhook(
+    req.body.event,
+    req.body,
+    signature,
+    eventId,
+  );
+  return res.status(result.status).json(new ApiResponse(true, result.message));
+});
+
+export const sendCodOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { phone, email, channel } = req.body;
+  const settings = await storeSettingsService.getSettings();
+  const configuredChannel = settings?.payments?.codOtpChannel || 'phone';
+
+  const effectiveChannel: 'phone' | 'email' =
+    configuredChannel === 'email'
+      ? 'email'
+      : configuredChannel === 'both'
+        ? channel === 'email' || (email && !phone)
+          ? 'email'
+          : 'phone'
+        : 'phone';
+
+  const targetPhone = phone || (req.user as any)?.phone;
+  const targetEmail = email || req.user?.email;
+
+  if (effectiveChannel === 'email') {
+    if (!targetEmail) {
+      throw new ApiError(400, 'Delivery email address is required to receive verification OTP');
+    }
+  } else {
+    if (!targetPhone) {
+      throw new ApiError(400, 'Delivery phone number is required to receive verification OTP');
+    }
+  }
+
+  const userId = req.user?.id;
+  logger.info(`[ORDER COD] Generating ${effectiveChannel.toUpperCase()} OTP for COD verification`);
+  const result = await OtpAuthService.generateCodOTP({
+    channel: effectiveChannel,
+    phone: targetPhone,
+    email: targetEmail,
+    userId,
+    ip: req.ip,
+  });
+
+  const message =
+    effectiveChannel === 'email'
+      ? 'Verification code sent to your email address'
+      : 'Verification code sent to your delivery phone number';
+
+  res.status(200).json(new ApiResponse(true, message, result));
+});
+
+export const verifyCodOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { phone, email, challengeId, otp } = req.body;
+  const identifier = challengeId || phone || email;
+  if (!identifier || !otp) {
+    throw new ApiError(400, 'Delivery phone, email, or challenge ID and OTP are required');
+  }
+
+  const userId = req.user?.id;
+  logger.info(`[ORDER COD] Verifying OTP for COD verification`);
+  const result = await OtpAuthService.verifyCodOTP({ phone, email, challengeId }, otp, userId);
+
+  const message =
+    result.channel === 'email'
+      ? 'Email verified successfully for COD order'
+      : 'Delivery phone verified successfully for COD order';
+
+  res.status(200).json(new ApiResponse(true, message, result));
+});
+
+export const getOrderTimeline = asyncHandler(async (req: Request, res: Response) => {
+  const orderId = req.params.id as string;
+  const timeline = await OrderTimelineService.getOrderTimeline(orderId);
+  res.status(200).json(new ApiResponse(true, 'Order timeline fetched successfully', timeline));
+});
+
+export const softDeleteOrder = asyncHandler(async (req: Request, res: Response) => {
+  const orderId = req.params.id;
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    throw new ApiError(404, 'Order not found');
+  }
+
+  // SoftDeletePlugin will automatically intercept this and move it to the RecycleBin
+  await (order as any).softDelete(req.user, 'Deleted by admin');
+
+  if (req.user && req.user.role !== 'user') {
+    await AdminAuditService.logAction({
+      actorId: req.user.id,
+      actorEmail: req.user.email || 'unknown',
+      actorRole: req.user.role,
+      method: req.method,
+      path: req.originalUrl,
+      entityType: 'Order',
+      entityId: order.id,
+      action: 'soft_delete',
+      previousValue: null,
+      newValue: { status: 'deleted' },
+    });
+  }
+
+  res.status(200).json(new ApiResponse(true, 'Order moved to recycle bin successfully'));
+});
