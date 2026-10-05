@@ -1,0 +1,205 @@
+import ContentSection from '../models/ContentSection';
+
+import ApiError from '../utils/ApiError';
+import { cmsCache } from '../utils/cache/MemoryCache';
+import { bumpPublicCacheVersion } from '../utils/cache/cacheVersion';
+import { invalidateSafetyLockCache } from '../utils/cache/safetyLockCache';
+
+const SENSITIVE_STUDIO_SETTINGS_KEYS = ['razorpaySecret', 'razorpayKeySecret'] as const;
+const ADMIN_ONLY_SECTION_KEYS = new Set(['studio_settings']);
+
+export const sanitizeStudioSettings = (data: Record<string, unknown> | null | undefined) => {
+  if (!data || typeof data !== 'object') return data;
+  const sanitized = { ...data };
+  for (const key of SENSITIVE_STUDIO_SETTINGS_KEYS) {
+    delete sanitized[key];
+  }
+  return sanitized;
+};
+
+const stripSensitiveFromSectionData = (key: string, data: any) => {
+  if (key === 'studio_settings') {
+    return sanitizeStudioSettings(data);
+  }
+  return data;
+};
+
+export const sanitizeArray = (val: any): any => {
+  if (val === null || val === undefined) return val;
+  if (val instanceof Date) return val;
+
+  if (typeof val === 'object') {
+    if (Array.isArray(val)) {
+      return val.map((v) => sanitizeArray(v));
+    }
+
+    const keys = Object.keys(val);
+    const isArrayLike =
+      keys.length > 0 &&
+      keys.includes('0') &&
+      keys.every((k) => !isNaN(Number(k)) && Number.isInteger(Number(k)));
+
+    if (isArrayLike) {
+      const arr: any[] = [];
+      let i = 0;
+      while (i.toString() in val) {
+        arr.push(sanitizeArray(val[i.toString()]));
+        i++;
+      }
+      return arr;
+    } else {
+      const obj: any = {};
+      for (const k of keys) {
+        obj[k] = sanitizeArray(val[k]);
+      }
+      return obj;
+    }
+  }
+  return val;
+};
+
+class ContentService {
+  static isAdminOnlySection(key: string): boolean {
+    return ADMIN_ONLY_SECTION_KEYS.has(key);
+  }
+
+  static async getPublishedContent() {
+    const cacheKey = 'cms:published:flat';
+    return cmsCache.getOrSet(
+      cacheKey,
+      async () => {
+        const sections = await ContentSection.find({ status: 'published' })
+          .select('sectionKey data')
+          .lean();
+        const flatContent: Record<string, unknown> = {};
+        sections.forEach((section) => {
+          if (ADMIN_ONLY_SECTION_KEYS.has(section.sectionKey)) return;
+          flatContent[section.sectionKey] = sanitizeArray(
+            stripSensitiveFromSectionData(section.sectionKey, section.data),
+          );
+        });
+        return flatContent;
+      },
+      10 * 60 * 1000,
+    );
+  }
+
+  static async getSectionByKey(key: string) {
+    let section = await ContentSection.findOne({ sectionKey: key });
+    if (!section) {
+      const defaultData: { [key: string]: any } = {
+        admin_safety_lock: { safetyLock: false },
+        admin_idle_timeout: { idleTimeout: 15 },
+        admin_theme_mode: { themeMode: 'dark' },
+        studio_settings: {
+          businessName: "Akula's Kitchen",
+          tagline: '',
+          businessEmail: '',
+          phoneNumber: '',
+          alternatePhone: '',
+          gstNumber: 'GSTIN123456789',
+          address: '',
+          primaryColor: '#735c00',
+          secondaryColor: '#F8F9FB',
+          fontFamily: 'Playfair Display + Inter',
+          freeShippingThreshold: '2000',
+          standardShippingFee: '99',
+          expressShippingFee: '249',
+          codFee: '90',
+          deliveryEstimate: '5-7',
+          razorpayKeyId: '',
+          upiId: 'akulaskitchen@upi',
+          whatsappNumber: '',
+          whatsappMessage: "Hello! Thank you for reaching Akula's Kitchen.",
+        },
+        custom_categories: {
+          products: [],
+          events: [],
+        },
+      };
+
+      if (defaultData[key] !== undefined) {
+        section = new ContentSection({
+          sectionKey: key,
+          data: defaultData[key],
+          status: 'published',
+        });
+        await section.save();
+      } else {
+        throw new ApiError(404, `Section ${key} not found`);
+      }
+    }
+    if (section) {
+      if (key === 'studio_settings') {
+        section.data = stripSensitiveFromSectionData(key, section.data) as typeof section.data;
+      }
+      section.data = sanitizeArray(section.data);
+    }
+    return section;
+  }
+
+  static async updateSection(key: string, newData: any, retry = 0): Promise<any> {
+    let payload = key === 'studio_settings' ? sanitizeStudioSettings(newData) : newData;
+    payload = sanitizeArray(payload);
+    try {
+      let section = await ContentSection.findOne({ sectionKey: key });
+
+      if (section) {
+        // Store current data in revision history
+        section.revisionHistory.push({
+          previousData: section.data,
+          modifiedAt: new Date(),
+        });
+
+        // Limit revision history to last 10 versions
+        if (section.revisionHistory.length > 10) {
+          section.revisionHistory.shift();
+        }
+
+        section.data = payload;
+        section.lastModified = new Date();
+        section.status = 'published'; // Always publish on update/save from admin
+        section.markModified('data');
+        await section.save();
+      } else {
+        section = new ContentSection({
+          sectionKey: key,
+          data: payload,
+          status: 'published', // Always publish on update/save from admin
+        });
+        await section.save();
+      }
+
+      // Invalidate MemoryCache to ensure immediate sync
+      cmsCache.delete(`cms:content:${key}`);
+      cmsCache.delete('cms:all_sections');
+      cmsCache.delete('cms:published:flat');
+      cmsCache.delete(key); // Just in case cache key is set without prefix (like 'studio_settings')
+      if (key === 'admin_safety_lock') {
+        await invalidateSafetyLockCache();
+      }
+      await bumpPublicCacheVersion();
+
+      return section;
+    } catch (err: any) {
+      if (err.name === 'VersionError' && retry < 3) {
+        return this.updateSection(key, newData, retry + 1);
+      }
+      throw err;
+    }
+  }
+
+  static async publishAll() {
+    const result = await ContentSection.updateMany(
+      { status: 'draft' },
+      { $set: { status: 'published' } },
+    );
+
+    cmsCache.clear();
+    await bumpPublicCacheVersion();
+
+    return result;
+  }
+}
+
+export default ContentService;

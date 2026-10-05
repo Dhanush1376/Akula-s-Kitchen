@@ -1,0 +1,305 @@
+import mongoose from 'mongoose';
+import Order from '../../models/Order';
+import ApiError from '../../utils/ApiError';
+import logger from '../../config/logger';
+import { emitUserEvent } from '../../socket';
+import * as Sentry from '@sentry/node';
+import { OrderStateMachine } from './OrderStateMachine';
+import { PaymentStateMachine } from '../payments/PaymentStateMachine';
+import { PaymentRefundService } from '../PaymentRefundService';
+import { OrderRollbackService } from './OrderRollbackService';
+import OutboxEvent from '../../models/OutboxEvent';
+import storeSettingsService from '../../services/StoreSettingsService';
+
+export class OrderFulfillmentService {
+  static async updateOrderStatus(
+    id: string,
+    status: string,
+    note?: string,
+    courierCharges?: number,
+    isPrivileged: boolean = true,
+    collectedAmount?: number,
+  ) {
+    const session = await mongoose.startSession();
+    let finalOrder: any;
+    let triggerPurchaseRewards = false;
+    let triggerReversalRewards = false;
+
+    const settings = await storeSettingsService.getSettings();
+
+    // Compatibility Mapping for lowercase status strings
+    let finalStatus = status;
+    if (status === 'placed' || status === 'Payment Pending') finalStatus = 'Pending';
+    else if (status === 'confirmed') finalStatus = 'Confirmed';
+    else if (
+      status === 'processing' ||
+      status === 'packed' ||
+      status === 'Packed' ||
+      status === 'Ready to Ship' ||
+      status === 'Shipped' ||
+      status === 'shipped' ||
+      status === 'Out for Delivery'
+    )
+      finalStatus = 'Processing';
+    else if (status === 'delivered') finalStatus = 'Delivered';
+    else if (status === 'cancelled') finalStatus = 'Cancelled';
+    else if (status === 'settled') finalStatus = 'Settled';
+
+    try {
+      await session.withTransaction(async () => {
+        const order = await Order.findById(id).session(session);
+        if (!order) throw new ApiError(404, 'Order not found');
+
+        // State Machine Validation
+        const oldStatus = OrderStateMachine.normalizeState(order.orderStatus as string);
+        finalStatus = OrderStateMachine.normalizeState(finalStatus as string);
+
+        OrderStateMachine.validateTransition(id, oldStatus, finalStatus as any, isPrivileged);
+
+        // Track successful state transitions for analytics and audit
+        if (oldStatus !== finalStatus) {
+          Sentry.addBreadcrumb({
+            category: 'state_machine',
+            message: `Order ${id} transitioned from ${oldStatus} to ${finalStatus}`,
+            level: 'info',
+          });
+        }
+
+        // Block 'Returned' or 'Refunded' if all items are non-refundable
+        if (finalStatus === 'Returned' || finalStatus === 'Refunded') {
+          const allNonRefundable =
+            order.items.length > 0 && order.items.every((item: any) => item.isNonRefundable);
+          if (allNonRefundable) {
+            throw new ApiError(
+              400,
+              'This order consists entirely of non-refundable items and cannot be returned or refunded.',
+            );
+          }
+        }
+
+        // Evaluate user-initiated cancellations/returns against store policies
+        if (!isPrivileged) {
+          if (finalStatus === 'Cancelled') {
+            throw new ApiError(
+              400,
+              'Orders cannot be cancelled once placed. Please contact support if you need assistance.',
+            );
+          } else if (finalStatus === 'Returned') {
+            if (!settings.returnsExchanges.enableReturns) {
+              throw new ApiError(400, 'Returns are currently disabled by the store.');
+            }
+            if (oldStatus !== 'Delivered') {
+              throw new ApiError(400, 'Only delivered orders can be returned.');
+            }
+
+            const deliveredHistory = order.statusHistory?.find(
+              (h: any) => h.status === 'Delivered',
+            );
+            if (
+              deliveredHistory &&
+              deliveredHistory.timestamp &&
+              settings.returnsExchanges.returnWindowDays
+            ) {
+              const daysSinceDelivery =
+                (Date.now() - deliveredHistory.timestamp.getTime()) / (1000 * 60 * 60 * 24);
+              if (daysSinceDelivery > settings.returnsExchanges.returnWindowDays) {
+                throw new ApiError(
+                  400,
+                  `Returns are only allowed within ${settings.returnsExchanges.returnWindowDays} days of delivery.`,
+                );
+              }
+            }
+          }
+        }
+
+        order.orderStatus = finalStatus as any;
+
+        if (courierCharges !== undefined && courierCharges !== null) {
+          order.courierCharges = courierCharges;
+        }
+
+        if (collectedAmount !== undefined && collectedAmount !== null) {
+          order.collectedAmount = collectedAmount;
+        }
+
+        // Automatic COD Remittance Transitions
+        const isCodOrder = order.paymentMethod?.toLowerCase() === 'cod';
+
+        if (isCodOrder) {
+          if (finalStatus === 'Delivered') {
+            order.codCollected = true;
+            order.paymentStatus = 'COD Collected';
+            order.settlementStatus = 'Pending';
+            if (oldStatus === 'Settled') {
+              // Reverted from Settled to Delivered (Undo Settlement)
+              order.settledAmount = 0;
+            }
+            if (!order.courierCharges) {
+              order.courierCharges =
+                courierCharges !== undefined
+                  ? courierCharges
+                  : Math.round((order.shippingFee || settings.shipping.deliveryCharge) + 30);
+            }
+            order.statusHistory.push({
+              status: 'COD Collected',
+              timestamp: new Date(),
+              note: 'Package delivered. Cash collected by courier agent. Reconciliation pending.',
+            });
+          } else if (finalStatus === 'Settled') {
+            order.codCollected = true;
+            order.paymentStatus = 'COD Collected';
+            order.settlementStatus = 'Settled';
+            const charges =
+              courierCharges !== undefined
+                ? courierCharges
+                : order.courierCharges ||
+                  Math.round((order.shippingFee || settings.shipping.deliveryCharge) + 30);
+            order.courierCharges = charges;
+            const totalCollected =
+              collectedAmount !== undefined && collectedAmount !== null
+                ? Number(collectedAmount)
+                : order.collectedAmount !== undefined && order.collectedAmount !== null
+                  ? Number(order.collectedAmount)
+                  : order.total;
+            order.collectedAmount = totalCollected;
+            order.settledAmount = Math.max(0, totalCollected - charges);
+            order.earnings = order.settledAmount;
+            order.statusHistory.push({
+              status: 'Settled',
+              timestamp: new Date(),
+              note:
+                note ||
+                `COD Remittance Settled. Received amount: ₹${order.settledAmount} (Collected: ₹${totalCollected} - Courier fee: ₹${charges})`,
+            });
+          } else if (finalStatus === 'Returned') {
+            order.codCollected = false;
+            order.settlementStatus = 'Not Applicable';
+            order.settledAmount = 0;
+            order.paymentStatus = 'returned';
+          } else if (finalStatus === 'Cancelled') {
+            order.codCollected = false;
+            order.settlementStatus = 'Not Applicable';
+            order.settledAmount = 0;
+            order.paymentStatus = 'cancelled';
+          }
+        }
+
+        order.statusHistory.push({ status: finalStatus, timestamp: new Date(), note });
+
+        // Process Loyalty/Wallet adjustments based on status change
+        // Strict Guard: ONLY trigger purchase rewards on genuine first-time transition to Delivered
+        if (finalStatus === 'Delivered' && oldStatus !== 'Delivered' && !order.rewardsProcessed) {
+          triggerPurchaseRewards = true;
+          order.rewardsProcessed = true;
+        } else if (
+          (finalStatus === 'Cancelled' ||
+            finalStatus === 'Returned' ||
+            finalStatus === 'Refunded') &&
+          oldStatus !== finalStatus &&
+          oldStatus !== 'Cancelled' &&
+          oldStatus !== 'Returned' &&
+          oldStatus !== 'Refunded'
+        ) {
+          triggerReversalRewards = true;
+
+          // Use centralized rollback service (handles inventory + coupon with audit trail)
+          const isStockConfirmed = oldStatus !== 'Pending'; // If order was beyond Pending, stock was deducted
+          await OrderRollbackService.rollbackAll(order, isStockConfirmed, session);
+
+          // Automated Razorpay refund integration for online paid orders via async Queue
+          if (
+            order.paymentStatus === 'paid' &&
+            order.razorpayPaymentId &&
+            order.paymentMethod?.toLowerCase() === 'razorpay'
+          ) {
+            try {
+              logger.info(
+                `[PAYMENT REFUND] Enqueueing Razorpay automatic refund of ₹${order.total} for order: ${order._id}`,
+              );
+
+              await PaymentRefundService.initiateAsyncRefund(
+                {
+                  amount: order.total,
+                  currency: 'INR',
+                  originalTransactionId: order.razorpayPaymentId,
+                  entityType: 'Order',
+                  entityId: order._id,
+                },
+                session,
+              );
+
+              PaymentStateMachine.transition(
+                order,
+                'refunded',
+                'Refund initiated and queued for background processing.',
+              );
+            } catch (enqueueErr: any) {
+              logger.error('🏥 [REFUND FAILED] Failed to enqueue async refund:', enqueueErr);
+              order.statusHistory.push({
+                status: order.orderStatus as any, // keep current status
+                timestamp: new Date(),
+                note: `Failed to initiate automated refund: ${enqueueErr.message || 'Queue error'}`,
+              });
+
+              // Fallback to manual admin alert
+              Sentry.captureException(enqueueErr, { extra: { orderId: order._id } });
+            }
+          }
+        }
+
+        await OutboxEvent.create(
+          [
+            {
+              aggregateId: order._id.toString(),
+              aggregateType: 'Order',
+              eventType: 'OrderStatusUpdated',
+              payload: {
+                orderId: order._id.toString(),
+                userId: order.user.toString(),
+                oldStatus: oldStatus,
+                newStatus: finalStatus,
+                note: note || '',
+                total: order.total,
+                paymentStatus: order.paymentStatus,
+                triggerPurchaseRewards,
+                triggerReversalRewards,
+              },
+            },
+          ],
+          { session },
+        );
+
+        const { OrderEventService } = require('./OrderEventService');
+        await OrderEventService.recordEvent(
+          order._id,
+          (order as any).orderType || 'purchase',
+          `StatusUpdated:${finalStatus}`,
+          { name: 'System', role: 'system' }, // Ideally from req.user, but we don't have it in this scope directly. Will use System as fallback.
+          'system',
+          { oldStatus, finalStatus, note },
+          session,
+        );
+
+        await order.save({ session });
+        finalOrder = order;
+      });
+    } finally {
+      session.endSession();
+    }
+
+    const order = finalOrder;
+
+    try {
+      emitUserEvent(order.user.toString(), 'order_status_updated', {
+        orderId: order._id,
+        orderStatus: order.orderStatus,
+        paymentStatus: order.paymentStatus,
+        note: note || null,
+      });
+    } catch (socketErr) {
+      logger.debug('Could not emit user order status socket event:', socketErr);
+    }
+
+    return order;
+  }
+}
