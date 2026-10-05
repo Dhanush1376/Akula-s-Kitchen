@@ -1,0 +1,167 @@
+import { z } from 'zod';
+import { canonicalizeEmail } from '../utils/email/emailHelper';
+
+const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID');
+
+export const createOrderSchema = z.object({
+  body: z
+    .object({
+      items: z
+        .array(
+          z
+            .object({
+              productId: objectIdSchema,
+              quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+              type: z.string().optional(),
+              variant: z.string().trim().max(100).optional().or(z.literal('')),
+              customizationNote: z.string().trim().max(2000).optional().or(z.literal('')),
+            })
+            .strict(),
+        )
+        .min(1, 'Order must contain at least one item'),
+      shippingAddress: z
+        .object({
+          name: z.string().trim().min(1, 'Name is required'),
+          phone: z.string().trim().min(1, 'Mobile number is required'),
+          alternatePhone: z.string().trim().optional().or(z.literal('')),
+          email: z
+            .string()
+            .trim()
+            .email('Please provide a valid email address')
+            .transform((val) => canonicalizeEmail(val)),
+          pincode: z.string().trim().length(6, 'Pincode must be 6 digits'),
+          locality: z.string().trim().min(1, 'Locality is required'),
+          address: z.string().trim().min(1, 'Address is required'),
+          landmark: z.string().trim().optional().or(z.literal('')),
+          city: z.string().trim().min(1, 'City is required'),
+          state: z.string().trim().min(1, 'State is required'),
+          country: z.string().trim().min(1, 'Country is required'),
+          type: z.enum(['home', 'work', 'other']).optional(),
+          deliveryInstructions: z.string().trim().max(500).optional().or(z.literal('')),
+        })
+        .strict(),
+      couponCode: z.string().trim().max(50).optional().or(z.literal('')),
+
+      needByDate: z.string().trim().max(50).optional().or(z.literal('')),
+      paymentMethod: z.enum(['razorpay', 'cod']).default('razorpay'),
+      useWallet: z.boolean().optional(),
+      idempotencyKey: z.string().trim().max(120).optional(),
+      orderType: z.string().optional(),
+      isCustomOrder: z.boolean().optional(),
+      customOrderId: z.string().optional(),
+      codVerificationToken: z.string().trim().optional(),
+    })
+    .strict(),
+});
+
+export const verifyPaymentSchema = z.object({
+  body: z
+    .object({
+      razorpay_order_id: z.string().trim().max(200).optional(),
+      razorpayOrderId: z.string().trim().max(200).optional(),
+      razorpay_payment_id: z.string().trim().max(200).optional(),
+      razorpayPaymentId: z.string().trim().max(200).optional(),
+      razorpay_signature: z.string().trim().max(500).optional(),
+      razorpaySignature: z.string().trim().max(500).optional(),
+    })
+    .refine(
+      (data) => {
+        const hasOrder = data.razorpay_order_id || data.razorpayOrderId;
+        const hasPayment = data.razorpay_payment_id || data.razorpayPaymentId;
+        return hasOrder && hasPayment;
+      },
+      {
+        message: 'razorpay order id and payment id are required',
+      },
+    ),
+});
+
+export const validateTotalsSchema = z.object({
+  body: z
+    .object({
+      items: z
+        .array(
+          z
+            .object({
+              productId: objectIdSchema,
+              quantity: z.number().int().min(1).max(99, 'Quantity must be between 1 and 99'),
+              type: z.string().optional(),
+            })
+            .strict(),
+        )
+        .min(1, 'Items array is required'),
+      couponCode: z.string().trim().max(50).optional().or(z.literal('')),
+      paymentMethod: z.string().trim().optional(),
+      useWallet: z.boolean().optional(),
+    })
+    .strict(),
+});
+
+const codOtpPhoneSchema = z
+  .object({
+    phone: z
+      .string()
+      .trim()
+      .min(10, 'Valid delivery phone number is required')
+      .max(20, 'Phone number cannot exceed 20 characters')
+      .optional(),
+    email: z.string().trim().email('Valid delivery email address is required').optional(),
+    channel: z.enum(['phone', 'email']).optional(),
+  })
+  .refine((data) => Boolean(data.phone || data.email), {
+    message: 'Delivery phone number or email is required',
+  });
+
+export const codOtpPhoneBodySchema = z.object({
+  body: codOtpPhoneSchema,
+});
+
+// Backward-compatible alias
+export const codOtpEmailBodySchema = codOtpPhoneBodySchema;
+
+export const codOtpVerifySchema = z.object({
+  body: z
+    .object({
+      phone: z.string().trim().min(10).max(20).optional(),
+      email: z.string().trim().email().optional(),
+      channel: z.enum(['phone', 'email']).optional(),
+      challengeId: z.string().trim().optional(),
+      otp: z
+        .union([z.string(), z.number()])
+        .transform((val) => String(val).trim())
+        .refine((val) => val.length === 6, {
+          message: 'OTP must be exactly 6 digits.',
+        })
+        .refine((val) => /^\d+$/.test(val), {
+          message: 'OTP must contain only numbers',
+        }),
+    })
+    .refine((data) => Boolean(data.phone || data.email || data.challengeId), {
+      message: 'Delivery phone, email, or challenge ID is required',
+    }),
+});
+
+export const updateStatusSchema = z.object({
+  body: z
+    .object({
+      status: z.enum(
+        [
+          'Pending',
+          'Confirmed',
+          'Processing',
+          'Delivered',
+          'Cancelled',
+          'Returned',
+          'Refunded',
+          'Settled',
+        ],
+        {
+          message: 'Invalid order status',
+        },
+      ),
+      note: z.string().trim().max(1000).optional().or(z.literal('')),
+      courierCharges: z.number().min(0).optional(),
+      collectedAmount: z.number().min(0).optional(),
+    })
+    .strict(),
+});
