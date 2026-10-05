@@ -1,0 +1,97 @@
+import { PageLoader } from './PageLoader';
+import { Skeleton } from './SkeletonBase';
+import { lazy, Suspense } from 'react';
+
+export function getRouteSkeletonVariant(path) {
+  if (path === '/') return 'home';
+  if (path === '/collections') return 'product-list';
+  if (path.match(/^\/collections\/[^/]+$/)) return 'collection-detail';
+  if (path.startsWith('/product')) return 'product-detail';
+  if (path.startsWith('/collections') || path.startsWith('/search')) return 'product-list';
+  if (path === '/cart') return 'cart';
+  if (path === '/checkout') return 'checkout';
+  if (path.startsWith('/dashboard')) return 'dashboard';
+  if (path === '/wishlist') return 'wishlist';
+  if (path === '/contact') return 'contact';
+  if (path === '/blog') return 'blog';
+  if (path.startsWith('/blog/')) return 'blog-post';
+  if (path.startsWith('/track/')) return 'order-tracking';
+  if (path === '/order-success') return 'order-success';
+  if (['/shipping', '/returns', '/privacy', '/terms'].includes(path)) return 'policy';
+  if (path.startsWith('/admin')) return 'admin';
+
+  return 'page';
+}
+
+const LazySkeletons = {
+  home: lazy(() => import('./Skeleton').then((m) => ({ default: m.HomeSkeleton }))),
+  'product-list': lazy(() =>
+    import('./Skeleton').then((m) => ({ default: m.ProductListSkeleton })),
+  ),
+  'collection-detail': lazy(() =>
+    import('./Skeleton').then((m) => ({ default: m.CollectionSkeleton })),
+  ),
+  'product-detail': lazy(() =>
+    import('./Skeleton').then((m) => ({ default: m.ProductDetailSkeleton })),
+  ),
+  cart: lazy(() => import('./Skeleton').then((m) => ({ default: m.CartSkeleton }))),
+  checkout: lazy(() => import('./Skeleton').then((m) => ({ default: m.CheckoutStepSkeleton }))),
+  dashboard: lazy(() => import('./Skeleton').then((m) => ({ default: m.DashboardSkeleton }))),
+  wishlist: lazy(() => import('./Skeleton').then((m) => ({ default: m.WishlistPageSkeleton }))),
+  contact: lazy(() => import('./Skeleton').then((m) => ({ default: m.ContactSkeleton }))),
+  blog: lazy(() => import('./Skeleton').then((m) => ({ default: m.BlogListingSkeleton }))),
+  'blog-post': lazy(() => import('./Skeleton').then((m) => ({ default: m.BlogPostSkeleton }))),
+  'order-success': lazy(() =>
+    import('./Skeleton').then((m) => ({ default: m.OrderSuccessSkeleton })),
+  ),
+  'order-tracking': lazy(() =>
+    import('./Skeleton').then((m) => ({ default: m.OrderTrackingSkeleton })),
+  ),
+  admin: lazy(() =>
+    import('../../admin/components/skeletons/AdminRouteSuspenseFallback').then((m) => ({
+      default: m.AdminRouteSuspenseFallback,
+    })),
+  ),
+};
+
+/** Lightweight route transition skeleton — avoids blank screens during lazy route loads. */
+export function RouteSkeleton({ variant = 'page' }) {
+  if (variant === 'page' || variant === 'policy') {
+    return (
+      <>
+        <PageLoader />
+        <div
+          className="min-h-[50vh] flex flex-col items-center justify-center gap-6 px-4"
+          aria-busy="true"
+          aria-label="Loading page"
+        >
+          <div className="w-full max-w-3xl space-y-4">
+            <Skeleton className="h-8 w-2/3 mx-auto" />
+            <Skeleton className="h-4 w-1/2 mx-auto" />
+            <Skeleton className="h-48 w-full rounded-[28px]" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const Component = LazySkeletons[variant];
+  if (Component) {
+    if (variant === 'checkout') {
+      return (
+        <div className="max-w-3xl mx-auto pt-8 px-4">
+          <Suspense fallback={<PageLoader />}>
+            <Component />
+          </Suspense>
+        </div>
+      );
+    }
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Component />
+      </Suspense>
+    );
+  }
+
+  return <PageLoader />;
+}
