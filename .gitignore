@@ -1,0 +1,217 @@
+# ==========================================
+# ENTERPRISE REPOSITORY GITIGNORE
+# ==========================================
+
+# ------------------------------------------
+# 1. Dependencies & Package Managers
+# ------------------------------------------
+node_modules/
+.npm/
+.pnpm-store/
+bun.lockb
+.turbo/
+
+# ------------------------------------------
+# 2. Build Outputs & Compilation
+# ------------------------------------------
+dist/
+dist-ssr/
+build/
+.vite/
+.parcel-cache/
+.rollup.cache/
+.esbuild/
+*.tsbuildinfo
+
+# ------------------------------------------
+# 3. Cache & Temporary Directories
+# ------------------------------------------
+.cache/
+tmp/
+temp/
+backend/cache/
+backend/src/cache/*
+!backend/src/cache/.gitkeep
+storybook-static/
+
+# ------------------------------------------
+# 4. Logs & Profiling
+# ------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+prof*.txt
+*.prof
+*.cpuprofile
+.heapprofile
+
+# ------------------------------------------
+# 5. Environment Variables & Secrets
+# ------------------------------------------
+.env
+.env.*
+!.env.example
+*.secret
+.env.backup
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ------------------------------------------
+# 6. Testing & Coverage
+# ------------------------------------------
+coverage/
+playwright-report/
+test-results/
+cypress/videos/
+cypress/screenshots/
+
+# ------------------------------------------
+# 7. Operating System & IDE Files
+# ------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+.AppleDouble
+.LSOverride
+.directory
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.history/
+.cursor/
+.claude/
+
+# ------------------------------------------
+# 8. Agent & IDE Artifacts
+# ------------------------------------------
+.agents/
+brain/
+CODEBASE_TREE.md
+my-mailmap
+generate_metrics.py
+reference_check.py
+audit_temp.json
+*.patch
+diff.txt
+
+# ------------------------------------------
+# 9. Operational Archives & Backups
+# ------------------------------------------
+backups/
+/backend/backups/
+/backup/
+ops/archive/
+
+# ------------------------------------------
+# 10. Documents & Media (Runtime generated)
+# ------------------------------------------
+*.docx
+*.pdf
+*.pptx
+
+# ------------------------------------------
+# 11. Specific Generated Artifacts & Reports
+# ------------------------------------------
+stats.html
+stats.json
+frontend/stats.html
+frontend/stats.json
+network-data.json
+temp*.json
+*-results.json
+*_baseline.json
+backend/knip-report.json
+frontend/knip-report.json
+migration_report*.md
+codebase_report*.txt
+*-audit-report*.json
+audit_performance.*
+runtime-audit*
+.audit-history/
+frontend/eslint-results.json
+frontend/lint-errors.log
+frontend/errors.txt
+load_tests/
+load-tests.yml
+filters*.json
+explain_output.json
+certification_*.json
+certification_*.md
+backend/recovered_products_preview.json
+backend/old_seed_data_temp.txt
+build_output.log
+
+# ------------------------------------------
+# 12. Run-Time PIDs
+# ------------------------------------------
+*.pid
+*.seed
+*.tmp
+*.temp
+
+# ------------------------------------------
+# 13. Excluded Scripts
+# ------------------------------------------
+scripts/extract_arch.js
+backend/test-mongoose.js
+patch_frontend.py
+backend/fix-image.js
+backend/fix-all-images.js
+frontend/replaceImports.cjs
+generate_tree.py
+rewrite_commits.py
+rewrite_dependabot.py
+filter-commits.sh
+private-ops-repository
+backend/tests/manual/
+backend/backfill_notifications.ts
+scanDeps.js
+
+# ------------------------------------------
+# 14. Additional Production Safeguards & Scratch Files
+# ------------------------------------------
+*.pem
+*.key
+*.cert
+*.crt
+*.sql
+*.dump
+*.rdb
+*.tar.gz
+*.zip
+.dev-otp-log
+backend/.dev-otp-log
+backend/verification_evidence/
+verification_evidence/
+backend/build-log.txt
+backend/lint-log.txt
+backend/tsc-errors.txt
+backend/tsc_output.txt
+backend/final_evidence.txt
+backend/ts-prune*.log
+frontend/frontend-prune.log
+frontend/errors.txt
+frontend/lint-errors.log
+frontend/eslint-results.json
+.eslintcache
+backend/.eslintcache
+frontend/.eslintcache
+backend/cms*.json
+scratch/
+.gemini/
+.antigravity/

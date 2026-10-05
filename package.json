@@ -1,0 +1,26 @@
+{
+  "name": "akulas-kitchen-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "frontend:dev": "cd frontend && npm run dev",
+    "backend:dev": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\"",
+    "build:all": "cd frontend && npm run build && cd ../backend && npm run build",
+    "lint:all": "cd frontend && npm run lint && cd ../backend && npm run lint",
+    "test:all": "cd frontend && npm test && cd ../backend && npm test",
+    "build": "npm run build:all",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "eslint": "^9.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
