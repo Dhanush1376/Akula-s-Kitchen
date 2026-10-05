@@ -80,7 +80,7 @@ export default async function handler(req, res) {
       return res
         .status(200)
         .send(
-          `<!DOCTYPE html><html><head><title>Siri Arts & Crafts</title></head><body><div id="root"></div><script>console.warn("Social proxy fallback hit. If you see this, the SPA rewrite might be misconfigured.");</script></body></html>`,
+          `<!DOCTYPE html><html><head><title>Akula's Kitchen</title></head><body><div id="root"></div><script>console.warn("Social proxy fallback hit. If you see this, the SPA rewrite might be misconfigured.");</script></body></html>`,
         );
     }
   } catch (error) {

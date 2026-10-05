@@ -31,4 +31,4 @@ When reporting a vulnerability, please provide the following information:
 
 We will acknowledge receipt of your vulnerability report as soon as possible and strive to send you regular updates about our progress.
 
-Thank you for helping keep EventDecor secure!
+Thank you for helping keep Akula's Kitchen secure!

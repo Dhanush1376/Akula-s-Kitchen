@@ -1,11 +1,11 @@
-# Siri Arts & Crafts — Cinematic E-Commerce & Atelier Portal
+# Akula's Kitchen — Authentic Culinary Experience & Storefront Portal
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org)
 [![React Version](https://img.shields.io/badge/React-19.x-blue.svg)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org/)
 
-Siri Arts & Crafts is an enterprise-grade, high-performance digital sanctuary dedicated to premium architectural event curation and bespoke artisanal scapes. Combining modern luxury styling with strict technical hardening, the platform connects a fluid, gold-morphic React storefront with a secure Node.js/TypeScript Express backend.
+Akula's Kitchen is an enterprise-grade, high-performance digital culinary platform and gourmet storefront. Combining modern styling with strict technical hardening, the platform connects a fluid, gold-morphic React storefront with a secure Node.js/TypeScript Express backend.
 
 ---
 
@@ -25,7 +25,7 @@ Siri Arts & Crafts is an enterprise-grade, high-performance digital sanctuary de
 
 ## Engineering Documentation & Guides
 
-We maintain a comprehensive suite of engineering documentation to help developers understand, run, and extend the EventDecor platform.
+We maintain a comprehensive suite of engineering documentation to help developers understand, run, and extend the Akula's Kitchen platform.
 
 **Developer Experience:**
 
@@ -104,11 +104,11 @@ The codebase has undergone a complete pre-production audit and hardening sequenc
 
 ### 1. Domain-Aware Gmail Canonicalization
 
-To prevent registration bypasses, authorization exploits, and duplicate admin states, Gmail ignores dots (`.`) and sub-addressing `+` qualifiers. We implemented a unified [emailHelper.ts](file:///c:/Users/Dhanush/OneDrive/Desktop/PROJECTS/EventDecor-Ecommerce/backend/src/utils/emailHelper.ts) that normalizes all addresses prior to DB lookup, rate limiting, and verification check matches.
+To prevent registration bypasses, authorization exploits, and duplicate admin states, Gmail ignores dots (`.`) and sub-addressing `+` qualifiers. We implemented a unified [emailHelper.ts](./backend/src/utils/emailHelper.ts) that normalizes all addresses prior to DB lookup, rate limiting, and verification check matches.
 
 ### 2. Synchronous Concurrency Request Locking
 
-React's asynchronous batching leaves a vulnerable window where rapid button clicks can invoke multiple concurrent dispatches. We added synchronous frontend locks (`isSubmittingRef`) to both [Auth.jsx](file:///c:/Users/Dhanush/OneDrive/Desktop/PROJECTS/EventDecor-Ecommerce/frontend/src/pages/Auth.jsx) and [AuthModal.jsx](file:///c:/Users/Dhanush/OneDrive/Desktop/PROJECTS/EventDecor-Ecommerce/frontend/src/components/auth/AuthModal.jsx). This guarantees that double clicks or duplicate keyboard enters trigger only a single API call.
+React's asynchronous batching leaves a vulnerable window where rapid button clicks can invoke multiple concurrent dispatches. We added synchronous frontend locks (`isSubmittingRef`) to both [Auth.jsx](./frontend/src/pages/Auth.jsx) and [AuthModal.jsx](./frontend/src/components/auth/AuthModal.jsx). This guarantees that double clicks or duplicate keyboard enters trigger only a single API call.
 
 ### 3. Transaction-Safe Connection Pooling
 
@@ -327,4 +327,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-© 2026 Siri Arts & Crafts. All rights reserved. Premium Event Scapes & Bespoke Curators.
+© 2026 Akula's Kitchen. All rights reserved. Authentic Flavors & Bespoke Culinary Delights.

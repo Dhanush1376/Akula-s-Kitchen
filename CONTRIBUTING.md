@@ -1,6 +1,6 @@
-# Contributing to EventDecor
+# Contributing to Akula's Kitchen
 
-First off, thank you for considering contributing to EventDecor! It's people like you that make this project such a great enterprise application.
+First off, thank you for considering contributing to Akula's Kitchen! It's people like you that make this project such a great enterprise application.
 
 ## 1. Local Development Setup
 
