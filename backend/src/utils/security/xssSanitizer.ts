@@ -30,7 +30,7 @@ const defaultOptions: sanitizeHtml.IOptions = {
     '*': ['style', 'class', 'id'],
   },
   allowedIframeHostnames: ['www.youtube.com', 'player.vimeo.com'],
-  textFilter: (text) =>
+  textFilter: (text: string) =>
     text
       .replace(/&amp;/g, '&')
       .replace(/&quot;/g, '"')

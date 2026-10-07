@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth, requireRole } from '../../middleware/authMiddleware';
 import storeSettingsService from '../../services/StoreSettingsService';
 import logger from '../../config/logger';
@@ -11,7 +11,7 @@ const router = Router();
  * @desc    Get public store settings (cached, safe for storefront)
  * @access  Public
  */
-router.get('/public', async (req, res, next) => {
+router.get('/public', async (req: Request, res: Response, next: NextFunction) => {
   try {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const settings = await storeSettingsService.getPublicSettings();
@@ -30,20 +30,25 @@ router.get('/public', async (req, res, next) => {
  * @desc    Get full store settings including audit logs
  * @access  Private/Admin
  */
-router.get('/admin', requireAuth, requireRole([...ADMIN_ROLES]), async (req, res, next) => {
-  try {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    const bypassCache = req.query.fresh === 'true';
-    const settings = await storeSettingsService.getSettings(bypassCache);
-    res.json({
-      success: true,
-      data: settings,
-    });
-  } catch (error) {
-    logger.error('Error fetching admin store settings:', error);
-    next(error);
-  }
-});
+router.get(
+  '/admin',
+  requireAuth,
+  requireRole([...ADMIN_ROLES]),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      const bypassCache = req.query.fresh === 'true';
+      const settings = await storeSettingsService.getSettings(bypassCache);
+      res.json({
+        success: true,
+        data: settings,
+      });
+    } catch (error) {
+      logger.error('Error fetching admin store settings:', error);
+      next(error);
+    }
+  },
+);
 
 /**
  * @route   PATCH /api/v1/settings/shipping-orders
@@ -54,7 +59,7 @@ router.patch(
   '/shipping-orders',
   requireAuth,
   requireRole([...ADMIN_ROLES]),
-  async (req, res, next) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { shipping, orders } = req.body;
 
@@ -88,60 +93,66 @@ router.patch(
  * @desc    Update a specific section of store settings
  * @access  Private/Admin
  */
-router.patch('/:section', requireAuth, requireRole([...ADMIN_ROLES]), async (req, res, next) => {
-  try {
-    const { section } = req.params;
-    const data = req.body;
+router.patch(
+  '/:section',
+  requireAuth,
+  requireRole([...ADMIN_ROLES]),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { section } = req.params;
+      const data = req.body;
 
-    // Whitelist allowed sections
-    const allowedSections = [
-      'general',
-      'shipping',
-      'payments',
-      'returnsExchanges',
-      'cancellation',
-      'taxes',
-      'loyalty',
-      'orders',
-      'contact',
-      'legal',
-      'notifications',
-      'storefront',
-    ];
+      // Whitelist allowed sections
+      const allowedSections = [
+        'general',
+        'shipping',
+        'payments',
+        'returnsExchanges',
+        'cancellation',
+        'taxes',
+        'loyalty',
+        'orders',
+        'contact',
+        'legal',
+        'notifications',
+        'storefront',
+      ];
 
-    if (!allowedSections.includes(section as string)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid settings section: ${section}`,
-      });
-    }
-
-    if (section === 'payments' && data && typeof data === 'object') {
-      const isRazorpay = Boolean(data.enableRazorpay);
-      const isCod = Boolean(data.enableCOD);
-      if (!isRazorpay && !isCod) {
+      if (!allowedSections.includes(section as string)) {
         return res.status(400).json({
           success: false,
-          message: 'At least one payment method (Razorpay or Cash on Delivery) must remain active.',
+          message: `Invalid settings section: ${section}`,
         });
       }
+
+      if (section === 'payments' && data && typeof data === 'object') {
+        const isRazorpay = Boolean(data.enableRazorpay);
+        const isCod = Boolean(data.enableCOD);
+        if (!isRazorpay && !isCod) {
+          return res.status(400).json({
+            success: false,
+            message:
+              'At least one payment method (Razorpay or Cash on Delivery) must remain active.',
+          });
+        }
+      }
+
+      const updatedSettings = await storeSettingsService.updateSection(
+        section as any,
+        data,
+        req.user!.id,
+      );
+
+      res.json({
+        success: true,
+        message: `${section} settings updated successfully`,
+        data: updatedSettings,
+      });
+    } catch (error) {
+      logger.error(`Error updating store settings section ${req.params.section}:`, error);
+      next(error);
     }
-
-    const updatedSettings = await storeSettingsService.updateSection(
-      section as any,
-      data,
-      req.user!.id,
-    );
-
-    res.json({
-      success: true,
-      message: `${section} settings updated successfully`,
-      data: updatedSettings,
-    });
-  } catch (error) {
-    logger.error(`Error updating store settings section ${req.params.section}:`, error);
-    next(error);
-  }
-});
+  },
+);
 
 export default router;

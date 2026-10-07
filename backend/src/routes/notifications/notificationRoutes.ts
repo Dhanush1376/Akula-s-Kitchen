@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import {
   saveConsentPreference,
   getConsentPreference,
@@ -22,9 +22,9 @@ const router = Router();
 // Opt-in / GDPR consent updates
 router.post(
   '/consent',
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     // Allow anonymous visitors to save consent, but check auth if header is present
-    requireAuth(req, res, (_err) => {
+    requireAuth(req, res, (_err: any) => {
       // Continue regardless of whether they are authenticated
       next();
     });

@@ -110,7 +110,7 @@ router.post(
   requireAdmin,
   checkContentLength,
   ...uploadCMS.single('image'),
-  (req, res) => {
+  (req: Request, res: Response) => {
     const file = req.file as any;
     res.status(200).json({ success: true, url: file.path });
   },
@@ -123,8 +123,8 @@ router.post(
   requireAdmin,
   checkContentLength,
   ...uploadProducts.array('images', 4),
-  (req, res) => {
-    const files = req.files as Express.Multer.File[];
+  (req: Request, res: Response) => {
+    const files = (req.files || []) as Express.Multer.File[];
     const imageUrls = files.map((file: any) => file.path);
     res.status(200).json({ success: true, images: imageUrls });
   },
@@ -136,7 +136,7 @@ router.post(
   requireAuth,
   checkContentLength,
   ...uploadReviews.array('images', 5),
-  (req, res) => {
+  (req: Request, res: Response) => {
     const files = req.files as any[];
     const imageUrls = files.map((file: any) => file.path);
     const reviewImages = files.map((file: any) => ({

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { HealthController } from '../../controllers/system/healthController';
 import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
 
@@ -15,7 +15,7 @@ router.get('/deep', requireAuth, requireAdmin, HealthController.deepHealth);
 router.get('/metrics', HealthController.metrics);
 
 // Sentry Debug
-router.get('/sentry-debug', requireAuth, requireAdmin, (_req, _res) => {
+router.get('/sentry-debug', requireAuth, requireAdmin, (_req: Request, _res: Response) => {
   throw new Error("Sentry Debug Exception from Akula's Kitchen Backend");
 });
 
