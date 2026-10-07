@@ -55,26 +55,44 @@ export function OrderDetail() {
         return {
           icon: CheckCircle2,
           label: 'Delivered',
-          classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          classes: 'bg-emerald-50 text-emerald-800 border-emerald-200',
         };
       case 'shipped':
       case 'out_for_delivery':
         return {
           icon: Truck,
           label: status === 'out_for_delivery' ? 'Out for Delivery' : 'Shipped',
-          classes: 'bg-blue-50 text-blue-700 border-blue-200',
+          classes: 'bg-blue-50 text-blue-800 border-blue-200',
         };
       case 'cancelled':
         return {
           icon: XCircle,
           label: 'Cancelled',
-          classes: 'bg-red-50 text-red-700 border-red-200',
+          classes: 'bg-rose-50 text-rose-700 border-rose-200',
+        };
+      case 'confirmed':
+        return {
+          icon: CheckCircle2,
+          label: 'Confirmed',
+          classes: 'bg-[#283618]/10 text-[#283618] border-[#283618]/25',
+        };
+      case 'placed':
+        return {
+          icon: Clock,
+          label: 'Placed',
+          classes: 'bg-[#283618]/10 text-[#283618] border-[#283618]/25',
+        };
+      case 'processing':
+        return {
+          icon: Clock,
+          label: 'Processing',
+          classes: 'bg-amber-50 text-amber-800 border-amber-200',
         };
       default:
         return {
           icon: Clock,
           label: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
-          classes: 'bg-amber-50 text-amber-800 border-amber-200',
+          classes: 'bg-[#283618]/10 text-[#283618] border-[#283618]/25',
         };
     }
   };
@@ -92,41 +110,50 @@ export function OrderDetail() {
   return (
     <div className="space-y-3.5 text-left font-sans">
       {/* Main Order Overview Card */}
-      <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm space-y-4">
-        {/* Header Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-neutral-200">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[13.5px] sm:text-[14px] font-bold text-neutral-950 font-mono">
+      <div className="bg-white border border-neutral-300 rounded-lg overflow-hidden shadow-xs">
+        {/* Header Strip — Subtle shaded accent with persistent split layout */}
+        <div className="px-4 py-3 sm:py-3.5 bg-[#283618]/[0.05] border-b border-neutral-200 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[13.5px] sm:text-[14.5px] font-bold text-neutral-950 font-mono tracking-tight">
                 #
                 {String(order._id || order.id)
                   .slice(-8)
                   .toUpperCase()}
               </span>
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-semibold border ${statusBadge.classes}`}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold tracking-wide uppercase border ${statusBadge.classes}`}
               >
-                <StatusIcon className="w-3 h-3" />
+                <StatusIcon className="w-3 h-3 shrink-0" strokeWidth={2.2} />
                 <span>{statusBadge.label}</span>
               </span>
             </div>
-            <p className="text-[11.5px] text-neutral-500 mt-0.5">
-              Placed on {orderDate}
-              {order.paymentMethod && <span> • Paid via {order.paymentMethod.toUpperCase()}</span>}
+            <p className="text-[11.5px] text-neutral-500 mt-1 flex items-center gap-1.5 flex-wrap">
+              <span>Placed on {orderDate}</span>
+              {order.paymentMethod && (
+                <>
+                  <span className="text-neutral-300">•</span>
+                  <span className="font-medium text-neutral-700">
+                    Paid via {order.paymentMethod.toUpperCase()}
+                  </span>
+                </>
+              )}
             </p>
           </div>
 
-          <div className="text-left sm:text-right">
-            <span className="text-[10.5px] text-neutral-500 block">Total Amount</span>
-            <span className="text-[15px] sm:text-[16px] font-bold text-neutral-950">
+          <div className="text-right shrink-0">
+            <span className="text-[10px] sm:text-[10.5px] font-bold uppercase tracking-wider text-neutral-500 block">
+              Total Amount
+            </span>
+            <span className="text-[15.5px] sm:text-[17px] font-bold text-neutral-950 font-mono leading-tight block">
               ₹{(order.total || 0).toLocaleString('en-IN')}
             </span>
           </div>
         </div>
 
-        {/* Ordered Items List */}
-        <div>
-          <h3 className="text-[12.5px] font-semibold text-neutral-800 pb-2 mb-2 border-b border-neutral-200">
+        {/* Ordered Items List Body */}
+        <div className="p-4 sm:p-5">
+          <h3 className="text-[12px] sm:text-[12.5px] font-bold uppercase tracking-wider text-neutral-700 pb-2.5 mb-2 border-b border-neutral-200">
             Items Ordered ({itemsList.length})
           </h3>
 

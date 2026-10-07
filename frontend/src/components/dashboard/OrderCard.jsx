@@ -68,7 +68,7 @@ export function OrderCard({ order, item, itemIdx, idx = 0 }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.2, delay: idx * 0.02 }}
-      className="bg-white border border-neutral-300 rounded-xl overflow-hidden shadow-xs hover:border-neutral-400 hover:shadow-sm transition-all text-left font-sans select-none"
+      className="bg-white border border-neutral-300 rounded-lg overflow-hidden shadow-xs hover:border-neutral-400 hover:shadow-sm transition-all text-left font-sans select-none"
     >
       {/* Top Header Row — Subtle Olive Green Shaded Strip */}
       <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-neutral-200 bg-[#283618]/[0.06] backdrop-blur-xs">
