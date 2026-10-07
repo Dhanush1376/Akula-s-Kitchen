@@ -12,11 +12,7 @@ export class OrderNotificationService {
 
       const itemTitle =
         order.items && order.items.length > 0
-          ? order.items[0].title ||
-            order.items[0].name ||
-            order.items[0].showcaseTitle ||
-            order.items[0].productTitle ||
-            'Product'
+          ? order.items[0].title || order.items[0].name || order.items[0].productTitle || 'Product'
           : 'Order';
       const moreCount =
         order.items && order.items.length > 1 ? ` (+${order.items.length - 1} more)` : '';

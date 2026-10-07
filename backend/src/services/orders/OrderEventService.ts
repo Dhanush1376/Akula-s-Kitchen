@@ -10,7 +10,7 @@ export class OrderEventService {
    */
   static async recordEvent(
     orderId: string | mongoose.Types.ObjectId,
-    orderType: 'purchase' | 'rental' | 'custom',
+    orderType: 'purchase',
     eventType: string,
     performedBy: { userId?: mongoose.Types.ObjectId; name: string; role: string },
     source: 'system' | 'admin' | 'warehouse' | 'courier' | 'customer',

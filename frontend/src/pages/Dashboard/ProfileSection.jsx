@@ -9,7 +9,7 @@ import { useGoogleIdentity } from '../../hooks/useGoogleIdentity';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
-export function ProfileSection() {
+export function ProfileSection({ isDrawer = false }) {
   const { user: dashboardUser, checkAuth, addresses } = useDashboard();
   const { user, refreshUser } = useAuth();
 
@@ -195,23 +195,37 @@ export function ProfileSection() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
-      className="space-y-4 text-left pb-8 font-sans"
+      className={`space-y-4 text-left font-sans ${isDrawer ? 'pb-2' : 'pb-8'}`}
     >
       {/* Profile Info Card */}
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-xs overflow-hidden">
-        {/* Card Header */}
-        <div className="bg-[#283618]/5 px-4 sm:px-5 py-3.5 border-b border-[#283618]/15 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <User className="w-4 h-4 text-[#283618]" strokeWidth={2} />
-            <span className="text-[13.5px] font-bold text-[#283618]">Profile Settings</span>
+      <div
+        className={
+          isDrawer
+            ? 'space-y-4'
+            : 'bg-white/75 backdrop-blur-xl border border-white/80 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] overflow-hidden'
+        }
+      >
+        {/* Card Header (hidden in drawer to avoid redundancy) */}
+        {!isDrawer && (
+          <div className="bg-[#283618]/5 backdrop-blur-xs px-4 sm:px-5 py-3.5 border-b border-[#283618]/15 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <User className="w-4 h-4 text-[#283618]" strokeWidth={2} />
+              <span className="text-[13.5px] font-bold text-[#283618]">Profile Settings</span>
+            </div>
+            <span className="text-[11px] text-neutral-500 font-medium hidden sm:inline">
+              Manage personal details
+            </span>
           </div>
-          <span className="text-[11px] text-neutral-500 font-medium hidden sm:inline">
-            Manage personal details
-          </span>
-        </div>
+        )}
 
-        <form onSubmit={handleProfileSave} className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 max-w-2xl">
+        <form onSubmit={handleProfileSave} className={isDrawer ? 'space-y-4 px-1' : 'p-4 sm:p-6'}>
+          <div
+            className={
+              isDrawer
+                ? 'grid grid-cols-1 gap-4'
+                : 'grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 max-w-2xl'
+            }
+          >
             {/* Full Name */}
             <div>
               <label

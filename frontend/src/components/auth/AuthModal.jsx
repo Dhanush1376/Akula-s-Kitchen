@@ -14,6 +14,9 @@ import {
   LinkRequiredScreen,
   NamePromptForm,
 } from './AuthForms';
+import { DrawerDragHandle } from '../ui/drawer';
+import { useMobileDrawerEngine } from '../../hooks/useMobileDrawerEngine';
+import { AuthCornerLeaves } from './AuthCornerLeaves';
 
 export function AuthModal() {
   const { isAuthModalOpen, closeAuthModal, loginSuccess } = useAuth();
@@ -54,35 +57,27 @@ export function AuthModal() {
   } = useAuthFlow(loginSuccess, isAuthModalOpen);
 
   const [isFocused, setIsFocused] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { isMobile, dragProps, sheetTransition } = useMobileDrawerEngine({
+    isOpen: isAuthModalOpen,
+    onClose: closeAuthModal,
+  });
 
   const modalVariants = {
-    hidden: isMobile ? { y: '100%', opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95, y: 15 },
+    hidden: isMobile ? { y: '100%', opacity: 0.5 } : { opacity: 0, scale: 0.95, y: 15 },
     visible: {
       y: 0,
       opacity: 1,
       scale: 1,
-      transition: isMobile
-        ? { type: 'spring', damping: 25, stiffness: 250 }
-        : { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+      transition: isMobile ? sheetTransition : { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
     },
     exit: isMobile
       ? {
           y: '100%',
-          opacity: 1,
-          scale: 1,
-          transition: { type: 'spring', damping: 30, stiffness: 300 },
+          opacity: 0,
+          transition: sheetTransition,
         }
-      : { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.3 } },
+      : { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.25 } },
   };
 
   // Reset modal state when it closes or opens
@@ -122,7 +117,7 @@ export function AuthModal() {
   return (
     <AnimatePresence>
       {isAuthModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 sm:p-6 md:p-8">
           {/* Dark blurred background overlay */}
           <motion.div
             key="auth-backdrop"
@@ -130,7 +125,7 @@ export function AuthModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeAuthModal}
-            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto"
           />
 
           {/* Floating Auth Card Modal Container */}
@@ -140,23 +135,35 @@ export function AuthModal() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="w-full sm:max-w-[420px] relative flex flex-col justify-end"
+            {...(isMobile ? dragProps : {})}
+            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[450px] md:max-w-[475px] mx-auto"
+            style={{
+              marginBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+            }}
           >
-            <div className="relative bg-white w-full rounded-t-[18px] sm:rounded-2xl p-6 sm:p-8 border-t sm:border border-black/10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)] overflow-y-auto max-h-[95%] no-scrollbar">
-              {/* Grab handle for mobile bottom sheet */}
-              <div className="sm:hidden w-12 h-1.5 bg-neutral-400 rounded-full mx-auto mb-4 shrink-0" />
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-2 px-5 pb-5 sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_12px_45px_rgba(0,0,0,0.16)] border border-black/[0.08] flex flex-col max-h-[88dvh] overflow-hidden">
+              {/* Decorative gentle corner leaves falling slowly */}
+              <AuthCornerLeaves />
+
+              {/* Grab handle for mobile bottom sheet - moved right to the top rim */}
+              <div
+                className="sm:hidden w-full flex justify-center pt-1 pb-2 cursor-grab select-none"
+                onClick={closeAuthModal}
+              >
+                <div className="w-9 h-1 rounded-full bg-neutral-300" />
+              </div>
 
               {/* Close button */}
               <button
                 onClick={closeAuthModal}
-                className="absolute top-5 right-5 w-9 h-9 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full bg-[#fff9e6] hover:bg-[#f7bb0e] border border-[#f7bb0e]/40 flex items-center justify-center text-neutral-900 transition-all z-50 cursor-pointer shadow-xs active:scale-95"
+                className="absolute top-3.5 right-3.5 sm:top-4.5 sm:right-4.5 w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-50 cursor-pointer"
                 aria-label="Close authentication modal"
               >
-                <X size={16} strokeWidth={2.2} />
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black" strokeWidth={2.2} />
               </button>
 
               {/* Core Content Layout */}
-              <div className="relative z-10">
+              <div className="relative z-10 flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1">
                 <AnimatePresence mode="wait">
                   {step === 'success' ? (
                     <AuthSuccessScreen isNewUser={isNewUser} />
@@ -166,12 +173,12 @@ export function AuthModal() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="space-y-6"
+                      className="space-y-4 sm:space-y-4.5"
                     >
                       {/* Headings */}
-                      <div className="text-left mb-6 sm:mb-8 space-y-2">
+                      <div className="text-left mb-3.5 sm:mb-4.5 space-y-1 sm:space-y-1.5">
                         <h2
-                          className="font-serif-heading text-[25px] sm:text-[28px] leading-tight text-neutral-950 font-extrabold tracking-tight"
+                          className="font-serif-heading text-[20px] sm:text-[23px] md:text-[25px] leading-tight text-neutral-950 font-bold tracking-tight"
                           style={{ fontFamily: 'var(--font-display)' }}
                         >
                           {step === '2fa'
@@ -183,7 +190,7 @@ export function AuthModal() {
                                 : 'Login or Sign Up'}
                         </h2>
                         {step !== 'otp' && step !== 'account_exists' && step !== 'name_prompt' && (
-                          <p className="text-amber-950/70 text-[13px] font-normal leading-relaxed">
+                          <p className="text-neutral-500 text-[12px] sm:text-[13px] md:text-[13.5px] font-normal leading-relaxed">
                             {step === '2fa'
                               ? 'Enter the 6-digit code from your authenticator app.'
                               : customerAuthMethod === 'email_only'
@@ -194,18 +201,18 @@ export function AuthModal() {
                           </p>
                         )}
                         {step === 'name_prompt' && (
-                          <p className="text-amber-950/70 text-[13px] font-normal leading-relaxed">
+                          <p className="text-neutral-500 text-[12px] sm:text-[13px] md:text-[13.5px] font-normal leading-relaxed">
                             Help us personalize your orders and account experience.
                           </p>
                         )}
                         {step === 'otp' && (
-                          <p className="text-amber-950/70 text-[13px] font-normal leading-relaxed">
+                          <p className="text-amber-950/70 text-[12.5px] sm:text-[13px] md:text-[13.5px] font-normal leading-relaxed">
                             Code sent to{' '}
                             <span className="font-bold text-neutral-950">{identifier}</span>
                             <button
                               type="button"
                               onClick={() => setStep('identifier')}
-                              className="text-neutral-950 hover:text-[#b38505] font-extrabold underline ml-1.5 uppercase text-[10px] tracking-wider cursor-pointer"
+                              className="text-neutral-950 hover:text-[#b38505] font-extrabold underline ml-1.5 uppercase text-[10px] sm:text-[11px] tracking-wider cursor-pointer"
                             >
                               Change
                             </button>

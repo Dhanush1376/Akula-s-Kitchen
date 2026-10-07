@@ -3,17 +3,11 @@ import { DestructionGuard } from '../utils/DestructionGuard';
 export type InteractionEventType =
   | 'product_view'
   | 'product_click'
-  | 'gallery_view'
-  | 'gallery_click'
-  | 'event_view'
-  | 'event_click'
-  | 'showcase_view'
   | 'wishlist_add'
   | 'wishlist_remove'
   | 'cart_add'
   | 'cart_remove'
   | 'purchase'
-  | 'booking'
   | 'search'
   | 'category_explore'
   | 'review_read'
@@ -22,7 +16,7 @@ export type InteractionEventType =
   | 'search_suggestion_clicked'
   | 'search_zero_results';
 
-export type TargetType = 'product' | 'event' | 'gallery' | 'showcase' | 'search_event';
+export type TargetType = 'product' | 'search_event';
 
 export interface IUserInteraction extends Document {
   userId?: mongoose.Types.ObjectId;
@@ -55,17 +49,11 @@ const UserInteractionSchema: Schema = new Schema(
       enum: [
         'product_view',
         'product_click',
-        'gallery_view',
-        'gallery_click',
-        'event_view',
-        'event_click',
-        'showcase_view',
         'wishlist_add',
         'wishlist_remove',
         'cart_add',
         'cart_remove',
         'purchase',
-        'booking',
         'search',
         'category_explore',
         'review_read',
@@ -78,7 +66,7 @@ const UserInteractionSchema: Schema = new Schema(
     targetType: {
       type: String,
       required: true,
-      enum: ['product', 'event', 'gallery', 'showcase', 'search_event'],
+      enum: ['product', 'search_event'],
     },
     targetId: { type: Schema.Types.ObjectId },
     metadata: {

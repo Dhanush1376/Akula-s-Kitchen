@@ -115,8 +115,6 @@ export class PrivacyService {
         promotions: false,
         security: false,
         newsletter: false,
-        bookingUpdates: false,
-        rentalUpdates: false,
       },
     };
     user.passwordHash = undefined;

@@ -97,10 +97,6 @@ export function computeSearchScore(
       const candidates = [w];
       if (w === 'jewelry') candidates.push('jewellery');
       if (w === 'jewellery') candidates.push('jewelry');
-      if (w === 'tray') candidates.push('trays');
-      if (w === 'trays') candidates.push('tray');
-      if (w === 'bangle') candidates.push('bangles');
-      if (w === 'bangles') candidates.push('bangle');
       return candidates.some((c) => normalizedTitle.includes(c));
     });
   if (allWordsInTitle) {
@@ -127,10 +123,6 @@ export function computeSearchScore(
     const wordCandidates = [word];
     if (word === 'jewelry') wordCandidates.push('jewellery');
     else if (word === 'jewellery') wordCandidates.push('jewelry');
-    if (word === 'tray') wordCandidates.push('trays');
-    else if (word === 'trays') wordCandidates.push('tray');
-    if (word === 'bangle') wordCandidates.push('bangles');
-    else if (word === 'bangles') wordCandidates.push('bangle');
 
     // Exact word boundary matches in title
     if (wordCandidates.some((wc) => new RegExp(`\\b${wc}\\b`).test(normalizedTitle))) {

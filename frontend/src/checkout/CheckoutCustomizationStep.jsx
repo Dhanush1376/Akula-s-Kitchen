@@ -1,5 +1,6 @@
 import React from 'react';
 import toast from 'react-hot-toast';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { useCheckout } from './CheckoutProvider';
 
 /**
@@ -153,22 +154,35 @@ export function CheckoutCustomizationStep({ onNext }) {
 
       {/* Sticky Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-surface-bright border-t border-outline-variant/20 p-3 shadow-lg z-40 flex flex-col items-center">
-        <div className="max-w-[768px] w-full mx-auto flex gap-3">
+        <div className="max-w-[768px] w-full mx-auto flex items-center gap-3">
           <button
             type="button"
             onClick={handleBack}
-            className="flex-1 bg-transparent text-on-surface font-bold uppercase tracking-widest text-[9px] py-2.5 rounded-full border border-outline-variant/40 hover:bg-surface-container-low transition-colors cursor-pointer"
+            className="h-11 px-5 bg-white text-neutral-800 font-extrabold uppercase tracking-wider text-xs rounded-full border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
           >
-            Back
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back</span>
           </button>
           <button
             type="button"
             onClick={handleNext}
             disabled={!canProceed}
-            className="flex-1 btn-primary py-2.5 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm transition-all text-center disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 !text-white cursor-pointer"
+            className={`flex-1 h-11 rounded-full pl-5 pr-1.5 py-1 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between group ${
+              !canProceed
+                ? 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed'
+                : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] active:scale-[0.98] cursor-pointer'
+            }`}
           >
-            <span>Payment</span>
-            <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+            <span className="font-extrabold text-[12px] uppercase tracking-wider text-neutral-950">
+              Payment
+            </span>
+            <span className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+              <ArrowRight
+                className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                strokeWidth={2.5}
+                aria-hidden="true"
+              />
+            </span>
           </button>
         </div>
       </div>

@@ -11,7 +11,7 @@ export interface IInvoice extends Document {
   invoiceNumber: string;
   transactionId: mongoose.Types.ObjectId;
   customer: mongoose.Types.ObjectId;
-  domain: 'purchase' | 'rental' | 'event' | 'custom';
+  domain: 'purchase';
   lineItems: IInvoiceLineItem[];
   subtotal: number;
   tax: number;
@@ -39,7 +39,7 @@ const InvoiceSchema = new Schema(
     invoiceNumber: { type: String, required: true, unique: true, index: true },
     transactionId: { type: Schema.Types.ObjectId, ref: 'Transaction', required: true, index: true },
     customer: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    domain: { type: String, enum: ['purchase', 'rental', 'event', 'custom'], required: true },
+    domain: { type: String, enum: ['purchase'], default: 'purchase', required: true },
     lineItems: [InvoiceLineItemSchema],
     subtotal: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },

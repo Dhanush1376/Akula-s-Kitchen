@@ -8,7 +8,7 @@ import { isPrerendering } from '../utils/performance/prerender';
 import logger from '../utils/core/logger';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes — stale-while-revalidate in background
 const STALE_REFRESH_MS = 60 * 1000; // revalidate at most once per minute when stale
-const LOCAL_STORAGE_KEY = 'akula_website_content';
+const LOCAL_STORAGE_KEY = 'akula_website_content_v2';
 
 // Global shared state for singleton caching and request de-duplication
 let globalCache = null;

@@ -4,7 +4,6 @@ import {
   SYNONYM_MAP,
   CATEGORY_KEYWORDS,
   INTENT_EXPANSION_MAP,
-  EVENT_KNOWLEDGE_GRAPH,
 } from './searchDictionaries';
 import { levenshteinSimilarity } from './rankingEngine';
 
@@ -73,17 +72,6 @@ export function getTransliterationsAndSynonyms(query: string): string[] {
       if (trans) trans.forEach((t) => expanded.add(t));
       const synonyms = SYNONYM_MAP[word] || SYNONYM_MAP[singular];
       if (synonyms) synonyms.forEach((s) => expanded.add(s));
-    }
-  }
-
-  // Check Event Knowledge Graph
-  for (const [_eventName, data] of Object.entries(EVENT_KNOWLEDGE_GRAPH)) {
-    if (
-      data.aliases.some((alias) => normalized.includes(alias)) ||
-      data.teluguAliases.some((alias) => normalized.includes(alias))
-    ) {
-      data.searchTerms.forEach((t) => expanded.add(t));
-      data.products.forEach((p) => expanded.add(p.toLowerCase()));
     }
   }
 
@@ -200,12 +188,6 @@ export function getSpellCorrectedQuery(query: string): { corrected: string; conf
     keywords.forEach(addTermToVocab);
   });
 
-  // Add event knowledge graph terms
-  Object.values(EVENT_KNOWLEDGE_GRAPH).forEach((g) => {
-    g.aliases.forEach(addTermToVocab);
-    g.searchTerms.forEach(addTermToVocab);
-  });
-
   const vocabArray = Array.from(vocabulary);
   const correctedWords: string[] = [];
 
@@ -269,15 +251,7 @@ export function predictCategories(query: string): string[] {
   if (!normalizedQuery) return [];
   const words = normalizedQuery.split(/\s+/).filter((w) => w.length > 1);
   const scores = new Map<string, number>();
-  const genericWords = new Set([
-    'ceremony',
-    'decor',
-    'set',
-    'item',
-    'function',
-    'traditional',
-    'style',
-  ]);
+  const genericWords = new Set(['set', 'item', 'function', 'traditional', 'style']);
 
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     let score = 0;
@@ -309,36 +283,6 @@ export function predictCategories(query: string): string[] {
     if (score >= 2) scores.set(category, (scores.get(category) || 0) + score);
   }
 
-  for (const [eventName, data] of Object.entries(EVENT_KNOWLEDGE_GRAPH)) {
-    let score = 0;
-    if (normalizedQuery.includes(eventName.toLowerCase())) {
-      score += 8;
-    }
-
-    for (const word of words) {
-      const singular = getSingularForm(word);
-      if (
-        data.aliases.includes(word) ||
-        data.aliases.includes(singular) ||
-        data.teluguAliases.includes(word) ||
-        data.teluguAliases.includes(singular)
-      ) {
-        score += genericWords.has(word) ? 1 : 4;
-      } else if (!genericWords.has(word) && !genericWords.has(singular)) {
-        if (
-          data.aliases.some(
-            (a) =>
-              (word.length >= 4 && a.includes(word)) ||
-              (singular.length >= 4 && a.includes(singular)),
-          )
-        ) {
-          score += 1.5;
-        }
-      }
-    }
-    if (score >= 2) scores.set(eventName, (scores.get(eventName) || 0) + score);
-  }
-
   return Array.from(scores.entries())
     .sort((a, b) => b[1] - a[1])
     .map(([cat]) => cat.replace(/([a-z])([A-Z])/g, '$1 $2').trim())
@@ -352,16 +296,6 @@ export function getIntentExpansions(query: string): string[] {
   for (const [key, expansions] of Object.entries(INTENT_EXPANSION_MAP)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       intents.push(...expansions);
-    }
-  }
-
-  // Check Event Knowledge Graph
-  for (const [_eventName, data] of Object.entries(EVENT_KNOWLEDGE_GRAPH)) {
-    if (
-      data.aliases.some((alias) => normalized.includes(alias) || alias.includes(normalized)) ||
-      data.teluguAliases.some((alias) => normalized.includes(alias) || alias.includes(normalized))
-    ) {
-      intents.push(...data.products);
     }
   }
 

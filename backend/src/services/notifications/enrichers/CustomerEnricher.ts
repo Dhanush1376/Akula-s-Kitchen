@@ -40,7 +40,7 @@ export class CustomerEnricher {
           lastLogin: user.lastLogin || 'N/A',
           isVerified: user.isVerified,
           loyaltyTier: user.loyaltyTier,
-          siriCoins: user.siriCoins,
+          rewardCoins: user.rewardCoins,
         },
         customerStats: {
           lifetimeSpend: Math.round(stats.lifetimeSpend * 100) / 100,

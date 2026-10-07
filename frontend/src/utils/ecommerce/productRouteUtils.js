@@ -1,3 +1,1 @@
-export const getProductRoute = (itemType, productId) => {
-  return itemType === 'event' ? `/events/${productId}` : `/product/${productId}`;
-};
+export const getProductRoute = (productId) => `/product/${productId}`;

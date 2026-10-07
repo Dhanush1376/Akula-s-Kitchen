@@ -28,7 +28,7 @@ export function ImageUpload({ value, onChange, folder = 'products', label = 'Upl
       '.ico',
       '.svg',
     ];
-    const maxSizeBytes = folder === 'gallery' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    const maxSizeBytes = 5 * 1024 * 1024;
 
     for (const file of files) {
       const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
@@ -43,7 +43,7 @@ export function ImageUpload({ value, onChange, folder = 'products', label = 'Upl
       }
 
       if (file.size > maxSizeBytes) {
-        const sizeLimitMsg = folder === 'gallery' ? '10MB' : '5MB';
+        const sizeLimitMsg = '5MB';
         toast.error(`Image size too large: ${file.name}. Maximum limit is ${sizeLimitMsg}.`);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;

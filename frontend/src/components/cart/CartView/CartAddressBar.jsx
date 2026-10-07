@@ -77,7 +77,7 @@ export function CartAddressBar({
               )}
               <div className="mt-2 pt-2 border-t border-black/5 flex justify-end">
                 <Link
-                  to="/dashboard?tab=addresses"
+                  to="/dashboard?drawer=addresses"
                   className="text-[10px] font-extrabold text-neutral-900 hover:text-[#f7bb0e] uppercase tracking-wider transition-colors flex items-center gap-1"
                 >
                   Manage Addresses

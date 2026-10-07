@@ -123,6 +123,10 @@ ops/archive/
 *.docx
 *.pdf
 *.pptx
+uploads/
+backend/uploads/
+email-previews/
+backend/email-previews/
 
 # ------------------------------------------
 # 11. Specific Generated Artifacts & Reports

@@ -2,18 +2,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { orderService } from '../services/domainServices';
 import { playSuccessBeep, playErrorBeep } from '../utils/media/audioUtils';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { isAdminRole } from '../constants/roles';
 
 const trackingSteps = ['Pending', 'Confirmed', 'Processing', 'Delivered'];
 
+/** Short package label printed on parcels; scanners may read it instead of the order id. */
+export const packageBarcode = (orderId = '') =>
+  `AK-${orderId.substring(orderId.length - 8).toUpperCase()}-IN`;
+
 export function useOrderTracking({ orderId, trackingToken }) {
+  const { user } = useAuth();
+  // Status updates are authorised server-side by the staff session; the panel is
+  // only offered to signed-in staff so customers never see operator controls.
+  const isStaff = isAdminRole(user?.role);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Courier Panel State
   const [showOperatorPanel, setShowOperatorPanel] = useState(false);
-  const [operatorPin, setOperatorPin] = useState('');
-  const [isPinVerified, setIsPinVerified] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [operatorNote, setOperatorNote] = useState('');
 
@@ -48,17 +56,6 @@ export function useOrderTracking({ orderId, trackingToken }) {
     return null;
   }, []);
 
-  const verifyCourierPin = (e) => {
-    e.preventDefault();
-    if (operatorPin.trim() === 'SIRI2026') {
-      setIsPinVerified(true);
-      toast.success('Logistics Operator Session Initialized!');
-    } else {
-      toast.error('Invalid Logistics Security Pin');
-      setOperatorPin('');
-    }
-  };
-
   const handleStatusUpdate = useCallback(
     async (newStatus) => {
       setUpdatingStatus(true);
@@ -67,7 +64,6 @@ export function useOrderTracking({ orderId, trackingToken }) {
           orderId,
           newStatus,
           operatorNote || `Dispatch transit scan: ${newStatus}`,
-          'SIRI2026',
         );
         toast.success(`Logistics status updated to ${newStatus}`);
         setOperatorNote('');
@@ -90,9 +86,9 @@ export function useOrderTracking({ orderId, trackingToken }) {
     }
   }, [orderId, fetchTrackingDetails]);
 
-  // Capture physical barcode scanner keyboard inputs
+  // Capture physical barcode scanner keyboard inputs (staff only)
   useEffect(() => {
-    if (!order) return;
+    if (!order || !isStaff) return;
     let buffer = '';
     let lastKeyTime = Date.now();
 
@@ -115,7 +111,7 @@ export function useOrderTracking({ orderId, trackingToken }) {
 
           const cleanOrderId = order._id.toUpperCase();
           const cleanAWB = (order.trackingNumber || '').toUpperCase();
-          const customBarcode = `SR-${order._id.substring(order._id.length - 8).toUpperCase()}-IN`;
+          const customBarcode = packageBarcode(order._id);
 
           if (
             scannedCode === cleanOrderId ||
@@ -125,19 +121,12 @@ export function useOrderTracking({ orderId, trackingToken }) {
           ) {
             playSuccessBeep();
 
-            if (!isPinVerified) {
-              setShowOperatorPanel(true);
-              toast.success(
-                'Package verified! Please enter Logistics PIN to authorize status updates.',
-              );
+            const nextStatus = getNextStatus(order.orderStatus);
+            if (nextStatus) {
+              handleStatusUpdate(nextStatus);
+              toast.success(`Package Verified! Advancing status to ${nextStatus}...`);
             } else {
-              const nextStatus = getNextStatus(order.orderStatus);
-              if (nextStatus) {
-                handleStatusUpdate(nextStatus);
-                toast.success(`Package Verified! Advancing status to ${nextStatus}...`);
-              } else {
-                toast.success('Package is already delivered!');
-              }
+              toast.success('Package is already delivered!');
             }
           } else {
             playErrorBeep();
@@ -154,7 +143,7 @@ export function useOrderTracking({ orderId, trackingToken }) {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [order, isPinVerified, getNextStatus, handleStatusUpdate]);
+  }, [order, isStaff, getNextStatus, handleStatusUpdate]);
 
   return {
     order,
@@ -162,14 +151,10 @@ export function useOrderTracking({ orderId, trackingToken }) {
     error,
     showOperatorPanel,
     setShowOperatorPanel,
-    operatorPin,
-    setOperatorPin,
-    isPinVerified,
-    setIsPinVerified,
+    isStaff,
     updatingStatus,
     operatorNote,
     setOperatorNote,
-    verifyCourierPin,
     handleStatusUpdate,
   };
 }

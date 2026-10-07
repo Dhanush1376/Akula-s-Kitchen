@@ -392,7 +392,7 @@ export function AdminProducts() {
               {/* Category Filters Header */}
               <div className="p-3 flex items-center justify-between gap-3 border-b border-[var(--admin-border-subtle)]">
                 <div className="flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] min-w-0 box-border">
-                  {['All', 'product', 'gallery', 'event'].map((t) => (
+                  {['All', 'product', 'global'].map((t) => (
                     <button
                       key={t}
                       onClick={() => setCategoryTypeFilter(t)}
@@ -562,7 +562,7 @@ export function AdminProducts() {
       ) : (
         /* Products & Inventory Tabs */
         <>
-          {/* Search & Actions Bar: Sticky below top navbar matching Showcase / Orders style */}
+          {/* Search & Actions Bar: Sticky below top navbar matching Orders style */}
           <div className="sticky top-[var(--admin-topbar-height,56px)] z-20 -my-2 py-2.5 bg-[var(--admin-bg)]/95 backdrop-blur-md mb-5">
             <div className="relative w-full">
               <motion.div variants={fadeUp} className="flex flex-row items-center gap-2 w-full">
@@ -724,22 +724,6 @@ export function AdminProducts() {
                             <option value="all">All (With & Without Photos)</option>
                             <option value="missing_images">Missing Photos (Needs Upload)</option>
                             <option value="has_images">Has Photos</option>
-                          </select>
-                        </AdminFilterSection>
-
-                        {/* Product Rental Availability Filter */}
-                        <AdminFilterSection
-                          title="Rental Option"
-                          active={filterState.type !== 'All'}
-                        >
-                          <select
-                            value={filterState.type}
-                            onChange={(e) => setFilterValue('type', e.target.value)}
-                            className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-[4px] px-3 py-2 text-[12px] font-medium outline-none text-[var(--admin-text-primary)] cursor-pointer"
-                          >
-                            <option value="All">All Products</option>
-                            <option value="rental">Rental Available</option>
-                            <option value="sale_only">Sale Only (Non-Rental)</option>
                           </select>
                         </AdminFilterSection>
 
@@ -1026,7 +1010,7 @@ export function AdminProducts() {
                           key={p.id}
                           className="admin-table-row-clickable group"
                           onClick={() => {
-                            navigate(`/admin/products/edit/${p.id}`);
+                            navigate(`/admin/products/edit/${p._id || p.id}`);
                           }}
                         >
                           <td className="text-center" onClick={(e) => e.stopPropagation()}>
@@ -1148,8 +1132,8 @@ export function AdminProducts() {
                                 }`}
                                 title={
                                   getIsHeroProduct(p.id)
-                                    ? 'Remove from Showcase Hero'
-                                    : 'Set as Showcase Hero'
+                                    ? "Remove from Today's Kitchen"
+                                    : "Feature in Today's Kitchen"
                                 }
                               >
                                 <span className="material-symbols-outlined text-[18px]">
@@ -1157,7 +1141,7 @@ export function AdminProducts() {
                                 </span>
                               </button>
                               <button
-                                onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                                onClick={() => navigate(`/admin/products/edit/${p._id || p.id}`)}
                                 className="admin-btn-icon w-8 h-8 p-0 min-h-0 text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]"
                                 title="Edit Product"
                               >
@@ -1196,7 +1180,7 @@ export function AdminProducts() {
                     <motion.div
                       key={p.id}
                       variants={fadeUp}
-                      onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                      onClick={() => navigate(`/admin/products/edit/${p._id || p.id}`)}
                       className={`bg-[var(--admin-surface)] rounded-[var(--admin-radius-lg)] border overflow-hidden group cursor-pointer hover:border-[var(--admin-border-strong)] hover:shadow-[var(--admin-shadow-md)] transition-all duration-300 flex flex-col justify-between text-left ${
                         isSelected
                           ? 'border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/20 shadow-sm'
@@ -1356,7 +1340,7 @@ export function AdminProducts() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                            onClick={() => navigate(`/admin/products/edit/${p._id || p.id}`)}
                             title="Edit Product"
                             className="w-6 h-6 rounded-[3px] flex items-center justify-center text-[var(--admin-text-tertiary)] hover:text-[var(--admin-accent)] hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer"
                           >

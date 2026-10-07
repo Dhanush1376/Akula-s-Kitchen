@@ -8,8 +8,8 @@ dotenv.config({ path: '.env.local' });
 // 1. Environmental Safeguards (Must be set BEFORE importing services to prevent side effects)
 process.env.NODE_ENV = 'test';
 const baseUri = process.env.MONGO_URI || '';
-// Force the database to 'eventdecor_payment_e2e' to ensure total isolation on the Atlas cluster
-process.env.MONGO_URI = baseUri.replace(/\/[^/?]+(\?|$)/, '/eventdecor_payment_e2e$1');
+// Force the database to 'akulas_kitchen_payment_e2e' to ensure total isolation on the Atlas cluster
+process.env.MONGO_URI = baseUri.replace(/\/[^/?]+(\?|$)/, '/akulas_kitchen_payment_e2e$1');
 console.log('E2E Target URI:', process.env.MONGO_URI.replace(/:[^:@]+@/, ':***@'));
 
 process.env.EMAIL_DISABLED = 'true';

@@ -266,7 +266,7 @@ export function IntelligentSearchOverlay({
                 showSuggestions ? 'max-w-5xl' : 'max-w-2xl'
               }`}
             >
-              <div className="bg-[#ffffff]/95 border-none rounded-[32px] shadow-[0_32px_80px_-10px_rgba(27,24,20,0.18)] focus-within:shadow-[0_32px_80px_-10px_rgba(184,157,112,0.12)] transition-all duration-500 overflow-hidden">
+              <div className="bg-[#ffffff]/95 border border-neutral-200 rounded-[32px] shadow-[0_32px_80px_-10px_rgba(27,24,20,0.18)] focus-within:shadow-[0_32px_80px_-10px_rgba(184,157,112,0.12)] transition-all duration-500 overflow-hidden">
                 <SearchInputHeader
                   isMobile={false}
                   onClose={onClose}

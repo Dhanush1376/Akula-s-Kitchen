@@ -67,7 +67,7 @@ export const RecommendationCache = {
     await cacheSet(`reco:personal:${userId}:${page}`, data, 3600, personalFeedCache); // 1 hour
   },
   async clearPersonalFeed(userId: string) {
-    const pages = ['homepage', 'gallery', 'events', 'products'];
+    const pages = ['homepage', 'products'];
     for (const page of pages) {
       await cacheDel(`reco:personal:${userId}:${page}`, personalFeedCache);
     }

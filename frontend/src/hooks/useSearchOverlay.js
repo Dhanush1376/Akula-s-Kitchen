@@ -60,7 +60,7 @@ export function useSearchOverlay() {
         trending: [],
         popularProducts: [],
         newArrivals: [],
-        eventCollections: [],
+        collections: [],
       }
     );
   }, [discoveryQuery.data]);
@@ -94,16 +94,14 @@ export function useSearchOverlay() {
 
     const groups = [
       { id: 'categories', items: [] },
-      { id: 'collections', items: [] },
       { id: 'products', items: [] },
       { id: 'others', items: [] },
     ];
 
     list.forEach((item) => {
       if (item.type === 'category') groups[0].items.push(item);
-      else if (item.type === 'event') groups[1].items.push(item);
-      else if (item.type === 'product') groups[2].items.push(item);
-      else groups[3].items.push(item);
+      else if (item.type === 'product') groups[1].items.push(item);
+      else groups[2].items.push(item);
     });
 
     return groups.flatMap((g) => g.items);

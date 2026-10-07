@@ -25,7 +25,7 @@ export class PaymentRefundService {
       amount: number;
       currency?: string;
       originalTransactionId: string;
-      entityType: 'Order' | 'Rental' | 'EventJob';
+      entityType: 'Order';
       entityId: mongoose.Types.ObjectId | string;
       isPartial?: boolean;
       reason?: string;
@@ -135,36 +135,6 @@ export class PaymentRefundService {
         const Order = require('../models/Order').default;
         const newStatus = refundRecord.isPartial ? 'partially_refunded' : 'refunded';
         await Order.findByIdAndUpdate(refundRecord.entityId, { paymentStatus: newStatus });
-      }
-
-      // Update Rental deposit status if applicable
-      if (refundRecord.entityType === 'Rental') {
-        const RentalOrder = require('../models/RentalOrder').default;
-        const rental = await RentalOrder.findById(refundRecord.entityId);
-        if (rental && rental.depositStatus === 'processing') {
-          rental.depositRefund = rental.depositRefund || {};
-          rental.depositRefund.status = 'completed';
-          rental.depositRefund.refundId = rzpRefund.id;
-          rental.depositStatus = 'refunded';
-
-          const { RentalStateMachine } = require('./rentals/RentalStateMachine');
-          RentalStateMachine.transition(
-            rental,
-            'completed',
-            `Deposit refund completed via Razorpay. Refund ID: ${rzpRefund.id}`,
-            'system',
-          );
-
-          await rental.save();
-
-          const OutboxEvent = require('../models/OutboxEvent').default;
-          await OutboxEvent.create({
-            aggregateId: rental._id.toString(),
-            aggregateType: 'RentalOrder',
-            eventType: 'RentalDepositRefunded',
-            payload: { orderId: rental._id.toString() },
-          });
-        }
       }
 
       // Emit refund socket event

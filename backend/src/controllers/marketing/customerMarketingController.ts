@@ -121,7 +121,7 @@ export const getMarketingCustomers = asyncHandler(async (req: Request, res: Resp
         marketingEligible: 1,
         lastLogin: 1,
         createdAt: 1,
-        siriCoins: { $ifNull: ['$siriCoins', 0] },
+        rewardCoins: { $ifNull: ['$rewardCoins', 0] },
         city: 1,
         addresses: 1,
       },

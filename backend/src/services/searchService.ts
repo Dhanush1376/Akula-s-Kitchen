@@ -36,7 +36,7 @@ export { computeSearchScore };
 export interface AutocompleteResult {
   id: string;
   title: string;
-  type: 'product' | 'gallery' | 'category' | 'suggestion';
+  type: 'product' | 'category' | 'suggestion';
   category?: string;
   image?: string;
   price?: number;
@@ -50,7 +50,7 @@ export interface AutocompleteResult {
 export interface SearchResult {
   id: string;
   title: string;
-  type: 'product' | 'event' | 'gallery';
+  type: 'product';
   category?: string;
   style?: string;
   image?: string;
@@ -164,7 +164,7 @@ export async function getAutocomplete(
     const poolLimit = 50;
     const indexResults = await SearchIndex.find({
       isActive: true,
-      entityType: { $ne: 'Gallery' },
+      entityType: 'Product',
       $or: [
         { ngrams: { $in: queryNgrams } },
         { tokens: { $in: searchTerms } },
@@ -370,10 +370,6 @@ export async function searchAll(
       wordVariants.push(lower);
       if (lower === 'jewelry') wordVariants.push('jewellery');
       if (lower === 'jewellery') wordVariants.push('jewelry');
-      if (lower === 'tray') wordVariants.push('trays');
-      if (lower === 'trays') wordVariants.push('tray');
-      if (lower === 'bangle') wordVariants.push('bangles');
-      if (lower === 'bangles') wordVariants.push('bangle');
     }
 
     const allUniqueTerms = [...new Set([...uniqueTerms, ...queryWords, ...wordVariants])];
@@ -464,7 +460,7 @@ export async function searchAll(
                 catName,
                 p.tags || [],
                 normalizedQuery,
-                p.teluguTitle,
+                (p as any).teluguTitle,
                 p.description,
                 p.material ? [p.material] : [],
               );
@@ -504,7 +500,7 @@ export async function searchAll(
                   catName,
                   p.tags || [],
                   normalizedQuery,
-                  p.teluguTitle,
+                  (p as any).teluguTitle,
                 ),
               });
             }
@@ -675,11 +671,9 @@ export async function searchAll(
       .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
       .slice(0, 4);
 
-    // 4. Similar Ideas: items of type 'gallery' (inspirations) or same category
+    // 4. Similar Ideas: items from the same predicted category
     const similarIdeas = [...deduplicatedItems]
-      .filter(
-        (a) => a.type === 'gallery' || (aiAnalysis.category && a.category === aiAnalysis.category),
-      )
+      .filter((a) => aiAnalysis.category && a.category === aiAnalysis.category)
       .slice(0, 4);
 
     // 5. Trending: items from the itemsSortedByScore that aren't already in bestMatches

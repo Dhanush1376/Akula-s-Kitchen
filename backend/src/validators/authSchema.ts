@@ -34,7 +34,8 @@ export const refreshSessionSchema = z.object({
         .optional()
         .or(z.literal('')),
     })
-    .strict(),
+    .strict()
+    .optional(),
 });
 
 export const logoutSchema = z.object({
@@ -47,7 +48,8 @@ export const logoutSchema = z.object({
         .optional()
         .or(z.literal('')),
     })
-    .strict(),
+    .strict()
+    .optional(),
 });
 
 export const twoFactorVerifyLoginSchema = z.object({

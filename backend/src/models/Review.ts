@@ -4,7 +4,6 @@ import SoftDeletePlugin, { ISoftDeleted, SoftDeleteModel } from '../utils/SoftDe
 
 export interface IReview extends ISoftDeleted {
   product?: mongoose.Types.ObjectId;
-  showcase?: mongoose.Types.ObjectId;
   customer: mongoose.Types.ObjectId;
   customerName: string;
   rating: number;
@@ -26,11 +25,9 @@ export interface IReview extends ISoftDeleted {
   moderationReason?: string;
   internalNotes?: string;
   location?: string;
-  eventType?: string;
-  favoriteElement?: string;
   helpfulCount: number;
   helpfulBy?: mongoose.Types.ObjectId[];
-  category: 'showcase' | 'event' | 'product';
+  category: 'product';
   verified: boolean;
   rewardPaid?: number;
   createdAt: Date;
@@ -40,7 +37,6 @@ export interface IReview extends ISoftDeleted {
 const ReviewSchema: Schema = new Schema(
   {
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: false },
-    showcase: { type: Schema.Types.ObjectId, ref: 'ShowcaseCollection', required: false },
     customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     customerName: { type: String, required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
@@ -67,14 +63,12 @@ const ReviewSchema: Schema = new Schema(
     moderatedAt: { type: Date },
     moderationReason: { type: String },
     internalNotes: { type: String },
-    location: { type: String, default: 'Ongole' },
-    eventType: { type: String, default: 'Traditional Celebration' },
-    favoriteElement: { type: String },
+    location: { type: String },
     helpfulCount: { type: Number, default: 0 },
     helpfulBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     category: {
       type: String,
-      enum: ['showcase', 'event', 'product'],
+      enum: ['product'],
       default: 'product',
     },
     verified: { type: Boolean, default: false },
@@ -87,7 +81,7 @@ const ReviewSchema: Schema = new Schema(
 ReviewSchema.index({ product: 1, status: 1 });
 ReviewSchema.index({ customer: 1 });
 
-// High-Performance Production Compound Index for Category Showcase Feed Sorts
+// Compound index for category feed sorts
 ReviewSchema.index({ category: 1, status: 1, createdAt: -1 });
 // Product review page compound index (prevents full scan + in-memory sort)
 ReviewSchema.index({ product: 1, status: 1, rating: -1, createdAt: -1 });

@@ -63,8 +63,8 @@ export function useAdminCMS({
         cmsService
           .updateSection('custom_categories', next)
           .catch((e) => logger.error('Failed to save category:', e));
-        logAdminAction('ADD_CATEGORY', `Added new category/theme '${data.name}' to ${type}`);
-        toast.success(`${type === 'products' ? 'Category' : 'Theme'} added`);
+        logAdminAction('ADD_CATEGORY', `Added new category '${data.name}' to ${type}`);
+        toast.success('Category added');
         return next;
       });
     },
@@ -89,7 +89,7 @@ export function useAdminCMS({
           .updateSection('custom_categories', next)
           .catch((e) => logger.error('Failed to save categories:', e));
         logAdminAction('UPDATE_CATEGORY', `Updated category/theme ID ${id}`);
-        toast.success(`${type === 'products' ? 'Product Category' : 'Event Theme'} updated!`);
+        toast.success('Product Category updated!');
         return next;
       });
     },
@@ -114,7 +114,7 @@ export function useAdminCMS({
           .updateSection('custom_categories', next)
           .catch((e) => logger.error('Failed to save categories:', e));
         logAdminAction('DELETE_CATEGORY', `Removed category/theme ID ${id}`);
-        toast.success(`${type === 'products' ? 'Product Category' : 'Event Theme'} removed.`);
+        toast.success('Product Category removed.');
         return next;
       });
     },

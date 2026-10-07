@@ -59,9 +59,26 @@ export function useCategories(options = {}) {
   return useQuery({
     queryKey: ['product_categories'],
     queryFn: async () => {
-      const res = await productService.getCategories();
-      if (res?.success && Array.isArray(res.data)) return res.data;
-      if (Array.isArray(res)) return res;
+      try {
+        const res = await productService.getCategories();
+        const raw = res?.success && res.data ? res.data : Array.isArray(res) ? res : [];
+        const list = Array.isArray(raw)
+          ? raw.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean)
+          : [];
+        if (list.length > 0) return list;
+      } catch (err) {
+        // Fallback to active categories endpoint
+      }
+
+      try {
+        const activeRes = await productService.getActiveCategories();
+        const raw = activeRes?.data || activeRes;
+        if (Array.isArray(raw)) {
+          return raw.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean);
+        }
+      } catch (err) {
+        // Ignore fallback error
+      }
       return [];
     },
     enabled,

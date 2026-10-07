@@ -7,8 +7,8 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env.local') });
 dotenv.config();
 
-const MONGO_URI =
-  process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/eventdecor';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || '';
+if (!MONGO_URI) throw new Error('MONGO_URI is not set; refusing to guess a database.');
 
 const statusMapping: Record<string, string> = {
   'Payment Pending': 'Pending',

@@ -1,10 +1,9 @@
 import React from 'react';
 import toast from 'react-hot-toast';
-import { MapPin, Phone, Edit3, Plus, ArrowRight, ChevronRight, Check } from 'lucide-react';
+import { MapPin, Phone, Edit3, Plus, ArrowRight, ChevronRight } from 'lucide-react';
 
 export function MainDeliveryView({
   activeSelectedAddress,
-  hasRentalItems,
   setIsSelectingList,
   handleAddNew,
   activeItems,
@@ -63,7 +62,7 @@ export function MainDeliveryView({
                   Default
                 </span>
                 {activeSelectedAddress.tag && (
-                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 bg-[#fef9e7] text-neutral-900 border border-[#fae182] rounded-md">
+                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 bg-[#283618]/10 text-[#283618] border border-[#283618]/20 rounded-md">
                     {activeSelectedAddress.tag}
                   </span>
                 )}
@@ -87,20 +86,6 @@ export function MainDeliveryView({
               <span>Mobile:</span>
               <strong className="font-bold text-neutral-950">{activeSelectedAddress.phone}</strong>
             </div>
-
-            {hasRentalItems && (
-              <div className="mt-3.5 p-3 bg-emerald-50 text-emerald-900 rounded-lg border border-emerald-200/60 flex items-start gap-2">
-                <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-emerald-700" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <p className="text-[11.5px] font-bold">Kitchen Order Verification</p>
-                  <p className="text-[11px] text-emerald-700/90 mt-0.5">
-                    Serviceable at your pincode. Fresh batches dispatched on schedule.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <div className="flex flex-col items-center text-center py-6">
@@ -116,10 +101,12 @@ export function MainDeliveryView({
             <button
               type="button"
               onClick={handleAddNew}
-              className="bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] py-2.5 px-6 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] transition-all cursor-pointer flex items-center gap-1.5"
+              className="inline-flex items-center justify-between gap-3.5 pl-6 pr-2 py-1.5 min-h-[46px] rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12.5px] uppercase tracking-wider transition-all shadow-sm hover:shadow-md active:scale-[0.98] border border-[#283618] group select-none cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
               <span>Add Address</span>
+              <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                <Plus className="w-4 h-4" strokeWidth={2.5} />
+              </span>
             </button>
           </div>
         )}
@@ -150,14 +137,22 @@ export function MainDeliveryView({
               setActiveStep(nextIndex);
             }}
             disabled={!activeSelectedAddress}
-            className={`w-full py-3.5 sm:py-4 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-2 ${
+            className={`w-full h-12 rounded-full pl-5 pr-1.5 py-1 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between group ${
               !activeSelectedAddress
                 ? 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed'
                 : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] active:scale-[0.98] cursor-pointer'
             }`}
           >
-            <span>Continue to Payment</span>
-            <ArrowRight className="w-4 h-4" />
+            <span className="font-extrabold text-[12px] sm:text-[12.5px] uppercase tracking-wider text-neutral-950">
+              Continue to Payment
+            </span>
+            <span className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+              <ArrowRight
+                className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                strokeWidth={2.5}
+                aria-hidden="true"
+              />
+            </span>
           </button>
         </div>
       </div>

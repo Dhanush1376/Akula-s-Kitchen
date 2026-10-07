@@ -147,7 +147,7 @@ export async function getUsersAlsoViewed(
     const viewers = await UserInteraction.distinct('sessionId', {
       targetId: targetId as any,
       targetType: targetType as any,
-      eventType: { $in: ['product_view', 'event_view', 'gallery_view'] },
+      eventType: 'product_view',
       timestamp: { $gte: sevenDaysAgo },
     });
 
@@ -160,7 +160,7 @@ export async function getUsersAlsoViewed(
           sessionId: { $in: viewers.slice(0, 100) as any[] }, // Cap for performance
           targetId: { $ne: targetId as any },
           eventType: {
-            $in: ['product_view', 'event_view', 'gallery_view', 'product_click', 'event_click'],
+            $in: ['product_view', 'product_click'],
           },
           timestamp: { $gte: sevenDaysAgo },
         },
@@ -250,7 +250,7 @@ export async function getFastFallbackSimilar(
         isActive: true,
       })
         .select(
-          '_id title imageSrc images primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
+          '_id title imageSrc images primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews slug',
         )
         .populate('primaryCategory', 'name')
         .limit(limit)
@@ -273,7 +273,6 @@ export async function getFastFallbackSimilar(
         rating: p.rating,
         reviews: p.reviews,
         slug: p.slug,
-        availabilityMode: p.availabilityMode,
       }));
     }
     return [];

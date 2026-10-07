@@ -225,15 +225,15 @@ const StoreSettingsSchema: Schema = new Schema(
       originalPaymentRefund: { type: Boolean, default: false },
     },
     taxes: {
-      gstEnabled: { type: Boolean, default: true },
-      gstRate: { type: Number, default: 0.18 }, // 18%
-      cgstRate: { type: Number, default: 0.09 }, // 9%
-      sgstRate: { type: Number, default: 0.09 }, // 9%
+      gstEnabled: { type: Boolean, default: false },
+      gstRate: { type: Number, default: 0 },
+      cgstRate: { type: Number, default: 0 },
+      sgstRate: { type: Number, default: 0 },
       invoicePrefix: { type: String, default: 'INV-' },
       invoiceFooter: { type: String, default: '' },
       hsnCode: { type: String, default: '' },
       gstNumber: { type: String, default: '' },
-      taxInclusive: { type: Boolean, default: true },
+      taxInclusive: { type: Boolean, default: false },
     },
     loyalty: {
       walletEnabled: { type: Boolean, default: true },

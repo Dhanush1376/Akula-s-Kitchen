@@ -1,4 +1,5 @@
 import express, { Application, Request, Response } from 'express';
+import path from 'path';
 import os from 'os';
 import mongoose from 'mongoose';
 import { corsMiddleware, corsHandler } from './middleware/corsMiddleware';
@@ -78,6 +79,9 @@ app.use(secretLeakInterceptor);
 app.options(/.*/, corsHandler); // Pre-flight global handler
 app.use(corsMiddleware);
 
+// Serve static local uploads (fallback for media storage in dev/local environments)
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+
 // Razorpay Webhook (MUST be registered BEFORE body parsing middleware)
 // Razorpay HMAC signature verification requires the raw, unparsed request body.
 // Parsing with express.json() + XSS sanitization corrupts the payload and breaks signature checks.
@@ -123,8 +127,7 @@ app.use((req: Request, res: Response, next) => {
   if (
     req.path.includes('/upload') ||
     req.path.includes('/webhook') ||
-    req.path.includes('/ai-autofill') ||
-    req.path.includes('/ai-vision-showcase')
+    req.path.includes('/ai-autofill')
   ) {
     return next();
   }

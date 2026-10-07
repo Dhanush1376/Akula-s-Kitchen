@@ -1,61 +1,24 @@
 import { logCartTrace, forensicHashId } from '../forensic/cartTrace';
 import { BRAND } from '../../config/brand';
 
-export function cleanRentalInfo(_rentalInfo) {
-  return undefined;
-}
-
-export function calculateCartSummary(
-  items,
-  _cartType,
-  shippingFee = 0,
-  platformFee = 0,
-  taxSettings,
-) {
+export function calculateCartSummary(items, shippingFee = 0, platformFee = 0, _taxSettings) {
   const subtotal = items.reduce((sum, item) => {
-    const itemPrice = item.price || item.product?.price || 0;
+    const itemPrice = Number(item.configuredUnitPrice ?? item.price ?? item.product?.price ?? 0);
     return sum + itemPrice * item.quantity;
   }, 0);
 
-  const depositTotal = 0;
   const resolvedPlatformFee = items.length > 0 ? Math.max(0, platformFee || 0) : 0;
+  const total = Math.round((subtotal + shippingFee + resolvedPlatformFee) * 100) / 100;
 
-  if (taxSettings && typeof taxSettings === 'object') {
-    const gstEnabled = taxSettings.gstEnabled ?? true;
-    const taxInclusive = taxSettings.taxInclusive ?? true;
-    const gstRate = Number(taxSettings.gstRate) || 0.18;
-
-    let estimatedTax = 0;
-    if (gstEnabled) {
-      if (taxInclusive) {
-        const taxableBase = Math.round((subtotal / (1 + gstRate)) * 100) / 100;
-        estimatedTax = Math.round((subtotal - taxableBase) * 100) / 100;
-      } else {
-        estimatedTax = Math.round(subtotal * gstRate * 100) / 100;
-      }
-    }
-
-    const total =
-      !gstEnabled || taxInclusive
-        ? Math.round((subtotal + depositTotal + shippingFee + resolvedPlatformFee) * 100) / 100
-        : Math.round(
-            (subtotal + depositTotal + shippingFee + resolvedPlatformFee + estimatedTax) * 100,
-          ) / 100;
-
-    return {
-      subtotal,
-      depositTotal,
-      shippingFee,
-      platformFee: resolvedPlatformFee,
-      estimatedTax,
-      taxInclusive,
-      gstEnabled,
-      total,
-    };
-  }
-
-  const total = subtotal + depositTotal + shippingFee + resolvedPlatformFee;
-  return { subtotal, depositTotal, shippingFee, platformFee: resolvedPlatformFee, total };
+  return {
+    subtotal,
+    shippingFee,
+    platformFee: resolvedPlatformFee,
+    estimatedTax: 0,
+    taxInclusive: false,
+    gstEnabled: false,
+    total,
+  };
 }
 
 export function transformDbCart(dbCartItems) {
@@ -75,14 +38,22 @@ export function transformDbCart(dbCartItems) {
       return isValid;
     })
     .map((item) => {
-      const itemPrice = item.price ?? item.product?.price ?? 0;
-      const itemId = item.product._id || item.product.id || item._id || item.id;
+      const unitPrice = Number(item.configuredUnitPrice ?? item.price ?? item.product?.price ?? 0);
+      const rawProductId =
+        item.product._id || item.product.id || item.productId || item._id || item.id;
+      const signature = item.configurationSignature || '';
+      const uniqueId =
+        signature && signature !== 'default' ? `${rawProductId}___${signature}` : rawProductId;
 
       return {
-        id: itemId,
-        _id: itemId,
+        id: uniqueId,
+        _id: uniqueId,
+        productId: rawProductId,
         title: item.product.title || item.title,
-        price: itemPrice,
+        price: unitPrice,
+        configuredUnitPrice: unitPrice,
+        selectedOptions: item.selectedOptions || [],
+        configurationSignature: signature,
         oldPrice: item.product.oldPrice || item.product.price || item.price,
         stock: item.product.stock ?? 10,
         seller: item.product.seller || BRAND.name,
@@ -94,8 +65,7 @@ export function transformDbCart(dbCartItems) {
         category: item.product.category || item.category,
         quantity: item.quantity,
         variant: item.variant || 'Default',
-        type: item.type || 'purchase',
-        deposit: 0,
+        customizationNote: item.customizationNote,
         isNonRefundable: item.product.isNonRefundable ?? item.isNonRefundable,
         customizationConfig: item.product.customizationConfig,
         product: item.product,

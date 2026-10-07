@@ -15,8 +15,21 @@ export const createOrderSchema = z.object({
               type: z.string().optional(),
               variant: z.string().trim().max(100).optional().or(z.literal('')),
               customizationNote: z.string().trim().max(2000).optional().or(z.literal('')),
+              selectedOptions: z
+                .array(
+                  z.object({
+                    groupId: z.string(),
+                    groupName: z.string().optional(),
+                    optionId: z.string(),
+                    optionLabel: z.string().optional(),
+                    priceAdjustment: z.number().optional(),
+                  }),
+                )
+                .optional(),
+              configurationSignature: z.string().optional(),
+              isNonRefundable: z.boolean().optional(),
             })
-            .strict(),
+            .passthrough(),
         )
         .min(1, 'Order must contain at least one item'),
       shippingAddress: z
@@ -29,17 +42,17 @@ export const createOrderSchema = z.object({
             .trim()
             .email('Please provide a valid email address')
             .transform((val) => canonicalizeEmail(val)),
-          pincode: z.string().trim().length(6, 'Pincode must be 6 digits'),
+          pincode: z.string().trim().min(5, 'Pincode must be at least 5 digits').max(10),
           locality: z.string().trim().min(1, 'Locality is required'),
           address: z.string().trim().min(1, 'Address is required'),
           landmark: z.string().trim().optional().or(z.literal('')),
           city: z.string().trim().min(1, 'City is required'),
           state: z.string().trim().min(1, 'State is required'),
-          country: z.string().trim().min(1, 'Country is required'),
-          type: z.enum(['home', 'work', 'other']).optional(),
+          country: z.string().trim().default('India'),
+          type: z.string().optional(),
           deliveryInstructions: z.string().trim().max(500).optional().or(z.literal('')),
         })
-        .strict(),
+        .passthrough(),
       couponCode: z.string().trim().max(50).optional().or(z.literal('')),
 
       needByDate: z.string().trim().max(50).optional().or(z.literal('')),
@@ -47,11 +60,9 @@ export const createOrderSchema = z.object({
       useWallet: z.boolean().optional(),
       idempotencyKey: z.string().trim().max(120).optional(),
       orderType: z.string().optional(),
-      isCustomOrder: z.boolean().optional(),
-      customOrderId: z.string().optional(),
       codVerificationToken: z.string().trim().optional(),
     })
-    .strict(),
+    .passthrough(),
 });
 
 export const verifyPaymentSchema = z.object({
@@ -86,6 +97,18 @@ export const validateTotalsSchema = z.object({
               productId: objectIdSchema,
               quantity: z.number().int().min(1).max(99, 'Quantity must be between 1 and 99'),
               type: z.string().optional(),
+              selectedOptions: z
+                .array(
+                  z.object({
+                    groupId: z.string().trim().min(1),
+                    groupName: z.string().trim().min(1),
+                    optionId: z.string().trim().min(1),
+                    optionLabel: z.string().trim().min(1),
+                    priceAdjustment: z.number().default(0),
+                  }),
+                )
+                .optional(),
+              configurationSignature: z.string().optional(),
             })
             .strict(),
         )

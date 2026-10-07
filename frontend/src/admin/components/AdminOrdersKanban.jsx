@@ -96,17 +96,6 @@ export function AdminOrdersKanban({
                             <span className="text-[11px] font-mono font-medium text-gray-500">
                               #{o.orderCode || o.id.substring(o.id.length - 8).toUpperCase()}
                             </span>
-                            {o.orderType && o.orderType !== 'purchase' && (
-                              <span
-                                className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border ${
-                                  o.orderType === 'rental'
-                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                                    : 'bg-purple-50 text-purple-700 border-purple-200'
-                                }`}
-                              >
-                                {o.orderType}
-                              </span>
-                            )}
                           </div>
                         </div>
                         <div className="relative inline-block shrink-0">

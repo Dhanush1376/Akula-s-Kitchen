@@ -132,8 +132,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
     // Protect primary super admin configured in env
     const protectedEmails = [
       (import.meta.env?.VITE_SUPER_ADMIN_EMAIL || '').trim().toLowerCase(),
-      'siriarts.superadmin@gmail.com', // safety fallback
-    ];
+    ].filter(Boolean);
     if (targetEmail && protectedEmails.includes(targetEmail.toLowerCase())) {
       return false;
     }
@@ -435,7 +434,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
 
                         <div className="min-w-0 flex-1">
                           <h3 className="text-[15px] font-bold text-[var(--admin-text-primary)] leading-tight truncate">
-                            {m.name || 'Curator'}
+                            {m.name || 'Team member'}
                           </h3>
                           <p className="text-[10px] text-[var(--admin-accent)] font-bold tracking-wider uppercase mt-1 mb-1.5">
                             {m.role}
@@ -770,7 +769,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
 
               <div className="border-t border-[var(--admin-border-subtle)] pt-4 mt-5 text-[10.5px] text-[var(--admin-text-tertiary)] leading-relaxed shrink-0">
                 <strong>SMTP Security Note:</strong> Members invited receive an explicit secure
-                email. Access rights to the studio panel are pending until the user logs into their
+                email. Access rights to the admin panel are pending until the user logs into their
                 account and clicks accept.
               </div>
             </motion.div>

@@ -8,7 +8,8 @@ const OrderEventSchema = new Schema(
     orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true, index: true },
     orderType: {
       type: String,
-      enum: ['purchase', 'rental', 'custom'],
+      enum: ['purchase'],
+      default: 'purchase',
       required: true,
     },
     eventType: { type: String, required: true, index: true },

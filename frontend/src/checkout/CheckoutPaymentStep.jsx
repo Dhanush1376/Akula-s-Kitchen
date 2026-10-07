@@ -236,7 +236,7 @@ export default function CheckoutPaymentStep() {
                 onClick={() => setPaymentOption('razorpay')}
                 className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden ${
                   paymentOption === 'razorpay'
-                    ? 'border-[#f7bb0e] ring-2 ring-[#f7bb0e]/20 bg-[#fffdfa] shadow-sm'
+                    ? 'border-[#283618] ring-2 ring-[#283618]/20 bg-[#f9faf7] shadow-sm'
                     : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md'
                 }`}
               >
@@ -246,12 +246,12 @@ export default function CheckoutPaymentStep() {
                     <div
                       className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-all ${
                         paymentOption === 'razorpay'
-                          ? 'border-neutral-950 bg-white'
+                          ? 'border-[#283618] bg-white'
                           : 'border-neutral-300 bg-white'
                       }`}
                     >
                       {paymentOption === 'razorpay' && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#f7bb0e]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#283618]" />
                       )}
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function CheckoutPaymentStep() {
                     <span className="text-[13px] font-semibold text-neutral-900 truncate">
                       Online Payment (UPI / Cards / Netbanking)
                     </span>
-                    <span className="bg-[#fef9e7] text-neutral-900 border border-[#fae182] text-[9.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider shrink-0">
+                    <span className="bg-[#283618]/10 text-[#283618] border border-[#283618]/20 text-[9.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider shrink-0">
                       Recommended
                     </span>
                   </div>
@@ -281,7 +281,7 @@ export default function CheckoutPaymentStep() {
                     ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-sm'
                     : 'cursor-pointer ' +
                       (paymentOption === 'cod'
-                        ? 'border-[#f7bb0e] ring-2 ring-[#f7bb0e]/20 bg-[#fffdfa] shadow-sm'
+                        ? 'border-[#283618] ring-2 ring-[#283618]/20 bg-[#f9faf7] shadow-sm'
                         : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md')
                 }`}
               >
@@ -291,12 +291,12 @@ export default function CheckoutPaymentStep() {
                     <div
                       className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-all ${
                         paymentOption === 'cod'
-                          ? 'border-neutral-950 bg-white'
+                          ? 'border-[#283618] bg-white'
                           : 'border-neutral-300 bg-white'
                       }`}
                     >
                       {paymentOption === 'cod' && (
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#f7bb0e]" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#283618]" />
                       )}
                     </div>
                   </div>
@@ -402,11 +402,11 @@ export default function CheckoutPaymentStep() {
             </motion.div>
           )}
 
-          <div className="flex gap-3 w-full">
+          <div className="flex gap-3 w-full items-center">
             <button
               onClick={() => setActiveStep(1)}
               disabled={isProcessing}
-              className="flex-1 bg-white text-neutral-800 font-extrabold uppercase tracking-wider text-xs py-3.5 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+              className="h-12 px-5 bg-white text-neutral-800 font-extrabold uppercase tracking-wider text-xs rounded-full border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -414,17 +414,27 @@ export default function CheckoutPaymentStep() {
             <button
               onClick={handleBottomSubmit}
               disabled={isButtonDisabled()}
-              className={`flex-2 py-3.5 sm:py-4 rounded-lg text-xs font-extrabold uppercase tracking-wider transition-all text-center flex items-center justify-center gap-2 ${
+              className={`flex-1 h-12 rounded-full pl-5 pr-1.5 py-1 text-xs font-extrabold uppercase tracking-wider transition-all flex items-center justify-between group ${
                 isButtonDisabled()
                   ? 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed'
                   : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] active:scale-[0.98] cursor-pointer'
               }`}
             >
-              {isProcessing && (
-                <div className="skeleton-box inline-block w-3.5 h-3.5 rounded-full" />
-              )}
-              <span>{getSubmitButtonLabel()}</span>
-              {!isProcessing && <ArrowRight className="w-4 h-4" />}
+              <div className="flex items-center gap-2">
+                {isProcessing && (
+                  <div className="w-3.5 h-3.5 border-2 border-neutral-950/30 border-t-neutral-950 rounded-full animate-spin shrink-0" />
+                )}
+                <span className="font-extrabold text-[12px] sm:text-[12.5px] uppercase tracking-wider text-neutral-950 truncate">
+                  {getSubmitButtonLabel()}
+                </span>
+              </div>
+              <span className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                <ArrowRight
+                  className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                />
+              </span>
             </button>
           </div>
         </div>

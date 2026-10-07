@@ -58,9 +58,18 @@ export function EmptyState({
       </p>
 
       {actionLabel && (
-        <button onClick={onAction} className="relative z-10 ak-btn ak-btn--dark cursor-pointer">
-          {actionLabel}
-          <ArrowRight size={16} strokeWidth={2.25} />
+        <button
+          onClick={onAction}
+          className="relative z-10 inline-flex items-center justify-between gap-3.5 pl-6 pr-2 py-1.5 min-h-[46px] rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12.5px] uppercase tracking-wider transition-all shadow-sm hover:shadow-md active:scale-[0.98] border border-[#283618] group select-none cursor-pointer"
+        >
+          <span>{actionLabel}</span>
+          <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+            <ArrowRight
+              className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+              strokeWidth={2.5}
+              aria-hidden="true"
+            />
+          </span>
         </button>
       )}
     </motion.div>

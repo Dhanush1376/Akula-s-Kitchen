@@ -4,15 +4,13 @@ import { getAuthCookieOptions, getAuthCookieName } from '../../config/cookieConf
 
 export const CUSTOMER_REFRESH_COOKIE = getAuthCookieName('akula_refresh_token');
 export const ADMIN_REFRESH_COOKIE = getAuthCookieName('akula_admin_refresh_token');
-export const LEGACY_CUSTOMER_REFRESH_COOKIE = getAuthCookieName('siri_refresh_token');
-export const LEGACY_ADMIN_REFRESH_COOKIE = getAuthCookieName('siri_admin_refresh_token');
 
 /**
  * Cookie options for refresh tokens.
- * path=/api covers both /api/v1/auth/* and legacy /api/auth/* routes.
+ * path=/ ensures the cookie is sent for all routes, proxies, and API versions.
  */
 export const getRefreshCookieOptions = (): CookieOptions => {
-  return getAuthCookieOptions(SessionAuthService.getRefreshTokenTtlMs(), '/api');
+  return getAuthCookieOptions(SessionAuthService.getRefreshTokenTtlMs(), '/');
 };
 
 export const setCustomerRefreshCookie = (res: Response, refreshToken: string) => {
@@ -21,11 +19,10 @@ export const setCustomerRefreshCookie = (res: Response, refreshToken: string) =>
 
 export const clearCustomerRefreshCookie = (res: Response) => {
   res.clearCookie(CUSTOMER_REFRESH_COOKIE, getRefreshCookieOptions());
-  res.clearCookie(LEGACY_CUSTOMER_REFRESH_COOKIE, getRefreshCookieOptions());
 };
 
 export const getAdminRefreshCookieOptions = (): CookieOptions => {
-  return getAuthCookieOptions(SessionAuthService.getRefreshTokenTtlMs(), '/api');
+  return getAuthCookieOptions(SessionAuthService.getRefreshTokenTtlMs(), '/');
 };
 
 export const setAdminRefreshCookie = (res: Response, refreshToken: string) => {
@@ -34,5 +31,4 @@ export const setAdminRefreshCookie = (res: Response, refreshToken: string) => {
 
 export const clearAdminRefreshCookie = (res: Response) => {
   res.clearCookie(ADMIN_REFRESH_COOKIE, getAdminRefreshCookieOptions());
-  res.clearCookie(LEGACY_ADMIN_REFRESH_COOKIE, getAdminRefreshCookieOptions());
 };

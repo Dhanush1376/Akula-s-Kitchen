@@ -74,7 +74,7 @@ export function Footer() {
     "Akula's Kitchen";
 
   // Dynamic CMS Link Mappings
-  let exploreLinks =
+  const exploreLinks =
     footer?.exploreLinks?.length > 0
       ? footer.exploreLinks
       : [
@@ -82,13 +82,8 @@ export function Footer() {
           { label: 'Special Today', href: '/' },
         ];
 
-  exploreLinks = exploreLinks.filter((link) => {
-    const href = (link?.href || link?.link || '').toLowerCase().trim();
-    const label = (link?.label || '').toLowerCase().trim();
-    return !href.includes('gallery') && !label.includes('gallery');
-  });
-
-  const studioLinks = (
+  // `studioLinks` is the persisted CMS key for the footer's second link column.
+  const quickLinks = (
     footer?.studioLinks?.length > 0
       ? footer.studioLinks
       : [
@@ -144,7 +139,7 @@ export function Footer() {
                   {logoText}
                 </span>
                 <span className="text-[10px] text-white/60 tracking-wider uppercase font-semibold">
-                  Handcrafted & Pure
+                  Fresh · Tasty · Healthy
                 </span>
               </div>
             </Link>
@@ -227,7 +222,7 @@ export function Footer() {
                 Kitchen
               </h3>
               <ul className="space-y-2.5">
-                {studioLinks.map((link, idx) => (
+                {quickLinks.map((link, idx) => (
                   <li key={idx}>
                     <Link
                       to={link.href || '#'}

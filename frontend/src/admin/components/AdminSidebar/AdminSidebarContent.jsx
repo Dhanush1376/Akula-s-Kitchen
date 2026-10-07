@@ -144,7 +144,7 @@ export function AdminSidebarContent({
                       .filter((item) => !item.roles || item.roles.includes(effectiveRole))
                       .map((item, ii) => {
                         // We only want exact match or if it's not a root hub path.
-                        // To prevent 'Active Rentals' from highlighting when 'Due Returns' is selected.
+                        // Prevents a hub entry from highlighting while one of its tabs is selected.
                         const currentFullPath = location.pathname + location.search;
                         const isExact = item.path.includes('?')
                           ? currentFullPath === item.path ||
@@ -155,7 +155,6 @@ export function AdminSidebarContent({
                         const isSubPath =
                           !item.path.includes('?') &&
                           item.path !== '/admin' &&
-                          item.path !== '/admin/rentals' &&
                           item.path !== '/admin/orders' &&
                           item.path !== '/admin/system' &&
                           item.path !== '/admin/analytics' &&
@@ -239,7 +238,7 @@ export function AdminSidebarContent({
               {recentlyEdited.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                  onClick={() => navigate(`/admin/products/edit/${p._id || p.id}`)}
                   className="w-full flex items-center gap-2.5 p-1.5 rounded-[var(--admin-radius-md)] hover:bg-[var(--admin-surface-hover)] text-left border border-transparent transition-all cursor-pointer group min-h-0"
                 >
                   <img

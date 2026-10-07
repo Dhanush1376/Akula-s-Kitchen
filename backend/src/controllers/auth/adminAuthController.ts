@@ -13,9 +13,9 @@ import {
 import User from '../../models/User';
 import {
   ADMIN_REFRESH_COOKIE,
-  LEGACY_ADMIN_REFRESH_COOKIE,
   setAdminRefreshCookie,
   clearAdminRefreshCookie,
+  setCustomerRefreshCookie,
 } from '../../utils/security/authCookies';
 import { regenerateCsrfToken, clearCsrfCookie } from '../../middleware/csrfMiddleware';
 import { getFrontendUrl } from '../../utils/getFrontendUrl';
@@ -29,6 +29,8 @@ const issueAdminSession = async (req: Request, res: Response, userId: string) =>
   const userAgent = req.headers['user-agent'] || '';
   const session = await SessionAuthService.createSession(user, userAgent);
   setAdminRefreshCookie(res, session.refreshToken);
+  // Also set customer refresh cookie for unified session across all routes
+  setCustomerRefreshCookie(res, session.refreshToken);
 
   // Regenerate CSRF token post-login to prevent session fixation
   const csrfToken = regenerateCsrfToken(res);
@@ -37,6 +39,7 @@ const issueAdminSession = async (req: Request, res: Response, userId: string) =>
     new ApiResponse(true, 'Admin authenticated successfully', {
       user: session.user,
       accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
       csrfToken,
     }),
   );
@@ -158,9 +161,7 @@ export const adminVerifyTwoFactor = asyncHandler(async (req: Request, res: Respo
 });
 
 export const adminLogout = asyncHandler(async (req: Request, res: Response) => {
-  const refreshToken = String(
-    req.cookies?.[ADMIN_REFRESH_COOKIE] || req.cookies?.[LEGACY_ADMIN_REFRESH_COOKIE] || '',
-  ).trim();
+  const refreshToken = String(req.cookies?.[ADMIN_REFRESH_COOKIE] || '').trim();
 
   logger.info('[ADMIN AUTH] Admin manual logout requested');
   if (refreshToken) {

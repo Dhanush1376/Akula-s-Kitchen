@@ -203,19 +203,19 @@ export class EmailBlockRenderer {
           oldPrice && oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : null;
 
         return `
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #e5e7eb; border-radius: 8px; margin: 16px 0; overflow: hidden; background-color: #ffffff;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #e5dcce; border-radius: 10px; margin: 16px 0; overflow: hidden; background-color: #faf7f0;">
             <tr>
-              <td width="140" valign="middle" align="center" style="padding: 12px; background-color: #f9fafb;">
-                ${imageSrc ? `<img src="${imageSrc}" alt="${title}" width="120" height="120" style="object-fit: cover; border-radius: 4px; display: block; border: 1px solid #e5e7eb;" />` : ''}
+              <td width="140" valign="middle" align="center" style="padding: 12px; background-color: #f4efe2;">
+                ${imageSrc ? `<img src="${imageSrc}" alt="${title}" width="120" height="120" style="object-fit: cover; border-radius: 6px; display: block; border: 1px solid #e5dcce;" />` : ''}
               </td>
               <td valign="middle" style="padding: 16px 20px;">
-                <div style="font-family: ${DEFAULT_EMAIL_FONT}; font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 6px;">${title}</div>
-                <div style="font-family: ${MONO_FONT}; font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 12px;">
+                <div style="font-family: ${DEFAULT_EMAIL_FONT}; font-size: 15px; font-weight: 700; color: #283618; margin-bottom: 6px;">${title}</div>
+                <div style="font-family: ${MONO_FONT}; font-size: 15px; font-weight: 700; color: #283618; margin-bottom: 12px;">
                   ₹${price.toLocaleString('en-IN')}
-                  ${oldPrice ? `<span style="font-size: 13px; font-weight: normal; color: #9ca3af; text-decoration: line-through; margin-left: 6px;">₹${oldPrice.toLocaleString('en-IN')}</span>` : ''}
-                  ${discountPct ? `<span style="font-size: 11px; background-color: #f3f4f6; color: #111827; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 600;">${discountPct}% OFF</span>` : ''}
+                  ${oldPrice ? `<span style="font-size: 13px; font-weight: normal; color: #606c38; text-decoration: line-through; margin-left: 6px;">₹${oldPrice.toLocaleString('en-IN')}</span>` : ''}
+                  ${discountPct ? `<span style="font-size: 11px; background-color: #f7bb0e; color: #283618; padding: 2px 8px; border-radius: 999px; margin-left: 6px; font-weight: 800;">${discountPct}% OFF</span>` : ''}
                 </div>
-                <a href="${productUrl}" target="_blank" style="display: inline-block; background-color: #111827; color: #ffffff !important; padding: 8px 18px; font-size: 12px; font-weight: 500; text-decoration: none; border-radius: 6px; font-family: ${DEFAULT_EMAIL_FONT};">Shop Now</a>
+                <a href="${productUrl}" target="_blank" style="display: inline-block; background-color: #283618; color: #ffffff !important; padding: 10px 22px; font-size: 13px; font-weight: 700; text-decoration: none; border-radius: 999px; font-family: ${DEFAULT_EMAIL_FONT};">Shop Now</a>
               </td>
             </tr>
           </table>
@@ -239,11 +239,11 @@ export class EmailBlockRenderer {
           );
 
           gridHtml += `
-            <td width="48%" valign="top" style="background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; text-align: center;">
-              ${prod.imageSrc ? `<img src="${prod.imageSrc}" alt="${prod.title || ''}" width="200" height="160" style="width: 100%; max-height: 160px; object-fit: cover; border-radius: 4px; display: block; margin-bottom: 12px; border: 1px solid #e5e7eb;" />` : ''}
-              <div style="font-family: ${DEFAULT_EMAIL_FONT}; font-size: 13px; font-weight: 600; color: #111827; height: 36px; overflow: hidden; margin-bottom: 6px;">${prod.title || 'Product'}</div>
-              <div style="font-family: ${MONO_FONT}; font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 12px;">₹${price.toLocaleString('en-IN')}</div>
-              <a href="${pUrl}" target="_blank" style="display: inline-block; background-color: #111827; color: #ffffff !important; padding: 8px 16px; font-size: 12px; font-weight: 500; text-decoration: none; border-radius: 6px; font-family: ${DEFAULT_EMAIL_FONT};">View Details</a>
+            <td width="48%" valign="top" style="background-color: #faf7f0; border: 1px solid #e5dcce; border-radius: 10px; padding: 16px; text-align: center;">
+              ${prod.imageSrc ? `<img src="${prod.imageSrc}" alt="${prod.title || ''}" width="200" height="160" style="width: 100%; max-height: 160px; object-fit: cover; border-radius: 6px; display: block; margin-bottom: 12px; border: 1px solid #e5dcce;" />` : ''}
+              <div style="font-family: ${DEFAULT_EMAIL_FONT}; font-size: 13px; font-weight: 700; color: #283618; height: 36px; overflow: hidden; margin-bottom: 6px;">${prod.title || 'Product'}</div>
+              <div style="font-family: ${MONO_FONT}; font-size: 14px; font-weight: 700; color: #283618; margin-bottom: 12px;">₹${price.toLocaleString('en-IN')}</div>
+              <a href="${pUrl}" target="_blank" style="display: inline-block; background-color: #283618; color: #ffffff !important; padding: 8px 18px; font-size: 12px; font-weight: 700; text-decoration: none; border-radius: 999px; font-family: ${DEFAULT_EMAIL_FONT};">View Details</a>
             </td>
             ${idx % 2 === 0 && idx < products.length - 1 ? `<td width="4%"></td>` : ''}
           `;
@@ -322,13 +322,13 @@ export class EmailBlockRenderer {
         return `
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
             <tr>
-              <td align="center" style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px 20px;">
-                <span style="display: block; color: #6b7280; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-family: ${DEFAULT_EMAIL_FONT};">EXCLUSIVE OFFER</span>
-                <h3 style="color: #111827; font-size: 18px; font-weight: 700; margin: 0 0 14px 0; font-family: ${DEFAULT_EMAIL_FONT};">${discountText}</h3>
-                <div style="display: inline-block; background-color: #ffffff; border: 1px solid #d1d5db; padding: 10px 24px; font-family: ${MONO_FONT}; font-size: 20px; font-weight: 700; color: #111827; letter-spacing: 4px; border-radius: 6px; margin-bottom: 8px;">
+              <td align="center" style="background-color: #faf7f0; border: 1.5px solid #283618; border-top: 4px solid #f7bb0e; border-radius: 12px; padding: 24px 20px;">
+                <span style="display: block; color: #606c38; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-family: ${DEFAULT_EMAIL_FONT};">EXCLUSIVE OFFER</span>
+                <h3 style="color: #283618; font-size: 19px; font-weight: 800; margin: 0 0 14px 0; font-family: ${DEFAULT_EMAIL_FONT};">${discountText}</h3>
+                <div style="display: inline-block; background-color: #fdfbf5; border: 2px dashed #283618; padding: 10px 24px; font-family: ${MONO_FONT}; font-size: 22px; font-weight: 800; color: #283618; letter-spacing: 5px; border-radius: 8px; margin-bottom: 8px;">
                   ${code}
                 </div>
-                <div style="color: #6b7280; font-size: 12px; font-family: ${DEFAULT_EMAIL_FONT}; margin-top: 6px;">${expiry}</div>
+                <div style="color: #606c38; font-size: 12.5px; font-family: ${DEFAULT_EMAIL_FONT}; margin-top: 6px;">${expiry}</div>
               </td>
             </tr>
           </table>
@@ -338,14 +338,14 @@ export class EmailBlockRenderer {
       case 'button': {
         const label = this.interpolateVariables(content.label || 'Learn More', context);
         const url = this.wrapUrl(content.url || '/', context, block.id);
-        const bgColor = content.bgColor || '#111827';
+        const bgColor = content.bgColor || '#283618';
         const textColor = content.textColor || '#ffffff';
 
         return `
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
             <tr>
               <td align="${content.align || 'center'}">
-                <a href="${url}" target="_blank" style="display: inline-block; background-color: ${bgColor}; color: ${textColor} !important; padding: 12px 24px; font-family: ${DEFAULT_EMAIL_FONT}; font-size: 14px; font-weight: 500; text-decoration: none; border-radius: 6px;">
+                <a href="${url}" target="_blank" style="display: inline-block; background-color: ${bgColor}; color: ${textColor} !important; padding: 13px 28px; font-family: ${DEFAULT_EMAIL_FONT}; font-size: 14px; font-weight: 800; text-decoration: none; border-radius: 999px; box-shadow: 0 4px 12px rgba(40, 54, 24, 0.2);">
                   ${label}
                 </a>
               </td>
@@ -358,7 +358,7 @@ export class EmailBlockRenderer {
         return `
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
             <tr>
-              <td style="border-top: 1px solid #f3f4f6;"></td>
+              <td style="border-top: 1px solid #e8e1cf;"></td>
             </tr>
           </table>
         `;
@@ -383,16 +383,21 @@ export class EmailBlockRenderer {
         const unsubscribeUrl = `${backendUrl}/api/v1/notifications/unsubscribe?email=${encodeURIComponent(recipientEmail)}`;
 
         return `
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding-top: 24px; border-top: 1px solid #f3f4f6; margin-top: 32px; font-family: ${DEFAULT_EMAIL_FONT}; font-size: 12px; color: #6b7280; text-align: center; line-height: 1.6;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding-top: 24px; border-top: 2px solid #e8e1cf; margin-top: 32px; font-family: ${DEFAULT_EMAIL_FONT}; font-size: 12.5px; color: #606c38; text-align: center; line-height: 1.6;">
             <tr>
               <td align="center">
-                <p style="margin: 0 0 6px 0; font-weight: 600; color: #111827;">${storeName}</p>
-                <p style="margin: 0 0 8px 0; color: #6b7280;">Need help? Reach us at <a href="mailto:${supportEmail}" style="color: #111827; text-decoration: underline;">${supportEmail}</a></p>
-                <p style="margin: 0 0 8px 0; color: #6b7280;">
-                  You are receiving this email because you opted in to updates from ${storeName}.
+                <p style="margin: 0 0 6px 0; font-weight: 800; font-size: 14px; color: #283618;">${storeName}</p>
+                <div style="margin: 8px 0 10px 0;">
+                  <a href="https://akulas.kitchen" target="_blank" style="display: inline-block; background-color: #f7bb0e; color: #283618 !important; padding: 4px 14px; border-radius: 999px; text-decoration: none; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; border: 1px solid #dca306;">
+                    akulas.kitchen
+                  </a>
+                </div>
+                <p style="margin: 0 0 8px 0; color: #606c38;">Need help? Reach us at <a href="mailto:${supportEmail}" style="color: #283618; font-weight: 700; text-decoration: underline;">${supportEmail}</a></p>
+                <p style="margin: 0 0 8px 0; color: #606c38; font-size: 11.5px;">
+                  You are receiving this communication because you opted in to updates from ${storeName}.
                 </p>
                 <p style="margin: 0;">
-                  <a href="${unsubscribeUrl}" target="_blank" style="color: #6b7280; text-decoration: underline;">Unsubscribe from marketing emails</a>
+                  <a href="${unsubscribeUrl}" target="_blank" style="color: #606c38; font-size: 11.5px; text-decoration: underline;">Unsubscribe from marketing emails</a>
                 </p>
               </td>
             </tr>
@@ -440,7 +445,7 @@ export class EmailBlockRenderer {
         }
       } else {
         bodyContent = `
-          <div style="font-family: ${DEFAULT_EMAIL_FONT}; padding: 20px; text-align: center; color: #6b7280;">
+          <div style="font-family: ${DEFAULT_EMAIL_FONT}; padding: 20px; text-align: center; color: #606c38;">
             <p>No content specified for this campaign.</p>
           </div>
         `;
@@ -461,23 +466,23 @@ export class EmailBlockRenderer {
           <meta http-equiv="X-UA-Compatible" content="IE=edge">
           <meta name="color-scheme" content="light dark">
           <meta name="supported-color-schemes" content="light dark">
-          <title>${context.campaign?.title || 'Special Update'}</title>
+          <title>${context.campaign?.title || "Akula's Kitchen"}</title>
           <style type="text/css">
             body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
             table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
             img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
             table { border-collapse: collapse !important; }
-            body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f9fafb; color: #111827; font-family: ${DEFAULT_EMAIL_FONT}; }
+            body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f7f4ec; color: #283618; font-family: ${DEFAULT_EMAIL_FONT}; }
             @media screen and (max-width: 600px) {
               .main-card { padding: 24px 16px !important; }
             }
           </style>
         </head>
-        <body style="margin: 0; padding: 24px 10px; background-color: #f9fafb; font-family: ${DEFAULT_EMAIL_FONT};">
+        <body style="margin: 0; padding: 24px 10px; background-color: #f7f4ec; font-family: ${DEFAULT_EMAIL_FONT};">
           <center>
             <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto;">
               <tr>
-                <td class="main-card" style="background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 36px 40px; text-align: left;">
+                <td class="main-card" style="background-color: #ffffff; border: 1px solid #e4dac7; border-radius: 16px; padding: 36px 40px; text-align: left; box-shadow: 0 4px 20px rgba(40, 54, 24, 0.07);">
                   ${bodyContent}
                   ${openPixel}
                 </td>

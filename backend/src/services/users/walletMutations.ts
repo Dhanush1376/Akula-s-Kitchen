@@ -20,8 +20,8 @@ export const creditWalletBalance = async (
   return null;
 };
 
-/** Atomic siriCoins credit. */
-export const creditSiriCoins = async (
+/** Atomic rewardCoins credit. */
+export const creditRewardCoins = async (
   userId: mongoose.Types.ObjectId | string,
   amount: number,
   session?: ClientSession,
@@ -29,21 +29,21 @@ export const creditSiriCoins = async (
   if (amount <= 0) return User.findById(userId).session(session || null);
   return User.findByIdAndUpdate(
     userId,
-    { $inc: { siriCoins: amount } },
+    { $inc: { rewardCoins: amount } },
     { returnDocument: 'after', session },
   );
 };
 
-/** Atomic siriCoins debit — throws if balance would go negative. */
-export const debitSiriCoins = async (
+/** Atomic rewardCoins debit — throws if balance would go negative. */
+export const debitRewardCoins = async (
   userId: mongoose.Types.ObjectId | string,
   amount: number,
   session?: ClientSession,
 ) => {
   if (amount <= 0) return User.findById(userId).session(session || null);
   const updated = await User.findOneAndUpdate(
-    { _id: userId, siriCoins: { $gte: amount } },
-    { $inc: { siriCoins: -amount } },
+    { _id: userId, rewardCoins: { $gte: amount } },
+    { $inc: { rewardCoins: -amount } },
     { returnDocument: 'after', session },
   );
   if (!updated) {

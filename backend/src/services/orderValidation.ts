@@ -2,6 +2,7 @@ import Product from '../models/Product';
 import ApiError from '../utils/ApiError';
 import storeSettingsService from '../services/StoreSettingsService';
 import { computeOrderTotals } from './orders/orderTotals';
+import { ProductConfigurationService } from './products/ProductConfigurationService';
 
 export class OrderValidationService {
   static async validateTotals(userId: string, data: any) {
@@ -45,14 +46,12 @@ export class OrderValidationService {
     ] as any[];
 
     const products = await Product.find({ _id: { $in: productIds } }).select(
-      'title price stock category isActive rentalEnabled rentalPricing securityDeposit isDepositRefundable',
+      'title price stock category isActive optionGroups',
     );
 
     const productsById = new Map<string, any>(
       products.map((product: any) => [product._id.toString(), product]),
     );
-
-    let depositTotal = 0;
 
     // 1. Validate stock availability and calculate actual subtotal from DB
     for (const item of items) {
@@ -65,27 +64,23 @@ export class OrderValidationService {
         throw new ApiError(400, `Insufficient stock for product: ${product.title}`);
       }
 
-      let itemPrice = product.price;
-
-      if (item.type === 'rental') {
-        if (!product.rentalEnabled)
-          throw new ApiError(400, `Product is not available for rent: ${product.title}`);
-
-        if (
-          product.rentalPricing?.rentalPrice !== undefined &&
-          product.rentalPricing?.rentalPrice !== null
-        ) {
-          itemPrice = product.rentalPricing.rentalPrice;
+      let unitPrice = product.price;
+      if (product.optionGroups && product.optionGroups.length > 0) {
+        const configResult = ProductConfigurationService.validateAndCalculateConfiguration(
+          product,
+          item.selectedOptions || [],
+        );
+        if (!configResult.isValid) {
+          throw new ApiError(
+            400,
+            `Configuration error for "${product.title}": ${configResult.errors.join(', ')}`,
+          );
         }
-
-        // Add security deposit
-        if (product.securityDeposit) {
-          depositTotal += product.securityDeposit * item.quantity;
-        }
+        unitPrice = configResult.configuredUnitPrice;
       }
 
-      item._calculatedPrice = itemPrice;
-      subtotal += itemPrice * item.quantity;
+      item._calculatedPrice = unitPrice;
+      subtotal += unitPrice * item.quantity;
     }
 
     const discount = 0;
@@ -95,8 +90,6 @@ export class OrderValidationService {
 
     const totals = computeOrderTotals({
       subtotal,
-      discount: 0,
-      depositTotal,
       isCod,
       codFee: settings.payments.codFee,
       enableFreeShipping: settings.shipping.enableFreeShipping,
@@ -138,7 +131,6 @@ export class OrderValidationService {
       coinsEarned: coinsToEarn,
       cashbackEarned: estimatedCashback,
       total,
-      depositTotal,
     };
   }
 }

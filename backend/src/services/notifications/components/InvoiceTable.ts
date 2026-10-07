@@ -39,10 +39,6 @@ export const InvoiceTable = (rows: InvoiceRow[], subtotal: number, tax: number, 
           <td align="right" style="padding: 12px 8px; color: #111827; font-size: 14px; font-weight: 500;">₹${subtotal}</td>
         </tr>
         <tr>
-          <td colspan="3" align="right" style="padding: 8px 8px; color: #6b7280; font-size: 14px;">Tax</td>
-          <td align="right" style="padding: 8px 8px; color: #111827; font-size: 14px; font-weight: 500;">₹${tax}</td>
-        </tr>
-        <tr>
           <td colspan="3" align="right" style="padding: 16px 8px 8px 8px; color: #111827; font-size: 16px; font-weight: 600;">Total</td>
           <td align="right" style="padding: 16px 8px 8px 8px; color: #111827; font-size: 16px; font-weight: 600;">₹${total}</td>
         </tr>

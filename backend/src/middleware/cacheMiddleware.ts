@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getPublicCacheVersion } from '../utils/cache/cacheVersion';
+import { ADMIN_REFRESH_COOKIE, CUSTOMER_REFRESH_COOKIE } from '../utils/security/authCookies';
 
 export const cacheResponse = (_durationSeconds: number) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -11,8 +12,8 @@ export const cacheResponse = (_durationSeconds: number) => {
       const version = await getPublicCacheVersion();
       const isAuthRequest =
         req.headers.authorization ||
-        req.cookies?.akula_refresh_token ||
-        req.cookies?.siri_refresh_token;
+        req.cookies?.[CUSTOMER_REFRESH_COOKIE] ||
+        req.cookies?.[ADMIN_REFRESH_COOKIE];
 
       res.setHeader('ETag', `"api-v${version}"`);
       res.setHeader('Vary', 'Authorization, Cookie');

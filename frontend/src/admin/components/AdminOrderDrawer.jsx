@@ -315,7 +315,7 @@ export function AdminOrderDrawer({
           {/* 2. Items List */}
           <div className="space-y-3">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] pl-1">
-              Curated Items
+              Items
             </h4>
             <div className="space-y-2">
               {selectedOrder.items.map((item, idx) => (
@@ -337,37 +337,24 @@ export function AdminOrderDrawer({
                     )}
                     <div>
                       <p className="text-[13px] font-bold text-[var(--admin-text-primary)] line-clamp-1">
-                        {item.name}
+                        {item.name || item.title}
                       </p>
+                      {item.selectedOptions && item.selectedOptions.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1 mb-1">
+                          {item.selectedOptions.map((opt, optIdx) => (
+                            <span
+                              key={optIdx}
+                              className="text-[10px] font-medium bg-amber-50 text-amber-900 border border-amber-200/60 px-1.5 py-0.5 rounded"
+                            >
+                              {opt.groupName}: <strong>{opt.optionLabel}</strong>
+                              {opt.priceAdjustment > 0 && ` (+₹${opt.priceAdjustment})`}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <p className="text-[11px] font-medium text-[var(--admin-text-secondary)] mt-0.5 bg-[var(--admin-surface-muted)] inline-block px-1.5 py-0.5 rounded-[4px] border border-[var(--admin-border-subtle)]">
                         Qty: {item.qty || item.quantity || 1}
                       </p>
-                      {item.type === 'rental' && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          <span
-                            className={`text-[9px] px-1.5 py-0.5 rounded-[4px] border font-bold uppercase tracking-wider ${
-                              item.rentalInfo?.inspectionStatus === 'Inspected'
-                                ? 'bg-green-100 text-green-700 border-green-200'
-                                : item.rentalInfo?.inspectionStatus === 'Damage Reported'
-                                  ? 'bg-red-100 text-red-700 border-red-200'
-                                  : 'bg-amber-100 text-amber-700 border-amber-200'
-                            }`}
-                          >
-                            Insp: {item.rentalInfo?.inspectionStatus || 'Pending'}
-                          </span>
-                          <span
-                            className={`text-[9px] px-1.5 py-0.5 rounded-[4px] border font-bold uppercase tracking-wider ${
-                              item.rentalInfo?.refundStatus === 'Refunded'
-                                ? 'bg-green-100 text-green-700 border-green-200'
-                                : item.rentalInfo?.refundStatus === 'Deducted'
-                                  ? 'bg-purple-100 text-purple-700 border-purple-200'
-                                  : 'bg-amber-100 text-amber-700 border-amber-200'
-                            }`}
-                          >
-                            Ref: {item.rentalInfo?.refundStatus || 'Pending'}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                   <span className="text-[12px] font-bold text-[var(--admin-text-primary)] shrink-0 ml-3">

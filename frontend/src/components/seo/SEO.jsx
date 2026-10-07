@@ -94,13 +94,12 @@ export function SEO({
   const globalSeoKeywords = seo?.globalKeywords;
   const globalSeoOgImage = seo?.ogImage;
 
-  // Clean title to avoid duplicate "| Akula's Kitchen" or stale store name suffix
+  // Clean title to avoid a duplicated "| <store name>" suffix
+  const escapedSiteName = String(siteName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const cleanTitle = title
     ? title
-        .replace(new RegExp(`\\s*\\|?\\s*${siteName}$`, 'i'), '')
+        .replace(new RegExp(`\\s*\\|?\\s*${escapedSiteName}$`, 'i'), '')
         .replace(/\s*\|\s*Akula's Kitchen$/i, '')
-        .replace(/\s*\|\s*Siri Arts & Crafts$/i, '')
-        .replace(/\s*\|\s*Siri Arts and Crafts$/i, '')
         .trim()
     : '';
 
@@ -351,12 +350,6 @@ export function SEO({
                 {
                   '@type': 'SiteNavigationElement',
                   position: 2,
-                  name: 'Menu & Services',
-                  url: `${siteUrl}/events`,
-                },
-                {
-                  '@type': 'SiteNavigationElement',
-                  position: 3,
                   name: 'Contact',
                   url: `${siteUrl}/contact`,
                 },

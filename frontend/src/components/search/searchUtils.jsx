@@ -15,8 +15,6 @@ export const getTypeLabel = (type) => {
   switch (type) {
     case 'product':
       return 'Product';
-    case 'event':
-      return 'Event';
     case 'category':
       return 'Category';
     default:

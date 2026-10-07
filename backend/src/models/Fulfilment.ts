@@ -20,7 +20,7 @@ export interface IFulfilment extends Document {
   fulfilmentNumber: string;
   transactionId: mongoose.Types.ObjectId;
   customer: mongoose.Types.ObjectId;
-  domain: 'purchase' | 'rental' | 'event' | 'custom';
+  domain: 'purchase';
   status: ITrackingEvent['status'];
   trackingNumber?: string;
   carrier?: string;
@@ -47,7 +47,7 @@ const FulfilmentSchema = new Schema(
     customer: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     domain: {
       type: String,
-      enum: ['purchase', 'rental', 'event', 'custom'],
+      enum: ['purchase'],
       required: true,
       index: true,
     },

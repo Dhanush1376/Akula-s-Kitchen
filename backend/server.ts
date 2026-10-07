@@ -48,6 +48,7 @@ import {
   setSocketNotificationHandler,
 } from './src/services/notificationService';
 import { initStoreConfig } from './src/config/storeConfig';
+import { auditSenderConfig } from './src/config/emailSender';
 
 // Wire up circular dependencies
 setAlertingNotificationHandlers(sendDirectEmail, createAdminNotification);
@@ -207,6 +208,14 @@ const initializeNonCriticalServices = async (httpServer: Server) => {
       logger.error(`[STARTUP] Serviceability seeding error: ${err.message}`);
     }
 
+    // 7.b Ensure Default Categories in database
+    try {
+      const { seedCategories } = require('./src/scripts/seedCategories');
+      await seedCategories();
+    } catch (err: any) {
+      logger.error(`[STARTUP] Categories seeding error: ${err.message}`);
+    }
+
     // 8. Auto-generate sitemap
     generateSitemap().catch((err: any) =>
       logger.error(`[BOOT SITEMAP] Initial sitemap generation failed: ${err.message}`),
@@ -232,6 +241,8 @@ const startServer = async () => {
 
     // Prime store identity configuration cache
     await initStoreConfig();
+    // Flag a personal-mailbox production sender (warning only, never blocks startup)
+    auditSenderConfig();
 
     // 2. Start Express Server
     server = app.listen(PORT, '0.0.0.0', () => {

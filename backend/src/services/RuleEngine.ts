@@ -162,7 +162,7 @@ export class RuleEngine {
 
         case 'multiplier_points':
           // Multiplier logic usually applies inline during purchase processing,
-          // but if it applies a flat bonus, we can add it to user's siriCoins.
+          // but if it applies a flat bonus, we can add it to user's rewardCoins.
           break;
 
         case 'tier_upgrade':

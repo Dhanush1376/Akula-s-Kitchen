@@ -11,7 +11,8 @@ import RefundRecord from '../../src/models/RefundRecord';
 
 async function runIndexBuild() {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/eventdecor';
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    if (!mongoUri) throw new Error('MONGO_URI is not set; refusing to guess a database.');
     await mongoose.connect(mongoUri);
     logger.info('Connected to MongoDB for index building.');
 

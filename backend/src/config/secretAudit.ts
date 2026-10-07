@@ -60,7 +60,6 @@ export const secretLeakInterceptor = (req: Request, res: Response, next: NextFun
           req.originalUrl.includes('/api/auth') ||
           req.originalUrl.includes('/api/v1/auth') ||
           req.originalUrl.includes('/api/v1/orders') ||
-          req.originalUrl.includes('/api/v1/event-bookings') ||
           req.originalUrl.includes('/api/v1/products') ||
           req.originalUrl.includes('/api/v1/warehouse') ||
           req.originalUrl.includes('/api/v1/shipping');
@@ -104,7 +103,6 @@ export const secretLeakInterceptor = (req: Request, res: Response, next: NextFun
       logger.debug('[CART_RESPONSE_TRACE][FINAL_BODY]', {
         requestId: res.locals.forensicRequestId || 'unknown',
         purchaseItemCount: body?.data?.purchaseCart?.items?.length ?? 0,
-        rentalItemCount: body?.data?.rentalCart?.items?.length ?? 0,
         topLevelKeys: Object.keys(body || {}),
         dataKeys: body?.data ? Object.keys(body.data) : [],
         route: req.originalUrl,

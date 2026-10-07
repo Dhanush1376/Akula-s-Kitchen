@@ -118,7 +118,7 @@ export function Contact() {
     ...(addressDisplay
       ? [
           {
-            title: 'Studio Address',
+            title: 'Kitchen Address',
             value: addressDisplay,
             icon: 'location_on',
             link:
@@ -294,7 +294,7 @@ export function Contact() {
                     Message Received
                   </h2>
                   <p className="font-body text-on-surface-variant/70 text-xs mb-8 max-w-[260px] leading-relaxed">
-                    Our design studio will review your inquiry and respond within 24 business hours.
+                    Our team will review your message and respond within 24 business hours.
                   </p>
                   <button
                     onClick={() => setFormState('idle')}

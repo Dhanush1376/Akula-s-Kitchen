@@ -8,21 +8,19 @@
  * - Gmail SMTP also gets blocked by cloud providers due to IP reputation.
  * - HTTP API (HTTPS port 443) is NEVER blocked - it's regular web traffic.
  *
- * SETUP INSTRUCTIONS:
- * 1. Sign up FREE at https://www.brevo.com (no credit card needed, 300 emails/day)
- * 2. Go to Account → SMTP & API → API Keys → Create new API Key
- * 3. Set environment variable: BREVO_API_KEY=your_key_here
- * 4. Go to Senders & IPs → Senders → Add your Gmail as a verified sender
- * 5. Set SMTP_FROM="Akula's Kitchen <your-gmail@gmail.com>"
+ * SETUP:
+ * 1. Brevo → SMTP & API → API Keys → create a REST API key and set BREVO_API_KEY.
+ * 2. Authenticate the brand domain (akulas.kitchen) in Brevo and add its DNS records.
+ * 3. Set the sender: BREVO_SENDER_EMAIL=orders@akulas.kitchen, BREVO_SENDER_NAME, and
+ *    optionally BREVO_REPLY_TO_EMAIL. Sender rules live in config/emailSender.ts.
+ * Full steps: docs/email-brand-authentication.md
  *
- * OPTIONAL - Keep SMTP as fallback for local dev:
- * SMTP_USER=your-gmail@gmail.com
- * SMTP_PASS=your-app-password
+ * OPTIONAL - SMTP fallback for local dev: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
  */
 
 import logger from '../config/logger';
 import dns from 'dns';
-import { getStoreConfigSync } from '../config/storeConfig';
+import { resolveSender } from '../config/emailSender';
 
 // Force Node.js >= 17 to prefer IPv4 first (fixes ENETUNREACH on IPv6 to Gmail SMTP)
 if (dns.setDefaultResultOrder) {
@@ -33,8 +31,10 @@ export interface EmailPayload {
   to: string;
   subject: string;
   html: string;
+  /** Sender address override; honoured only on the configured sending domain. */
   from?: string;
   fromName?: string;
+  replyTo?: string;
   attachments?: {
     filename: string;
     content: Buffer | string;
@@ -50,15 +50,30 @@ export const sendViaBrevo = async (payload: EmailPayload): Promise<{ messageId: 
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) throw new Error('BREVO_API_KEY missing');
 
-  const senderEmail = payload.from || process.env.BREVO_SENDER_EMAIL || 'noreply@akulas.kitchen';
-  const senderName = payload.fromName || getStoreConfigSync().name || "Akula's Kitchen";
+  // Brevo HTTP API requires a REST API key (starts with "xkeysib-").
+  // Keys starting with "xsmtpsib-" are SMTP passwords and will always fail with 401 Unauthorized.
+  if (apiKey.startsWith('xsmtpsib-')) {
+    throw new Error(
+      'BREVO_API_KEY is an SMTP relay key (starts with "xsmtpsib-"), not a REST API key (which starts with "xkeysib-"). Brevo HTTP API requires an API key.',
+    );
+  }
+
+  const sender = resolveSender({
+    email: payload.from,
+    name: payload.fromName,
+    replyTo: payload.replyTo,
+  });
 
   const body: any = {
-    sender: { name: senderName, email: senderEmail },
+    sender: { name: sender.name, email: sender.email },
     to: [{ email: payload.to }],
     subject: payload.subject,
     htmlContent: payload.html,
   };
+
+  if (sender.replyTo) {
+    body.replyTo = { email: sender.replyTo };
+  }
 
   if (payload.headers && Object.keys(payload.headers).length > 0) {
     body.headers = payload.headers;
@@ -91,7 +106,7 @@ export const sendViaBrevo = async (payload: EmailPayload): Promise<{ messageId: 
 };
 
 /**
- * Send email via Nodemailer SMTP (works locally, may be blocked on some cloud providers)
+ * Send email via Nodemailer SMTP with persistent connection pooling
  */
 let cachedTransporter: any = null;
 
@@ -100,39 +115,57 @@ export const sendViaSMTP = async (payload: EmailPayload): Promise<{ messageId: s
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const smtpPort = Number(process.env.SMTP_PORT) || 587;
+  const configuredPort = Number(process.env.SMTP_PORT);
+  // Default to 465 (direct SSL) for Gmail if not explicitly overridden, or 587
+  const smtpPort = configuredPort || (smtpHost.includes('gmail') ? 465 : 587);
+  const isSecure = smtpPort === 465;
 
   if (!cachedTransporter) {
     cachedTransporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      secure: smtpPort === 465,
+      secure: isSecure,
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
+      rateDelta: 1000,
+      rateLimit: 5,
       auth: { user: smtpUser, pass: smtpPass },
-      tls: { rejectUnauthorized: false }, // Helps with some local firewall setups
+      tls: { rejectUnauthorized: false }, // Helps with local firewalls / VPNs
       // Force IPv4 to prevent ENETUNREACH issues when IPv6 is broken locally
       family: 4,
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 8000,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 15000,
     });
   }
 
   const transporter = cachedTransporter;
 
-  const senderEmail = payload.from || process.env.SMTP_USER || 'noreply@akulas.kitchen';
-  const senderName = payload.fromName || getStoreConfigSync().name || "Akula's Kitchen";
-
-  const info = await transporter.sendMail({
-    from: `"${senderName}" <${senderEmail}>`,
-    to: payload.to,
-    subject: payload.subject,
-    html: payload.html,
-    headers: payload.headers,
-    attachments: payload.attachments,
+  const sender = resolveSender({
+    email: payload.from,
+    name: payload.fromName,
+    replyTo: payload.replyTo,
   });
 
-  logger.info(`[SMTP SUCCESS] Email sent to ${payload.to}. MessageId: ${info.messageId}`);
-  return { messageId: info.messageId };
+  try {
+    const info = await transporter.sendMail({
+      from: `"${sender.name}" <${sender.email}>`,
+      replyTo: sender.replyTo,
+      to: payload.to,
+      subject: payload.subject,
+      html: payload.html,
+      headers: payload.headers,
+      attachments: payload.attachments,
+    });
+
+    logger.info(`[SMTP SUCCESS] Email sent to ${payload.to}. MessageId: ${info.messageId}`);
+    return { messageId: info.messageId };
+  } catch (err: any) {
+    // Reset cached transporter so broken connections are purged immediately
+    cachedTransporter = null;
+    throw err;
+  }
 };
 
 /**
@@ -187,10 +220,11 @@ export const resolveAuthoritativeRecipient = (
  * Get current configured provider status and diagnostics
  */
 export const getProviderStatus = () => {
-  const hasBrevo = Boolean(process.env.BREVO_API_KEY);
+  const brevoKey = process.env.BREVO_API_KEY;
+  const isBrevoHttpEligible = Boolean(brevoKey && !brevoKey.startsWith('xsmtpsib-'));
   const hasSMTP = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
   let activeProvider = 'ethereal_dev';
-  if (hasBrevo) {
+  if (isBrevoHttpEligible) {
     activeProvider = 'brevo_https';
   } else if (hasSMTP) {
     activeProvider = 'smtp';
@@ -198,7 +232,10 @@ export const getProviderStatus = () => {
 
   return {
     activeProvider,
-    brevoConfigured: hasBrevo,
+    brevoConfigured: isBrevoHttpEligible,
+    brevoKeyWarning: brevoKey?.startsWith('xsmtpsib-')
+      ? 'BREVO_API_KEY is an SMTP relay key (starts with "xsmtpsib-"). Brevo HTTP API requires an API key starting with "xkeysib-".'
+      : null,
     smtpConfigured: hasSMTP,
     nodeEnv: process.env.NODE_ENV || 'development',
     marketingTestMode: process.env.MARKETING_EMAIL_TEST_MODE === 'true',
@@ -224,7 +261,10 @@ export const sendEmail = async (
   const payload = resolvedPayload;
   const errors: string[] = [];
 
-  if (process.env.BREVO_API_KEY) {
+  const brevoKey = process.env.BREVO_API_KEY;
+  const isBrevoHttpEligible = Boolean(brevoKey && !brevoKey.startsWith('xsmtpsib-'));
+
+  if (isBrevoHttpEligible) {
     logger.info(`[EMAIL PROVIDER] selected=BREVO`);
     try {
       const result = await sendViaBrevo(payload);
@@ -234,6 +274,10 @@ export const sendEmail = async (
       logger.error(`[EMAIL PROVIDER][FAILED] provider=BREVO error=${err.message}`);
       errors.push(`Brevo: ${err.message}`);
     }
+  } else if (brevoKey?.startsWith('xsmtpsib-')) {
+    logger.warn(
+      `[EMAIL PROVIDER] BREVO_API_KEY starts with "xsmtpsib-" (SMTP key). Bypassing Brevo HTTP API (which requires "xkeysib-") to prevent 401 Unauthorized delays. Using SMTP directly.`,
+    );
   }
 
   if (process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -255,8 +299,14 @@ export const sendEmail = async (
       secure: false,
       auth: { user: testAccount.user, pass: testAccount.pass },
     });
+    const sender = resolveSender({
+      email: payload.from,
+      name: payload.fromName,
+      replyTo: payload.replyTo,
+    });
     const info = await transporter.sendMail({
-      from: `"Akula's Kitchen" <noreply@akulas.kitchen>`,
+      from: `"${sender.name}" <${sender.email}>`,
+      replyTo: sender.replyTo,
       to: payload.to,
       subject: payload.subject,
       html: payload.html,

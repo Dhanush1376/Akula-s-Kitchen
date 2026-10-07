@@ -61,11 +61,14 @@ export function resolveStoreIdentity(settings?: any): StoreIdentity {
 
   const name = dbGeneral?.storeName?.trim() || envName?.trim() || "Akula's Kitchen";
   const logo = dbGeneral?.logo?.trim() || '';
-  const websiteUrl = envUrl?.trim() || 'https://example.com';
+  const websiteUrl = envUrl?.trim() || 'https://akulas.kitchen';
   const websiteDomain = extractDomain(websiteUrl);
 
   const email =
-    dbGeneral?.supportEmail?.trim() || dbContact?.email?.trim() || envEmail?.trim() || '';
+    dbGeneral?.supportEmail?.trim() ||
+    dbContact?.email?.trim() ||
+    envEmail?.trim() ||
+    'support@akulas.kitchen';
 
   const phone = dbGeneral?.phone?.trim() || dbContact?.phone?.trim() || envPhone?.trim() || '';
 

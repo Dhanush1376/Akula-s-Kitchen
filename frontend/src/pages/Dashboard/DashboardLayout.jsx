@@ -1,18 +1,20 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { User, MapPin, Bell } from 'lucide-react';
 import { useDashboard } from '../../context/DashboardContext';
 import { SEO } from '../../components/seo/SEO';
 import { useConfig } from '../../context/ConfigContext';
 import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
 import { Sidebar } from '../../components/dashboard/Sidebar';
+import { AccountLeaves, AccountTopLeaf } from '../../components/dashboard/AccountLeaves';
 import { AddressModal } from '../../components/dashboard/AddressModal';
 import { WriteReviewModal } from '../../components/sections/ProductReviews';
-import { Skeleton, AppDrawer } from '../../components/ui';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { AppDrawer } from '../../components/ui/AppDrawer';
+import { Skeleton } from '../../components/ui';
 import { ProfileSection } from './ProfileSection';
 import { AddressesSection } from './AddressesSection';
-import { User, MapPin } from 'lucide-react';
+import { NotificationsSection } from './NotificationsSection';
 
 const InvoiceTemplate = React.lazy(() =>
   import('../../components/ui').then((m) => ({ default: m.InvoiceTemplate })),
@@ -22,7 +24,6 @@ export function DashboardLayout() {
   const { storeName } = useConfig();
   const {
     mobileShowContent,
-    setMobileShowContent,
     reviewingProduct,
     setReviewingProduct,
     selectedInvoiceOrder,
@@ -30,16 +31,30 @@ export function DashboardLayout() {
     user,
   } = useDashboard();
 
-  const isMobile = useMediaQuery('(max-width: 1023px)');
+  const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isProfileRoute = location.pathname.includes('/dashboard/profile');
-  const isAddressesRoute = location.pathname.includes('/dashboard/addresses');
+  const drawerParam = searchParams.get('drawer');
+  const tabParam = searchParams.get('tab');
+  const isProfileDrawerOpen = drawerParam === 'profile' || tabParam === 'profile';
+  const isAddressesDrawerOpen = drawerParam === 'addresses' || tabParam === 'addresses';
+  const isNotificationsDrawerOpen = drawerParam === 'notifications' || tabParam === 'notifications';
 
   const handleCloseDrawer = () => {
-    setMobileShowContent(false);
-    navigate('/dashboard');
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('drawer');
+    if (
+      nextParams.get('tab') === 'profile' ||
+      nextParams.get('tab') === 'addresses' ||
+      nextParams.get('tab') === 'notifications'
+    ) {
+      nextParams.delete('tab');
+    }
+    const searchString = nextParams.toString();
+    navigate(searchString ? `${location.pathname}?${searchString}` : location.pathname, {
+      replace: true,
+    });
   };
 
   return (
@@ -47,7 +62,7 @@ export function DashboardLayout() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="bg-white min-h-screen pt-[calc(var(--ak-header-h,115px)+16px)] pb-24 lg:pb-12 font-sans text-neutral-900"
+      className="relative bg-white min-h-screen pt-[calc(var(--ak-header-h,115px)+16px)] pb-24 lg:pb-12 font-sans text-neutral-900"
     >
       <SEO
         title={`Your ${storeName || "Akula's Kitchen"} Account`}
@@ -55,7 +70,11 @@ export function DashboardLayout() {
         noindex
       />
 
-      <div className="max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop">
+      {/* Decorative banana leaves along the bottom edge, behind the content */}
+      <AccountLeaves />
+      <AccountTopLeaf />
+
+      <div className="relative z-10 max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop">
         {/* HEADER */}
         <DashboardHeader />
 
@@ -66,9 +85,7 @@ export function DashboardLayout() {
           {/* MAIN DYNAMIC CONTENT PORTAL PANELS */}
           <div
             className={`col-span-1 lg:col-span-4 lg:col-span-9 space-y-4 ${
-              mobileShowContent && (!isMobile || (!isProfileRoute && !isAddressesRoute))
-                ? 'block'
-                : 'hidden lg:block'
+              mobileShowContent ? 'block' : 'hidden lg:block'
             }`}
           >
             <Outlet />
@@ -76,37 +93,42 @@ export function DashboardLayout() {
         </div>
       </div>
 
-      {/* MOBILE APP DRAWERS FOR PROFILE & ADDRESSES */}
-      {isMobile && (
-        <>
-          {/* Profile App Drawer */}
-          <AppDrawer
-            isOpen={isProfileRoute}
-            onClose={handleCloseDrawer}
-            title="My Profile"
-            subtitle="Account & Personal Details"
-            headerIcon={User}
-            maxWidth="max-w-[480px]"
-          >
-            <ProfileSection />
-          </AppDrawer>
-
-          {/* Addresses App Drawer */}
-          <AppDrawer
-            isOpen={isAddressesRoute}
-            onClose={handleCloseDrawer}
-            title="Saved Addresses"
-            subtitle="Delivery Destinations"
-            headerIcon={MapPin}
-            maxWidth="max-w-[480px]"
-          >
-            <AddressesSection />
-          </AppDrawer>
-        </>
-      )}
-
       {/* RETAINED MODALS */}
       <AddressModal />
+
+      {/* APP DRAWERS: Profile & Addresses */}
+      <AppDrawer
+        isOpen={isProfileDrawerOpen}
+        onClose={handleCloseDrawer}
+        title="My Profile"
+        subtitle="Account & Personal Details"
+        headerIcon={User}
+        maxWidth="max-w-[540px]"
+      >
+        <ProfileSection isDrawer />
+      </AppDrawer>
+
+      <AppDrawer
+        isOpen={isAddressesDrawerOpen}
+        onClose={handleCloseDrawer}
+        title="Saved Addresses"
+        subtitle="Delivery Destinations"
+        headerIcon={MapPin}
+        maxWidth="max-w-[540px]"
+      >
+        <AddressesSection isDrawer />
+      </AppDrawer>
+
+      <AppDrawer
+        isOpen={isNotificationsDrawerOpen}
+        onClose={handleCloseDrawer}
+        title="Notifications"
+        subtitle="Updates & Alerts"
+        headerIcon={Bell}
+        maxWidth="max-w-[540px]"
+      >
+        <NotificationsSection isDrawer />
+      </AppDrawer>
 
       <AnimatePresence>
         {reviewingProduct && (

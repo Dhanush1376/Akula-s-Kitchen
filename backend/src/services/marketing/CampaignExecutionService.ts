@@ -6,6 +6,7 @@ import AudienceResolverService from './AudienceResolverService';
 import EmailBlockRenderer from './EmailBlockRenderer';
 import { EmailProviderAbstraction } from './EmailProviderAbstraction';
 import logger from '../../config/logger';
+import { resolveSender } from '../../config/emailSender';
 
 export class CampaignExecutionService {
   /**
@@ -96,6 +97,14 @@ export class CampaignExecutionService {
       let deliveredCount = 0;
       let bounceCount = 0;
 
+      // Resolved once per campaign: a sender off the authenticated domain is ignored (and
+      // logged) here rather than once per recipient.
+      const sender = resolveSender({
+        email: campaign.senderEmail,
+        name: campaign.senderName,
+        replyTo: campaign.replyTo,
+      });
+
       for (let i = 0; i < recipients.length; i += batchSize) {
         // Re-check if admin paused or cancelled campaign mid-flight
         const currentCheck = await EmailCampaign.findById(campaignId).select('status');
@@ -171,7 +180,7 @@ export class CampaignExecutionService {
                 action: 'campaign_broadcast',
                 status: 'processing',
                 trackingToken,
-                sender: campaign.senderEmail || 'noreply@akulas.kitchen',
+                sender: sender.email,
                 sendTime: new Date(),
               });
               await log.save();
@@ -181,8 +190,9 @@ export class CampaignExecutionService {
                 to: recipient.email,
                 subject: campaign.subject,
                 html: renderedHtml,
-                from: campaign.senderEmail,
-                fromName: campaign.senderName,
+                from: sender.email,
+                fromName: sender.name,
+                replyTo: sender.replyTo,
               });
 
               sentCount++;

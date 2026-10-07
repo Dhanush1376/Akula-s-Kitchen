@@ -10,8 +10,7 @@ const getTypeBadgeStyle = (type) => {
   switch (type) {
     case 'order':
       return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300';
-    case 'booking':
-    case 'custom_request':
+    case 'inquiry':
       return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:border-purple-800 dark:text-purple-300';
     case 'payment':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300';
@@ -29,9 +28,8 @@ const getTypeIcon = (type) => {
   switch (type) {
     case 'order':
       return 'shopping_bag';
-    case 'booking':
-    case 'custom_request':
-      return 'event';
+    case 'inquiry':
+      return 'mail';
     case 'payment':
       return 'payments';
     case 'review':
@@ -47,7 +45,6 @@ const getTypeIcon = (type) => {
 
 const formatTypeLabel = (type) => {
   if (!type) return 'General';
-  if (type === 'custom_request') return 'Custom';
   return type.charAt(0).toUpperCase() + type.slice(1);
 };
 
@@ -101,9 +98,7 @@ export function AdminNotifications({ hideHeader = false }) {
     if (activeTab === 'unread') {
       list = list.filter((n) => !n.read);
     } else if (activeTab === 'inquiry') {
-      list = list.filter(
-        (n) => n.type === 'booking' || n.type === 'custom_request' || n.type === 'inquiry',
-      );
+      list = list.filter((n) => n.type === 'inquiry');
     } else if (activeTab !== 'all') {
       list = list.filter((n) => n.type === activeTab);
     }
@@ -125,9 +120,7 @@ export function AdminNotifications({ hideHeader = false }) {
       all: notifications.length,
       unread: unreadCount,
       order: notifications.filter((n) => n.type === 'order').length,
-      inquiry: notifications.filter(
-        (n) => n.type === 'booking' || n.type === 'custom_request' || n.type === 'inquiry',
-      ).length,
+      inquiry: notifications.filter((n) => n.type === 'inquiry').length,
       payment: notifications.filter((n) => n.type === 'payment').length,
       system: notifications.filter((n) => n.type === 'system' || n.type === 'stock').length,
     };

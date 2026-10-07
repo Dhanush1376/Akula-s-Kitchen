@@ -124,7 +124,7 @@ export function getStatusVariant(status, variant) {
   ) {
     return 'info';
   }
-  if (['confirmed', 'rental'].includes(s)) {
+  if (s === 'confirmed') {
     return 'primary';
   }
   return 'neutral';
@@ -263,7 +263,7 @@ export function EmptyState({ icon = 'inbox', title, description, action, classNa
 }
 
 /**
- * Unified Payment Badge for Order, Rental, Custom Order, Return, Exchange & Booking Cards.
+ * Unified Payment Badge for Order, Return and Exchange Cards.
  * Derives badge state from orderStatus, paymentMethod, paymentStatus, settlementStatus, and razorpayPaymentId.
  * Precedence:
  *   Returned -> Cancelled -> Refunded -> Online Verified -> COD Settled -> COD Collected -> COD Pending -> Online Failed/Unpaid

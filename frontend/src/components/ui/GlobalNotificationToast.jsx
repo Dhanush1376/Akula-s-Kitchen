@@ -15,8 +15,6 @@ const getNotificationImage = (notif) => {
     notif.metadata?.image ||
     notif.metadata?.thumbnail ||
     notif.metadata?.productImage ||
-    notif.metadata?.showcaseImage ||
-    notif.metadata?.inspirationImages?.[0] ||
     notif.imageSrc ||
     notif.image ||
     null
@@ -31,8 +29,6 @@ const formatNotificationMessage = (msg) => {
       .replace(/\b(exchange|return)\s+request\s+[A-Za-z0-9_-]+\s+/gi, '$1 request ')
       // Remove order numbers like "#6a9f3fd1410" or "6a9f3fd14102b2f0a356a168"
       .replace(/\border\s+(#[A-Za-z0-9_-]+|[A-Za-z0-9_-]{8,})\s+/gi, 'order ')
-      // Remove booking IDs like "SR-BK-2026-04273A" or "#..."
-      .replace(/\bbooking\s+(#[A-Za-z0-9_-]+|[A-Za-z0-9_-]{8,})\s+/gi, 'booking ')
       // Replace underscores in status strings (e.g. "is now setup_in_progress")
       .replace(/status is now ([a-z_]+)/gi, (match, p1) => `status is now ${p1.replace(/_/g, ' ')}`)
       .replace(/\s{2,}/g, ' ')
@@ -46,7 +42,7 @@ export function GlobalNotificationToast() {
   const [resolvedImage, setResolvedImage] = useState(null);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthInitialized } = useAuth();
   const socket = useUserSocket();
 
   const pollingIntervalRef = useRef(null);
@@ -76,7 +72,7 @@ export function GlobalNotificationToast() {
   }, []);
 
   const fetchLatestNotification = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !isAuthInitialized) return;
 
     try {
       const res = await notificationService.getMyNotifications({ limit: 1 });
@@ -126,14 +122,12 @@ export function GlobalNotificationToast() {
     socket.on('notification:new', handleNewNotif);
     socket.on('order_status_updated', handleUpdateEvent);
     socket.on('order_status_update', handleUpdateEvent);
-    socket.on('booking_status_updated', handleUpdateEvent);
     socket.on('refund:status_updated', handleUpdateEvent);
 
     return () => {
       socket.off('notification:new', handleNewNotif);
       socket.off('order_status_updated', handleUpdateEvent);
       socket.off('order_status_update', handleUpdateEvent);
-      socket.off('booking_status_updated', handleUpdateEvent);
       socket.off('refund:status_updated', handleUpdateEvent);
     };
   }, [socket, triggerToast, fetchLatestNotification]);
@@ -154,17 +148,18 @@ export function GlobalNotificationToast() {
 
   // Initial fetch and 15-second polling interval
   useEffect(() => {
-    fetchLatestNotification();
-
-    if (isAuthenticated) {
+    if (isAuthenticated && isAuthInitialized) {
+      fetchLatestNotification();
       pollingIntervalRef.current = setInterval(fetchLatestNotification, 15000);
+    } else {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
     }
 
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     };
-  }, [isAuthenticated, fetchLatestNotification]);
+  }, [isAuthenticated, isAuthInitialized, fetchLatestNotification]);
 
   useEffect(() => {
     if (!latestNotification) {
@@ -227,7 +222,7 @@ export function GlobalNotificationToast() {
           navigate(latestNotification.actionUrl);
         }
       } else {
-        navigate('/dashboard/notifications');
+        navigate('/dashboard?drawer=notifications');
       }
     }
   };

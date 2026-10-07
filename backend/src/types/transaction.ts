@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-export type TransactionDomain = 'purchase' | 'rental' | 'event' | 'custom';
+export type TransactionDomain = 'purchase';
 export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'REFUNDED' | 'FAILED';
 
 export interface ITransaction {

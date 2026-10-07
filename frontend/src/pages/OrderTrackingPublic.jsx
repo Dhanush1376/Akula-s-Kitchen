@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { SEO } from '../components/seo/SEO';
 import { OrderTrackingSkeleton } from '../components/ui/Skeleton';
-import { useOrderTracking } from '../hooks/useOrderTracking';
+import { useOrderTracking, packageBarcode } from '../hooks/useOrderTracking';
 import OrderJourneyTracker from '../features/orders/components/OrderJourneyTracker';
 import { TrackingCourierDetails } from '../components/tracking/TrackingCourierDetails';
 import { TrackingOperatorPanel } from '../components/tracking/TrackingOperatorPanel';
@@ -21,6 +21,7 @@ const statusColors = {
 
 export function OrderTrackingPublic() {
   const { storeNameUpper, storeSettings } = useConfig();
+  const supportPhone = storeSettings?.support?.phone || storeSettings?.contact?.phone || '';
   const { orderId } = useParams();
   const [searchParams] = useSearchParams();
   const trackingToken = searchParams.get('token') || '';
@@ -31,14 +32,10 @@ export function OrderTrackingPublic() {
     error,
     showOperatorPanel,
     setShowOperatorPanel,
-    operatorPin,
-    setOperatorPin,
-    isPinVerified,
-    setIsPinVerified,
+    isStaff,
     updatingStatus,
     operatorNote,
     setOperatorNote,
-    verifyCourierPin,
     handleStatusUpdate,
   } = useOrderTracking({ orderId, trackingToken });
 
@@ -93,8 +90,7 @@ export function OrderTrackingPublic() {
                 AWB Tracking No
               </span>
               <strong className="text-neutral-900 font-mono text-[11.5px] font-semibold">
-                {order.trackingNumber ||
-                  `SR-${order._id.substring(order._id.length - 8).toUpperCase()}-IN`}
+                {order.trackingNumber || packageBarcode(order._id)}
               </strong>
             </div>
             <div>
@@ -285,25 +281,22 @@ export function OrderTrackingPublic() {
         {/* Delivery Address & Package Summary */}
         <TrackingCourierDetails order={order} />
 
-        {/* Courier Scanning desk portal (Operator Section) */}
-        <TrackingOperatorPanel
-          showOperatorPanel={showOperatorPanel}
-          setShowOperatorPanel={setShowOperatorPanel}
-          isPinVerified={isPinVerified}
-          setIsPinVerified={setIsPinVerified}
-          operatorPin={operatorPin}
-          setOperatorPin={setOperatorPin}
-          operatorNote={operatorNote}
-          setOperatorNote={setOperatorNote}
-          verifyCourierPin={verifyCourierPin}
-          handleStatusUpdate={handleStatusUpdate}
-          updatingStatus={updatingStatus}
-        />
+        {/* Courier scanning desk (signed-in staff only) */}
+        {isStaff && (
+          <TrackingOperatorPanel
+            showOperatorPanel={showOperatorPanel}
+            setShowOperatorPanel={setShowOperatorPanel}
+            operatorNote={operatorNote}
+            setOperatorNote={setOperatorNote}
+            handleStatusUpdate={handleStatusUpdate}
+            updatingStatus={updatingStatus}
+          />
+        )}
 
         {/* Footer info */}
         <div className="text-center text-[10px] text-secondary font-medium tracking-wide">
-          {storeNameUpper || "AKULA'S KITCHEN"} • KITCHEN DELIVERIES • NEED HELP? CALL{' '}
-          {storeSettings?.support?.phone || storeSettings?.contact?.phone || '+91 99999 99999'}
+          {storeNameUpper || "AKULA'S KITCHEN"} • KITCHEN DELIVERIES
+          {supportPhone && <> • NEED HELP? CALL {supportPhone}</>}
         </div>
       </div>
     </div>

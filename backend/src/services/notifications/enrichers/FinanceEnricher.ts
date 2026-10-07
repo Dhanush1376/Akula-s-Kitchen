@@ -15,10 +15,9 @@ export class FinanceEnricher {
       const subtotal = order.subtotal || 0;
       const discount = order.discount || 0;
 
-      // Simulated calculations that would normally be derived from detailed DB queries or settings
-      const gstRate = 0.18;
-      const gstAmount = Math.round(subtotal * gstRate);
-      const netRevenue = grossRevenue - gstAmount - shipping;
+      const gstRate = 0;
+      const gstAmount = 0;
+      const netRevenue = grossRevenue - shipping;
 
       // Approximating margin & vendor payouts (if applicable)
       const avgMarginRate = 0.4;
@@ -31,8 +30,8 @@ export class FinanceEnricher {
         grossRevenue,
         netRevenue,
         taxes: {
-          total: gstAmount,
-          rate: '18%',
+          total: 0,
+          rate: '0%',
         },
         fees: {
           shipping,

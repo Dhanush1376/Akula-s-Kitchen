@@ -1,4 +1,4 @@
-import { Info, ShieldCheck, Shield, Lock, AlertTriangle } from 'lucide-react';
+import { Info, ShieldCheck, Shield, Lock, AlertTriangle, ArrowRight } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '../../ui/Skeleton';
@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 
 export const CartSummary = ({
   loading,
-  activeCartMode,
   cartCount,
   totalMRP,
   actualSubtotal,
@@ -16,7 +15,6 @@ export const CartSummary = ({
   platformFee,
   shippingFee,
   finalPayableAmount,
-  depositTotal,
   runProtectedAction,
   navigate,
   orderLimitError,
@@ -43,47 +41,28 @@ export const CartSummary = ({
           className="text-[11px] font-extrabold text-neutral-950 uppercase tracking-widest pb-3.5 border-b border-neutral-200 mb-4 flex items-center justify-between"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          <span>{activeCartMode === 'rental' ? 'Rental Summary' : 'Bill Details'}</span>
+          <span>Bill Details</span>
           <span className="text-[10px] font-extrabold text-neutral-400">
             {cartCount} {cartCount === 1 ? 'ITEM' : 'ITEMS'}
           </span>
         </div>
         <div className="space-y-3 text-[13px] text-neutral-800">
-          {activeCartMode === 'rental' ? (
-            <>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Rental Charges</span>
-                <span className="font-bold text-neutral-900">
-                  ₹{actualSubtotal.toLocaleString()}
+          <>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Item Total (MRP)</span>
+              <span className="font-medium text-neutral-700">
+                ₹{(totalMRP || actualSubtotal).toLocaleString()}
+              </span>
+            </div>
+            {discountOnMRP > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-emerald-700 font-medium">Bag Discount</span>
+                <span className="text-emerald-700 font-extrabold">
+                  − ₹{discountOnMRP.toLocaleString()}
                 </span>
               </div>
-              {depositTotal > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Security Deposits</span>
-                  <span className="font-bold text-neutral-900">
-                    ₹{depositTotal.toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Item Total (MRP)</span>
-                <span className="font-medium text-neutral-700">
-                  ₹{(totalMRP || actualSubtotal).toLocaleString()}
-                </span>
-              </div>
-              {discountOnMRP > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-emerald-700 font-medium">Bag Discount</span>
-                  <span className="text-emerald-700 font-extrabold">
-                    − ₹{discountOnMRP.toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
+            )}
+          </>
 
           {platformFee > 0 && (
             <div className="flex justify-between items-center group">
@@ -109,7 +88,7 @@ export const CartSummary = ({
           <div className="h-[1px] bg-neutral-200 my-3.5" />
           <div className="flex justify-between items-baseline">
             <span className="font-extrabold text-[14px] text-neutral-950 uppercase tracking-wider">
-              {activeCartMode === 'rental' ? 'Grand Total Due' : 'To Pay'}
+              To Pay
             </span>
             <div className="flex items-center gap-2">
               <motion.span
@@ -122,17 +101,6 @@ export const CartSummary = ({
               </motion.span>
             </div>
           </div>
-
-          {/* Expected Refund Block for Rentals */}
-          {activeCartMode === 'rental' && depositTotal > 0 && (
-            <div className="mt-3 bg-emerald-50 border border-emerald-200/60 p-2.5 rounded-lg flex justify-between items-center text-[11.5px] text-emerald-800">
-              <div className="flex items-center gap-1 font-bold">
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                Expected Refund
-              </div>
-              <span className="font-extrabold">₹{depositTotal.toLocaleString()}</span>
-            </div>
-          )}
 
           {/* Desktop Place Order Button */}
           {orderLimitError && (
@@ -155,34 +123,39 @@ export const CartSummary = ({
               }
               runProtectedAction(() => {
                 sessionStorage.removeItem('akula_checkout_step');
-                navigate('/checkout', {
-                  state: {
-                    checkoutMode: activeCartMode,
-                  },
-                });
+                navigate('/checkout');
               });
             }}
             disabled={Boolean(isStoreClosed || orderLimitError)}
-            className={`w-full mt-5 py-3.5 sm:py-4 rounded-lg text-[12px] font-extrabold uppercase tracking-wider transition-all text-center hidden lg:flex items-center justify-center gap-2 ${
+            className={`w-full mt-5 h-12 rounded-full pl-5 pr-1.5 py-1 text-[12px] sm:text-[12.5px] font-extrabold uppercase tracking-wider transition-all hidden lg:flex items-center justify-between group ${
               isStoreClosed || orderLimitError
                 ? 'bg-neutral-200 text-neutral-500 border border-neutral-300 cursor-not-allowed'
-                : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[1.5px] border-[#f7bb0e] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] cursor-pointer active:scale-[0.98]'
+                : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] cursor-pointer active:scale-[0.99]'
             }`}
           >
             {isStoreClosed ? (
-              <>
-                <Lock className="w-3.5 h-3.5 text-neutral-500" />
+              <div className="flex items-center justify-center gap-2 w-full pr-3.5">
+                <Lock className="w-4 h-4 text-neutral-500" />
                 <span>Orders Paused (View Only)</span>
-              </>
+              </div>
             ) : orderLimitError ? (
-              <>
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <div className="flex items-center justify-center gap-2 w-full pr-3.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
                 <span>{orderLimitButtonText || 'Order Limits Not Met'}</span>
-              </>
-            ) : activeCartMode === 'rental' ? (
-              'Continue Rental Booking'
+              </div>
             ) : (
-              'Proceed to Checkout'
+              <>
+                <span className="font-extrabold text-[12px] sm:text-[12.5px] uppercase tracking-wider text-neutral-950">
+                  Proceed to Checkout
+                </span>
+                <span className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                  <ArrowRight
+                    className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                  />
+                </span>
+              </>
             )}
           </button>
         </div>
@@ -192,7 +165,7 @@ export const CartSummary = ({
       <div className="bg-neutral-50 px-5 py-3 border-t border-neutral-200 flex items-center justify-between text-[10.5px] text-neutral-600 font-extrabold">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
-          <span>100% Authentic Quality</span>
+          <span>Fresh From Our Kitchen</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-neutral-800" strokeWidth={2} />

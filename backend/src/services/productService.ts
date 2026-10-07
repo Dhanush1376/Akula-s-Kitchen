@@ -17,7 +17,6 @@ import { generateProductUuid } from '../shared/utils/uuidGenerator';
 import { QRCodeService } from '../shared/services/barcode/QRCodeService';
 import { emitAdminEvent, emitGlobalUserEvent } from '../socket';
 import {
-  enforceSmartPricing,
   normalizeProductImages,
   resolveCategories,
   normalizeProductAttributes,
@@ -46,9 +45,6 @@ class ProductService {
       maxPrice,
       material,
       collection,
-      availableForRent,
-      availableForPurchase,
-      availabilityMode,
       spellcheck,
       bypassCorrection,
       ids,
@@ -76,17 +72,6 @@ class ProductService {
     }
     if (featured === 'true') filter.featured = true;
 
-    // Rental filters
-    if (availableForRent === 'true') {
-      filter.rentalEnabled = true;
-      filter.availabilityMode = { $in: ['rent_only', 'both'] };
-    }
-    if (availableForPurchase === 'true') {
-      filter.availabilityMode = { $in: ['purchase_only', 'both'] };
-    }
-    if (availabilityMode && ['purchase_only', 'rent_only', 'both'].includes(availabilityMode)) {
-      filter.availabilityMode = availabilityMode;
-    }
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
@@ -219,11 +204,6 @@ class ProductService {
       } else if (search.toLowerCase().includes('jewellery')) {
         phraseVariants.push(search.replace(/\bjewellery\b/gi, 'jewelry'));
       }
-      if (search.toLowerCase().includes('tray')) {
-        phraseVariants.push(search.replace(/\btray\b/gi, 'trays'));
-      } else if (search.toLowerCase().includes('trays')) {
-        phraseVariants.push(search.replace(/\btrays\b/gi, 'tray'));
-      }
 
       const words = search
         .trim()
@@ -235,16 +215,8 @@ class ProductService {
         wordVariants.push(lower);
         if (lower === 'jewelry') wordVariants.push('jewellery');
         if (lower === 'jewellery') wordVariants.push('jewelry');
-        if (lower === 'tray') wordVariants.push('trays');
-        if (lower === 'trays') wordVariants.push('tray');
-        if (lower === 'bangle') wordVariants.push('bangles');
-        if (lower === 'bangles') wordVariants.push('bangle');
-        if (lower === 'decoration') wordVariants.push('decorations');
-        if (lower === 'decorations') wordVariants.push('decoration');
         if (lower === 'box') wordVariants.push('boxes');
         if (lower === 'boxes') wordVariants.push('box');
-        if (lower === 'flower') wordVariants.push('flowers');
-        if (lower === 'flowers') wordVariants.push('flower');
       }
 
       const allSearchTerms = [
@@ -333,9 +305,7 @@ class ProductService {
     const [rawProducts, totalCount] = await Promise.all([
       Product.find(filter)
         .select(
-          isAdmin
-            ? ''
-            : '-description -seoTitle -seoDescription -customizationConfig -variants -dimensions -weight',
+          isAdmin ? '' : '-description -seoTitle -seoDescription -variants -dimensions -weight',
         )
         .populate('primaryCategory', 'name slug type')
         .populate('secondaryCategories', 'name slug type')
@@ -479,7 +449,6 @@ class ProductService {
       normalizeProductImages(data);
       await resolveCategories(data);
       await normalizeProductAttributes(data);
-      enforceSmartPricing(data);
 
       if (!data.productUuid) {
         data.productUuid = generateProductUuid();
@@ -509,7 +478,6 @@ class ProductService {
           production: 0,
           packing: 0,
           transit: 0,
-          rental: Number(data.rentalStock) || 0,
           maintenance: 0,
           returned: 0,
           damaged: 0,
@@ -592,7 +560,6 @@ class ProductService {
       normalizeProductImages(data, oldProduct as IProduct);
       await resolveCategories(data);
       await normalizeProductAttributes(data);
-      enforceSmartPricing(data, oldProduct as IProduct);
 
       const updateData = { ...data };
       delete updateData.__v;
@@ -847,25 +814,40 @@ class ProductService {
     }
 
     logger.info('[CATEGORY CACHE] Cache Miss. Fetching distinct categories from database');
-    // Fetch unique primaryCategory IDs from active products
-    const categoryIds = await Product.distinct('primaryCategory', { isActive: true });
+    // Fetch all active configured categories from the Category collection
+    const allActiveCategories = await Category.find({ isActive: true }).select('name slug').lean();
 
-    // Populate them using the Category model to get the { name, slug } objects expected by UI
-    const categories = await Category.find({ _id: { $in: categoryIds }, isActive: true })
+    // Fetch unique primaryCategory and secondaryCategories values from active products
+    const distinctPrimary = await Product.distinct('primaryCategory', { isActive: true });
+    const distinctSecondary = await Product.distinct('secondaryCategories', { isActive: true });
+
+    // Separate ObjectIds from raw strings
+    const idList: any[] = [];
+    const rawStringNames: string[] = [];
+
+    [...distinctPrimary, ...distinctSecondary].forEach((val: any) => {
+      if (!val) return;
+      if (typeof val === 'string' && val.length !== 24) {
+        rawStringNames.push(val);
+      } else {
+        idList.push(val);
+      }
+    });
+
+    const productCategories = await Category.find({ _id: { $in: idList }, isActive: true })
       .select('name slug')
       .lean();
 
-    // Transform to simple array of names to maintain backward compatibility with some simple frontends,
-    // though the UI might prefer the objects. Let's return just names for now to be safe,
-    // or better, if the UI expects strings, return strings.
-    // The older code returned strings. We will return strings.
-    const result = categories
-      .map((c) => c.name)
-      .filter(Boolean)
-      .sort();
+    const merged = [
+      ...allActiveCategories.map((c) => c.name),
+      ...productCategories.map((c) => c.name),
+      ...rawStringNames,
+    ];
 
-    categoryCache.set(cacheKey, result);
-    return result;
+    const uniqueNames = Array.from(new Set(merged.filter(Boolean))).sort();
+
+    categoryCache.set(cacheKey, uniqueNames);
+    return uniqueNames;
   }
 }
 

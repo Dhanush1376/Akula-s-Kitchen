@@ -4,14 +4,7 @@ import { mediaLibraryService } from '../mediaLibraryService';
 
 export const uploadService = {
   uploadImages: async (formData, folder = 'akulas-kitchen/direct-uploads', onProgress = null) => {
-    let targetFolder = folder;
-    if (
-      !targetFolder.startsWith('akulas-kitchen/') &&
-      !targetFolder.startsWith('siri-arts-crafts/') &&
-      !targetFolder.startsWith('event_decor_ecommerce/')
-    ) {
-      targetFolder = `akulas-kitchen/${folder}`;
-    }
+    const targetFolder = folder.startsWith('akulas-kitchen/') ? folder : `akulas-kitchen/${folder}`;
 
     return uploadWithRetry(async (fd) => {
       // Convert standard FormData back to array of files (since frontend components pass FormData)
@@ -44,12 +37,6 @@ export const uploadService = {
       if (!file) return { success: false, error: 'No files to upload' };
       const res = await mediaLibraryService.uploadMedia(file, 'cms', []);
       return { success: true, data: res.data };
-    }, formData);
-  },
-  uploadInspirations: async (formData) => {
-    return uploadWithRetry(async (fd) => {
-      const response = await api.post('/upload/inspirations', fd);
-      return response.data;
     }, formData);
   },
 };

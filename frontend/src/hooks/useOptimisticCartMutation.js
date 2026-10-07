@@ -10,8 +10,6 @@ const checkAuthLocal = () => hasSessionMarker();
 
 export function useOptimisticCartMutation({
   isAuthenticated,
-  activeCartMode,
-  setActiveCartMode,
   runProtectedAction,
   setIsCartOpen,
   emptySummary,
@@ -28,16 +26,18 @@ export function useOptimisticCartMutation({
   const addItem = useCallback(
     (product) => {
       runProtectedAction(() => {
-        const itemType = 'purchase';
         const targetCartKey = 'purchaseCart';
 
         const previousCart = queryClient.getQueryData(['cart', cartKey]);
         const currentItems = previousCart?.[targetCartKey]?.items || [];
         const productId = product._id || product.id;
+        const targetSig = product.configurationSignature || 'default';
 
-        const existingItem = currentItems.find(
-          (item) => (item.product?._id || item.product?.id || item._id || item.id) === productId,
-        );
+        const existingItem = currentItems.find((item) => {
+          const itemId = item.product?._id || item.product?.id || item._id || item.id;
+          const itemSig = item.configurationSignature || 'default';
+          return itemId === productId && itemSig === targetSig;
+        });
 
         const currentQty = existingItem ? Number(existingItem.quantity) || 0 : 0;
         const requestedQty = Number(product.quantity) || 1;
@@ -60,7 +60,8 @@ export function useOptimisticCartMutation({
           product,
           productId: product._id || product.id,
           quantity: qty,
-          type: itemType,
+          selectedOptions: product.selectedOptions,
+          customizationNote: product.customizationNote,
         });
       });
     },
@@ -83,22 +84,36 @@ export function useOptimisticCartMutation({
   );
 
   const removeItem = useCallback(
-    (id) => {
+    (id, configurationSignature) => {
+      let rawId = id;
+      let sig = configurationSignature;
+      if (typeof id === 'string' && id.includes('___')) {
+        const parts = id.split('___');
+        rawId = parts[0];
+        if (!sig) sig = parts[1];
+      }
       runProtectedAction(() => {
         // React Query useCartMutations handles the optimistic UI and rollback natively now!
-        removeFromCart({ productId: id, type: activeCartMode });
+        removeFromCart({ productId: rawId, configurationSignature: sig });
       });
     },
-    [runProtectedAction, removeFromCart, activeCartMode],
+    [runProtectedAction, removeFromCart],
   );
 
   const updateQuantity = useCallback(
-    (id, variantOrQuantity, maybeQuantity) => {
+    (id, variantOrQuantity, maybeQuantity, maybeSig) => {
       const quantity = maybeQuantity !== undefined ? maybeQuantity : variantOrQuantity;
       let numericQuantity = Number(quantity) || 1;
+      let configurationSignature = maybeSig;
+      let rawId = id;
+      if (typeof id === 'string' && id.includes('___')) {
+        const parts = id.split('___');
+        rawId = parts[0];
+        if (!configurationSignature) configurationSignature = parts[1];
+      }
 
       if (numericQuantity < 1) {
-        removeItem(id);
+        removeItem(rawId, configurationSignature);
         return;
       }
 
@@ -114,8 +129,14 @@ export function useOptimisticCartMutation({
           const targetCartKey = 'purchaseCart';
           const updatedItems =
             previousCart[targetCartKey]?.items.map((item) => {
-              const itemId = item.product?._id || item.product?.id;
-              if (itemId === id) {
+              const itemId = item.product?._id || item.product?.id || item._id || item.id;
+              const itemSig = item.configurationSignature || 'default';
+              const matches = configurationSignature
+                ? (itemId === rawId || String(item.product) === rawId) &&
+                  itemSig === configurationSignature
+                : itemId === rawId || item.id === id || item._id === id;
+
+              if (matches) {
                 return { ...item, quantity: numericQuantity };
               }
               return item;
@@ -123,7 +144,6 @@ export function useOptimisticCartMutation({
 
           const { subtotal, total } = calculateCartSummary(
             updatedItems,
-            'purchase',
             previousCart[targetCartKey]?.summary?.shippingFee || 0,
           );
 
@@ -154,7 +174,9 @@ export function useOptimisticCartMutation({
             return {
               product: item.product?._id || item.product?.id || item._id || item.id || item.product,
               quantity: item.quantity,
-              type: 'purchase',
+              selectedOptions: item.selectedOptions || [],
+              configurationSignature: item.configurationSignature || 'default',
+              configuredUnitPrice: item.configuredUnitPrice || item.price,
             };
           });
 

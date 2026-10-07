@@ -164,7 +164,7 @@ export default function CodOtpVerificationSection({
                       onClick={() => onSelectCodChannel && onSelectCodChannel('phone')}
                       className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                         selectedCodChannel === 'phone'
-                          ? 'bg-[#f7bb0e] text-neutral-950 border border-[#f7bb0e] shadow-xs'
+                          ? 'bg-[#283618] text-white border border-[#283618] shadow-xs'
                           : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
                       }`}
                     >
@@ -176,7 +176,7 @@ export default function CodOtpVerificationSection({
                       onClick={() => onSelectCodChannel && onSelectCodChannel('email')}
                       className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                         selectedCodChannel === 'email'
-                          ? 'bg-[#f7bb0e] text-neutral-950 border border-[#f7bb0e] shadow-xs'
+                          ? 'bg-[#283618] text-white border border-[#283618] shadow-xs'
                           : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
                       }`}
                     >
@@ -215,17 +215,22 @@ export default function CodOtpVerificationSection({
                     type="button"
                     onClick={handleSendCodOtp}
                     disabled={isSendingOtp || isProcessing}
-                    className="bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] py-2.5 px-5 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    className="bg-[#283618] text-white hover:bg-[#1f2b13] border border-[#283618] h-10 pl-4 pr-1.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider shadow-sm transition-all cursor-pointer flex items-center justify-between gap-2.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 group"
                   >
                     {isSendingOtp ? (
-                      <>
+                      <div className="flex items-center gap-1.5 pr-2">
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         <span>Sending...</span>
-                      </>
+                      </div>
                     ) : (
                       <>
                         <span>Send OTP</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <span className="w-7 h-7 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                          <ArrowRight
+                            className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                            strokeWidth={2.5}
+                          />
+                        </span>
                       </>
                     )}
                   </button>

@@ -1,18 +1,52 @@
 import { z } from 'zod';
 
+export const productOptionSchema = z.object({
+  _id: z.any().optional(),
+  id: z.string().optional(),
+  optionId: z.string().optional(),
+  label: z.string().min(1, 'Option label is required'),
+  value: z.string().min(1, 'Option value is required'),
+  priceAdjustment: z.number().default(0),
+  available: z.boolean().default(true),
+  default: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  sortOrder: z.number().default(0),
+});
+
+export const productOptionGroupSchema = z.object({
+  _id: z.any().optional(),
+  id: z.string().optional(),
+  groupId: z.string().optional(),
+  name: z.string().min(1, 'Option group name is required'),
+  type: z
+    .enum(['SINGLE_SELECT', 'MULTI_SELECT', 'OPTIONAL_SINGLE_SELECT'])
+    .default('SINGLE_SELECT'),
+  required: z.boolean().default(false),
+  minSelections: z.number().min(0).optional(),
+  maxSelections: z.number().min(0).optional(),
+  displayStyle: z
+    .preprocess(
+      (val) => {
+        if (typeof val === 'string') {
+          const upper = val.toUpperCase().trim();
+          if (upper === 'CARDS') return 'RADIO_CARDS';
+          if (upper === 'PILLS') return 'BUTTON_GROUP';
+          if (['RADIO_CARDS', 'CHECKBOX_CARDS', 'DROPDOWN', 'BUTTON_GROUP'].includes(upper)) {
+            return upper;
+          }
+        }
+        return val || 'RADIO_CARDS';
+      },
+      z.enum(['RADIO_CARDS', 'CHECKBOX_CARDS', 'DROPDOWN', 'BUTTON_GROUP']),
+    )
+    .optional(),
+  sortOrder: z.number().default(0),
+  options: z.array(productOptionSchema).default([]),
+});
+
 export const createProductSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
-  teluguTitle: z.string().optional(),
   customerNote: z.string().max(2000).optional(),
-  complimentaryGift: z
-    .object({
-      enabled: z.boolean().optional(),
-      name: z.string().max(100).optional(),
-      quantity: z.number().min(1).optional(),
-      description: z.string().max(500).optional(),
-      displayBadge: z.string().max(50).optional(),
-    })
-    .optional(),
   slug: z.string().min(2, 'Slug must be at least 2 characters'),
   category: z.string().min(2, 'Category is required'),
   material: z.string().optional(),
@@ -34,30 +68,6 @@ export const createProductSchema = z.object({
   featured: z.boolean().optional(),
   isActive: z.boolean().optional(),
   isNonRefundable: z.boolean().optional(),
-  showInGallery: z.boolean().optional(),
-  rentalEnabled: z.boolean().optional(),
-  availabilityMode: z.enum(['purchase_only', 'rent_only', 'both']).optional(),
-  rentalPricing: z
-    .object({
-      rentalPrice: z.number().min(0).optional(),
-      rentalDurationDays: z.number().min(1).optional(),
-    })
-    .optional(),
-  securityDeposit: z.number().min(0).optional(),
-  isDepositRefundable: z.boolean().optional(),
-  rentalStock: z.number().min(0).optional(),
-  rentalMinDays: z.number().min(1).optional(),
-  rentalMaxDays: z.number().min(1).optional(),
-  customizationConfig: z
-    .object({
-      enabled: z.boolean().optional(),
-      required: z.boolean().optional(),
-      label: z.string().max(100).optional(),
-      placeholder: z.string().max(200).optional(),
-      maxLength: z.number().min(1).max(2000).optional(),
-      helperText: z.string().max(500).optional(),
-    })
-    .optional(),
   returnSettings: z
     .object({
       returnWindow: z.number().optional(),
@@ -70,6 +80,7 @@ export const createProductSchema = z.object({
     })
     .optional(),
   variants: z.array(z.any()).optional(),
+  optionGroups: z.array(productOptionGroupSchema).optional(),
   __v: z.number().optional(),
 });
 

@@ -13,6 +13,7 @@ import { computeOrderTotals } from './orderTotals';
 import { InventoryService } from '../InventoryService';
 import { InvoiceService } from '../InvoiceService';
 import { TaxEngine } from '../taxes/TaxEngine';
+import { ProductConfigurationService } from '../products/ProductConfigurationService';
 
 export class OrderCheckoutService {
   static async createOrder(userId: string, orderData: any) {
@@ -24,8 +25,6 @@ export class OrderCheckoutService {
       needByDate,
       paymentMethod,
       idempotencyKey,
-      isCustomOrder,
-      customOrderId,
       codVerificationToken,
     } = orderData;
     const isCod = paymentMethod === 'cod';
@@ -66,7 +65,6 @@ export class OrderCheckoutService {
     session.startTransaction();
 
     let subtotal = 0;
-    const depositTotal = 0;
     const orderItems = [];
     const reservationIds = [];
     const pendingOrderId = new mongoose.Types.ObjectId();
@@ -77,17 +75,13 @@ export class OrderCheckoutService {
         ...new Set(items.map((item: any) => String(item.productId)).filter(Boolean)),
       ] as any[];
       const products = await Product.find({ _id: { $in: productIds } })
-        .select('title price stock reservedStock isActive imageSrc category isNonRefundable')
+        .select(
+          'title price stock reservedStock isActive imageSrc category isNonRefundable optionGroups',
+        )
         .session(session);
       const productsById = new Map<string, any>(products.map((p: any) => [p._id.toString(), p]));
 
       for (const item of items) {
-        if (item.type === 'rental') {
-          throw new ApiError(
-            400,
-            `Rental items cannot be purchased through the standard checkout. Please use the dedicated Rental Wizard for ${item.title || 'this item'}.`,
-          );
-        }
         const product = productsById.get(String(item.productId));
         if (!product) throw new ApiError(404, `Product ${item.productId} not found`);
         if (!product.isActive)
@@ -111,8 +105,44 @@ export class OrderCheckoutService {
         );
         reservationIds.push(reservation._id);
 
-        const itemPrice = product.price;
-        const itemType = item.type || 'purchase';
+        // Authoritatively validate configuration and compute unit price
+        let effectiveSelectedOptions = item.selectedOptions;
+        if (
+          (!effectiveSelectedOptions || effectiveSelectedOptions.length === 0) &&
+          Array.isArray(product.optionGroups) &&
+          product.optionGroups.length > 0
+        ) {
+          effectiveSelectedOptions = [];
+          for (const group of product.optionGroups) {
+            const defaultOpt =
+              group.options?.find(
+                (o: any) => (o.isDefault || o.default) && o.available !== false,
+              ) || group.options?.find((o: any) => o.available !== false);
+            if (defaultOpt) {
+              effectiveSelectedOptions.push({
+                groupId: String(group.groupId || group.id || group._id || group.name),
+                groupName: group.name,
+                optionId: String(
+                  defaultOpt.optionId ||
+                    defaultOpt.id ||
+                    defaultOpt._id ||
+                    defaultOpt.value ||
+                    defaultOpt.label,
+                ),
+                optionLabel: defaultOpt.label,
+                priceAdjustment: Number(defaultOpt.priceAdjustment) || 0,
+              });
+            }
+          }
+        }
+
+        const configResult = ProductConfigurationService.validateAndCalculateConfiguration(
+          product,
+          effectiveSelectedOptions || [],
+          true,
+        );
+
+        const itemPrice = configResult.configuredUnitPrice;
         const itemTotal = itemPrice * item.quantity;
         subtotal += itemTotal;
 
@@ -120,13 +150,15 @@ export class OrderCheckoutService {
           productId: product._id,
           title: product.title,
           price: itemPrice,
+          basePrice: configResult.basePrice,
+          configuredUnitPrice: configResult.configuredUnitPrice,
           quantity: item.quantity,
           variant: item.variant || 'Default',
+          selectedOptions: configResult.selectedOptions,
+          configurationSignature: configResult.configurationSignature,
           imageSrc: product.imageSrc,
           category: product.category,
-          isNonRefundable: product.isNonRefundable || false,
-          type: itemType,
-          deposit: 0,
+          isNonRefundable: true,
           customizationNote: item.customizationNote,
         });
       }
@@ -134,7 +166,7 @@ export class OrderCheckoutService {
       const discount = 0;
 
       if (!shippingAddress?.state) {
-        throw new ApiError(400, 'Destination state is required for delivery and tax compliance.');
+        throw new ApiError(400, 'Destination state is required for delivery.');
       }
 
       const storeState =
@@ -158,8 +190,6 @@ export class OrderCheckoutService {
 
       const totals = computeOrderTotals({
         subtotal,
-        discount,
-        depositTotal,
         isCod,
         codFee: settings.payments.codFee,
         enableFreeShipping: settings.shipping.enableFreeShipping,
@@ -332,8 +362,6 @@ export class OrderCheckoutService {
           shippingPhone: normalizedShippingPhone,
           codPhoneVerified: isCod,
           codVerifiedAt: isCod ? new Date() : undefined,
-          orderType: 'purchase',
-          depositTotal,
           subtotal,
           shippingFee,
           platformFee,
@@ -369,8 +397,6 @@ export class OrderCheckoutService {
           settledAmount: 0,
           courierCharges: Math.round((shippingFee || settings.shipping.deliveryCharge) + codFee),
           earnings: 0,
-          isCustomOrder,
-          customOrderId,
         });
 
         await order.save({ session });
@@ -492,8 +518,6 @@ export class OrderCheckoutService {
           shippingPhone: normalizedAttemptShippingPhone,
           orderItems,
           shippingAddress,
-          orderType: 'purchase',
-          depositTotal,
           subtotal,
           shippingFee,
           discount: 0,
@@ -512,8 +536,6 @@ export class OrderCheckoutService {
           notes,
           needByDate,
           idempotencyKey,
-          isCustomOrder,
-          customOrderId,
           requiresApproval, // Added for webhook processing
         };
 

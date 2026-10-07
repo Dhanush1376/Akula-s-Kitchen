@@ -122,14 +122,13 @@ export class ProductAiService {
 
       ${title ? `The admin has provided the title: "${title}"` : ''}
 
-      Please perform a rigorous 7-stage analysis:
+      Please perform a rigorous 6-stage analysis:
       STAGE 1 — OBJECT DETECTION: Identify the exact product (e.g. idli batter, dosa batter, coconut chutney, mango pickle, gongura pickle, sambar masala, podi, murukulu, cashews).
       STAGE 2 — INGREDIENT & PACKAGING DETECTION: Detect key visible ingredients and packaging (e.g. rice, urad dal, red chilli, mango, gongura, amla, curry leaves, ragi, glass jar, pouch, tub).
       STAGE 3 — USAGE CONTEXT DETECTION: Determine typical use cases (e.g. breakfast, lunch accompaniment, tea-time snack, festive gifting, everyday cooking).
       STAGE 4 — CUSTOMER-FRIENDLY TITLE GENERATION: Generate a clean, elegant, human-readable title.
-      STAGE 5 — PERSONALIZATION ANALYSIS: Determine if this product supports customer personalization (names, messages, colors, themes). If yes, generate specific personalization instructions.
-      STAGE 6 — CUSTOMER NOTE GENERATION: Generate professional, product-specific important notes for customers (storage tips, shelf life, spice level, serving suggestions).
-      STAGE 7 — QUANTITY ESTIMATION: Using the image, title, description, and price, estimate the quantity of items visible (e.g. number of packs, jars, pouches). Use "approximately" when estimating.
+      STAGE 5 — CUSTOMER NOTE GENERATION: Generate professional, product-specific important notes for customers (storage tips, shelf life, spice level, serving suggestions).
+      STAGE 6 — QUANTITY ESTIMATION: Using the image, title, description, and price, estimate the quantity of items visible (e.g. number of packs, jars, pouches). Use "approximately" when estimating.
 
       Available Store Categories: ${JSON.stringify(categoryList || [])}
       
@@ -153,35 +152,25 @@ export class ProductAiService {
       8. Generate a clean, simple, short SEO-friendly slug.
       9. Suggest an estimated, realistic price in INR (e.g., 999, 1500, 2500) based on the product type and pack size.
       10. Suggest 1 or 2 catchy storefront badges (e.g. "Bestseller", "Trending", "Limited Edition").
-      11. CUSTOMIZATION DETECTION: Intelligently determine if this specific item is commonly personalized with text/names by customers (e.g. gift packs with a message). If yes, set "isCustomizable" to true and provide a "customizationNote" prompt for the customer (e.g., "Enter names to be printed").
-      12. CONFIDENCE SCORES: Output an accurate "confidence" integer (between 1 and 100) representing your certainty about the detected object class. ALSO output "category_confidence" object mapping the primary/secondary categories to confidence percentages (1-100).
-      13. TELUGU SEARCH ALIASES & KEYWORDS:
+      11. CONFIDENCE SCORES: Output an accurate "confidence" integer (between 1 and 100) representing your certainty about the detected object class. ALSO output "category_confidence" object mapping the primary/secondary categories to confidence percentages (1-100).
+      12. TELUGU SEARCH ALIASES & KEYWORDS:
           - "telugu_keywords": Generate 3 to 5 transliterated Telugu search terms (written in English script) that local customers would use (e.g., ["avakaya", "mamidikaya pachadi"] for mango pickle; ["karam podi", "kandi podi"] for a podi).
           - "event_associations": String array mapping this product to specific events where it is used (e.g., ["Breakfast", "Festive", "Snack"]).
           - "search_aliases": Array of alternate names/synonyms users might search for in English or Hindi (e.g., ["aam ka achar", "mango pickle", "avakai"]).
 
-      14. PERSONALIZATION CONFIG: Analyze the product type and generate context-aware personalization instructions.
-          - "personalization_enabled": boolean — true ONLY if the product genuinely supports customization (e.g. gift packs with messages). Set false for regular food products.
-          - "personalization_label": A short label for the personalization input (e.g. "Customization Details", "Gift Message").
-          - "personalization_placeholder": A specific, multi-line placeholder with bullet-pointed instructions. Examples:
-            For a Pickle Gift Pack: "• Mention preferred pickle varieties\n• Mention preferred spice level\n• Enter your gift message for the recipient"
-            For a Cashew Gift Box: "• Mention preferred grade (W240, W320, W210)\n• Enter your gift message"
-          - "personalization_helper": A short helper text for the admin (e.g. "Customers can customize this gift pack").
-
-      15. CUSTOMER NOTE: Generate a professional, product-specific multi-line note that will be displayed on the storefront.
+      13. CUSTOMER NOTE: Generate a professional, product-specific multi-line note that will be displayed on the storefront.
           - "customer_note": A multi-line string with bullet points using "• " prefix. This note should contain ONLY relevant, accurate information. Never generate generic placeholder text.
             Examples:
             For a Pickle (500 g): "• Made in small batches with traditional Andhra recipes\n• Always use a dry spoon\n• Store in a cool and dry place; refrigerate after opening"
             For a Batter (1 kg): "• Freshly ground; keep refrigerated\n• Best consumed within the shelf life printed on the pack"
             For Cashews: "• Packed hygienically to maintain freshness\n• Store in an airtight container"
-            For a Rental Product: "• Rental duration and security deposit apply\n• Product must be returned in its original condition"
 
-      16. QUANTITY ESTIMATION: Analyze the image, title, and price to estimate the number of individual items.
+      14. QUANTITY ESTIMATION: Analyze the image, title, and price to estimate the number of individual items.
           - "estimated_quantity": An integer estimate of the number of items visible/included (e.g. number of packs or jars). Use the price and pack size as a guide.
           - "estimated_quantity_unit": The unit of measurement (e.g. "Packs", "Jars", "Pouches", "Pieces").
           - If you cannot determine the quantity, set estimated_quantity to 1 and estimated_quantity_unit to "Set".
 
-      17. VARIANTS GENERATION (CRITICAL FOR FILTERING): You MUST suggest realistic product variations for 'Size' (e.g. 250g, 500g, 1 kg), 'Color', and 'Material' based on the image and product type.
+      15. VARIANTS GENERATION (CRITICAL FOR FILTERING): You MUST suggest realistic product variations for 'Size' (e.g. 250g, 500g, 1 kg), 'Color', and 'Material' based on the image and product type.
           - "suggested_variants": An array of objects with "name" (Attribute like 'Size', 'Color', or 'Material'), "value" (Specific choice like 'Large', 'Red', or 'Wood'), and "price" (Price adjustment relative to base price, e.g. 0).
           - ALWAYS try to extract at least one 'Material', one 'Color', and one 'Size' variant so they can be used for storefront filtering. Even if there's only one option (e.g., Color: 'Gold'), include it as a variant with price 0.
 
@@ -207,15 +196,9 @@ export class ProductAiService {
         "price": 1500,
         "description": "Premium, clean 2-sentence description",
         "seo_keywords": ["keyword1", "keyword2"],
-        "isCustomizable": true,
-        "customizationNote": "Enter your gift message",
         "telugu_keywords": ["transliterated_telugu_1", "transliterated_telugu_2"],
         "event_associations": ["Breakfast", "Festive"],
         "search_aliases": ["alias1", "alias2"],
-        "personalization_enabled": true,
-        "personalization_label": "Customization Details",
-        "personalization_placeholder": "• Specific instruction 1\n• Specific instruction 2\n• Specific instruction 3",
-        "personalization_helper": "Customers can customize this gift pack",
         "customer_note": "• Product-specific note line 1\n• Product-specific note line 2\n• Product-specific note line 3",
         "estimated_quantity": 20,
         "estimated_quantity_unit": "Packs",
@@ -245,7 +228,7 @@ export class ProductAiService {
       }
     } catch (err: any) {
       logger.error('AI API Error:', err.message);
-      throw new ApiError(500, 'Failed to generate product details from AI API.');
+      throw new ApiError(500, `Failed to generate product details from AI: ${err.message}`);
     }
 
     try {
@@ -278,9 +261,8 @@ export class ProductAiService {
         }
       }
 
-      // Ensure uniqueness against DB for title and slug across both Product and Showcase
+      // Ensure uniqueness against DB for title and slug
       const ProductModel = mongoose.model('Product');
-      const ShowcaseModel = mongoose.model('ShowcaseCollection');
       const baseSlug = parsedData.slug;
       const baseTitle = parsedData.english_title;
 
@@ -295,9 +277,7 @@ export class ProductAiService {
           $or: [{ slug: currentSlug }, { title: currentTitle }],
         });
 
-        const existingShowcase = await ShowcaseModel.exists({ title: currentTitle });
-
-        if (existingProduct || existingShowcase) {
+        if (existingProduct) {
           // If exists, append a counter to make it unique
           currentSlug = `${baseSlug}-${counter}`;
           currentTitle = `${baseTitle} ${counter}`;

@@ -106,7 +106,7 @@ export class CustomerIntelligenceService {
             createdAt: user.createdAt,
             isVerified: user.isVerified,
             loyaltyTier: user.loyaltyTier,
-            siriCoins: user.siriCoins,
+            rewardCoins: user.rewardCoins,
           },
           scores: {
             engagement: engagementScore,
@@ -132,7 +132,6 @@ export class CustomerIntelligenceService {
             total: totalSpent,
             breakdown: {
               purchases: purchasesTotal,
-              customOrders: 0,
             },
           },
           addresses,
@@ -429,13 +428,11 @@ export class CustomerIntelligenceService {
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]);
     const purchases = orders.length > 0 ? orders[0].total : 0;
-    const customOrders = 0;
 
     return {
-      total: purchases + customOrders,
+      total: purchases,
       breakdown: {
         purchases,
-        customOrders,
       },
     };
   }

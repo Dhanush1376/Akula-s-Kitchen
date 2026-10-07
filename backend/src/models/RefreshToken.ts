@@ -15,7 +15,7 @@ const RefreshTokenSchema: Schema = new Schema(
     expiresAt: { type: Date, required: true }, // TTL index below — auto-deletes when expiresAt passes
     userAgent: { type: String, default: '' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Auto-cleanup expired tokens via MongoDB TTL index
@@ -24,5 +24,9 @@ RefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 // Compound index for fast user-session lookups
 RefreshTokenSchema.index({ userId: 1, createdAt: -1 });
 
-const RefreshToken = mongoose.model<IRefreshToken>('RefreshToken', RefreshTokenSchema);
+const RefreshToken = mongoose.model<IRefreshToken>(
+  'RefreshToken',
+  RefreshTokenSchema,
+  'refreshtokens',
+);
 export default RefreshToken;

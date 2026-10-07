@@ -44,12 +44,6 @@ export function OrderItems({ order }) {
                 <h4 className="text-[14px] sm:text-[15px] font-bold text-[var(--admin-text-primary)] mb-1 group-hover:text-[var(--admin-accent)] transition-colors line-clamp-2">
                   {item.name}
                 </h4>
-                {item.type === 'rental' && item.rentalPeriod && (
-                  <p className="text-[12px] text-[var(--admin-text-secondary)] font-medium flex items-center gap-1 mt-1">
-                    <span className="material-symbols-outlined text-[14px]">calendar_clock</span>
-                    {item.rentalPeriod.startDate} to {item.rentalPeriod.endDate}
-                  </p>
-                )}
               </div>
 
               <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4 mt-3 sm:mt-4">
@@ -70,14 +64,6 @@ export function OrderItems({ order }) {
                       {item.quantity || item.qty || 1}
                     </span>
                   </div>
-                  {item.type === 'rental' && (
-                    <div className="flex flex-col pl-4 sm:pl-5">
-                      <span className="text-[10px] uppercase font-bold text-[var(--admin-text-tertiary)] tracking-wider">
-                        Deposit
-                      </span>
-                      <span className="font-bold text-indigo-600 mt-0.5">₹{item.deposit || 0}</span>
-                    </div>
-                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] uppercase font-bold text-[var(--admin-text-tertiary)] tracking-wider block mb-0.5">
@@ -106,14 +92,6 @@ export function OrderItems({ order }) {
               )}
             </span>
           </div>
-          {order.items?.some((i) => i.type === 'rental') && (
-            <div className="flex justify-between w-full sm:w-64">
-              <span>Security Deposit</span>
-              <span className="font-bold text-[var(--admin-text-primary)]">
-                ₹{order.deposit || 0}
-              </span>
-            </div>
-          )}
           <div className="flex justify-between w-full sm:w-64 pt-3 mt-1 border-t border-[var(--admin-border)]">
             <span className="text-[14px] font-bold text-[var(--admin-text-primary)] uppercase">
               Total

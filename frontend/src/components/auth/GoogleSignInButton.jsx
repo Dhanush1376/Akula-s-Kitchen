@@ -7,9 +7,7 @@ import { m as motion } from 'framer-motion';
 function GoogleIcon({ className = '' }) {
   return (
     <svg
-      className={className}
-      width="18"
-      height="18"
+      className={`w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0 ${className}`}
       viewBox="0 0 48 48"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
@@ -53,7 +51,7 @@ export function GoogleSignInButton({ onClick, isLoading, disabled = false, rende
   }, [renderGoogleButton, disabled, isLoading]);
 
   return (
-    <div className="relative w-full h-12 overflow-hidden rounded-full">
+    <div className="relative w-full h-11 sm:h-11.5 md:h-12 overflow-hidden rounded-full">
       {/* Invisible overlay for official Google button iframe */}
       <div
         id={containerId}
@@ -67,7 +65,7 @@ export function GoogleSignInButton({ onClick, isLoading, disabled = false, rende
         onClick={onClick}
         disabled={disabled || isLoading}
         whileTap={{ scale: 0.98 }}
-        className="w-full h-12 bg-white hover:bg-neutral-50 active:scale-98 text-neutral-900 rounded-full flex items-center justify-center gap-2.5 font-extrabold text-[12px] sm:text-[13px] uppercase tracking-wider border-[1.5px] border-black/15 hover:border-black/35 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group relative overflow-hidden cursor-pointer"
+        className="w-full h-11 sm:h-11.5 md:h-12 bg-white hover:bg-neutral-50 active:scale-98 text-neutral-800 rounded-full flex items-center justify-center gap-2 sm:gap-2.5 font-bold text-[12px] sm:text-[12.5px] md:text-[13px] uppercase tracking-wider border border-black/12 hover:border-black/30 shadow-xs disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group relative overflow-hidden cursor-pointer"
         aria-label="Continue with Google"
       >
         {isLoading ? (
@@ -81,7 +79,7 @@ export function GoogleSignInButton({ onClick, isLoading, disabled = false, rende
           </div>
         ) : (
           <>
-            <GoogleIcon className="shrink-0" />
+            <GoogleIcon />
             <span>Continue with Google</span>
           </>
         )}

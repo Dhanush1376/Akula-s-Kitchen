@@ -5,10 +5,6 @@ export type OrderEventType =
   | 'inventory_reserved'
   | 'production_started'
   | 'raw_material_reserved'
-  | 'craft_started'
-  | 'painting'
-  | 'drying'
-  | 'decoration'
   | 'quality_inspection_started'
   | 'quality_inspection_passed'
   | 'quality_inspection_failed'
@@ -49,7 +45,7 @@ export type OrderEventType =
 export interface IOrderEvent extends mongoose.Document {
   eventId: string;
   orderId: mongoose.Types.ObjectId;
-  orderType: 'purchase' | 'rental' | 'custom';
+  orderType: 'purchase';
   eventType: OrderEventType;
   timestamp: Date;
   performedBy: {

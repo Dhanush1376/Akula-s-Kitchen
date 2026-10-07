@@ -79,13 +79,13 @@ describe('Authorization & IDOR Security Integration Suite', () => {
     } as any);
 
     product = await Product.create({
-      title: 'Handcrafted Lamp',
-      description: 'Handcrafted brass lamp for home decor',
-      slug: `lamp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title: 'Gunpowder Podi (200 g)',
+      description: 'Roasted lentil and chilli podi',
+      slug: `podi-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       primaryCategory: category._id,
       price: 2500,
       stock: 20,
-      imageSrc: 'https://example.com/lamp.webp',
+      imageSrc: 'https://example.com/podi.webp',
     } as any);
 
     userA = await User.create({

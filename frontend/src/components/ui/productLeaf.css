@@ -1,0 +1,89 @@
+/* ─── Quiet banana leaf peeking in beside the product details (phones only) ─── */
+.pd-leaf {
+  position: absolute;
+  z-index: -1;
+  top: -30px;
+  /* set from ProductLeaf.jsx to reach the screen edge; this is the fallback */
+  right: -10px;
+  pointer-events: none;
+}
+/* Clips the leaf at the screen edge so its stem and cut base never show */
+.pd-leaf__frame {
+  position: relative;
+  width: 100px;
+  height: 220px;
+  overflow: hidden;
+  /* Fade the frame's bottom and left edges so the leaf melts into the page instead of
+     showing straight clipped lines */
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 92%),
+    linear-gradient(to right, transparent 0, #000 38%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 92%),
+    linear-gradient(to right, transparent 0, #000 38%);
+  mask-composite: intersect;
+  animation: pd-leaf-in 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+/* The leaf's upright blade rises along the screen edge; its cut base sits below the
+   frame. Breeze and gusts pivot on the stem, out of sight. */
+.pd-leaf__sway {
+  position: absolute;
+  /* a little past the edge, so the cut side stays hidden when the breeze tilts it */
+  right: -16px;
+  bottom: -70px;
+  width: 240px;
+  transform-origin: 90% 100%;
+}
+.pd-leaf__img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  filter: drop-shadow(0 1px 1.5px rgba(28, 40, 14, 0.22));
+}
+/* Thin, soft shade like the other leaves (light from the top left) */
+.pd-leaf__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  translate: 6px 10px;
+  filter: brightness(0.25) saturate(0.6) blur(6px);
+  opacity: 0.22;
+}
+
+/* Slides in from the screen edge, overshoots a touch and settles */
+@keyframes pd-leaf-in {
+  0% {
+    opacity: 0;
+    translate: 75% 6%;
+  }
+  60% {
+    opacity: 1;
+    translate: -4% -1%;
+  }
+  80% {
+    translate: 1.5% 0;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .pd-leaf {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd-leaf__frame {
+    animation: none;
+  }
+}

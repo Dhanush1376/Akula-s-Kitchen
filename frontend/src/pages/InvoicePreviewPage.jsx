@@ -12,9 +12,9 @@ const sampleReferenceOrder = {
   },
   createdAt: new Date('2026-09-06'),
   paymentMethod: 'COD',
-  customer: 'Dhanush Atmakuri',
+  customer: 'Asha Rao',
   shippingAddress: {
-    name: 'Dhanush',
+    name: 'Asha Rao',
     email: 'customer@example.com',
     phone: '9876543210',
     address: 'Flat 101, Green Meadows Apartments,',
@@ -25,8 +25,6 @@ const sampleReferenceOrder = {
   store: {
     displayName: BRAND.name,
     legalCompanyName: BRAND.legalCompanyName || BRAND.name,
-    gstin: BRAND.gstin || '',
-    cin: BRAND.cin || '',
     addressLine1: BRAND.address || '',
     city: BRAND.city || '',
     state: BRAND.state || '',
@@ -35,7 +33,7 @@ const sampleReferenceOrder = {
   },
   items: [
     {
-      title: 'Kondapalli Family Set',
+      title: 'Kitchen Essentials Hamper',
       quantity: 1,
       price: 1499,
     },
@@ -43,14 +41,14 @@ const sampleReferenceOrder = {
   subtotal: 1499,
   shippingFee: 0,
   tax: {
-    taxableAmount: 1295.76,
-    cgst: 116.62,
-    sgst: 116.62,
-    totalTax: 233.24,
-    grandTotal: 1529,
+    taxableAmount: 1499,
+    cgst: 0,
+    sgst: 0,
+    totalTax: 0,
+    grandTotal: 1499,
     currencySymbol: '₹',
   },
-  totalAmount: 1529,
+  totalAmount: 1499,
 };
 
 const sampleExtremeOrder = {
@@ -60,9 +58,8 @@ const sampleExtremeOrder = {
   createdAt: new Date(),
   paymentMethod: 'ONLINE_PREPAID',
   shippingAddress: {
-    name: 'Sri Sri Sri Ramachandra Venkata Subrahmanya Sastry Garu Bahadur',
-    email:
-      'ramachandra.venkata.subrahmanya.sastry.official.business.long.email@company-enterprise.org',
+    name: 'Sri Ramachandra Venkata Subrahmanya Sastry Garu (Long Name Test)',
+    email: 'a.very.long.customer.email.address.for.layout.testing@example.com',
     phone: '+91 9876543210 / 08592-234567',
     address:
       'Door No. 12-34/56, 3rd Floor, Golden Jubilee Tower, Behind Old Municipal Complex, Ramnagar Colony, Extension Phase 2',
@@ -83,16 +80,16 @@ const sampleExtremeOrder = {
   discount: 2000,
   shippingFee: 250,
   tax: {
-    taxableAmount: 17201.69,
-    cgst: 1548.15,
-    sgst: 1548.15,
-    totalTax: 3096.31,
-    grandTotal: 23444,
+    taxableAmount: 20098,
+    cgst: 0,
+    sgst: 0,
+    totalTax: 0,
+    grandTotal: 20348,
   },
-  totalAmount: 23444,
+  totalAmount: 20348,
 };
 
-const sampleBalajiOrder = {
+const sampleUpiOrder = {
   _id: '68bc449129031022',
   orderId: '68bc449129031022',
   invoiceNumber: 'INV-2026-000045',
@@ -102,21 +99,21 @@ const sampleBalajiOrder = {
   },
   createdAt: new Date('2026-09-10'),
   paymentMethod: 'UPI',
-  customer: 'Balaji Atmakuri',
+  customer: 'Kiran Kumar',
   shippingAddress: {
-    name: 'Balaji Atmakuri',
-    email: 'sakhisoaps@gmail.com',
+    name: 'Kiran Kumar',
+    email: 'upi.customer@example.com',
     phone: '9876543210',
-    address: 'Chiheru Khusropur Link Road, Law gate, Phagwara Tahsil, Punjab',
-    pincode: '144411',
+    address: 'Plot 7, Lake View Road, Madhapur',
+    city: 'Hyderabad',
+    state: 'Telangana',
+    pincode: '500081',
   },
   store: {
     displayName: BRAND.name,
     email: BRAND.email,
     phone: BRAND.phone,
     legalCompanyName: BRAND.legalCompanyName || BRAND.name,
-    gstin: BRAND.gstin || '',
-    cin: BRAND.cin || '',
     addressLine1: BRAND.address || '',
     city: BRAND.city || '',
     state: BRAND.state || '',
@@ -133,111 +130,38 @@ const sampleBalajiOrder = {
   subtotal: 1300,
   shippingFee: 0,
   tax: {
-    taxableAmount: 1101.69,
-    cgst: 99.15,
-    sgst: 99.15,
-    totalTax: 198.31,
+    taxableAmount: 1300,
+    cgst: 0,
+    sgst: 0,
+    totalTax: 0,
     grandTotal: 1300,
     currencySymbol: '₹',
   },
   totalAmount: 1300,
 };
 
-const sampleRentalBangleOrder = {
-  _id: '68bc88888888888888',
-  rentalOrderId: 'RNT-2026-000088',
-  orderId: 'RNT-2026-000088',
-  orderType: 'rental',
-  isPureRental: true,
-  productTitle: 'Bangle Ceremony Tray',
-  quantity: 2,
-  durationDays: 5,
-  rentalStartDate: new Date('2026-09-11'),
-  rentalEndDate: new Date('2026-09-16'),
-  rentalRate: {
-    rentalPrice: 799,
-    rentalDurationDays: 5,
-  },
-  rentalCharge: 1598,
-  securityDeposit: 1200,
-  deliveryCharge: 0,
-  tax: 243.76,
-  totalAmount: 1895,
-  paymentMethod: 'UPI',
-  customer: 'Balaji Atmakuri',
-  shippingAddress: {
-    name: 'Balaji Atmakuri',
-    email: 'sakhisoaps@gmail.com',
-    phone: '9876543210',
-    address: 'Chiheru Khusropur Link Road, Law gate, Phagwara Tahsil, Punjab',
-    pincode: '144411',
-  },
-  store: {
-    displayName: BRAND.name,
-    legalCompanyName: BRAND.legalCompanyName || BRAND.name,
-    gstin: BRAND.gstin || '',
-    cin: BRAND.cin || '',
-    addressLine1: BRAND.address || '',
-    city: BRAND.city || '',
-    state: BRAND.state || '',
-    postalCode: BRAND.postalCode || '',
-    country: BRAND.country || 'India',
-  },
-  items: [
-    {
-      title: 'Bangle Ceremony Tray',
-      quantity: 2,
-      price: 1598, // Purchase/retail price passed by backend or order
-      rentalPrice: 799,
-      isRental: true,
-      type: 'rental',
-      rentalDurationDays: 5,
-    },
-  ],
-  taxSnap: {
-    taxableAmount: 1354.24,
-    cgst: 121.88,
-    sgst: 121.88,
-    totalTax: 243.76,
-    grandTotal: 1895,
-    subtotal: 1598,
-    currencySymbol: '₹',
-  },
-};
-
 export default function InvoicePreviewPage() {
-  const [activeTab, setActiveTab] = useState('rental'); // 'rental' | 'balaji' | 'reference' | 'extreme'
+  const [activeTab, setActiveTab] = useState('reference'); // 'reference' | 'upi' | 'extreme'
   const [showModal, setShowModal] = useState(false);
   const currentOrder =
-    activeTab === 'rental'
-      ? sampleRentalBangleOrder
-      : activeTab === 'balaji'
-        ? sampleBalajiOrder
-        : activeTab === 'extreme'
-          ? sampleExtremeOrder
-          : sampleReferenceOrder;
+    activeTab === 'upi'
+      ? sampleUpiOrder
+      : activeTab === 'extreme'
+        ? sampleExtremeOrder
+        : sampleReferenceOrder;
 
   return (
     <div className="min-h-screen bg-neutral-100 py-6 px-2 sm:px-4 flex flex-col items-center">
       {/* Test Controls */}
       <div className="mb-4 flex items-center gap-3 bg-white p-2.5 rounded-full shadow-sm border border-neutral-200 flex-wrap justify-center">
         <button
-          id="btn-rental"
-          onClick={() => setActiveTab('rental')}
+          id="btn-upi"
+          onClick={() => setActiveTab('upi')}
           className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-            activeTab === 'rental' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+            activeTab === 'upi' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
           }`}
         >
-          Rental Bangle Tray
-        </button>
-        <button
-          id="btn-balaji"
-          onClick={() => setActiveTab('balaji')}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-            activeTab === 'balaji' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
-          }`}
-        >
-          Balaji Order
+          UPI Order
         </button>
         <button
           id="btn-reference"

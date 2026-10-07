@@ -13,7 +13,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const URI = process.env.MONGO_URI!;
-const DR_URI = URI.replace(/\/[a-zA-Z0-9_-]+\?/, '/eventdecor_dr_test?');
+const DR_URI = URI.replace(/\/[a-zA-Z0-9_-]+\?/, '/akulas_kitchen_dr_test?');
 
 const timings: Record<string, number> = {};
 
@@ -68,7 +68,7 @@ async function runDRDrill() {
 
   // 4. Disconnect Primary, Connect Recovery
   await mongoose.disconnect();
-  console.log('\\n[3/5] Connecting to Isolated Recovery DB (eventdecor_dr_test)...');
+  console.log('\\n[3/5] Connecting to Isolated Recovery DB (akulas_kitchen_dr_test)...');
   await mongoose.connect(DR_URI);
 
   // Clean old DR if exists

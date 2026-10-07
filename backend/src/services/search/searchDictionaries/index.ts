@@ -2,7 +2,7 @@
 // Telugu-First AI Search Dictionaries
 // ══════════════════════════════════════════════════════════════════════
 // This is the linguistic brain of the search engine.
-// Telugu transliterations, synonyms and concept relationships used by
+// Telugu transliterations, synonyms and category keywords used by
 // the search engine are defined here.
 //
 // The dictionaries were split into one file per concern for maintainability.
@@ -14,4 +14,3 @@ export { TRANSLITERATION_MAP } from './transliterationMap';
 export { SYNONYM_MAP } from './synonymMap';
 export { CATEGORY_KEYWORDS } from './categoryKeywords';
 export { INTENT_EXPANSION_MAP } from './intentExpansionMap';
-export { EVENT_KNOWLEDGE_GRAPH, type EventGraphEntry } from './eventKnowledgeGraph';

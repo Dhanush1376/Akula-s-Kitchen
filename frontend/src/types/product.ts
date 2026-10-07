@@ -27,12 +27,6 @@ export interface PricingTier {
   unitPrice: number;
 }
 
-export interface RentalTier {
-  durationDays: number;
-  pricePerDay: number;
-  securityDeposit: number;
-}
-
 export interface Product {
   _id: string;
   id?: string;
@@ -47,10 +41,6 @@ export interface Product {
   category: string | ProductCategory;
   tags?: string[];
   stock: number;
-  isAvailableForRent?: boolean;
-  rentalPricePerDay?: number;
-  rentalSecurityDeposit?: number;
-  rentalTiers?: RentalTier[];
   pricingTiers?: PricingTier[];
   isCustomizable?: boolean;
   averageRating?: number;

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { ISoftDeleted } from '../utils/SoftDeletePlugin';
 import { IOrderInvoice, IOrderStoreSnapshot, IOrderTaxSnapshot } from './invoice';
+import { ISelectedOptionSnapshot } from './user';
 
 export interface IOrderStatusHistory {
   status: string;
@@ -13,8 +14,12 @@ export interface IOrderItem {
   productId: mongoose.Types.ObjectId;
   title: string;
   price: number;
+  basePrice?: number;
+  configuredUnitPrice?: number;
   quantity: number;
   variant?: string;
+  selectedOptions?: ISelectedOptionSnapshot[];
+  configurationSignature?: string;
   imageSrc: string;
   category?: string;
   isNonRefundable?: boolean;
@@ -55,8 +60,6 @@ export interface IOrder extends ISoftDeleted {
     upiVpa?: string;
   };
   paymentMethod: string;
-  isCustomOrder?: boolean;
-  customOrderId?: mongoose.Types.ObjectId;
   paymentStatus:
     | 'pending'
     | 'processing'

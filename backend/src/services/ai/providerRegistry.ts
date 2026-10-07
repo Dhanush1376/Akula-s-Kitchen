@@ -164,10 +164,10 @@ export const VISION_PROVIDER_CONFIG: Record<string, VisionProviderConfig> = {
 
 export const VISION_MODEL_REGISTRY: Record<string, VisionModelEntry> = {
   groq: {
-    validation: 'llama-3.3-70b-versatile',
-    production: 'llama-3.3-70b-versatile',
-    fallback: 'llama-3.1-8b-instant',
-    chain: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'],
+    validation: 'openai/gpt-oss-120b',
+    production: 'openai/gpt-oss-120b',
+    fallback: 'openai/gpt-oss-20b',
+    chain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'],
   },
   openai: {
     validation: 'gpt-4o-mini',

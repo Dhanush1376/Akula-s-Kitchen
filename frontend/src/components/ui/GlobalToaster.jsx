@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import toast, { Toaster, ToastBar, useToasterStore } from 'react-hot-toast';
 import debounce from 'lodash.debounce';
-import { m } from 'framer-motion';
 
 export function GlobalToaster() {
   const [toastPosition, setToastPosition] = useState('bottom-right');
@@ -74,25 +73,32 @@ export function GlobalToaster() {
         }}
       >
         {(t) => (
-          <m.div
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={0.4}
-            onDragEnd={(_, info) => {
-              if (info.offset.y < -20) {
-                toast.dismiss(t.id);
-              }
-            }}
-            style={{ touchAction: 'none', cursor: 'grab' }}
-            whileTap={{ cursor: 'grabbing' }}
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="pointer-events-auto"
+          <div
+            onClick={() => toast.dismiss(t.id)}
+            className="pointer-events-auto cursor-pointer transition-transform duration-150 active:scale-95"
           >
-            <ToastBar toast={t} />
-          </m.div>
+            <ToastBar toast={t}>
+              {({ icon, message }) => (
+                <>
+                  {icon}
+                  {message}
+                  {t.type !== 'loading' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toast.dismiss(t.id);
+                      }}
+                      className="ml-2 text-neutral-400 hover:text-neutral-700 text-xs p-0.5 rounded-full transition-colors cursor-pointer"
+                      aria-label="Dismiss toast"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </>
+              )}
+            </ToastBar>
+          </div>
         )}
       </Toaster>
     </div>

@@ -189,7 +189,7 @@ export function AdminDashboardRecents({ orders, trendingProducts }) {
               <motion.div
                 key={i}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/admin/products/edit/${p.id}`)}
+                onClick={() => navigate(`/admin/products/edit/${p._id || p.id}`)}
                 className="flex items-center gap-2.5 p-2 rounded-[4px] border border-[var(--admin-border-subtle)] hover:bg-[var(--admin-surface-hover)] hover:border-[var(--admin-border-strong)] transition-all cursor-pointer group min-w-0 bg-[var(--admin-surface)]"
               >
                 <img

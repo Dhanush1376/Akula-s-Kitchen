@@ -461,44 +461,45 @@ export function AdminAnalytics() {
     };
   }, [orders, selectedPeriod, dashboardStats]);
 
-  // ─── Revenue Streams Breakdown (Products vs Rentals) ───
+  // ─── Revenue Streams Breakdown (Online vs Cash on Delivery) ───
   const revenueStreams = useMemo(() => {
-    let productSales = 0;
-    let productCount = 0;
-    let rentalSales = 0;
-    let rentalCount = 0;
+    let onlineSales = 0;
+    let onlineCount = 0;
+    let codSales = 0;
+    let codCount = 0;
 
-    // From Orders
     orders.forEach((o) => {
       const tot = Number(o.total || 0);
-      const hasRentalItem = Array.isArray(o.items) && o.items.some((it) => it.type === 'rental');
-      if (hasRentalItem) {
-        rentalSales += tot;
-        rentalCount += 1;
+      const isCod =
+        o.payment?.toLowerCase().includes('cod') ||
+        o.rawOrder?.paymentMethod?.toLowerCase() === 'cod';
+      if (isCod) {
+        codSales += tot;
+        codCount += 1;
       } else {
-        productSales += tot;
-        productCount += 1;
+        onlineSales += tot;
+        onlineCount += 1;
       }
     });
 
-    const grandTotal = productSales + rentalSales || 1;
+    const grandTotal = onlineSales + codSales || 1;
 
     return [
       {
-        name: 'Storefront Sales',
-        revenue: productSales,
-        orders: productCount,
-        percentage: Math.round((productSales / grandTotal) * 100),
+        name: 'Online Prepaid',
+        revenue: onlineSales,
+        orders: onlineCount,
+        percentage: Math.round((onlineSales / grandTotal) * 100),
         color: THEME.gold,
-        icon: 'storefront',
+        icon: 'credit_card',
       },
       {
-        name: 'Rentals',
-        revenue: rentalSales,
-        orders: rentalCount,
-        percentage: Math.round((rentalSales / grandTotal) * 100),
+        name: 'Cash on Delivery',
+        revenue: codSales,
+        orders: codCount,
+        percentage: Math.round((codSales / grandTotal) * 100),
         color: THEME.slate,
-        icon: 'celebration',
+        icon: 'payments',
       },
     ];
   }, [orders]);
@@ -1139,11 +1140,11 @@ export function AdminAnalytics() {
                 Revenue Streams Split
               </h3>
               <span className="hidden sm:inline-block text-[10.5px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
-                Storefront vs Rentals
+                Online vs COD
               </span>
             </div>
             <p className="hidden sm:block text-[12px] text-[var(--admin-text-tertiary)] mb-4">
-              Financial performance segmented across storefront purchases and rentals
+              Storefront revenue split by how customers paid
             </p>
 
             <div className="space-y-2.5 sm:space-y-3.5 mt-2 sm:mt-0">

@@ -3,7 +3,7 @@ import { ITransaction } from '../types/transaction';
 
 /**
  * The lightweight cross-reference model for all commercial entities
- * (Purchases, Rentals, Events, Custom Orders).
+ * (store purchases).
  * This acts as the single source of truth for tracking, searching, and fulfilling
  * operations across disparate domain silos.
  */
@@ -17,7 +17,7 @@ const TransactionSchema = new Schema(
     },
     domain: {
       type: String,
-      enum: ['purchase', 'rental', 'event', 'custom'],
+      enum: ['purchase'],
       required: true,
       index: true,
     },

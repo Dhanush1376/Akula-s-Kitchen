@@ -240,7 +240,6 @@ export const getCart = asyncHandler(async (req: any, res: Response) => {
     hashedUserId: forensicHashId(userId),
     rawCartItemCount: Array.isArray(user.cart) ? user.cart.length : 0,
     computedPurchaseItemCount: cartDetails.purchaseCart?.items?.length ?? 0,
-    computedRentalItemCount: cartDetails.rentalCart?.items?.length ?? 0,
   });
 
   res.setHeader('X-Session-Cache', bypassCache ? 'BYPASS' : 'MISS');
@@ -249,15 +248,15 @@ export const getCart = asyncHandler(async (req: any, res: Response) => {
 });
 
 export const addToCart = asyncHandler(async (req: any, res: Response) => {
-  const { productId, quantity, type, rentalInfo } = req.body;
+  const { productId, quantity, selectedOptions, customizationNote } = req.body;
   const requestId = crypto.randomBytes(4).toString('hex');
 
   const updatedUser = await UserCartService.addToCart(
     req.user.id,
     productId,
     quantity,
-    type,
-    rentalInfo,
+    selectedOptions,
+    customizationNote,
   );
 
   // Forensic DB write logging
@@ -280,7 +279,6 @@ export const addToCart = asyncHandler(async (req: any, res: Response) => {
   logger.debug('[CART_RESPONSE_TRACE][CONTROLLER_OUTPUT]', {
     requestId,
     purchaseItemCount: cartDetails.purchaseCart?.items?.length ?? 0,
-    rentalItemCount: cartDetails.rentalCart?.items?.length ?? 0,
     responseDataKeys: Object.keys(cartDetails || {}),
   });
 
@@ -313,7 +311,12 @@ export const mergeCart = asyncHandler(async (req: any, res: Response) => {
 
 export const removeFromCart = asyncHandler(async (req: any, res: Response) => {
   const { productId } = req.params;
-  const user = await UserCartService.removeFromCart(req.user.id, productId);
+  const { configurationSignature } = req.query;
+  const user = await UserCartService.removeFromCart(
+    req.user.id,
+    productId,
+    configurationSignature as string,
+  );
   await invalidateUserSessionCaches(String(req.user.id));
   const cartDetails = await UserService.computeAndValidateCart(user);
   await cacheCart(String(req.user.id), cartDetails);

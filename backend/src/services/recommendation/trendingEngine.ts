@@ -11,14 +11,14 @@ export interface TrendingItem {
   velocity: number;
   clickCount: number;
   viewCount: number;
-  bookingCount: number;
+  purchaseCount: number;
   wishlistCount: number;
   rank: number;
 }
 
 export interface TrendingResult {
   trendingNow: TrendingItem[];
-  mostBooked: TrendingItem[];
+  mostPurchased: TrendingItem[];
   popularThisSeason: TrendingItem[];
   topRated: TrendingItem[];
   luxuryTrending: TrendingItem[];
@@ -45,19 +45,7 @@ export async function calculateTrending(
           targetType,
           timestamp: { $gte: last24h },
           eventType: {
-            $in: [
-              'product_view',
-              'product_click',
-              'event_view',
-              'event_click',
-              'gallery_view',
-              'gallery_click',
-              'showcase_view',
-              'wishlist_add',
-              'cart_add',
-              'purchase',
-              'booking',
-            ],
+            $in: ['product_view', 'product_click', 'wishlist_add', 'cart_add', 'purchase'],
           },
         },
       },
@@ -67,29 +55,16 @@ export async function calculateTrending(
           totalInteractions: { $sum: 1 },
           clicks: {
             $sum: {
-              $cond: [
-                { $in: ['$eventType', ['product_click', 'event_click', 'gallery_click']] },
-                1,
-                0,
-              ],
+              $cond: [{ $eq: ['$eventType', 'product_click'] }, 1, 0],
             },
           },
           views: {
             $sum: {
-              $cond: [
-                {
-                  $in: [
-                    '$eventType',
-                    ['product_view', 'event_view', 'gallery_view', 'showcase_view'],
-                  ],
-                },
-                1,
-                0,
-              ],
+              $cond: [{ $eq: ['$eventType', 'product_view'] }, 1, 0],
             },
           },
           wishlists: { $sum: { $cond: [{ $eq: ['$eventType', 'wishlist_add'] }, 1, 0] } },
-          bookings: { $sum: { $cond: [{ $in: ['$eventType', ['purchase', 'booking']] }, 1, 0] } },
+          purchases: { $sum: { $cond: [{ $eq: ['$eventType', 'purchase'] }, 1, 0] } },
         },
       },
       { $sort: { totalInteractions: -1 } },
@@ -123,7 +98,7 @@ export async function calculateTrending(
 
       // Combined score: weighted interaction count + velocity bonus
       const score =
-        item.clicks * 3 + item.views * 1 + item.wishlists * 5 + item.bookings * 10 + velocity * 10;
+        item.clicks * 3 + item.views * 1 + item.wishlists * 5 + item.purchases * 10 + velocity * 10;
 
       return {
         targetId: targetIdStr,
@@ -132,7 +107,7 @@ export async function calculateTrending(
         velocity,
         clickCount: item.clicks,
         viewCount: item.views,
-        bookingCount: item.bookings,
+        purchaseCount: item.purchases,
         wishlistCount: item.wishlists,
         rank: 0,
       };
@@ -160,16 +135,14 @@ export async function getTrendingFeeds(seasonalContext?: string): Promise<Trendi
     const cached = await RecommendationCache.getTrending('all');
     if (cached) return cached;
 
-    const [products, events] = await Promise.all([
-      calculateTrending('product', { limit: 15, seasonalContext }),
-      calculateTrending('event', { limit: 10, seasonalContext }),
-    ]);
-
-    const allItems = [...products, ...events];
+    const products = await calculateTrending('product', { limit: 15, seasonalContext });
+    const allItems = products;
 
     // Sort by different criteria for different feeds
     const trendingNow = [...allItems].sort((a, b) => b.velocity - a.velocity).slice(0, 12);
-    const mostBooked = [...allItems].sort((a, b) => b.bookingCount - a.bookingCount).slice(0, 10);
+    const mostPurchased = [...allItems]
+      .sort((a, b) => b.purchaseCount - a.purchaseCount)
+      .slice(0, 10);
 
     // Get 30-day most popular for "popular this season"
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -178,14 +151,7 @@ export async function getTrendingFeeds(seasonalContext?: string): Promise<Trendi
         $match: {
           timestamp: { $gte: thirtyDaysAgo },
           eventType: {
-            $in: [
-              'product_view',
-              'event_view',
-              'gallery_view',
-              'purchase',
-              'booking',
-              'wishlist_add',
-            ],
+            $in: ['product_view', 'purchase', 'wishlist_add'],
           },
         },
       },
@@ -206,20 +172,22 @@ export async function getTrendingFeeds(seasonalContext?: string): Promise<Trendi
       velocity: 0,
       clickCount: 0,
       viewCount: item.count,
-      bookingCount: 0,
+      purchaseCount: 0,
       wishlistCount: 0,
       rank: idx + 1,
     }));
 
-    // Luxury trending: items with high wishlist + booking scores (correlates with premium items)
+    // Luxury trending: items with high wishlist + purchase scores (correlates with premium items)
     const luxuryTrending = [...products]
-      .filter((p) => p.wishlistCount + p.bookingCount > 0)
-      .sort((a, b) => b.wishlistCount + b.bookingCount * 3 - (a.wishlistCount + a.bookingCount * 3))
+      .filter((p) => p.wishlistCount + p.purchaseCount > 0)
+      .sort(
+        (a, b) => b.wishlistCount + b.purchaseCount * 3 - (a.wishlistCount + a.purchaseCount * 3),
+      )
       .slice(0, 10);
 
     const result: TrendingResult = {
       trendingNow,
-      mostBooked,
+      mostPurchased,
       popularThisSeason,
       topRated: products.slice(0, 10), // Will be enriched with ratings in the orchestrator
       luxuryTrending,
@@ -231,7 +199,7 @@ export async function getTrendingFeeds(seasonalContext?: string): Promise<Trendi
     logger.error(`[TRENDING ENGINE] Error getting trending feeds: ${err.message}`);
     return {
       trendingNow: [],
-      mostBooked: [],
+      mostPurchased: [],
       popularThisSeason: [],
       topRated: [],
       luxuryTrending: [],
@@ -260,7 +228,7 @@ export async function saveTrendingSnapshot(
         score: item.score,
         clickCount: item.clickCount,
         viewCount: item.viewCount,
-        bookingCount: item.bookingCount,
+        purchaseCount: item.purchaseCount,
         wishlistCount: item.wishlistCount,
         rank: item.rank,
       })),

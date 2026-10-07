@@ -2,7 +2,7 @@ import axios from 'axios';
 import GlobalAiSettings from '../../models/GlobalAiSettings';
 import AiProvider from '../../models/AiProvider';
 import AiUsageLog from '../../models/AiUsageLog';
-import { VISION_PROVIDER_CONFIG, getVisionModel } from './providerRegistry';
+import { VISION_PROVIDER_CONFIG, getVisionModel, getValidationChain } from './providerRegistry';
 import { preprocessImage } from './imagePreprocessor';
 import logger from '../../config/logger';
 
@@ -63,7 +63,28 @@ export class AIClient {
     }
 
     if (!settings.selectedProviderId) {
-      throw new Error('No AI Provider selected in Global AI Settings.');
+      if (process.env.GROQ_API_KEY) {
+        return {
+          settings: {
+            temperature: settings.temperature ?? 0.2,
+            maxTokens: settings.maxTokens ?? 4000,
+            requestTimeout: settings.requestTimeout ?? 60000,
+            retryCount: settings.retryCount ?? 2,
+            autoSelectModel: true,
+            fallbackProviderIds: [],
+          },
+          provider: {
+            id: 'legacy-groq',
+            name: 'Legacy Groq (Env)',
+            provider: 'groq',
+            getDecryptedApiKey: () => process.env.GROQ_API_KEY,
+            endpointUrl: '',
+            modelOverride: '',
+            capabilities: { vision: false, text: true, jsonMode: true },
+          },
+        };
+      }
+      throw new Error('No AI Provider selected in Global AI Settings and GROQ_API_KEY is missing.');
     }
 
     return {
@@ -197,6 +218,21 @@ export class AIClient {
             'health.lastErrorAt': new Date(),
             'health.lastError': errorMsg,
           }).catch((e) => logger.error(`Failed to update provider health: ${e.message}`));
+        }
+
+        // Model deprecation / not found fallback: try next model in provider chain
+        const chain = getValidationChain(currentProvider.provider);
+        const currentModelIdx = chain.indexOf(model);
+        if (
+          (errorMsg.includes('does not exist') || errorMsg.includes('do not have access')) &&
+          currentModelIdx !== -1 &&
+          currentModelIdx + 1 < chain.length
+        ) {
+          const nextModel = chain[currentModelIdx + 1];
+          logger.warn(`[AIClient] Model ${model} unavailable. Stepping down to ${nextModel}...`);
+          currentProvider.modelOverride = nextModel;
+          attempts = 0;
+          continue;
         }
 
         // Retry logic

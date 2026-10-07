@@ -23,7 +23,7 @@ export function ProductInfoStep({
         <div className="flex-1 min-w-0 pr-1 sm:pr-2">
           <h2 className="text-[11px] font-bold text-[var(--admin-text-primary)]">Product Info</h2>
           <p className="text-[10px] sm:text-[11px] text-[var(--admin-text-secondary)] mt-0.5">
-            Detail product info, category, and materials.
+            Detail product info, category, and ingredients.
           </p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -124,19 +124,6 @@ export function ProductInfoStep({
 
         <div className="col-span-2 sm:col-span-1">
           <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-            Telugu Title (optional)
-          </label>
-          <input
-            type="text"
-            value={formData.teluguTitle}
-            onChange={(e) => setFormData({ ...formData, teluguTitle: e.target.value })}
-            placeholder="సాంప్రదాయ పూజా పీఠం"
-            className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-          />
-        </div>
-
-        <div className="col-span-2 sm:col-span-1">
-          <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
             Slug (auto-generated from title)
           </label>
           <input
@@ -157,13 +144,13 @@ export function ProductInfoStep({
 
         <div className="col-span-2 sm:col-span-1">
           <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-            Material
+            Ingredients
           </label>
           <input
             type="text"
             value={formData.material}
             onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-            placeholder="e.g. Teak wood, Pure Brass"
+            placeholder="e.g. Rice, Urad Dal, Red Chilli, Ghee"
             className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
           />
         </div>
@@ -193,7 +180,7 @@ export function ProductInfoStep({
               required
               value={formData.primaryCategory}
               onChange={(e) => setFormData({ ...formData, primaryCategory: e.target.value })}
-              placeholder="Traditional Urlis, Brass Lamps"
+              placeholder="e.g. Pickles, Podis, Batters, Snacks, Sweets"
               className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
             />
           ) : (
@@ -203,12 +190,20 @@ export function ProductInfoStep({
               onChange={(e) => setFormData({ ...formData, primaryCategory: e.target.value })}
               className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
             >
-              <option value="">Select Category</option>
-              {categoriesList.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
+              <option value="">
+                {categoriesList.length === 0
+                  ? 'No categories yet — click "+ Add Custom"'
+                  : 'Select Category'}
+              </option>
+              {categoriesList.map((c) => {
+                const name = typeof c === 'string' ? c : c?.name;
+                if (!name) return null;
+                return (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                );
+              })}
             </select>
           )}
         </div>
@@ -267,261 +262,6 @@ export function ProductInfoStep({
             className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] p-3 text-[12.5px] outline-none transition-all resize-none"
           />
         </div>
-      </div>
-
-      {/* Product Personalization Settings */}
-      <div
-        className={`p-4 bg-[var(--admin-bg-subtle)] border rounded-[4px] space-y-4 mt-6 transition-all duration-300 ${focusedField === 'isCustomizable' ? 'border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/50' : 'border-[var(--admin-border)]'}`}
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--admin-text-primary)]">
-              Customer Personalization Notes
-            </p>
-            <p className="text-[10.5px] text-[var(--admin-text-secondary)] mt-0.5">
-              Allow custom text or engravings at checkout
-            </p>
-          </div>
-          <AdminToggle
-            checked={formData.customizationConfig?.enabled || false}
-            onChange={() =>
-              setFormData((prev) => ({
-                ...prev,
-                customizationConfig: {
-                  ...prev.customizationConfig,
-                  enabled: !prev.customizationConfig?.enabled,
-                },
-              }))
-            }
-          />
-        </div>
-
-        {formData.customizationConfig?.enabled && (
-          <div className="space-y-4 pt-2 border-t border-[var(--admin-border)] mt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Input Label
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Name to Print"
-                  value={formData.customizationConfig?.label || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      customizationConfig: {
-                        ...prev.customizationConfig,
-                        label: e.target.value,
-                      },
-                    }))
-                  }
-                  className={`w-full bg-[var(--admin-surface)] rounded-[4px] px-3 h-9 text-[12.5px] border outline-none transition-all ${focusedField === 'customizationNote' ? 'border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/50' : 'border-[var(--admin-border)] focus:border-[var(--admin-accent)]'}`}
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Placeholder Text
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Enter name here..."
-                  value={formData.customizationConfig?.placeholder || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      customizationConfig: {
-                        ...prev.customizationConfig,
-                        placeholder: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full bg-[var(--admin-surface)] rounded-[4px] px-3 h-9 text-[12.5px] border border-[var(--admin-border)] outline-none focus:border-[var(--admin-accent)] transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Max Length (chars)
-                </label>
-                <input
-                  type="number"
-                  placeholder="500"
-                  value={formData.customizationConfig?.maxLength || 500}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      customizationConfig: {
-                        ...prev.customizationConfig,
-                        maxLength: e.target.value,
-                      },
-                    }))
-                  }
-                  className="w-full bg-[var(--admin-surface)] rounded-[4px] px-3 h-9 text-[12.5px] border border-[var(--admin-border)] outline-none focus:border-[var(--admin-accent)] transition-all"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                  Required Field?
-                </label>
-                <div className="flex items-center mt-2">
-                  <AdminToggle
-                    checked={formData.customizationConfig?.required || false}
-                    onChange={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customizationConfig: {
-                          ...prev.customizationConfig,
-                          required: !prev.customizationConfig?.required,
-                        },
-                      }))
-                    }
-                  />
-                  <span className="ml-2 text-[11px] text-[var(--admin-text-secondary)]">
-                    Customers must provide this note to checkout.
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                Helper Description (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Please double check spelling before submitting."
-                value={formData.customizationConfig?.helperText || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    customizationConfig: {
-                      ...prev.customizationConfig,
-                      helperText: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full bg-[var(--admin-surface)] rounded-[4px] px-3 h-9 text-[12.5px] border border-[var(--admin-border)] outline-none focus:border-[var(--admin-accent)] transition-all"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Complimentary Gift Information */}
-      <div className="p-4 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] space-y-4 mt-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--admin-text-primary)]">
-              Complimentary Gift Included
-            </p>
-            <p className="text-[10.5px] text-[var(--admin-text-secondary)] mt-0.5">
-              Offer a free gift with this product purchase
-            </p>
-          </div>
-          <AdminToggle
-            checked={formData.complimentaryGift?.enabled || false}
-            onChange={() =>
-              setFormData((prev) => ({
-                ...prev,
-                complimentaryGift: {
-                  ...prev.complimentaryGift,
-                  enabled: !prev.complimentaryGift?.enabled,
-                },
-              }))
-            }
-          />
-        </div>
-
-        {formData.complimentaryGift?.enabled && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                Gift Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Welcome Chocolate Gift"
-                value={formData.complimentaryGift?.name || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    complimentaryGift: {
-                      ...prev.complimentaryGift,
-                      name: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                Quantity
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.complimentaryGift?.quantity || 1}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    complimentaryGift: {
-                      ...prev.complimentaryGift,
-                      quantity: parseInt(e.target.value, 10) || 1,
-                    },
-                  }))
-                }
-                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                Gift Description (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Premium assorted Belgian chocolates."
-                value={formData.complimentaryGift?.description || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    complimentaryGift: {
-                      ...prev.complimentaryGift,
-                      description: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-                Display Badge (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. FREE GIFT"
-                value={formData.complimentaryGift?.displayBadge || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    complimentaryGift: {
-                      ...prev.complimentaryGift,
-                      displayBadge: e.target.value,
-                    },
-                  }))
-                }
-                className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

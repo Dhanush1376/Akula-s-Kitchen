@@ -25,19 +25,6 @@ export enum NotificationEvent {
   PROFILE_UPDATED = 'PROFILE_UPDATED',
   SECURITY_ALERT = 'SECURITY_ALERT',
 
-  // Booking & Rental Events
-  BOOKING_CREATED = 'BOOKING_CREATED',
-  BOOKING_CONFIRMED = 'BOOKING_CONFIRMED',
-  BOOKING_UPDATED = 'BOOKING_UPDATED',
-  BOOKING_CANCELLED = 'BOOKING_CANCELLED',
-  BOOKING_REMINDER = 'BOOKING_REMINDER',
-  BOOKING_PAYMENT_FAILED = 'BOOKING_PAYMENT_FAILED',
-  RENTAL_CONFIRMED = 'RENTAL_CONFIRMED',
-  RENTAL_CANCELLED = 'RENTAL_CANCELLED',
-  RENTAL_PAYMENT_FAILED = 'RENTAL_PAYMENT_FAILED',
-  RENTAL_DEPOSIT_REFUNDED = 'RENTAL_DEPOSIT_REFUNDED',
-  RENTAL_DEPOSIT_FORFEITED = 'RENTAL_DEPOSIT_FORFEITED',
-
   // Engagement Events
   WISHLIST_PRICE_DROP = 'WISHLIST_PRICE_DROP',
   BACK_IN_STOCK = 'BACK_IN_STOCK',
@@ -120,16 +107,7 @@ export interface RecipientConfig {
 
 export interface EventRegistryConfig {
   event: NotificationEvent;
-  category:
-    | 'order'
-    | 'payment'
-    | 'account'
-    | 'booking'
-    | 'rental'
-    | 'engagement'
-    | 'support'
-    | 'admin'
-    | 'system';
+  category: 'order' | 'payment' | 'account' | 'engagement' | 'support' | 'admin' | 'system';
   recipients: RecipientConfig[];
   idempotent?: boolean; // Ensure only sent once per unique payload
 }
@@ -158,7 +136,9 @@ export interface EmailSendOptions {
   to: string;
   subject: string;
   html: string;
+  /** Sender display name; the address always comes from config/emailSender. */
   from?: string;
+  replyTo?: string;
   headers?: Record<string, string>;
   attachments?: {
     filename: string;

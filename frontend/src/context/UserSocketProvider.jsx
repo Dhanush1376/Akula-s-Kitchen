@@ -96,12 +96,6 @@ export function UserSocketProvider({ children }) {
           queryClient.invalidateQueries({ queryKey: ['order'] });
         });
 
-        socket.on('booking_status_updated', () => {
-          logger.dev('[WEBSOCKET] Booking status updated, invalidating queries');
-          queryClient.invalidateQueries({ queryKey: ['bookings'] });
-          queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
-        });
-
         socket.on('timeline_update', () => {
           logger.dev('[WEBSOCKET] Timeline update, invalidating queries');
           queryClient.invalidateQueries({ queryKey: ['order-timeline'] });

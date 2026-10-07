@@ -40,11 +40,6 @@ const multerProducts = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: createFileFilter(false),
 });
-const multerGallery = multer({
-  storage: memoryStorage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit for gallery videos and images
-  fileFilter: createFileFilter(true),
-});
 const multerCMS = multer({
   storage: memoryStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -180,13 +175,6 @@ export const uploadProducts = {
   array: (fieldName: string, maxCount?: number) => [
     multerProducts.array(fieldName, maxCount),
     handleStorageUpload('products', true, false),
-  ],
-};
-
-export const uploadGallery = {
-  array: (fieldName: string, maxCount?: number) => [
-    multerGallery.array(fieldName, maxCount),
-    handleStorageUpload('gallery', true, true),
   ],
 };
 

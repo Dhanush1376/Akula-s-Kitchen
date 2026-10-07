@@ -3,7 +3,7 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 export interface IPaymentAttempt extends Document {
   razorpayOrderId: string;
   userId: mongoose.Types.ObjectId;
-  type: 'purchase' | 'rental' | 'event_booking';
+  type: 'purchase';
   status: 'initiated' | 'processing' | 'success' | 'failed' | 'expired';
   orderData: Record<string, any>;
   processingBy?: string;
@@ -17,7 +17,7 @@ const paymentAttemptSchema = new Schema<IPaymentAttempt>(
   {
     razorpayOrderId: { type: String, required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    type: { type: String, enum: ['purchase', 'rental', 'event_booking'], required: true },
+    type: { type: String, enum: ['purchase'], default: 'purchase', required: true },
     status: {
       type: String,
       enum: ['initiated', 'processing', 'success', 'failed', 'expired'],

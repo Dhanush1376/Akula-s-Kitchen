@@ -1,0 +1,100 @@
+/* ─── Banana leaf hanging into the top of the wishlist page ─── */
+.wl-leaf {
+  position: absolute;
+  z-index: 1;
+  /* reaches up under the header, bleeding off the left edge of the screen */
+  top: -70px;
+  left: -26%;
+  width: min(86%, 560px);
+  transform: rotate(-5deg);
+  pointer-events: none;
+  /* Sweeps in from the top-left corner on page load, like the shop page leaf */
+  animation: wl-leaf-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+@keyframes wl-leaf-in {
+  0% {
+    opacity: 0;
+    translate: -38% -55%;
+    rotate: -30deg;
+    scale: 0.6;
+  }
+  60% {
+    opacity: 1;
+    translate: 1.5% 2%;
+    rotate: 3deg;
+    scale: 1.03;
+  }
+  80% {
+    translate: -0.5% -0.5%;
+    rotate: -1deg;
+    scale: 0.99;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+    scale: 1;
+  }
+}
+/* The gust pivots on the leaf stem so it reads as a leaf hanging from its stalk */
+.wl-leaf__sway {
+  position: relative;
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
+  transform-origin: 2% 24%;
+  -webkit-tap-highlight-color: transparent;
+}
+.wl-leaf__img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  /* Tight contact shadow that crisps the edge; the cast shadow below adds the depth */
+  filter: drop-shadow(0 1px 1.5px rgba(28, 40, 14, 0.22));
+}
+/* Cast shadow, matching the shop page leaf: a soft, dark-green copy of the leaf thrown
+   down and to the right (light from the top left) */
+.wl-leaf__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  translate: 12px 20px;
+  filter: brightness(0.25) saturate(0.6) blur(11px);
+  opacity: 0.4;
+}
+/* Falling pieces sit behind the leaf, so they appear to come off its edge */
+.fl-layer.wl-leaf-fall {
+  z-index: 0;
+}
+/* Positions the wishlist heading over the banana leaf when there are saved items */
+.wl-leaf-clearance {
+  padding-top: 14px;
+}
+
+@media (min-width: 768px) {
+  .wl-leaf {
+    top: -152px;
+    left: -9%;
+    width: min(54%, 720px);
+  }
+  .wl-leaf-clearance {
+    padding-top: 28px;
+  }
+  .wl-leaf__shadow {
+    translate: 18px 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-leaf {
+    animation: none;
+  }
+}

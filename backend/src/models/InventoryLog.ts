@@ -21,11 +21,9 @@ export interface IInventoryLog extends Document {
     | 'stale_release'
     | 'manual_adjustment'
     | 'return'
-    | 'restock'
-    | 'rental_placed'
-    | 'booking_placed';
+    | 'restock';
   orderId?: mongoose.Types.ObjectId;
-  referenceType?: 'Order' | 'RentalOrder' | 'EventJob';
+  referenceType?: 'Order';
   performedBy?: string;
   note?: string;
   createdAt: Date;
@@ -48,12 +46,10 @@ const InventoryLogSchema: Schema = new Schema(
         'manual_adjustment',
         'return',
         'restock',
-        'rental_placed',
-        'booking_placed',
       ],
     },
     orderId: { type: Schema.Types.ObjectId }, // Flexible ref based on referenceType
-    referenceType: { type: String, enum: ['Order', 'RentalOrder', 'EventJob'] },
+    referenceType: { type: String, enum: ['Order'] },
     performedBy: { type: String }, // userId or 'system' for automated jobs
     note: { type: String },
   },

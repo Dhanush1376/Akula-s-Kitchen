@@ -9,9 +9,7 @@ export function OrderSettlement({
   setCollectedAmount,
 }) {
   const showSettlement =
-    order.payment === 'Cash_on_Delivery' ||
-    ['Settled', 'Delivered'].includes(order.status) ||
-    order.items?.some((i) => i.type === 'rental');
+    order.payment === 'Cash_on_Delivery' || ['Settled', 'Delivered'].includes(order.status);
 
   const rawCollected = order.rawOrder?.collectedAmount;
 
@@ -30,7 +28,6 @@ export function OrderSettlement({
   if (!showSettlement) return null;
 
   const isSettled = order.status === 'Settled';
-  const hasRental = order.items?.some((i) => i.type === 'rental');
 
   const currentCollected = collectedAmount !== undefined ? collectedAmount : localCollected;
 
@@ -107,16 +104,6 @@ export function OrderSettlement({
             </div>
           )}
         </div>
-
-        {hasRental && (
-          <div className="flex items-center justify-between py-2 border-b border-[var(--admin-border-subtle)]">
-            <span className="text-[13px] text-[var(--admin-text-secondary)] flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-indigo-500">lock</span>
-              Security Deposit
-            </span>
-            <span className="text-[14px] font-bold text-indigo-600">₹{order.deposit || 0}</span>
-          </div>
-        )}
 
         {/* Amount Collected / Received (Editable) */}
         <div className="pt-1">

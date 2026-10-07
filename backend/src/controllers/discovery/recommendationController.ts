@@ -19,7 +19,7 @@ import mongoose from 'mongoose';
 import { recommendationQueue, isQueuesReady } from '../../jobs/queues';
 
 // Whitelist of valid target types for parameter validation
-const VALID_TARGET_TYPES = new Set(['product', 'gallery']);
+const VALID_TARGET_TYPES = new Set(['product']);
 
 /**
  * GET /recommendations/feed — Personalized homepage feed.
@@ -45,10 +45,7 @@ export const getFeed = async (req: Request, res: Response) => {
     const trendingFeeds = await getTrendingFeeds().catch(() => null);
     let fallbackItems: any[] = [];
     if (trendingFeeds) {
-      fallbackItems =
-        page === 'homepage'
-          ? trendingFeeds.trendingNow.filter((i: any) => i.targetType !== 'gallery')
-          : trendingFeeds.trendingNow;
+      fallbackItems = trendingFeeds.trendingNow;
     }
     if (fallbackItems.length === 0) {
       fallbackItems = await getColdStartFeed({ limit: limit + 5 }).catch(() => []);
@@ -97,7 +94,9 @@ export const getFeed = async (req: Request, res: Response) => {
  */
 export const getSimilar = async (req: Request, res: Response) => {
   try {
-    const { targetType, targetId } = req.params;
+    const rawTargetId = req.params.targetId;
+    const targetId = rawTargetId ? String(rawTargetId).split('___')[0] : rawTargetId;
+    const targetType = req.params.targetType;
     const limit = Math.min(parseInt(req.query.limit as string, 10) || 8, 20);
 
     if (!targetType || !targetId) {
@@ -113,7 +112,7 @@ export const getSimilar = async (req: Request, res: Response) => {
     }
 
     // Check cache
-    const cacheKey = targetType === 'event' ? `event:${targetId as string}` : (targetId as string);
+    const cacheKey = targetId as string;
     const cached = await RecommendationCache.getSimilar(cacheKey);
 
     if (cached) {
@@ -190,8 +189,8 @@ export const getTrending = async (req: Request, res: Response) => {
     // Select the requested feed
     let items: any[];
     switch (feed) {
-      case 'mostBooked':
-        items = trendingFeeds.mostBooked;
+      case 'mostPurchased':
+        items = trendingFeeds.mostPurchased;
         break;
       case 'popularThisSeason':
         items = trendingFeeds.popularThisSeason;
@@ -270,7 +269,7 @@ export const getSeasonal = async (req: Request, res: Response) => {
       ],
     })
       .select(
-        '_id title imageSrc images primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
+        '_id title imageSrc images primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug',
       )
       .populate('primaryCategory', 'name')
       .sort({ rating: -1, reviews: -1 })
@@ -295,11 +294,6 @@ export const getSeasonal = async (req: Request, res: Response) => {
       reviews: p.reviews,
       tags: p.tags,
       slug: p.slug,
-      rentalEnabled: p.rentalEnabled,
-      availabilityMode: p.availabilityMode,
-      rentalPricing: p.rentalPricing,
-      securityDeposit: p.securityDeposit,
-      isDepositRefundable: p.isDepositRefundable,
       seasonalBoost: computeSeasonalBoost(
         p.primaryCategory?.toString(),
         undefined,
@@ -390,12 +384,13 @@ export const getForYou = async (req: Request, res: Response) => {
  */
 export const getCompleteSetup = async (req: Request, res: Response) => {
   try {
-    const { targetId } = req.params;
+    const rawTargetId = req.params.targetId;
+    const targetId = rawTargetId ? String(rawTargetId).split('___')[0] : rawTargetId;
     const targetType = (req.query.targetType as string) || 'product';
     const limit = Math.min(parseInt(req.query.limit as string, 10) || 6, 12);
 
     // Check cache
-    const cacheKey = targetType === 'event' ? `event:${targetId}` : targetId;
+    const cacheKey = targetId;
     const cached = await RecommendationCache.getCompleteSetup(cacheKey as string);
     if (cached) {
       return res
@@ -438,7 +433,8 @@ export const getCompleteSetup = async (req: Request, res: Response) => {
  */
 export const getAlsoViewed = async (req: Request, res: Response) => {
   try {
-    const { targetId } = req.params;
+    const rawTargetId = req.params.targetId;
+    const targetId = rawTargetId ? String(rawTargetId).split('___')[0] : rawTargetId;
     const targetType = (req.query.targetType as string) || 'product';
     const limit = Math.min(parseInt(req.query.limit as string, 10) || 8, 15);
 
@@ -492,7 +488,7 @@ async function enrichTrendingItems(items: any[]): Promise<any[]> {
     productIds.length > 0
       ? await Product.find({ _id: { $in: productIds }, isActive: true })
           .select(
-            '_id title imageSrc images primaryCategory price oldPrice rating reviews tags slug availabilityMode',
+            '_id title imageSrc images primaryCategory price oldPrice rating reviews tags slug optionGroups isNonRefundable',
           )
           .populate('primaryCategory', 'name')
           .lean()
@@ -522,7 +518,8 @@ async function enrichTrendingItems(items: any[]): Promise<any[]> {
         reviews: full.reviews,
         tags: full.tags,
         slug: full.slug,
-        availabilityMode: full.availabilityMode,
+        optionGroups: full.optionGroups || [],
+        isNonRefundable: full.isNonRefundable ?? true,
       };
     })
     .filter(Boolean);

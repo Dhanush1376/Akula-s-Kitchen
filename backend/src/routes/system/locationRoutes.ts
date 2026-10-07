@@ -373,7 +373,7 @@ router.get(
 
 /**
  * Public Location Search / Autocomplete Endpoint
- * GET /api/v1/location/search?q=Ongole
+ * GET /api/v1/location/search?q=Hyderabad
  *
  * Employs server-side User-Agent to comply with OpenStreetMap Nominatim policies,
  * with resilient fallback to Photon (Komoot).

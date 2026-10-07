@@ -30,8 +30,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
       e?.stopPropagation?.();
       if (isConverting || !product) return;
       setIsConverting(true);
-      const targetRoute =
-        product.itemType === 'event' ? `/events/${productId}` : `/product/${productId}`;
+      const targetRoute = `/product/${productId}`;
 
       // Smooth transition: give the morph animation 220ms to expand into full screen
       setTimeout(() => {
@@ -130,9 +129,8 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
   const handleAddToCart = (e) => {
     e?.stopPropagation();
     if (!product) return;
-    if (product.itemType === 'event') {
-      onClose();
-      navigate(`/events/${product._id || product.id}`);
+    if (product.optionGroups && product.optionGroups.length > 0) {
+      handleConvertToDetails(e);
       return;
     }
     addItem({
@@ -443,12 +441,10 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                     <button
                       onClick={handleAddToCart}
                       className="w-8 h-8 lg:w-9 lg:h-9 min-h-0 bg-black text-white rounded-full flex items-center justify-center shadow-lg border border-black/5 hover:scale-110 active:scale-95 transition-all cursor-pointer shrink-0 aspect-square"
-                      aria-label={product.itemType === 'event' ? 'Book Setup' : 'Add to Collection'}
-                      title={product.itemType === 'event' ? 'Book Setup' : 'Add to Collection'}
+                      aria-label="Add to Bag"
+                      title="Add to Bag"
                     >
-                      <span className="material-symbols-outlined text-[16px]">
-                        {product.itemType === 'event' ? 'event' : 'shopping_bag'}
-                      </span>
+                      <span className="material-symbols-outlined text-[16px]">shopping_bag</span>
                     </button>
                   </div>
                 </div>
@@ -510,22 +506,9 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
 
                 <div className="flex items-baseline gap-2.5 mb-2 sm:mb-3">
                   <span className="font-display lining-nums font-bold text-[22px] sm:text-[24px] lg:text-[32px] text-on-surface">
-                    ₹
-                    {(product.itemType === 'event'
-                      ? product.rentalPrice || product.price
-                      : product.availabilityMode === 'rent_only' &&
-                          product.rentalPricing?.rentalPrice
-                        ? product.rentalPricing.rentalPrice
-                        : product.price
-                    )?.toLocaleString('en-IN') || '0'}
-                    {product.availabilityMode === 'rent_only' &&
-                      product.rentalPricing?.rentalPrice > 0 && (
-                        <span className="font-label text-[11px] sm:text-[12px] text-on-surface-variant/60 ml-1.5 font-bold">
-                          {`for up to ${product.rentalPricing.rentalDurationDays || 1} ${(product.rentalPricing.rentalDurationDays || 1) === 1 ? 'day' : 'days'}`}
-                        </span>
-                      )}
+                    ₹{product.price?.toLocaleString('en-IN') || '0'}
                   </span>
-                  {product.itemType !== 'event' && product.oldPrice && (
+                  {product.oldPrice && (
                     <span className="font-display lining-nums text-on-surface-variant/40 line-through text-[15px] lg:text-[18px]">
                       ₹{product.oldPrice.toLocaleString('en-IN')}
                     </span>
@@ -569,9 +552,9 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                     className="w-full btn-primary !py-4 md:!py-5 flex items-center justify-center gap-3 font-bold cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
                   >
                     <span className="material-symbols-outlined text-[20px]">
-                      {product.itemType === 'event' ? 'event' : 'shopping_bag'}
+                      {product?.optionGroups?.length > 0 ? 'tune' : 'shopping_bag'}
                     </span>
-                    {product.itemType === 'event' ? 'Book Setup' : 'Add to Collection'}
+                    {product?.optionGroups?.length > 0 ? 'Choose Options' : 'Add to Bag'}
                   </button>
 
                   <div className="grid grid-cols-2 gap-3">

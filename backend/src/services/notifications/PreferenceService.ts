@@ -35,8 +35,6 @@ export class PreferenceService {
         categoryOptIn = categoryPrefs.promotions;
       if (category === 'order' || category === 'payment')
         categoryOptIn = categoryPrefs.orderUpdates;
-      if (category === 'booking') categoryOptIn = categoryPrefs.bookingUpdates;
-      if (category === 'rental') categoryOptIn = categoryPrefs.rentalUpdates;
 
       if (!categoryOptIn) {
         return []; // User has opted out of this entire category

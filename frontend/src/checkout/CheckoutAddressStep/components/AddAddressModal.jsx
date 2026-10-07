@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Check from 'lucide-react/dist/esm/icons/check';
+import X from 'lucide-react/dist/esm/icons/x';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import User from 'lucide-react/dist/esm/icons/user';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Phone from 'lucide-react/dist/esm/icons/phone';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { createPortal } from 'react-dom';
-import { useMobileDrawerEngine, DrawerDragHandle } from '../../../components/ui/drawer';
-import { sanitizePhoneNumber } from '../../../utils/phoneUtils';
-import {
-  detectAndResolveAddress,
-  searchLocations,
-  reverseGeocodeCoords,
-} from '../../../utils/locationService';
-import { LocationMarker } from './LocationMarker';
+import { useMobileDrawerEngine } from '../../../components/ui/drawer';
+import { sanitizePhoneNumber, isValidPhoneNumber } from '../../../utils/phoneUtils';
+import { detectAndResolveAddress } from '../../../utils/locationService';
+import { AuthCornerLeaves } from '../../../components/auth/AuthCornerLeaves';
 
 export function AddAddressModal({
   isAddingNewAddress,
@@ -28,9 +32,21 @@ export function AddAddressModal({
   isResolvingLocation,
 }) {
   const [mounted, setMounted] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [stepError, setStepError] = useState(null);
+  const [isInternalLocating, setIsInternalLocating] = useState(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Reset to Step 1 whenever the modal opens
+  useEffect(() => {
+    if (isAddingNewAddress) {
+      setCurrentStep(1);
+      setStepError(null);
+    }
+  }, [isAddingNewAddress]);
 
   const { isMobile, dragProps, sheetTransition } = useMobileDrawerEngine({
     isOpen: isAddingNewAddress,
@@ -38,24 +54,6 @@ export function AddAddressModal({
   });
 
   const formContainerRef = useRef(null);
-  const searchContainerRef = useRef(null);
-  const searchDebounceRef = useRef(null);
-  const [isInternalLocating, setIsInternalLocating] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [locationSuggestions, setLocationSuggestions] = useState([]);
-  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-
-  // Close search suggestions on click outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setLocationSuggestions([]);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Smoothly scroll focused input into clear visible area when mobile keyboard opens
   const handleFocusCapture = (e) => {
@@ -63,7 +61,6 @@ export function AddAddressModal({
     if (!target) return;
     const tag = target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-      // Allow mobile virtual keyboard animation (~250-300ms) to finish
       setTimeout(() => {
         if (!target || !formContainerRef.current) return;
         const targetRect = target.getBoundingClientRect();
@@ -81,96 +78,10 @@ export function AddAddressModal({
     }
   };
 
-  const handleLocationSearchChange = (e) => {
-    const q = e.target.value;
-    setSearchQuery(q);
-
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-
-    if (!q || q.trim().length < 2) {
-      setLocationSuggestions([]);
-      setIsSearchingLocation(false);
-      return;
-    }
-
-    setIsSearchingLocation(true);
-    searchDebounceRef.current = setTimeout(async () => {
-      try {
-        const results = await searchLocations(q.trim(), {
-          latitude: mapPosition?.lat || newAddress?.latitude,
-          longitude: mapPosition?.lng || newAddress?.longitude,
-        });
-        setLocationSuggestions(results || []);
-      } catch {
-        setLocationSuggestions([]);
-      } finally {
-        setIsSearchingLocation(false);
-      }
-    }, 300);
-  };
-
-  const handleSelectSuggestion = async (item) => {
-    const addr = item.address || {};
-    const lat = item.lat;
-    const lng = item.lon;
-
-    if (lat && lng && typeof setMapPosition === 'function') {
-      setMapPosition({ lat, lng });
-      setShowMap(true);
-    }
-
-    const street = addr.road || addr.street || '';
-    const building = addr.building || (item.name && item.name !== street ? item.name : '');
-    const locality = addr.locality || addr.district || addr.suburb || '';
-    const city = addr.city || addr.town || addr.village || '';
-    const state = addr.state || '';
-    const pincode = (addr.pincode || '').replace(/\D/g, '').slice(0, 6);
-    const landmark =
-      addr.landmark || (building ? `Near ${building}` : item.name ? `Near ${item.name}` : '');
-    const fullAddress =
-      [building, street, locality].filter(Boolean).join(', ') || item.displayName || '';
-
-    setNewAddress((prev) => ({
-      ...prev,
-      latitude: lat ?? prev.latitude,
-      longitude: lng ?? prev.longitude,
-      pincode: pincode || prev.pincode,
-      city: city || prev.city,
-      state: state || prev.state,
-      locality: locality || prev.locality,
-      landmark: landmark || prev.landmark,
-      address: fullAddress || prev.address,
-    }));
-
-    setSearchQuery(item.name || item.displayName || '');
-    setLocationSuggestions([]);
-    toast.success(`Location selected: ${item.name || 'Auto-filled'}!`, { id: 'search-loc' });
-
-    // Deep-enrich via reverse geocoding if lat & lng are available
-    if (lat && lng) {
-      try {
-        const enriched = await reverseGeocodeCoords(lat, lng);
-        if (enriched.success && enriched.data) {
-          const d = enriched.data;
-          setNewAddress((prev) => ({
-            ...prev,
-            pincode: d.pincode || prev.pincode,
-            city: d.city || prev.city,
-            state: d.state || prev.state,
-            locality: d.locality || prev.locality,
-            landmark: d.landmark || prev.landmark,
-            address: d.address || prev.address,
-          }));
-        }
-      } catch {}
-    }
-  };
-
   const handleLocationClick = async (e) => {
     e.preventDefault();
     if (typeof handleAutofillLocation === 'function') {
       await handleAutofillLocation();
-      setShowMap(true);
       return;
     }
 
@@ -182,7 +93,6 @@ export function AddAddressModal({
         const d = res.data;
         if (d.latitude && d.longitude && typeof setMapPosition === 'function') {
           setMapPosition({ lat: d.latitude, lng: d.longitude });
-          setShowMap(true);
         }
         const resolvedAddressLine =
           d.address || [d.locality, d.landmark, d.city].filter(Boolean).join(', ');
@@ -204,15 +114,15 @@ export function AddAddressModal({
           const accText = res.accuracy ? ` (~${Math.round(res.accuracy)}m)` : '';
           toast.success(`Exact pinpoint GPS locked${accText}!`, { id: 'gps' });
         } else if (res.isApproximate) {
-          toast(
-            'Approximate region detected from network. Please drag the pin on the map to your exact spot!',
-            { id: 'gps', duration: 5000 },
-          );
+          toast.success('Location detected! Please review and confirm your address.', {
+            id: 'gps',
+            duration: 4000,
+          });
         } else {
-          toast.success('Location locked!', { id: 'gps' });
+          toast.success('Location auto-filled!', { id: 'gps' });
         }
       } else {
-        toast.error(res.error || 'Could not detect location. Please fill manually.', {
+        toast.error(res?.error || 'Could not detect location. Please fill manually.', {
           id: 'gps',
           duration: 5000,
         });
@@ -226,337 +136,251 @@ export function AddAddressModal({
 
   const isLocating = isResolvingLocation || isInternalLocating;
 
+  const validateStep1 = () => {
+    const pincode = (newAddress.pincode || '').trim();
+    const locality = (newAddress.locality || '').trim();
+    const address = (newAddress.address || '').trim();
+    const city = (newAddress.city || '').trim();
+    const state = (newAddress.state || '').trim();
+
+    if (!pincode || !locality || !address || !city || !state) {
+      return 'Please fill in all mandatory address fields (Pincode, Locality, Address, City, State).';
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      return 'Please enter a valid 6-digit postal pincode.';
+    }
+    return null;
+  };
+
+  const handleProceedToStep2 = () => {
+    const err = validateStep1();
+    if (err) {
+      setStepError(err);
+      toast.error(err, { id: 'address-step-err' });
+      return false;
+    }
+    setStepError(null);
+    setCurrentStep(2);
+    if (formContainerRef.current) {
+      formContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    return true;
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (currentStep === 1) {
+      handleProceedToStep2();
+      return;
+    }
+
+    const name = (newAddress.name || '').trim();
+    const phone = sanitizePhoneNumber(newAddress.phone || '');
+
+    if (!name) {
+      setStepError('Please enter the receiver full name.');
+      toast.error('Please enter the receiver full name.', { id: 'address-step-err' });
+      return;
+    }
+    if (!phone || !isValidPhoneNumber(phone)) {
+      setStepError('Please enter a valid 10-digit mobile number.');
+      toast.error('Please enter a valid 10-digit mobile number.', { id: 'address-step-err' });
+      return;
+    }
+
+    setStepError(null);
+    handleSaveNewAddress(e);
+  };
+
+  const modalVariants = {
+    hidden: isMobile ? { y: '100%', opacity: 0.5 } : { opacity: 0, scale: 0.95, y: 15 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: isMobile ? sheetTransition : { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+    },
+    exit: isMobile
+      ? {
+          y: '100%',
+          opacity: 0,
+          transition: sheetTransition,
+        }
+      : { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.25 } },
+  };
+
   if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
       {isAddingNewAddress && (
-        <div className="fixed inset-0 z-[100] flex items-end lg:items-center justify-center p-0 lg:p-4 pointer-events-none">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 sm:p-6 md:p-8">
+          {/* Dark blurred background overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsAddingNewAddress(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto cursor-pointer"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
           />
-          <motion.div
-            initial={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 16 }}
-            transition={sheetTransition}
-            {...dragProps}
-            className="pointer-events-auto relative z-10 bg-surface-bright dark:bg-surface-container-low rounded-t-[18px] lg:rounded-lg w-full max-w-[760px] max-h-[95dvh] lg:max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-outline-variant/20 modern-sans-headings font-body"
-          >
-            {isMobile && (
-              <DrawerDragHandle
-                onClick={() => setIsAddingNewAddress(false)}
-                className="pt-1.5 pb-0"
-              />
-            )}
 
-            {/* Modal Header */}
-            <div className="bg-surface-bright z-10 py-1.5 sm:py-2.5 px-4 sm:px-6 flex justify-between items-center border-b border-outline-variant/20 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[17px] sm:text-[19px] text-primary">
-                  add_location_alt
-                </span>
-                <h2
-                  className="font-sans text-[11.5px] sm:text-[13px] font-bold text-on-surface uppercase tracking-wider"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  {newAddress?.id ? 'Edit Address' : 'Add New Address'}
-                </h2>
+          {/* Floating Card Modal Container in AuthModal style */}
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            {...(isMobile ? dragProps : {})}
+            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[510px] md:max-w-[535px] mx-auto"
+            style={{
+              marginBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+            }}
+          >
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-2 px-5 pb-5 sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_12px_45px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[88dvh] overflow-hidden font-body">
+              {/* Gentle wind-blown corner foliage accents */}
+              <AuthCornerLeaves />
+
+              {/* Grab handle for mobile bottom sheet */}
+              <div
+                className="sm:hidden w-full flex justify-center pt-1 pb-2 cursor-grab select-none z-20 relative"
+                onClick={() => setIsAddingNewAddress(false)}
+              >
+                <div className="w-9 h-1 rounded-full bg-neutral-300" />
               </div>
+
+              {/* Close button */}
               <button
                 type="button"
                 onClick={() => setIsAddingNewAddress(false)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface-container-low hover:bg-surface-container flex items-center justify-center border border-outline-variant/30 text-secondary hover:text-on-surface transition-all cursor-pointer"
+                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-50 cursor-pointer"
                 aria-label="Close modal"
               >
-                <span className="material-symbols-outlined text-[15px] sm:text-[17px]">close</span>
+                <X className="w-3.5 h-3.5 text-black" strokeWidth={2} />
               </button>
-            </div>
 
-            {/* Scrollable Form Body */}
-            <div
-              ref={formContainerRef}
-              onFocusCapture={handleFocusCapture}
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-4 sm:px-6 pt-2 pb-6"
-            >
-              <form id="address-form" onSubmit={handleSaveNewAddress}>
-                <div className="space-y-4">
-                  {/* Contact Details */}
-                  <div className="pb-5 border-b border-outline-variant/20">
-                    <h2
-                      className="font-sans text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5 mb-4"
-                      style={{ fontFamily: 'var(--font-body)' }}
-                    >
-                      <span className="material-symbols-outlined text-[14px] text-primary">
-                        person
-                      </span>
-                      Contact Details
-                    </h2>
-                    <div className="flex flex-col gap-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                        <div>
-                          <label className="form-label">Receiver Full Name*</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Receiver full name"
-                            value={newAddress.name}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, name: e.target.value }))
-                            }
-                            className="form-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Email Address</label>
-                          <input
-                            type="email"
-                            placeholder="Enter email address"
-                            value={newAddress.email}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, email: e.target.value }))
-                            }
-                            className="form-field"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                        <div>
-                          <label className="form-label">Phone Number*</label>
-                          <input
-                            type="tel"
-                            required
-                            inputMode="numeric"
-                            maxLength={10}
-                            placeholder="10-digit mobile number"
-                            value={newAddress.phone}
-                            onChange={(e) => {
-                              const cleaned = sanitizePhoneNumber(e.target.value);
-                              setNewAddress((prev) => ({ ...prev, phone: cleaned }));
-                            }}
-                            onPaste={(e) => {
-                              const pasted = e.clipboardData?.getData('text');
-                              if (pasted) {
-                                e.preventDefault();
-                                const cleaned = sanitizePhoneNumber(pasted);
-                                setNewAddress((prev) => ({ ...prev, phone: cleaned }));
-                              }
-                            }}
-                            className="form-field"
-                          />
-                        </div>
-                        <div>
-                          <label className="form-label">Alternate Number</label>
-                          <input
-                            type="tel"
-                            inputMode="numeric"
-                            maxLength={10}
-                            placeholder="Optional alternate number"
-                            value={newAddress.alternatePhone}
-                            onChange={(e) => {
-                              const cleaned = sanitizePhoneNumber(e.target.value);
-                              setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
-                            }}
-                            onPaste={(e) => {
-                              const pasted = e.clipboardData?.getData('text');
-                              if (pasted) {
-                                e.preventDefault();
-                                const cleaned = sanitizePhoneNumber(pasted);
-                                setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
-                              }
-                            }}
-                            className="form-field"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              {/* Modal Headings in AuthModal serif style */}
+              <div className="relative z-10 text-left mb-3 space-y-0.5 pt-1">
+                <h2
+                  className="font-serif-heading text-[20px] sm:text-[22px] leading-tight text-neutral-950 font-bold tracking-tight"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {newAddress?.id ? 'Edit Address' : 'Add New Address'}
+                </h2>
+                <p className="text-neutral-500 text-[12px] sm:text-[12.5px] font-normal leading-relaxed">
+                  {currentStep === 1
+                    ? 'Step 1 of 2: Set your delivery address and location'
+                    : 'Step 2 of 2: Provide recipient contact information'}
+                </p>
+              </div>
 
-                  {/* Address Details */}
-                  <div className="py-2 border-b border-outline-variant/20">
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <h2
-                        className="font-sans text-[11.5px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5 m-0"
-                        style={{ fontFamily: 'var(--font-body)' }}
-                      >
-                        <span className="material-symbols-outlined text-[15px] text-primary">
-                          pin_drop
-                        </span>
-                        Address & Location
-                      </h2>
-                      <span className="text-[9.5px] font-bold tracking-wider uppercase bg-primary/10 text-primary px-2.5 py-0.5 rounded-full border border-primary/20">
-                        All India
-                      </span>
-                    </div>
+              {/* 2-Step Stepper Progress Bar */}
+              <div className="relative z-10 flex items-center justify-between gap-2 mb-3.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStepError(null);
+                    setCurrentStep(1);
+                  }}
+                  className={`flex items-center gap-2 py-1 px-3 sm:px-3.5 rounded-full text-[11px] font-bold tracking-wide transition-all cursor-pointer ${
+                    currentStep === 1
+                      ? 'bg-[#283618] text-white shadow-xs'
+                      : 'bg-neutral-100 hover:bg-neutral-200/80 text-neutral-600'
+                  }`}
+                >
+                  <span
+                    className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-extrabold ${
+                      currentStep === 1
+                        ? 'bg-white text-[#283618]'
+                        : 'bg-neutral-300 text-neutral-800'
+                    }`}
+                  >
+                    1
+                  </span>
+                  <span>Address & Location</span>
+                </button>
 
-                    {/* Quick Action Toolbar */}
-                    <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-                      <button
-                        type="button"
-                        onClick={() => setShowMap((prev) => !prev)}
-                        className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl border text-[11px] font-bold tracking-wide transition-all cursor-pointer ${
-                          showMap
-                            ? 'bg-primary/10 border-primary text-primary shadow-xs'
-                            : 'bg-surface hover:bg-surface-container-low border-outline-variant/30 text-on-surface'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[15px] text-primary">
-                          {showMap ? 'layers_clear' : 'map'}
-                        </span>
-                        <span>{showMap ? 'Hide Map' : 'Adjust on Map'}</span>
-                      </button>
+                <div className="flex-1 h-0.5 mx-1 bg-neutral-200 relative overflow-hidden rounded-full">
+                  <div
+                    className="h-full bg-[#283618] transition-all duration-300"
+                    style={{ width: currentStep === 2 ? '100%' : '0%' }}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (currentStep === 1) {
+                      handleProceedToStep2();
+                    }
+                  }}
+                  className={`flex items-center gap-2 py-1 px-3 sm:px-3.5 rounded-full text-[11px] font-bold tracking-wide transition-all cursor-pointer ${
+                    currentStep === 2
+                      ? 'bg-[#283618] text-white shadow-xs'
+                      : 'bg-neutral-100 hover:bg-neutral-200/80 text-neutral-600'
+                  }`}
+                >
+                  <span
+                    className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-extrabold ${
+                      currentStep === 2
+                        ? 'bg-white text-[#283618]'
+                        : 'bg-neutral-300 text-neutral-800'
+                    }`}
+                  >
+                    2
+                  </span>
+                  <span>Contact Details</span>
+                </button>
+              </div>
+
+              {/* Scrollable Form Body */}
+              <div
+                ref={formContainerRef}
+                onFocusCapture={handleFocusCapture}
+                className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pr-0.5 space-y-3 pb-1"
+              >
+                <form id="address-form" onSubmit={handleFormSubmit}>
+                  {currentStep === 1 && (
+                    <div className="space-y-3">
+                      {/* Olive Green Signature Button to Auto-Fill Address */}
                       <button
                         type="button"
                         disabled={isLocating}
                         onClick={handleLocationClick}
-                        className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-neutral-900 hover:bg-black text-white text-[11px] font-bold tracking-wide transition-all shadow-xs disabled:opacity-50 cursor-pointer active:scale-[0.98]"
+                        className="w-full h-11 px-5 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mb-2.5 select-none"
                       >
                         <span
-                          className={`material-symbols-outlined text-[15px] ${
-                            isLocating ? 'animate-spin' : 'text-primary'
+                          className={`material-symbols-outlined text-[17px] text-[#f7bb0e] shrink-0 ${
+                            isLocating ? 'animate-spin' : ''
                           }`}
                         >
-                          {isLocating ? 'progress_activity' : 'my_location'}
+                          {isLocating ? 'progress_activity' : 'near_me'}
                         </span>
-                        <span>{isLocating ? 'Locating...' : 'Use Current GPS'}</span>
+                        <span>
+                          {isLocating
+                            ? 'Detecting your location...'
+                            : 'Auto-Fill Current Location (GPS)'}
+                        </span>
                       </button>
-                    </div>
 
-                    {/* Google Maps-Style Location Search Bar */}
-                    <div ref={searchContainerRef} className="relative mb-4">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10.5px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[13px] text-primary">
-                            search
-                          </span>
-                          Search Location (India)
-                        </span>
-                        {isSearchingLocation ? (
-                          <span className="text-[10px] text-primary animate-pulse font-semibold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                            Searching India places...
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-on-surface-variant/70 font-medium">
-                            Auto-fills address form
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="relative flex items-center bg-surface border border-outline-variant/40 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 rounded-xl transition-all shadow-2xs">
-                        <span className="material-symbols-outlined text-[18px] text-primary/80 pl-3 shrink-0 pointer-events-none">
-                          search
-                        </span>
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={handleLocationSearchChange}
-                          placeholder="Search area, landmark, colony, PG, road, or 6-digit pincode..."
-                          className="w-full py-2.5 px-2.5 text-[12px] sm:text-[13px] bg-transparent outline-none text-on-surface placeholder:text-on-surface-variant/50 font-medium"
-                        />
-                        {searchQuery && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSearchQuery('');
-                              setLocationSuggestions([]);
-                            }}
-                            className="p-2 text-on-surface-variant/60 hover:text-on-surface cursor-pointer shrink-0"
-                            aria-label="Clear search"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">cancel</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Dropdown suggestions */}
-                      {locationSuggestions.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full mt-1.5 bg-surface-bright rounded-xl shadow-2xl border border-outline-variant/30 overflow-hidden z-30 max-h-64 overflow-y-auto divide-y divide-outline-variant/10">
-                          {locationSuggestions.map((item, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => handleSelectSuggestion(item)}
-                              className="w-full text-left px-3.5 py-2.5 hover:bg-primary/5 flex items-start gap-2.5 transition-colors cursor-pointer group"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary mt-0.5 shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                                <span className="material-symbols-outlined text-[14px]">
-                                  location_on
-                                </span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <p className="text-[11.5px] font-bold text-on-surface truncate">
-                                    {item.name || 'Selected Location'}
-                                  </p>
-                                  {item.address?.landmark && (
-                                    <span className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold px-1.5 py-0.2 rounded-md">
-                                      {item.address.landmark}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-[10px] text-on-surface-variant/80 truncate mt-0.5">
-                                  {item.displayName}
-                                </p>
-                              </div>
-                            </button>
-                          ))}
-                          <div className="px-3.5 py-1.5 bg-surface-container-lowest text-[9px] text-on-surface-variant/60 flex items-center justify-between font-medium">
-                            <span>Showing locations in India</span>
-                            <span className="flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                              OSM & Postal Registry
-                            </span>
-                          </div>
+                      {newAddress.latitude && newAddress.longitude && (
+                        <div className="flex items-center gap-1.5 text-[10.5px] text-[#283618] bg-[#283618]/10 border border-[#283618]/20 px-3 py-1 rounded-full font-bold uppercase tracking-wider inline-flex mb-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#283618] animate-pulse" />
+                          <span>GPS Location Locked & Auto-Filled</span>
                         </div>
                       )}
-                    </div>
 
-                    {/* Interactive Leaflet Map for fine-tuning location pin */}
-                    {(showMap || (newAddress.latitude && newAddress.longitude)) && (
-                      <div className="mb-4">
-                        <div className="w-full h-44 bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/30 relative shadow-inner">
-                          <LocationMarker
-                            position={mapPosition}
-                            setPosition={setMapPosition}
-                            fetchAddressFromCoords={fetchAddressFromCoords}
-                          />
-                        </div>
-                        <p className="text-[9px] text-on-surface-variant/70 mt-1 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[11px]">info</span>
-                          Drag marker or tap on map to auto-update address and coordinates.
-                        </p>
-                      </div>
-                    )}
-
-                    {newAddress.latitude && newAddress.longitude && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-4 flex items-center gap-2 text-[10px] text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider inline-flex"
-                      >
-                        <span className="material-symbols-outlined text-xs">share_location</span>
-                        <span>
-                          GPS Locked: {Number(newAddress.latitude).toFixed(5)},{' '}
-                          {Number(newAddress.longitude).toFixed(5)}
-                        </span>
-                      </motion.div>
-                    )}
-
-                    <div className="flex flex-col gap-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                        <div>
-                          <label className="form-label">6-Digit Pincode*</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-neutral-600" />
+                            6-Digit Pincode*
+                          </label>
                           <input
                             type="tel"
                             required
                             inputMode="numeric"
                             maxLength={6}
-                            placeholder="e.g. 560041"
+                            placeholder="Enter 6-digit pincode"
                             value={newAddress.pincode}
                             onChange={(e) => {
                               const val = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -587,68 +411,78 @@ export function AddAddressModal({
                                   });
                               }
                             }}
-                            className="form-field"
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
-                        <div>
-                          <label className="form-label">Locality / Sector*</label>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                            Locality / Sector*
+                          </label>
                           <input
                             type="text"
                             required
-                            placeholder="e.g. Sector 4 / Jayanagar"
+                            placeholder="Locality, area, or sector"
                             value={newAddress.locality}
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, locality: e.target.value }))
                             }
-                            className="form-field"
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
 
-                      <div>
-                        <label className="form-label">Street Address & Building Details*</label>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                          Street Address & Building Details*
+                        </label>
                         <textarea
                           required
-                          placeholder="Flat, House no., Building, Apartment details"
+                          placeholder="Flat / House no., building, apartment, or street"
                           value={newAddress.address}
                           onChange={(e) =>
                             setNewAddress((prev) => ({ ...prev, address: e.target.value }))
                           }
-                          className="form-field min-h-[75px] resize-none"
+                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium p-3.5 shadow-2xs outline-none transition-all min-h-[70px] resize-none"
                         />
                       </div>
 
-                      <div>
-                        <label className="form-label">Landmark </label>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                          Landmark (Optional)
+                        </label>
                         <input
                           type="text"
-                          placeholder="e.g. Near Apollo Hospital"
+                          placeholder="Nearby landmark (optional)"
                           value={newAddress.landmark}
                           onChange={(e) =>
                             setNewAddress((prev) => ({ ...prev, landmark: e.target.value }))
                           }
-                          className="form-field"
+                          className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                         />
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                        <div>
-                          <label className="form-label">City / District*</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                            City / District*
+                          </label>
                           <input
                             type="text"
                             required
-                            placeholder="City"
+                            placeholder="City or district"
                             value={newAddress.city}
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, city: e.target.value }))
                             }
-                            className="form-field"
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
-                        <div>
-                          <label className="form-label">State*</label>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                            State*
+                          </label>
                           <input
                             type="text"
                             required
@@ -657,117 +491,318 @@ export function AddAddressModal({
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, state: e.target.value }))
                             }
-                            className="form-field uppercase"
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
                           />
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Destination & Options */}
-                  <div className="pt-2 pb-4">
-                    <h2
-                      className="font-sans text-[11px] font-bold uppercase tracking-wider text-secondary flex items-center gap-1.5 mb-4"
-                      style={{ fontFamily: 'var(--font-body)' }}
-                    >
-                      <span className="material-symbols-outlined text-[14px] text-primary">
-                        local_shipping
-                      </span>
-                      Destination & Options
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="form-label">Destination Type</label>
-                        <select
-                          value={newAddress.tag}
-                          onChange={(e) =>
-                            setNewAddress((prev) => ({ ...prev, tag: e.target.value }))
-                          }
-                          className="form-field cursor-pointer"
-                        >
-                          <option value="Home">Home</option>
-                          <option value="Work">Work</option>
-                          <option value="Warehouse">Warehouse</option>
-                        </select>
+                      {/* Destination Type Pills */}
+                      <div className="space-y-1.5 pt-0.5">
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">
+                          Address Type
+                        </label>
+                        <div className="flex items-center gap-2">
+                          {['Home', 'Work', 'Other'].map((type) => {
+                            const isSelected =
+                              (newAddress.tag || 'Home') ===
+                              (type === 'Other' ? 'Warehouse' : type);
+                            return (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() =>
+                                  setNewAddress((prev) => ({
+                                    ...prev,
+                                    tag: type === 'Other' ? 'Warehouse' : type,
+                                  }))
+                                }
+                                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-[#283618] text-white shadow-xs'
+                                    : 'bg-neutral-100 hover:bg-neutral-200/80 text-neutral-700'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {type === 'Home'
+                                    ? 'home'
+                                    : type === 'Work'
+                                      ? 'apartment'
+                                      : 'pin_drop'}
+                                </span>
+                                <span>{type}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-
-                    <div className="mb-4">
-                      <label className="form-label">Delivery Instructions (Optional)</label>
-                      <textarea
-                        placeholder="E.g. Leave with security, call before delivery"
-                        value={newAddress.deliveryInstructions}
-                        onChange={(e) =>
-                          setNewAddress((prev) => ({
-                            ...prev,
-                            deliveryInstructions: e.target.value,
-                          }))
-                        }
-                        className="form-field min-h-[70px] resize-none"
-                      />
-                    </div>
-
-                    <label className="flex items-center gap-2.5 cursor-pointer mt-2 select-none">
-                      <input
-                        type="checkbox"
-                        checked={newAddress.isDefault || false}
-                        onChange={(e) =>
-                          setNewAddress((prev) => ({ ...prev, isDefault: e.target.checked }))
-                        }
-                        className="w-4 h-4 rounded border-outline-variant/40 text-primary focus:ring-primary cursor-pointer"
-                      />
-                      <span className="text-[12px] text-on-surface font-medium">
-                        Make this as my default address
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            {/* Modal Footer: Non-overlapping, pinned at bottom of modal flex container */}
-            <div
-              className="bg-surface-bright border-t border-outline-variant/20 p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] shrink-0 z-20"
-              style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
-            >
-              {addressError && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-3 p-3 bg-red-50 text-red-600 rounded-xl text-[11px] mb-3 shadow-sm border border-red-100"
-                >
-                  <AlertTriangle
-                    className="w-4 h-4 shrink-0 text-red-600 mt-0.5"
-                    aria-hidden="true"
-                  />
-                  <span className="font-bold flex-1 leading-snug">{addressError}</span>
-                </motion.div>
-              )}
-              <div className="w-full flex gap-3 sm:gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsAddingNewAddress(false)}
-                  className="flex-1 bg-surface-container-low hover:bg-surface-container text-on-surface font-bold uppercase tracking-widest text-[11px] py-3 rounded-lg border border-outline-variant/30 transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  form="address-form"
-                  type="submit"
-                  disabled={isProcessing}
-                  className="flex-1 bg-neutral-900 hover:bg-black text-white py-3 rounded-lg font-bold uppercase tracking-widest text-[11px] shadow-md hover:shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-70 cursor-pointer active:scale-[0.99]"
-                >
-                  {isProcessing ? (
-                    <>
-                      <span className="material-symbols-outlined text-[14px] animate-spin">
-                        progress_activity
-                      </span>
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    'Save Address'
                   )}
-                </button>
+
+                  {currentStep === 2 && (
+                    <div className="space-y-3">
+                      {/* Summary of chosen address from Step 1 */}
+                      <div className="bg-neutral-50/90 border border-black/[0.08] rounded-2xl p-3 flex items-start justify-between gap-3 shadow-2xs">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-[#283618]/15 text-[#283618] flex items-center justify-center shrink-0 mt-0.5">
+                            <MapPin className="w-3.5 h-3.5 text-[#283618]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-neutral-500">
+                                Delivering to ({newAddress.tag || 'Home'})
+                              </span>
+                            </div>
+                            <p className="text-[12px] font-bold text-neutral-900 truncate mt-0.5">
+                              {newAddress.address || 'Address specified'}
+                            </p>
+                            <p className="text-[10.5px] text-neutral-500 truncate">
+                              {[
+                                newAddress.locality,
+                                newAddress.landmark,
+                                newAddress.city,
+                                newAddress.state,
+                                newAddress.pincode,
+                              ]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStepError(null);
+                            setCurrentStep(1);
+                          }}
+                          className="text-[11px] font-bold text-neutral-900 hover:underline shrink-0 flex items-center gap-1 cursor-pointer py-1 px-2.5 rounded-full bg-white hover:bg-neutral-100 border border-black/10 shadow-2xs"
+                        >
+                          <span>Edit</span>
+                        </button>
+                      </div>
+
+                      {/* Contact Details Fields */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                            <User className="w-3 h-3 text-neutral-600" />
+                            Receiver Full Name*
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Full name"
+                            value={newAddress.name}
+                            onChange={(e) =>
+                              setNewAddress((prev) => ({ ...prev, name: e.target.value }))
+                            }
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                            <Mail className="w-3 h-3 text-neutral-600" />
+                            Email Address (Optional)
+                          </label>
+                          <input
+                            type="email"
+                            placeholder="Email address (optional)"
+                            value={newAddress.email}
+                            onChange={(e) =>
+                              setNewAddress((prev) => ({ ...prev, email: e.target.value }))
+                            }
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-neutral-600" />
+                            Phone Number*
+                          </label>
+                          <div className="relative flex items-center">
+                            <div className="absolute left-3.5 flex items-center gap-1 pointer-events-none select-none text-[12px] font-bold text-neutral-800">
+                              <span>🇮🇳</span>
+                              <span>+91</span>
+                              <span className="text-black/15 ml-0.5">|</span>
+                            </div>
+                            <input
+                              type="tel"
+                              required
+                              inputMode="numeric"
+                              maxLength={10}
+                              placeholder="10-digit mobile number"
+                              value={newAddress.phone}
+                              onChange={(e) => {
+                                const cleaned = sanitizePhoneNumber(e.target.value);
+                                setNewAddress((prev) => ({ ...prev, phone: cleaned }));
+                              }}
+                              onPaste={(e) => {
+                                const pasted = e.clipboardData?.getData('text');
+                                if (pasted) {
+                                  e.preventDefault();
+                                  const cleaned = sanitizePhoneNumber(pasted);
+                                  setNewAddress((prev) => ({ ...prev, phone: cleaned }));
+                                }
+                              }}
+                              className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium !pl-18 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-neutral-600" />
+                            Alternate Number (Optional)
+                          </label>
+                          <input
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            placeholder="Alternate mobile number (optional)"
+                            value={newAddress.alternatePhone}
+                            onChange={(e) => {
+                              const cleaned = sanitizePhoneNumber(e.target.value);
+                              setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
+                            }}
+                            onPaste={(e) => {
+                              const pasted = e.clipboardData?.getData('text');
+                              if (pasted) {
+                                e.preventDefault();
+                                const cleaned = sanitizePhoneNumber(pasted);
+                                setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
+                              }
+                            }}
+                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Delivery Instructions & Default Option */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                          Delivery Instructions (Optional)
+                        </label>
+                        <textarea
+                          placeholder="Delivery instructions (e.g. Leave with security, call before delivery)"
+                          value={newAddress.deliveryInstructions}
+                          onChange={(e) =>
+                            setNewAddress((prev) => ({
+                              ...prev,
+                              deliveryInstructions: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium p-3.5 shadow-2xs outline-none transition-all min-h-[64px] resize-none"
+                        />
+                      </div>
+
+                      <label className="flex items-center gap-2.5 cursor-pointer select-none pt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={newAddress.isDefault || false}
+                          onChange={(e) =>
+                            setNewAddress((prev) => ({ ...prev, isDefault: e.target.checked }))
+                          }
+                          className="w-4 h-4 rounded border-black/20 text-[#283618] focus:ring-[#283618] cursor-pointer"
+                        />
+                        <span className="text-[12px] text-neutral-700 font-medium">
+                          Make this as my default address
+                        </span>
+                      </label>
+                    </div>
+                  )}
+                </form>
+              </div>
+
+              {/* Modal Footer: Styled cleanly like AuthModal */}
+              <div
+                className="relative z-10 pt-3 border-t border-black/[0.08] shrink-0 mt-2"
+                style={{
+                  paddingBottom: isMobile
+                    ? 'calc(0.5rem + env(safe-area-inset-bottom, 0px))'
+                    : undefined,
+                }}
+              >
+                {(stepError || addressError) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2.5 p-2.5 bg-red-50 text-red-600 rounded-2xl text-[11px] mb-2.5 shadow-2xs border border-red-100"
+                  >
+                    <AlertTriangle
+                      className="w-4 h-4 shrink-0 text-red-600 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <span className="font-bold flex-1 leading-snug">
+                      {stepError || addressError}
+                    </span>
+                  </motion.div>
+                )}
+
+                {currentStep === 1 ? (
+                  <div className="w-full flex items-center gap-2.5 sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewAddress(false)}
+                      className="h-11 px-5 rounded-full border border-black/12 hover:bg-neutral-50 text-neutral-800 font-bold uppercase text-[11px] tracking-wider transition-all cursor-pointer active:scale-[0.98]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleProceedToStep2}
+                      className="flex-1 h-11 pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer select-none"
+                    >
+                      <span className="truncate">Next: Contact Details</span>
+                      <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
+                        <ArrowRight
+                          className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                          strokeWidth={2.5}
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full flex items-center gap-2.5 sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStepError(null);
+                        setCurrentStep(1);
+                      }}
+                      className="h-11 px-4 sm:px-5 rounded-full border border-black/12 hover:bg-neutral-50 text-neutral-800 font-bold uppercase text-[11px] tracking-wider transition-all cursor-pointer active:scale-[0.98] flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
+                      <span>Back</span>
+                    </button>
+                    <button
+                      form="address-form"
+                      type="submit"
+                      disabled={isProcessing}
+                      className="flex-1 h-11 pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer disabled:opacity-60 select-none"
+                    >
+                      <span className="truncate">
+                        {isProcessing ? 'Saving Address...' : 'Save Address'}
+                      </span>
+                      <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
+                        {isProcessing ? (
+                          <span className="material-symbols-outlined text-[16px] animate-spin text-[#283618]">
+                            progress_activity
+                          </span>
+                        ) : (
+                          <Check
+                            className="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                            strokeWidth={2.5}
+                            aria-hidden="true"
+                          />
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

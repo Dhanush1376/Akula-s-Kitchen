@@ -760,6 +760,7 @@ a:hover .ak-tile-icon {
 }
 /* Pivot sits on the leaf stem (top-right, off-canvas) so motion reads as a hanging leaf */
 .ak-shop-head__leaf-rustle {
+  position: relative;
   display: block;
   pointer-events: auto;
   cursor: pointer;
@@ -767,19 +768,31 @@ a:hover .ak-tile-icon {
   transform-origin: 73.5% -81%;
   animation: ak-leaf-sway 6s ease-in-out 1.4s infinite;
 }
-/* Rustle animates the standalone `rotate` property so it stacks on top of the sway */
-.ak-shop-head__leaf-rustle.is-rustling {
-  animation:
-    ak-leaf-sway 6s ease-in-out 1.4s infinite,
-    ak-leaf-rustle 0.9s cubic-bezier(0.36, 0, 0.3, 1);
-}
 .ak-shop-head__leaf-img {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
   max-width: none;
   transform: rotate(118deg);
   animation: ak-leaf-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  /* Tight contact shadow that crisps the edge; the cast shadow below adds the depth */
+  filter: drop-shadow(0 1px 1.5px rgba(28, 40, 14, 0.22));
+}
+/* Cast shadow: a soft, dark-green copy of the leaf thrown down and to the right
+   (light from the top left), matching the wishlist leaf */
+.ak-shop-head__leaf-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  translate: 18px 30px;
+  filter: brightness(0.25) saturate(0.6) blur(11px);
+  opacity: 0.4;
+}
+.ak-shop-head__leaf-shadow .ak-shop-head__leaf-img {
+  filter: none;
 }
 @keyframes ak-leaf-in {
   0% {
@@ -807,34 +820,13 @@ a:hover .ak-tile-icon {
     transform: rotate(-4deg);
   }
 }
-@keyframes ak-leaf-rustle {
-  0% {
-    rotate: 0deg;
-  }
-  20% {
-    rotate: -6deg;
-  }
-  40% {
-    rotate: 4.5deg;
-  }
-  60% {
-    rotate: -2.5deg;
-  }
-  80% {
-    rotate: 1deg;
-  }
-  100% {
-    rotate: 0deg;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .ak-shop-head__leaf {
     transition: none;
     transform: none;
   }
   .ak-shop-head__leaf-img,
-  .ak-shop-head__leaf-rustle,
-  .ak-shop-head__leaf-rustle.is-rustling {
+  .ak-shop-head__leaf-rustle {
     animation: none;
   }
 }

@@ -108,15 +108,15 @@ class StoreSettingsService {
         cancellationWindowHours: settings.cancellation.cancellationWindowHours,
       },
       taxes: {
-        gstEnabled: settings.taxes.gstEnabled ?? true,
-        taxInclusive: settings.taxes.taxInclusive ?? true,
-        gstRate: settings.taxes.gstRate ?? 0.18,
-        cgstRate: settings.taxes.cgstRate ?? 0.09,
-        sgstRate: settings.taxes.sgstRate ?? 0.09,
-        gstNumber: settings.taxes.gstNumber || '',
-        hsnCode: settings.taxes.hsnCode || '',
-        invoicePrefix: settings.taxes.invoicePrefix || 'INV-',
-        invoiceFooter: settings.taxes.invoiceFooter || '',
+        gstEnabled: false,
+        taxInclusive: false,
+        gstRate: 0,
+        cgstRate: 0,
+        sgstRate: 0,
+        gstNumber: '',
+        hsnCode: '',
+        invoicePrefix: settings.taxes?.invoicePrefix || 'INV-',
+        invoiceFooter: settings.taxes?.invoiceFooter || '',
       },
       loyalty: {
         welcomeBonus: settings.loyalty.welcomeBonus,
@@ -175,174 +175,199 @@ class StoreSettingsService {
     data: any,
     adminId: string | mongoose.Types.ObjectId,
   ): Promise<IStoreSettings> {
-    const settings = await this.getOrCreateSettings();
+    const maxRetries = 3;
+    let attempt = 0;
 
-    // Store old data for audit log
-    const oldData = { ...(settings as any)[section] };
-    if (typeof oldData.toObject === 'function') {
-      // Handle Mongoose subdocuments
-      Object.assign(oldData, (settings as any)[section].toObject());
-    }
-
-    // Merge new data
-    const updatedSectionData = {
-      ...(settings as any)[section],
-      ...data,
-    };
-
-    if (section === 'payments') {
-      const isRazorpay = Boolean(updatedSectionData.enableRazorpay);
-      const isCod = Boolean(updatedSectionData.enableCOD);
-      if (!isRazorpay && !isCod) {
-        throw new Error(
-          'At least one payment method (Razorpay or Cash on Delivery) must remain active.',
-        );
-      }
-    }
-
-    if (section === 'taxes') {
-      const gstRate = Number(updatedSectionData.gstRate) || 0;
-      const cgstRate = Number(updatedSectionData.cgstRate) || 0;
-      const sgstRate = Number(updatedSectionData.sgstRate) || 0;
-
-      if (gstRate < 0 || cgstRate < 0 || sgstRate < 0) {
-        throw new Error('GST, CGST, and SGST rates cannot be negative.');
-      }
-
-      if (updatedSectionData.gstEnabled) {
-        if (Math.abs(cgstRate + sgstRate - gstRate) > 0.0001) {
-          throw new Error('CGST Rate + SGST Rate must equal the Total GST Rate.');
-        }
-      }
-    }
-
-    (settings as any)[section] = updatedSectionData;
-    settings.markModified(section);
-
-    // Cross-sync between general and contact sections so editing either preserves a unified source of truth
-    if (section === 'general') {
-      let contactModified = false;
-      if (data.supportEmail !== undefined && settings.contact.email !== data.supportEmail) {
-        settings.contact.email = data.supportEmail;
-        contactModified = true;
-      }
-      if (data.phone !== undefined && settings.contact.phone !== data.phone) {
-        settings.contact.phone = data.phone;
-        contactModified = true;
-      }
-      if (
-        data.alternatePhone !== undefined &&
-        settings.contact.alternatePhone !== data.alternatePhone
-      ) {
-        settings.contact.alternatePhone = data.alternatePhone;
-        contactModified = true;
-      }
-      if (
-        data.whatsappNumber !== undefined &&
-        settings.contact.whatsappNumber !== data.whatsappNumber
-      ) {
-        settings.contact.whatsappNumber = data.whatsappNumber;
-        contactModified = true;
-      }
-      if (contactModified) {
-        settings.markModified('contact');
-      }
-    } else if (section === 'contact') {
-      let generalModified = false;
-      if (data.email !== undefined && settings.general.supportEmail !== data.email) {
-        settings.general.supportEmail = data.email;
-        generalModified = true;
-      }
-      if (data.phone !== undefined && settings.general.phone !== data.phone) {
-        settings.general.phone = data.phone;
-        generalModified = true;
-      }
-      if (
-        data.alternatePhone !== undefined &&
-        settings.general.alternatePhone !== data.alternatePhone
-      ) {
-        settings.general.alternatePhone = data.alternatePhone;
-        generalModified = true;
-      }
-      if (
-        data.whatsappNumber !== undefined &&
-        settings.general.whatsappNumber !== data.whatsappNumber
-      ) {
-        settings.general.whatsappNumber = data.whatsappNumber;
-        generalModified = true;
-      }
-      if (generalModified) {
-        settings.markModified('general');
-      }
-    }
-
-    // Bump version and update metadata
-    settings.version += 1;
-    settings.lastModifiedBy =
-      typeof adminId === 'string' ? new mongoose.Types.ObjectId(adminId) : adminId;
-
-    // Add audit log (keep last 50 entries to prevent document bloat)
-    settings.auditLog.unshift({
-      timestamp: new Date(),
-      adminId: settings.lastModifiedBy,
-      changes: {
-        section,
-        old: oldData,
-        new: data,
-      },
-    });
-
-    if (settings.auditLog.length > 50) {
-      settings.auditLog = settings.auditLog.slice(0, 50);
-    }
-
-    await settings.save();
-
-    // Refresh cache and immediately update in-memory store config cache
-    this.cacheTimestamp = Date.now();
-    this.cache = settings;
-    try {
-      const { updateStoreConfigCache } = require('../config/storeConfig');
-      updateStoreConfigCache(settings);
-    } catch (_err) {
-      logger.warn('Could not refresh storeConfig in-memory cache:', _err);
-    }
-
-    // Emit live synchronization events for maintenance mode toggle
-    if (section === 'general') {
+    while (attempt < maxRetries) {
+      attempt++;
       try {
-        const io = getIO();
-        io.of('/visitor').emit('MAINTENANCE_TOGGLED', {
-          maintenanceMode: settings.general.maintenanceMode,
-        });
-        io.of('/user').emit('MAINTENANCE_TOGGLED', {
-          maintenanceMode: settings.general.maintenanceMode,
+        const settings = await StoreSettings.findOne();
+        if (!settings) {
+          await this.getOrCreateSettings();
+          continue;
+        }
+
+        // Store old data for audit log
+        const oldData = { ...(settings as any)[section] };
+        if (typeof oldData.toObject === 'function') {
+          // Handle Mongoose subdocuments
+          Object.assign(oldData, (settings as any)[section].toObject());
+        }
+
+        // Merge new data
+        const updatedSectionData = {
+          ...(settings as any)[section],
+          ...data,
+        };
+
+        if (section === 'payments') {
+          const isRazorpay = Boolean(updatedSectionData.enableRazorpay);
+          const isCod = Boolean(updatedSectionData.enableCOD);
+          if (!isRazorpay && !isCod) {
+            throw new Error(
+              'At least one payment method (Razorpay or Cash on Delivery) must remain active.',
+            );
+          }
+        }
+
+        if (section === 'taxes') {
+          const gstRate = Number(updatedSectionData.gstRate) || 0;
+          const cgstRate = Number(updatedSectionData.cgstRate) || 0;
+          const sgstRate = Number(updatedSectionData.sgstRate) || 0;
+
+          if (gstRate < 0 || cgstRate < 0 || sgstRate < 0) {
+            throw new Error('GST, CGST, and SGST rates cannot be negative.');
+          }
+
+          if (updatedSectionData.gstEnabled) {
+            if (Math.abs(cgstRate + sgstRate - gstRate) > 0.0001) {
+              throw new Error('CGST Rate + SGST Rate must equal the Total GST Rate.');
+            }
+          }
+        }
+
+        (settings as any)[section] = updatedSectionData;
+        settings.markModified(section);
+
+        // Cross-sync between general and contact sections so editing either preserves a unified source of truth
+        if (section === 'general') {
+          let contactModified = false;
+          if (data.supportEmail !== undefined && settings.contact.email !== data.supportEmail) {
+            settings.contact.email = data.supportEmail;
+            contactModified = true;
+          }
+          if (data.phone !== undefined && settings.contact.phone !== data.phone) {
+            settings.contact.phone = data.phone;
+            contactModified = true;
+          }
+          if (
+            data.alternatePhone !== undefined &&
+            settings.contact.alternatePhone !== data.alternatePhone
+          ) {
+            settings.contact.alternatePhone = data.alternatePhone;
+            contactModified = true;
+          }
+          if (
+            data.whatsappNumber !== undefined &&
+            settings.contact.whatsappNumber !== data.whatsappNumber
+          ) {
+            settings.contact.whatsappNumber = data.whatsappNumber;
+            contactModified = true;
+          }
+          if (contactModified) {
+            settings.markModified('contact');
+          }
+        } else if (section === 'contact') {
+          let generalModified = false;
+          if (data.email !== undefined && settings.general.supportEmail !== data.email) {
+            settings.general.supportEmail = data.email;
+            generalModified = true;
+          }
+          if (data.phone !== undefined && settings.general.phone !== data.phone) {
+            settings.general.phone = data.phone;
+            generalModified = true;
+          }
+          if (
+            data.alternatePhone !== undefined &&
+            settings.general.alternatePhone !== data.alternatePhone
+          ) {
+            settings.general.alternatePhone = data.alternatePhone;
+            generalModified = true;
+          }
+          if (
+            data.whatsappNumber !== undefined &&
+            settings.general.whatsappNumber !== data.whatsappNumber
+          ) {
+            settings.general.whatsappNumber = data.whatsappNumber;
+            generalModified = true;
+          }
+          if (generalModified) {
+            settings.markModified('general');
+          }
+        }
+
+        // Bump version and update metadata
+        settings.version = (settings.version || 0) + 1;
+        settings.lastModifiedBy =
+          typeof adminId === 'string' ? new mongoose.Types.ObjectId(adminId) : adminId;
+
+        // Add audit log (keep last 50 entries to prevent document bloat)
+        settings.auditLog.unshift({
+          timestamp: new Date(),
+          adminId: settings.lastModifiedBy,
+          changes: {
+            section,
+            old: oldData,
+            new: data,
+          },
         });
 
-        // Ensure new Enterprise Maintenance system is synced
-        const MaintenanceService = require('./MaintenanceService').default;
-        const state = await MaintenanceService.getMaintenanceState();
-        if (settings.general.maintenanceMode && !state.active) {
-          // If enabled via legacy settings but not active in new system, enable it in basic mode
-          await MaintenanceService.enableMaintenance(
-            'public_maintenance',
-            'Enabled via legacy StoreSettings interface',
-            settings.lastModifiedBy,
-            { ip: '127.0.0.1', userAgent: 'System' },
-          );
-        } else if (!settings.general.maintenanceMode && state.active) {
-          // If disabled via legacy settings but active in new system, disable it
-          await MaintenanceService.disableMaintenance(settings.lastModifiedBy, {
-            ip: '127.0.0.1',
-            userAgent: 'System',
-          });
+        if (settings.auditLog.length > 50) {
+          settings.auditLog = settings.auditLog.slice(0, 50);
         }
-      } catch (e) {
-        logger.error('Failed to emit MAINTENANCE_TOGGLED event or sync MaintenanceService', e);
+
+        await settings.save();
+
+        // Refresh cache and immediately update in-memory store config cache
+        this.cacheTimestamp = Date.now();
+        this.cache = settings;
+        try {
+          const { updateStoreConfigCache } = require('../config/storeConfig');
+          updateStoreConfigCache(settings);
+        } catch (_err) {
+          logger.warn('Could not refresh storeConfig in-memory cache:', _err);
+        }
+
+        // Emit live synchronization events for maintenance mode toggle
+        if (section === 'general') {
+          try {
+            const io = getIO();
+            io.of('/visitor').emit('MAINTENANCE_TOGGLED', {
+              maintenanceMode: settings.general.maintenanceMode,
+            });
+            io.of('/user').emit('MAINTENANCE_TOGGLED', {
+              maintenanceMode: settings.general.maintenanceMode,
+            });
+
+            // Ensure new Enterprise Maintenance system is synced
+            const MaintenanceService = require('./MaintenanceService').default;
+            const state = await MaintenanceService.getMaintenanceState();
+            if (settings.general.maintenanceMode && !state.active) {
+              // If enabled via legacy settings but not active in new system, enable it in basic mode
+              await MaintenanceService.enableMaintenance(
+                'public_maintenance',
+                'Enabled via legacy StoreSettings interface',
+                settings.lastModifiedBy,
+                { ip: '127.0.0.1', userAgent: 'System' },
+              );
+            } else if (!settings.general.maintenanceMode && state.active) {
+              // If disabled via legacy settings but active in new system, disable it
+              await MaintenanceService.disableMaintenance(settings.lastModifiedBy, {
+                ip: '127.0.0.1',
+                userAgent: 'System',
+              });
+            }
+          } catch (e) {
+            logger.error('Failed to emit MAINTENANCE_TOGGLED event or sync MaintenanceService', e);
+          }
+        }
+
+        return settings;
+      } catch (err: any) {
+        if (err.name === 'VersionError' || err.message?.includes('No matching document found')) {
+          if (attempt < maxRetries) {
+            logger.warn(
+              `[StoreSettings] Optimistic concurrency conflict on section ${section}, retrying (attempt ${attempt}/${maxRetries})...`,
+            );
+            await new Promise((r) => setTimeout(r, 60 * attempt));
+            continue;
+          }
+        }
+        throw err;
       }
     }
 
-    return settings;
+    throw new Error('Failed to update settings after maximum retry attempts.');
   }
 
   /**

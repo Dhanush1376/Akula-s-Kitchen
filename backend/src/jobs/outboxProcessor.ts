@@ -13,8 +13,6 @@ import Order from '../models/Order';
  * - PaymentFailed → Customer failure email + admin alert
  * - PaymentDisputed → Admin dispute notification
  * - BookingConfirmed → Customer booking confirmation email + admin notification
- * - RentalCreated → Customer rental confirmation email + admin notification
- * - RentalPaymentFailed → Customer failure email
  * - RefundFailed → Critical admin alert + Sentry
  */
 export const processOutboxEvents = async () => {

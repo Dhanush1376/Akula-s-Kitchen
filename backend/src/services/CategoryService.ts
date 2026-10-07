@@ -7,11 +7,7 @@ export class CategoryService {
     // Register cascade rules for when a category is soft-deleted
     ReferenceIntegrityService.register('Category', [
       { targetModel: 'Product', targetField: 'secondaryCategories', action: 'pull' },
-      { targetModel: 'Event', targetField: 'secondaryCategories', action: 'pull' },
-      { targetModel: 'Gallery', targetField: 'secondaryCategories', action: 'pull' },
       { targetModel: 'Product', targetField: 'primaryCategory', action: 'nullify' },
-      { targetModel: 'Event', targetField: 'primaryCategory', action: 'nullify' },
-      { targetModel: 'Gallery', targetField: 'primaryCategory', action: 'nullify' },
     ]);
   }
   /**

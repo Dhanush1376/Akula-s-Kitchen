@@ -3,8 +3,8 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export interface ICatalogSynonym extends Document {
   valueId: Types.ObjectId; // References CatalogValue
   attributeSlug: string; // Denormalized for fast lookup
-  term: string; // "golden", "gold finish", "pelli kobbari"
-  termSlug: string; // "golden", "gold-finish", "pelli-kobbari"
+  term: string; // "pachadi", "karam podi", "snacks"
+  termSlug: string; // "pachadi", "karam-podi", "snacks"
   type: 'synonym' | 'seo_alias'; // synonym = normalization, seo_alias = search only
   language?: string; // "en", "te", "hi", "ta"
   createdAt: Date;

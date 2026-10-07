@@ -64,8 +64,14 @@ export const userService = {
     const response = await api.get('/users/cart', options);
     return response.data;
   },
-  addToCart: async (productId, quantity, type, rentalInfo) => {
-    const response = await api.post('/users/cart', { productId, quantity, type, rentalInfo });
+  addToCart: async (productId, quantity, options = {}) => {
+    const payload = {
+      productId,
+      quantity,
+      selectedOptions: options?.selectedOptions,
+      customizationNote: options?.customizationNote,
+    };
+    const response = await api.post('/users/cart', payload);
     return response.data;
   },
   syncCart: async (cartItems) => {
@@ -76,8 +82,9 @@ export const userService = {
     const response = await api.post('/users/cart/merge', { cartItems: guestCartItems });
     return response.data;
   },
-  removeFromCart: async (productId) => {
-    const response = await api.delete(`/users/cart/${productId}`);
+  removeFromCart: async (productId, configurationSignature) => {
+    const params = configurationSignature ? { configurationSignature } : {};
+    const response = await api.delete(`/users/cart/${productId}`, { params });
     return response.data;
   },
   getRecentlyViewed: async () => {

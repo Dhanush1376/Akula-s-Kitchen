@@ -7,7 +7,6 @@ import { useAuth } from '../../context/AuthContext';
 
 const ROUTE_LABELS = {
   orders: 'All Orders',
-  rentals: 'Rentals',
 
   homepage: 'Edit Website',
   policies: 'Policies',
@@ -38,13 +37,12 @@ const getBreadcrumbLabel = (segment, index, arr) => {
   // Check if segment is genuinely an ID (MongoDB ObjectId, order code, or numeric ID)
   const isHexId = /^[0-9a-fA-F]{24}$/.test(segment);
   const isNumericId = /^[0-9]+$/.test(segment);
-  const isPrefixCode = /^(ORD|BKG|CUST|RENT)-/i.test(segment);
+  const isPrefixCode = /^(ORD|CUST)-/i.test(segment);
   const isLikelyId = isHexId || isNumericId || isPrefixCode;
 
   if (isLikelyId) {
     const parent = arr[index - 1] || arr[0];
     if (parent === 'orders') return 'Order Details';
-    if (parent === 'rentals') return 'Rental Details';
     return `#${segment.slice(-6).toUpperCase()}`;
   }
 
@@ -101,7 +99,7 @@ export function AdminTopBar() {
 
   const notifIcon = {
     order: 'shopping_bag',
-    booking: 'event',
+    inquiry: 'mail',
     stock: 'warning',
     review: 'star',
     payment: 'payments',

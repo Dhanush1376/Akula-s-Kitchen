@@ -7,7 +7,7 @@ const SITE_URL = process.env.FRONTEND_URLS?.split(',')[0]?.trim() || 'https://ak
 
 /**
  * Enterprise dynamic sitemap generator.
- * Fetches all static, product, gallery, and event routes from database,
+ * Fetches static pages and active product routes from the database,
  * builds a valid XML output with Google Image Sitemap tags,
  * and writes to the frontend public static folder.
  */
@@ -43,13 +43,11 @@ export async function generateSitemap(): Promise<string> {
       xml += `  </url>\n`;
     }
 
-    // Ensure models are registered by dynamically requiring them first
+    // Ensure the model is registered by dynamically requiring it first
     require('../models/Product');
-    require('../models/Event');
 
-    // Retrieve models dynamically from mongoose to prevent circular imports
+    // Retrieve the model dynamically from mongoose to prevent circular imports
     const Product = mongoose.model('Product');
-    const Event = mongoose.model('Event');
 
     // 2. Fetch Active Products
     if (Product) {
@@ -67,30 +65,7 @@ export async function generateSitemap(): Promise<string> {
         if (prod.imageSrc) {
           xml += `    <image:image>\n`;
           xml += `      <image:loc>${prod.imageSrc}</image:loc>\n`;
-          xml += `      <image:title>${escapeXml(prod.title || "Akula's Kitchen Masterpiece")}</image:title>\n`;
-          xml += `    </image:image>\n`;
-        }
-        xml += `  </url>\n`;
-      }
-    }
-
-    // 3. Fetch Active Events
-    if (Event) {
-      const events = (await Event.find({ isActive: true })
-        .select('_id updatedAt image title')
-        .lean()) as any[];
-
-      for (const ev of events) {
-        const evDate = new Date(ev.updatedAt || new Date()).toISOString().split('T')[0];
-        xml += `  <url>\n`;
-        xml += `    <loc>${SITE_URL}/events/${ev._id}</loc>\n`;
-        xml += `    <lastmod>${evDate}</lastmod>\n`;
-        xml += `    <changefreq>weekly</changefreq>\n`;
-        xml += `    <priority>0.8</priority>\n`;
-        if (ev.image) {
-          xml += `    <image:image>\n`;
-          xml += `      <image:loc>${ev.image}</image:loc>\n`;
-          xml += `      <image:title>${escapeXml(ev.title || "Akula's Kitchen Event")}</image:title>\n`;
+          xml += `      <image:title>${escapeXml(prod.title || "Akula's Kitchen")}</image:title>\n`;
           xml += `    </image:image>\n`;
         }
         xml += `  </url>\n`;

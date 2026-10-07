@@ -49,8 +49,6 @@ export function OrderDetail() {
     order.refundStatus === 'refunded' ||
     status === 'settled';
 
-  const isRental = order.orderType === 'rental' || order.isRental === true;
-
   const getStatusBadge = () => {
     switch (status) {
       case 'delivered':
@@ -128,11 +126,11 @@ export function OrderDetail() {
 
         {/* Ordered Items List */}
         <div>
-          <h3 className="text-[12.5px] font-semibold text-neutral-800 mb-2.5">
+          <h3 className="text-[12.5px] font-semibold text-neutral-800 pb-2 mb-2 border-b border-neutral-200">
             Items Ordered ({itemsList.length})
           </h3>
 
-          <div className="divide-y divide-neutral-100">
+          <div className="divide-y divide-neutral-200">
             {itemsList.map((orderItem, idx) => {
               const itemTitle =
                 orderItem.title ||
@@ -152,7 +150,7 @@ export function OrderDetail() {
                 0;
 
               return (
-                <div key={idx} className="py-3 first:pt-0 last:pb-0 flex items-center gap-3">
+                <div key={idx} className="py-3 first:pt-1 last:pb-0 flex items-center gap-3">
                   <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-md bg-neutral-100 border border-neutral-200 overflow-hidden shrink-0">
                     <OptimizedImage
                       src={itemImage}
@@ -166,6 +164,24 @@ export function OrderDetail() {
                     <h4 className="font-semibold text-neutral-900 text-[13px] truncate leading-tight">
                       {itemTitle}
                     </h4>
+                    {orderItem.selectedOptions && orderItem.selectedOptions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {orderItem.selectedOptions.map((opt, optIdx) => (
+                          <span
+                            key={optIdx}
+                            className="inline-flex items-center text-[10.5px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/70"
+                          >
+                            <span className="opacity-75 mr-1">{opt.groupName}:</span>
+                            <span className="font-bold">{opt.optionLabel}</span>
+                            {opt.priceAdjustment > 0 && (
+                              <span className="ml-1 text-[9.5px] text-amber-700 font-semibold">
+                                (+₹{opt.priceAdjustment})
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <p className="text-[11px] text-neutral-500 mt-0.5">
                       {itemVariant && itemVariant !== 'Default' ? `Pack: ${itemVariant} • ` : ''}
                       Qty: {itemQty}
@@ -176,7 +192,7 @@ export function OrderDetail() {
                   </div>
 
                   {/* Review Button for Delivered item */}
-                  {isDelivered && !isRental && (
+                  {isDelivered && (
                     <button
                       type="button"
                       onClick={() =>

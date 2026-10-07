@@ -28,14 +28,7 @@ const mapDbNotificationToFrontend = (n) => ({
   id: n._id || n.id,
   title: n.title,
   message: getErrorMessage({ message: n.message }, 'An automated system event occurred.'),
-  type:
-    n.type === 'custom_request'
-      ? 'booking'
-      : n.type === 'inquiry'
-        ? 'booking'
-        : n.type === 'user'
-          ? 'review'
-          : n.type,
+  type: n.type === 'user' ? 'review' : n.type,
   read: n.isRead,
   time: n.createdAt
     ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +

@@ -7,7 +7,7 @@ export class PrometheusService {
   public static initialize() {
     // Add a default label which is added to all metrics
     this.register.setDefaultLabels({
-      app: 'event_decor_backend',
+      app: 'akulas_kitchen_backend',
     });
 
     // Enable the collection of default metrics

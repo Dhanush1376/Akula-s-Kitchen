@@ -4,22 +4,36 @@ import { indexProduct } from '../services/search/searchIndexer';
 import logger from '../config/logger';
 import './Category'; // Ensure Category model is registered since Product depends on it
 
-export interface IRentalPricing {
-  rentalPrice: number;
-  rentalDurationDays: number;
+export interface IProductOption {
+  _id?: mongoose.Types.ObjectId | string;
+  id?: string;
+  optionId?: string;
+  label: string;
+  value: string;
+  priceAdjustment: number;
+  available: boolean;
+  default?: boolean;
+  isDefault?: boolean;
+  sortOrder: number;
+}
+
+export interface IProductOptionGroup {
+  _id?: mongoose.Types.ObjectId | string;
+  id?: string;
+  groupId?: string;
+  name: string;
+  type: 'SINGLE_SELECT' | 'MULTI_SELECT' | 'OPTIONAL_SINGLE_SELECT';
+  required: boolean;
+  minSelections?: number;
+  maxSelections?: number;
+  displayStyle?: 'RADIO_CARDS' | 'CHECKBOX_CARDS' | 'DROPDOWN' | 'BUTTON_GROUP' | string;
+  sortOrder: number;
+  options: IProductOption[];
 }
 
 export interface IProduct extends ISoftDeleted {
   title: string;
-  teluguTitle?: string;
   customerNote?: string;
-  complimentaryGift?: {
-    enabled: boolean;
-    name?: string;
-    quantity?: number;
-    description?: string;
-    displayBadge?: string;
-  };
   slug: string;
   primaryCategory: mongoose.Types.ObjectId;
   secondaryCategories: mongoose.Types.ObjectId[];
@@ -48,7 +62,6 @@ export interface IProduct extends ISoftDeleted {
     production: number;
     packing: number;
     transit: number;
-    rental: number;
     maintenance: number;
     returned: number;
     damaged: number;
@@ -80,7 +93,6 @@ export interface IProduct extends ISoftDeleted {
   featured: boolean;
   isActive: boolean;
   isNonRefundable: boolean;
-  showInGallery: boolean;
   variants: {
     id: string | number;
     name: string;
@@ -89,23 +101,8 @@ export interface IProduct extends ISoftDeleted {
     price?: number | string;
     stock?: number | string;
   }[];
-  // Rental fields
-  rentalEnabled: boolean;
-  availabilityMode: 'purchase_only' | 'rent_only' | 'both';
-  rentalPricing: IRentalPricing;
-  securityDeposit: number;
-  isDepositRefundable: boolean;
-  rentalStock: number;
-  rentalMinDays: number;
-  rentalMaxDays: number;
-  customizationConfig?: {
-    enabled: boolean;
-    required: boolean;
-    label: string;
-    placeholder: string;
-    maxLength: number;
-    helperText?: string;
-  };
+  // Generic Product Configuration / Options Engine
+  optionGroups?: IProductOptionGroup[];
   // AI metadata
   aiTags?: string[];
   aiCategory?: string;
@@ -127,18 +124,47 @@ export interface IProduct extends ISoftDeleted {
   updatedAt: Date;
 }
 
+const ProductOptionSchema = new Schema(
+  {
+    optionId: { type: String, trim: true },
+    label: { type: String, required: true, trim: true },
+    value: { type: String, required: true, trim: true },
+    priceAdjustment: { type: Number, default: 0 },
+    available: { type: Boolean, default: true },
+    default: { type: Boolean, default: false },
+    isDefault: { type: Boolean, default: false },
+    sortOrder: { type: Number, default: 0 },
+  },
+  { _id: true },
+);
+
+const ProductOptionGroupSchema = new Schema(
+  {
+    groupId: { type: String, trim: true },
+    name: { type: String, required: true, trim: true },
+    type: {
+      type: String,
+      enum: ['SINGLE_SELECT', 'MULTI_SELECT', 'OPTIONAL_SINGLE_SELECT'],
+      default: 'SINGLE_SELECT',
+    },
+    required: { type: Boolean, default: false },
+    minSelections: { type: Number, default: 0 },
+    maxSelections: { type: Number, default: 0 },
+    displayStyle: {
+      type: String,
+      enum: ['RADIO_CARDS', 'CHECKBOX_CARDS', 'DROPDOWN', 'BUTTON_GROUP'],
+      default: 'RADIO_CARDS',
+    },
+    sortOrder: { type: Number, default: 0 },
+    options: { type: [ProductOptionSchema], default: [] },
+  },
+  { _id: true },
+);
+
 const ProductSchema: Schema = new Schema(
   {
     title: { type: String, required: true, trim: true },
-    teluguTitle: { type: String, trim: true },
     customerNote: { type: String, trim: true },
-    complimentaryGift: {
-      enabled: { type: Boolean, default: false },
-      name: { type: String, trim: true },
-      quantity: { type: Number, min: 1, default: 1 },
-      description: { type: String, trim: true },
-      displayBadge: { type: String, trim: true },
-    },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     primaryCategory: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     secondaryCategories: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
@@ -167,7 +193,6 @@ const ProductSchema: Schema = new Schema(
       production: { type: Number, default: 0 },
       packing: { type: Number, default: 0 },
       transit: { type: Number, default: 0 },
-      rental: { type: Number, default: 0 },
       maintenance: { type: Number, default: 0 },
       returned: { type: Number, default: 0 },
       damaged: { type: Number, default: 0 },
@@ -204,8 +229,7 @@ const ProductSchema: Schema = new Schema(
     lowStockThreshold: { type: Number, default: 5, min: 0 },
     featured: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
-    isNonRefundable: { type: Boolean, default: false },
-    showInGallery: { type: Boolean, default: false },
+    isNonRefundable: { type: Boolean, default: true },
     variants: [
       {
         id: { type: Schema.Types.Mixed },
@@ -216,37 +240,7 @@ const ProductSchema: Schema = new Schema(
         stock: { type: Schema.Types.Mixed },
       },
     ],
-    // Rental fields
-    rentalEnabled: { type: Boolean, default: false },
-    availabilityMode: {
-      type: String,
-      enum: ['purchase_only', 'rent_only', 'both'],
-      default: 'purchase_only',
-    },
-    rentalPricing: {
-      rentalPrice: { type: Number, default: 0, min: 0 },
-      rentalDurationDays: { type: Number, default: 1, min: 1 },
-      // Preserved for rollback safety
-      daily: { type: Number, default: 0, min: 0 },
-      weekly: { type: Number, default: 0, min: 0 },
-      monthly: { type: Number, default: 0, min: 0 },
-      customDurationEnabled: { type: Boolean, default: false },
-      customPricePerDay: { type: Number, default: 0, min: 0 },
-    },
-    securityDeposit: { type: Number, default: 0, min: 0 },
-    isDepositRefundable: { type: Boolean, default: true },
-    rentalStock: { type: Number, default: 0, min: 0 },
-    rentalMinDays: { type: Number, default: 1, min: 1 },
-    rentalMaxDays: { type: Number, default: 365, min: 1 },
-    isManualRentalPricing: { type: Boolean, default: false },
-    customizationConfig: {
-      enabled: { type: Boolean, default: false },
-      required: { type: Boolean, default: false },
-      label: { type: String, default: 'Customization Note' },
-      placeholder: { type: String, default: 'Enter customization details' },
-      maxLength: { type: Number, default: 500, max: 2000 },
-      helperText: { type: String },
-    },
+    optionGroups: { type: [ProductOptionGroupSchema], default: [] },
     // AI metadata
     aiTags: [{ type: String, trim: true }],
     aiCategory: { type: String, trim: true },
@@ -275,10 +269,10 @@ const ProductSchema: Schema = new Schema(
 
 // Indexes
 ProductSchema.index(
-  { title: 'text', description: 'text', tags: 'text', teluguTitle: 'text' },
+  { title: 'text', description: 'text', tags: 'text' },
   {
     name: 'FullTextIndex',
-    weights: { title: 10, tags: 5, description: 1, teluguTitle: 8 },
+    weights: { title: 10, tags: 5, description: 1 },
   },
 );
 ProductSchema.index({ primaryCategory: 1 });
@@ -294,10 +288,6 @@ ProductSchema.index({ isActive: 1, primaryCategory: 1, rating: -1 });
 ProductSchema.index({ isActive: 1, primaryCategory: 1, createdAt: -1 });
 ProductSchema.index({ isActive: 1, secondaryCategories: 1, createdAt: -1 });
 ProductSchema.index({ isActive: 1, featured: 1, createdAt: -1 });
-
-// Rental Indexes
-ProductSchema.index({ isActive: 1, rentalEnabled: 1, primaryCategory: 1 });
-ProductSchema.index({ isActive: 1, availabilityMode: 1, primaryCategory: 1 });
 
 // Sitemap Auto-Update Trigger
 import { triggerSitemapUpdate } from '../utils/sitemapGenerator';

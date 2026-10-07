@@ -7,7 +7,7 @@ const TTL = 30 * 24 * 60 * 60 * 1000; // 30 days
 const defaultCart = {
   purchaseCart: {
     items: [],
-    summary: { subtotal: 0, depositTotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
+    summary: { subtotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
   },
 };
 
@@ -73,9 +73,9 @@ export const GuestCartService = {
   },
 
   /**
-   * Add or update item in guest cart
+   * Add or update item in guest cart, distinguishing distinct configurations
    */
-  addToCart(product, quantity = 1, type = 'purchase') {
+  addToCart(product, quantity = 1) {
     const cart = this.getCart();
     const targetCartKey = 'purchaseCart';
     const items = cart[targetCartKey].items || [];
@@ -83,10 +83,17 @@ export const GuestCartService = {
     const maxQty = getMaxQtyPerItem();
     const maxItems = getMaxItemsPerOrder();
 
-    const itemId = product._id || product.id;
-    const existingIndex = items.findIndex(
-      (item) => (item.product?._id || item.product?.id || item._id || item.id) === itemId,
-    );
+    const productId = String(product.productId || product._id || product.id || '');
+    const signature = String(product.configurationSignature || 'default');
+    const unitPrice = Number(product.configuredUnitPrice ?? product.price ?? 0);
+
+    const existingIndex = items.findIndex((item) => {
+      const pId = String(
+        item.productId || item.product?._id || item.product?.id || item._id || item.id || '',
+      );
+      const iSig = String(item.configurationSignature || 'default');
+      return pId === productId && iSig === signature;
+    });
 
     let updatedItems;
     if (existingIndex >= 0) {
@@ -98,27 +105,35 @@ export const GuestCartService = {
       updatedItems[existingIndex] = {
         ...updatedItems[existingIndex],
         quantity: newQty,
+        price: unitPrice || updatedItems[existingIndex].price,
+        configuredUnitPrice: unitPrice || updatedItems[existingIndex].configuredUnitPrice,
       };
     } else {
       if (items.length >= maxItems) {
         return this.getCart();
       }
+      const itemKey =
+        signature && signature !== 'default' ? `${productId}___${signature}` : productId;
       updatedItems = [
         ...items,
         {
-          id: itemId,
-          _id: itemId,
+          id: itemKey,
+          _id: itemKey,
+          productId,
           quantity: Math.min(maxQty, quantity),
-          type,
           product,
-          deposit: 0,
+          price: unitPrice,
+          configuredUnitPrice: unitPrice,
+          selectedOptions: product.selectedOptions || [],
+          configurationSignature: signature,
+          variant: product.variant || 'Default',
+          customizationNote: product.customizationNote,
         },
       ];
     }
 
-    const { subtotal, depositTotal, shippingFee, platformFee, total } = calculateCartSummary(
+    const { subtotal, shippingFee, platformFee, total } = calculateCartSummary(
       updatedItems,
-      type,
       cart[targetCartKey].summary?.shippingFee || 0,
       getPlatformFee(),
     );
@@ -127,7 +142,6 @@ export const GuestCartService = {
     cart[targetCartKey].summary = {
       ...(cart[targetCartKey].summary || defaultCart.purchaseCart.summary),
       subtotal,
-      depositTotal,
       shippingFee,
       platformFee,
       total,
@@ -136,18 +150,30 @@ export const GuestCartService = {
     return this.saveCart(cart);
   },
 
-  removeFromCart(productId, type = 'purchase') {
+  removeFromCart(productId, configurationSignature) {
     const cart = this.getCart();
     const targetCartKey = 'purchaseCart';
     const items = cart[targetCartKey].items || [];
 
-    const updatedItems = items.filter(
-      (item) => (item.product?._id || item.product?.id || item._id || item.id) !== productId,
-    );
+    const updatedItems = items.filter((item) => {
+      const pId = String(
+        item.productId || item.product?._id || item.product?.id || item._id || item.id || '',
+      );
+      const iSig = String(item.configurationSignature || 'default');
 
-    const { subtotal, depositTotal, shippingFee, platformFee, total } = calculateCartSummary(
+      if (configurationSignature) {
+        return !(pId === String(productId) && iSig === String(configurationSignature));
+      }
+      // If no signature given, match exact id or productId
+      return (
+        pId !== String(productId) &&
+        String(item.id) !== String(productId) &&
+        String(item._id) !== String(productId)
+      );
+    });
+
+    const { subtotal, shippingFee, platformFee, total } = calculateCartSummary(
       updatedItems,
-      type,
       cart[targetCartKey].summary?.shippingFee || 0,
       getPlatformFee(),
     );
@@ -156,7 +182,6 @@ export const GuestCartService = {
     cart[targetCartKey].summary = {
       ...(cart[targetCartKey].summary || defaultCart.purchaseCart.summary),
       subtotal,
-      depositTotal,
       shippingFee,
       platformFee,
       total,
@@ -165,7 +190,7 @@ export const GuestCartService = {
     return this.saveCart(cart);
   },
 
-  updateQuantity(productId, quantity, type = 'purchase') {
+  updateQuantity(productId, quantity, configurationSignature) {
     const cart = this.getCart();
     const targetCartKey = 'purchaseCart';
     const items = cart[targetCartKey].items || [];
@@ -174,20 +199,27 @@ export const GuestCartService = {
     const numericQuantity = Math.max(0, Math.min(maxQty, Number(quantity) || 1));
 
     if (numericQuantity === 0) {
-      return this.removeFromCart(productId, type);
+      return this.removeFromCart(productId, configurationSignature);
     }
 
     const updatedItems = items.map((item) => {
-      const id = item.product?._id || item.product?.id || item._id || item.id;
-      if (id === productId) {
+      const pId = String(
+        item.productId || item.product?._id || item.product?.id || item._id || item.id || '',
+      );
+      const iSig = String(item.configurationSignature || 'default');
+
+      const matches = configurationSignature
+        ? pId === String(productId) && iSig === String(configurationSignature)
+        : pId === String(productId) || String(item.id) === String(productId);
+
+      if (matches) {
         return { ...item, quantity: numericQuantity };
       }
       return item;
     });
 
-    const { subtotal, depositTotal, shippingFee, platformFee, total } = calculateCartSummary(
+    const { subtotal, shippingFee, platformFee, total } = calculateCartSummary(
       updatedItems,
-      type,
       cart[targetCartKey].summary?.shippingFee || 0,
       getPlatformFee(),
     );
@@ -196,7 +228,6 @@ export const GuestCartService = {
     cart[targetCartKey].summary = {
       ...(cart[targetCartKey].summary || defaultCart.purchaseCart.summary),
       subtotal,
-      depositTotal,
       shippingFee,
       platformFee,
       total,
@@ -213,10 +244,13 @@ export const GuestCartService = {
     const allItems = [...(cart.purchaseCart?.items || [])];
 
     return allItems.map((item) => ({
-      product: item.product?._id || item.product?.id || item._id || item.id,
+      product: item.productId || item.product?._id || item.product?.id || item._id || item.id,
       quantity: item.quantity,
-      type: item.type || 'purchase',
-      deposit: 0,
+      selectedOptions: item.selectedOptions || [],
+      configurationSignature: item.configurationSignature || '',
+      configuredUnitPrice: item.configuredUnitPrice || item.price,
+      variant: item.variant || 'Default',
+      customizationNote: item.customizationNote,
     }));
   },
 

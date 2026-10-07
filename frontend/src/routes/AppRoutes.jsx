@@ -192,7 +192,10 @@ export function AppRoutes() {
       <ErrorBoundary>
         <Suspense fallback={<AppRouteFallback />}>
           <Routes>
-            <Route path="/invoice-preview" element={<InvoicePreviewPage />} />
+            {/* Internal invoice layout preview; development builds only */}
+            {import.meta.env.DEV && (
+              <Route path="/invoice-preview" element={<InvoicePreviewPage />} />
+            )}
             <Route element={<MaintenanceGate />}>
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Home />} />
@@ -267,6 +270,7 @@ export function AppRoutes() {
               <Route path="policies/add" element={<AdminPolicies />} />
               <Route path="policies/edit/:id" element={<AdminPolicies />} />
               <Route path="products/add" element={<AdminAddProduct />} />
+              <Route path="products/new" element={<Navigate to="/admin/products/add" replace />} />
               <Route path="products/edit/:id" element={<AdminAddProduct />} />
               <Route path="orders/*" element={<AdminOrdersHub />} />
               <Route path="orders/:orderId" element={<AdminOrderDetail />} />

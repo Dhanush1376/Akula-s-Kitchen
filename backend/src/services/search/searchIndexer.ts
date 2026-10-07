@@ -49,7 +49,7 @@ export function tokenizeText(text?: string): string[] {
 /**
  * Analyzes an entity and extracts all search tokens
  */
-export function extractEntityTokens(entity: any, _type: 'Product' | 'Event') {
+export function extractEntityTokens(entity: any, _type: 'Product') {
   const titleTokens = new Set<string>();
   const categoryTokens = new Set<string>();
   const tagTokens = new Set<string>();

@@ -25,6 +25,7 @@ import { useSearchOverlay } from '../../hooks/useSearchOverlay';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useScrollDirection } from '../../hooks/useScrollDirection';
 import { productService } from '../../services/api/productService';
+import api from '../../services/api';
 import { lazyWithRetry as lazy } from '../../utils/performance/lazyWithRetry';
 import { useConfig } from '../../context/ConfigContext';
 
@@ -37,7 +38,7 @@ const IntelligentSearchOverlay = lazy(() =>
 // Search caching is now handled by useSearchOverlay hook
 
 export function TopNavbar() {
-  const { storeSettings, storeNameUpper } = useConfig();
+  const { storeSettings, storeNameUpper, categories: configCategories } = useConfig();
   const { navigation } = useWebsiteContent();
   const logoText = navigation?.logo?.text || storeNameUpper || "AKULA'S KITCHEN";
   const logoWords = logoText.split(' ');
@@ -48,23 +49,33 @@ export function TopNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [_scrolled, _setScrolled] = useState(false);
   const location = useLocation();
-  const { cartCount, setIsCartOpen, _purchaseCartCount, _rentalCartCount, _setActiveCartMode } =
-    useCart();
+  const { cartCount, setIsCartOpen } = useCart();
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = React.useRef(null);
   const [categories, setCategories] = useState([]);
   const [openAccordion, setOpenAccordion] = useState(null);
 
   useEffect(() => {
     let active = true;
-    productService
-      .getCategories()
+    api
+      .get('/categories/active')
       .then((res) => {
-        if (active && res?.success && res.data) {
-          setCategories(res.data);
+        if (active && res?.data?.success && Array.isArray(res.data.data)) {
+          setCategories(res.data.data);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback to distinct product categories if /categories/active fails
+        productService
+          .getCategories()
+          .then((res) => {
+            if (active && res?.success && res.data) {
+              setCategories(res.data);
+            }
+          })
+          .catch(() => {});
+      });
     return () => {
       active = false;
     };
@@ -172,9 +183,25 @@ export function TopNavbar() {
   const mobileMenuRef = React.useRef(null);
   const mobileTriggerRef = React.useRef(null);
 
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    if (isProfileDropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isProfileDropdownOpen]);
+
   // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false);
+    setIsProfileDropdownOpen(false);
   }, [location.pathname]);
 
   useScrollLock(isOpen && isMobile);
@@ -228,19 +255,6 @@ export function TopNavbar() {
     };
   }, [isOpen, isMobile]);
 
-  const isGalleryLink = (link) => {
-    const href = (link?.href || link?.link || '').toLowerCase().trim();
-    const label = (link?.label || '').toLowerCase().trim();
-    return (
-      href === '/gallery' ||
-      href.startsWith('/gallery/') ||
-      href.startsWith('/gallery?') ||
-      href.includes('gallery') ||
-      label === 'gallery' ||
-      label.includes('gallery')
-    );
-  };
-
   // Purely dynamic, CMS-driven links. No hardcoded fallbacks.
   const dbLinks =
     navigation?.mainLinks
@@ -248,29 +262,24 @@ export function TopNavbar() {
       .map((link) => ({
         label: link.label,
         href: link.href || link.link,
-      }))
-      .filter((link) => !isGalleryLink(link)) || [];
+      })) || [];
 
   const navLinks = [
     { label: 'Home', href: '/', mobileOnly: true },
     ...dbLinks,
     { label: 'My Orders', href: '/dashboard/orders', mobileOnly: true },
     { label: 'Contact Us', href: '/contact', mobileOnly: true },
-  ].filter((link) => !isGalleryLink(link));
+  ];
 
   const isActive = (href) => location.pathname === href;
 
-  const defaultCategories = [
-    'Bangle Trays',
-    'Butta Decorations',
-    'Pickles',
-    'Batters',
-    'Snacks',
-    'Podis',
-    'Sweets',
-  ];
-
-  const displayCategories = categories && categories.length > 0 ? categories : defaultCategories;
+  // Real, dynamic categories only — no hardcoded fallbacks
+  const displayCategories =
+    categories && categories.length > 0
+      ? categories
+      : configCategories && configCategories.length > 0
+        ? configCategories
+        : [];
 
   const categoriesScrollRef = React.useRef(null);
 
@@ -283,10 +292,10 @@ export function TopNavbar() {
         }`}
         style={{ zIndex: 'var(--z-sticky)' }}
       >
-        <div className="max-w-[1400px] mx-auto px-2 sm:px-4 pt-2 sm:pt-2.5 pb-1 pointer-events-auto">
-          <div className="bg-white/95 backdrop-blur-md border border-neutral-200 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.06)] flex items-center gap-2.5 sm:gap-3.5">
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 pb-1.5 sm:pb-2 pointer-events-auto">
+          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
             {/* Big Circular Logo spanning full height on left */}
-            <Link to="/" className="shrink-0 flex items-center self-center group">
+            <Link to="/" className="shrink-0 flex items-center self-center group pl-0.5 sm:pl-1">
               <BrandLogo
                 size="64px"
                 className="drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
@@ -295,13 +304,13 @@ export function TopNavbar() {
             </Link>
 
             {/* Right Content: Top Row (Search + Actions) & Bottom Row (TODAY + Categories) */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5">
               {/* Top Row: Pill Search Bar + Actions */}
               <div className="flex items-center gap-2 sm:gap-3 w-full">
                 {/* Pill Search Bar */}
                 <div
                   onClick={() => search.handleOpen('text')}
-                  className="flex-1 min-w-0 h-10 sm:h-11 bg-white border border-[#e5e0d8] hover:border-neutral-400 rounded-full pl-3.5 sm:pl-4 pr-1 sm:pr-1.5 flex items-center gap-2 shadow-2xs transition-all cursor-pointer group"
+                  className="flex-1 min-w-0 h-10 sm:h-11 bg-white/50 hover:bg-white/75 backdrop-blur-md border border-neutral-200 hover:border-neutral-300 rounded-full pl-3.5 sm:pl-4 pr-1 sm:pr-1.5 flex items-center gap-2 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02),0_1px_3px_rgba(0,0,0,0.03)] transition-all cursor-pointer group"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -335,8 +344,126 @@ export function TopNavbar() {
                   </button>
                 </div>
 
-                {/* Right Action Group: Cart & Menu Circular Buttons */}
+                {/* Right Action Group: Profile (Laptop/Desktop), Cart & Menu Circular Buttons */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {/* Laptop/Desktop Profile Button & Dropdown */}
+                  <div ref={profileDropdownRef} className="relative hidden md:block">
+                    <button
+                      type="button"
+                      id="profile-trigger-btn"
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          openAuthModal();
+                        } else {
+                          setIsProfileDropdownOpen((prev) => !prev);
+                        }
+                      }}
+                      className={`w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full border flex items-center justify-center shadow-2xs transition-all relative cursor-pointer shrink-0 ${
+                        isProfileDropdownOpen
+                          ? 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] ring-2 ring-[#f7bb0e]/30'
+                          : 'bg-white/60 hover:bg-white/85 backdrop-blur-md border-neutral-200 hover:border-neutral-300 text-neutral-800'
+                      }`}
+                      aria-label="Account Profile"
+                      title={
+                        isAuthenticated ? user?.name || user?.email || 'My Account' : 'Sign In'
+                      }
+                    >
+                      <User size={19} strokeWidth={1.8} />
+                      {isAuthenticated && (
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
+                      )}
+                    </button>
+
+                    {/* Profile Dropdown Menu */}
+                    <AnimatePresence>
+                      {isProfileDropdownOpen && isAuthenticated && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                          transition={{ duration: 0.16 }}
+                          className="absolute right-0 top-full mt-2 w-64 bg-white/85 backdrop-blur-2xl rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-neutral-200 p-2 z-50 text-left"
+                        >
+                          {/* User Header */}
+                          <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 mb-1.5">
+                            <p className="text-[13px] font-bold text-neutral-900 truncate">
+                              {user?.name || 'My Account'}
+                            </p>
+                            <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                              {user?.email || user?.phone || ''}
+                            </p>
+                            {user?.role && adminRoles.includes(user.role) && (
+                              <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f7bb0e]/20 text-[#a37200] text-[10px] font-bold uppercase tracking-wider">
+                                {user.role.replace('_', ' ')}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Navigation Options */}
+                          <div className="py-1 space-y-0.5">
+                            <Link
+                              to="/dashboard?drawer=profile"
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                            >
+                              <User size={16} strokeWidth={2} className="text-neutral-500" />
+                              <span>My Profile</span>
+                            </Link>
+
+                            <Link
+                              to="/dashboard/orders"
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                            >
+                              <ShoppingBag size={16} strokeWidth={2} className="text-neutral-500" />
+                              <span>My Orders</span>
+                            </Link>
+
+                            <Link
+                              to="/wishlist"
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                            >
+                              <Heart size={16} strokeWidth={2} className="text-neutral-500" />
+                              <span>Wishlist</span>
+                            </Link>
+
+                            {adminRoles.includes(user?.role) && (
+                              <Link
+                                to="/admin"
+                                onClick={() => setIsProfileDropdownOpen(false)}
+                                className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-bold text-[#b4820a] hover:bg-[#fff9e6] transition-colors"
+                              >
+                                <span className="flex items-center gap-2.5">
+                                  <LayoutGrid size={16} strokeWidth={2} />
+                                  <span>Admin Portal</span>
+                                </span>
+                                {hasPendingInvite && (
+                                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                                )}
+                              </Link>
+                            )}
+                          </div>
+
+                          <div className="my-1 border-t border-neutral-100" />
+
+                          {/* Sign Out */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsProfileDropdownOpen(false);
+                              logout();
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          >
+                            <LogOut size={16} strokeWidth={2} />
+                            <span>Sign Out</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   {/* Cart Circle Button */}
                   <motion.button
                     type="button"
@@ -348,7 +475,7 @@ export function TopNavbar() {
                         : {}
                     }
                     transition={{ duration: 0.5 }}
-                    className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full bg-white border border-[#e5e0d8] hover:border-neutral-300 hover:bg-neutral-50 flex items-center justify-center text-neutral-800 shadow-2xs transition-all relative cursor-pointer shrink-0"
+                    className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full bg-white/60 hover:bg-white/85 backdrop-blur-md border border-neutral-200 hover:border-neutral-300 flex items-center justify-center text-neutral-800 shadow-2xs transition-all relative cursor-pointer shrink-0"
                     aria-label="View Cart"
                   >
                     <ShoppingCart size={19} strokeWidth={1.8} />
@@ -363,11 +490,11 @@ export function TopNavbar() {
                     )}
                   </motion.button>
 
-                  {/* Menu Hamburger Circle Button */}
+                  {/* Menu Hamburger Circle Button (Mobile only) */}
                   <button
                     type="button"
                     onClick={() => setIsOpen(true)}
-                    className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full bg-white border border-[#e5e0d8] hover:border-neutral-300 hover:bg-neutral-50 flex items-center justify-center text-neutral-800 shadow-2xs transition-all cursor-pointer shrink-0"
+                    className="md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/60 hover:bg-white/85 backdrop-blur-md border border-neutral-200 hover:border-neutral-300 flex items-center justify-center text-neutral-800 shadow-2xs transition-all cursor-pointer shrink-0"
                     aria-label="Open Navigation Menu"
                     aria-expanded={isOpen}
                   >
@@ -377,11 +504,11 @@ export function TopNavbar() {
               </div>
 
               {/* Bottom Row: Horizontal Scrolling Row (TODAY + Categories) */}
-              <div className="flex items-center w-full min-w-0 relative">
+              <div className="flex items-center w-full min-w-0 relative rounded-full overflow-hidden isolate">
                 {/* Horizontal Scrolling Categories including TODAY */}
                 <div
                   ref={categoriesScrollRef}
-                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-0.5 px-0.5"
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-1 px-0.5 sm:px-3 rounded-full"
                   role="tablist"
                   aria-label="Product Categories"
                 >
@@ -389,7 +516,7 @@ export function TopNavbar() {
                   <button
                     type="button"
                     onClick={() => navigate('/')}
-                    className="bg-[#283618] hover:bg-[#1f2b13] text-white rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 text-[11px] sm:text-[11.5px] font-bold tracking-wider uppercase whitespace-nowrap transition-all shadow-2xs cursor-pointer border-0 outline-none"
+                    className="bg-[#283618]/95 hover:bg-[#1f2b13] text-white rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 text-[11px] sm:text-[11.5px] font-bold tracking-wider uppercase whitespace-nowrap transition-all shadow-2xs cursor-pointer border-0 outline-none backdrop-blur-xs"
                     aria-label="Today specials"
                   >
                     <LayoutGrid size={14} strokeWidth={2.2} className="shrink-0" />
@@ -410,8 +537,8 @@ export function TopNavbar() {
                         }
                         className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-[11px] sm:text-[11.5px] tracking-wider uppercase whitespace-nowrap shadow-2xs transition-all shrink-0 cursor-pointer border-0 outline-none ${
                           isSelected
-                            ? 'bg-[#f7bb0e] text-neutral-950'
-                            : 'bg-neutral-100/80 hover:bg-neutral-200/70 text-neutral-800 hover:text-black'
+                            ? 'bg-[#f7bb0e] text-neutral-950 shadow-xs'
+                            : 'bg-white/50 hover:bg-white/80 text-neutral-800 hover:text-black border border-white/60 backdrop-blur-xs'
                         }`}
                       >
                         <span>{catName}</span>
@@ -450,7 +577,7 @@ export function TopNavbar() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-              className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[78%] max-w-[300px] sm:max-w-[320px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden p-4 sm:p-5 flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_12px_45px_rgba(0,0,0,0.18)] rounded-3xl border border-black/[0.08]"
+              className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[78%] max-w-[300px] sm:max-w-[320px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/85 backdrop-blur-2xl z-[120] lg:hidden p-4 sm:p-5 flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.18),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-3xl border border-neutral-200"
               style={{
                 marginTop: 'env(safe-area-inset-top, 0px)',
                 marginBottom: 'env(safe-area-inset-bottom, 0px)',
@@ -479,7 +606,7 @@ export function TopNavbar() {
                       link.label.toLowerCase() === 'shop by category';
                     const hasSubMenu = isShopLink;
                     const accordionId = isShopLink ? 'shop' : null;
-                    const subItems = isShopLink ? categories : [];
+                    const subItems = isShopLink ? displayCategories : [];
 
                     return (
                       <motion.li

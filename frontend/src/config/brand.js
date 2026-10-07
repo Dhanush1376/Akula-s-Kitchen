@@ -159,7 +159,7 @@ export const getStoredState = () => {
       if (parsed?.contact?.state?.trim()) return parsed.contact.state.trim();
     }
   } catch (_e) {}
-  return 'Andhra Pradesh';
+  return '';
 };
 
 export const getStoredPostalCode = () => {

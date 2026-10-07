@@ -5,7 +5,7 @@ const PaymentEventSchema = new Schema<IPaymentEvent>(
   {
     eventId: { type: String, required: true, unique: true },
     orderId: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
-    orderType: { type: String, enum: ['purchase', 'rental', 'custom'], required: true },
+    orderType: { type: String, enum: ['purchase'], default: 'purchase', required: true },
     eventType: {
       type: String,
       enum: [

@@ -55,12 +55,18 @@ const UserSchema: Schema = new Schema(
           product: { type: Schema.Types.ObjectId, ref: 'Product' },
           quantity: { type: Number, default: 1 },
           variant: { type: String, default: 'Default' },
-          type: { type: String, enum: ['purchase', 'rental'], default: 'purchase' },
-          rentalInfo: {
-            startDate: { type: Date },
-            endDate: { type: Date },
-          },
           customizationNote: { type: String, trim: true, maxlength: 2000 },
+          selectedOptions: [
+            {
+              groupId: { type: String, required: true },
+              groupName: { type: String, required: true },
+              optionId: { type: String, required: true },
+              optionLabel: { type: String, required: true },
+              priceAdjustment: { type: Number, default: 0 },
+            },
+          ],
+          configurationSignature: { type: String, default: '' },
+          configuredUnitPrice: { type: Number },
         },
       ],
       validate: [(val: any[]) => val.length <= 50, '{PATH} exceeds the limit of 50 items'],
@@ -85,8 +91,6 @@ const UserSchema: Schema = new Schema(
         promotions: { type: Boolean, default: true },
         security: { type: Boolean, default: true },
         newsletter: { type: Boolean, default: true },
-        bookingUpdates: { type: Boolean, default: true },
-        rentalUpdates: { type: Boolean, default: true },
       },
     },
     accountPreferences: {
@@ -114,7 +118,7 @@ const UserSchema: Schema = new Schema(
     isLocked: { type: Boolean, default: false },
     lockUntil: { type: Date },
     walletBalance: { type: Number, default: 0 },
-    siriCoins: { type: Number, default: 0 },
+    rewardCoins: { type: Number, default: 0 },
     loyaltyTier: {
       type: String,
       default: 'Bronze',
@@ -166,6 +170,6 @@ import ForensicAuditPlugin from '../utils/ForensicAuditPlugin';
 UserSchema.plugin(ForensicAuditPlugin);
 UserSchema.plugin(AssetLifecyclePlugin);
 
-const User = mongoose.model<IUser, SoftDeleteModel<IUser>>('User', UserSchema);
+const User = mongoose.model<IUser, SoftDeleteModel<IUser>>('User', UserSchema, 'users');
 
 export default User;

@@ -1,8 +1,8 @@
 import { persistentStorage } from '../storage/persistentStorage';
 
 const PROFILE_KEY = 'akula_auth_profile_v1';
-// Align with refresh-token lifetime for instant UI restore on reload
-const PROFILE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// Align with refresh-token lifetime (30 days) so user never gets logged out on refresh or tab reopen
+const PROFILE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const loadCachedProfile = () => {
   return persistentStorage.getItem(PROFILE_KEY, { decrypt: true, ttl: PROFILE_TTL_MS });

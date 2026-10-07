@@ -23,11 +23,20 @@ export function useCheckoutTotals({ isAuthenticated, activeItems, paymentOption,
     setIsTotalsLoading(true);
     setTotalsError(null);
     try {
-      const itemsPayload = activeItems.map((item) => ({
-        productId: item.id || item._id || item.productId,
-        quantity: item.quantity,
-        type: item.type,
-      }));
+      const itemsPayload = activeItems.map((item) => {
+        const rawProductId =
+          item.productId ||
+          (item.id && typeof item.id === 'string' && item.id.includes('___')
+            ? item.id.split('___')[0]
+            : item.product?._id || item.product?.id || item.id || item._id);
+        return {
+          productId: rawProductId,
+          quantity: item.quantity,
+          type: item.type,
+          selectedOptions: item.selectedOptions || [],
+          configurationSignature: item.configurationSignature || 'default',
+        };
+      });
 
       const res = await orderService.validateTotals({
         items: itemsPayload,

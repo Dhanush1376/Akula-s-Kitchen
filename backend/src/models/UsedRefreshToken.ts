@@ -5,6 +5,7 @@ export interface IUsedRefreshToken extends Document {
   userId: mongoose.Types.ObjectId;
   expiresAt: Date;
   userAgent?: string;
+  createdAt: Date;
 }
 
 const UsedRefreshTokenSchema: Schema = new Schema(
@@ -14,11 +15,15 @@ const UsedRefreshTokenSchema: Schema = new Schema(
     expiresAt: { type: Date, required: true },
     userAgent: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // High-performance self-cleaning TTL index
 UsedRefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-const UsedRefreshToken = mongoose.model<IUsedRefreshToken>('UsedRefreshToken', UsedRefreshTokenSchema);
+const UsedRefreshToken = mongoose.model<IUsedRefreshToken>(
+  'UsedRefreshToken',
+  UsedRefreshTokenSchema,
+  'usedrefreshtokens',
+);
 export default UsedRefreshToken;

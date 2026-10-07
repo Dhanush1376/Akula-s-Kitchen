@@ -38,7 +38,6 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
       ${OrderSummary({
         subtotal: orderDetails.subtotal,
         shipping: orderDetails.shipping,
-        tax: orderDetails.tax,
         discount: orderDetails.discount,
         total: orderDetails.total,
       })}

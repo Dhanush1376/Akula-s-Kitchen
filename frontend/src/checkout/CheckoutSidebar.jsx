@@ -15,19 +15,11 @@ export default function CheckoutSidebar() {
     paymentOption,
     activeItems,
     fetchBackendTotals,
-    _hasRentalItems,
-    rentalStartDate,
-    rentalEndDate,
-    orderType,
-    rentalCostBreakdown,
     settings,
     checkoutSteps,
   } = useCheckout();
 
-  const grossRentalAmount = rentalCostBreakdown?.totalAmount || 0;
-  const netRentalPayable = grossRentalAmount;
-
-  const activeTotal = orderType === 'rental' ? netRentalPayable : backendTotals?.total || 0;
+  const activeTotal = backendTotals?.total || 0;
   const totalItemUnits = activeItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
   return (
@@ -47,7 +39,7 @@ export default function CheckoutSidebar() {
               className="text-[12.5px] font-semibold text-neutral-800 uppercase tracking-wider font-sans"
               style={{ fontStretch: 'normal' }}
             >
-              {orderType === 'rental' ? 'Rental Order' : 'Order Bill Details'}
+              Order Bill Details
             </span>
             <span className="text-[10.5px] font-extrabold text-neutral-400">
               {totalItemUnits} {totalItemUnits === 1 ? 'ITEM' : 'ITEMS'}
@@ -55,72 +47,7 @@ export default function CheckoutSidebar() {
           </div>
 
           <div className="space-y-3 text-[13px] text-neutral-700">
-            {orderType === 'rental' && rentalCostBreakdown ? (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">
-                    Rental Fee ({totalItemUnits} {totalItemUnits === 1 ? 'item' : 'items'})
-                  </span>
-                  <span className="font-bold text-neutral-950">
-                    ₹{rentalCostBreakdown?.rentalCharge?.toLocaleString() || 0}
-                  </span>
-                </div>
-
-                {rentalStartDate && rentalEndDate && (
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Rental Duration</span>
-                    <span className="font-bold text-neutral-900">
-                      {Math.max(
-                        1,
-                        Math.ceil(
-                          (new Date(rentalEndDate) - new Date(rentalStartDate)) /
-                            (1000 * 60 * 60 * 24),
-                        ),
-                      )}{' '}
-                      Days
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-500">Delivery Fee</span>
-                  <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-extrabold text-[10.5px] px-2 py-0.5 rounded-md">
-                    {rentalCostBreakdown?.deliveryCharge === 0
-                      ? 'FREE'
-                      : `₹${rentalCostBreakdown?.deliveryCharge || 0}`}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Taxes</span>
-                  <span className="font-bold text-neutral-900">Included</span>
-                </div>
-
-                {rentalCostBreakdown.securityDeposit > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">
-                      Security Deposit{' '}
-                      <span className="text-[10px] text-emerald-700 font-bold">(Refundable)</span>
-                    </span>
-                    <span className="font-bold text-neutral-950">
-                      ₹{rentalCostBreakdown?.securityDeposit?.toLocaleString() || 0}
-                    </span>
-                  </div>
-                )}
-
-                <div className="h-[1px] bg-neutral-200 my-3.5" />
-
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[13px] font-extrabold text-neutral-950">Total Payable</span>
-                  <span
-                    className="text-[19px] sm:text-[21px] text-neutral-950 font-black leading-none tracking-tight"
-                    style={{ fontFamily: 'var(--font-display, "Playfair Display", serif)' }}
-                  >
-                    ₹{netRentalPayable.toLocaleString()}
-                  </span>
-                </div>
-              </>
-            ) : totalsError ? (
+            {totalsError ? (
               <div className="p-3.5 bg-red-50 text-red-700 rounded-lg text-xs font-semibold border border-red-200 flex flex-col gap-2">
                 <div className="flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
@@ -177,11 +104,6 @@ export default function CheckoutSidebar() {
                       ₹{backendTotals?.shippingFee || 0}
                     </span>
                   )}
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">GST & Kitchen Taxes</span>
-                  <span className="font-bold text-neutral-900">Included</span>
                 </div>
 
                 {backendTotals?.platformFee > 0 && (

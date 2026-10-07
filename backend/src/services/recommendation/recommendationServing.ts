@@ -133,7 +133,7 @@ export async function getPersonalizedRecommendations(
         ? results[1].value
         : {
             trendingNow: [],
-            mostBooked: [],
+            mostPurchased: [],
             popularThisSeason: [],
             topRated: [],
             luxuryTrending: [],
@@ -153,7 +153,10 @@ export async function getPersonalizedRecommendations(
     // Build score map
     const behavioralMap = new Map(behavioralScores.map((s) => [s.targetId, s.score]));
     const trendingMap = new Map(
-      [...trendingFeeds.trendingNow, ...trendingFeeds.mostBooked].map((t) => [t.targetId, t.score]),
+      [...trendingFeeds.trendingNow, ...trendingFeeds.mostPurchased].map((t) => [
+        t.targetId,
+        t.score,
+      ]),
     );
 
     // Score each candidate
@@ -332,7 +335,7 @@ async function getCandidateItems(ctx: RecommendationContext, userProfile: any): 
   try {
     const products = await Product.find({ isActive: true })
       .select(
-        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug featured createdAt availabilityMode',
+        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug featured createdAt',
       )
       .populate('primaryCategory', 'name')
       .sort({ createdAt: -1 })
@@ -352,7 +355,7 @@ async function getCandidateItems(ctx: RecommendationContext, userProfile: any): 
         },
       })
         .select(
-          '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug createdAt rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
+          '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug createdAt',
         )
         .populate('primaryCategory', 'name')
         .limit(15)
@@ -406,7 +409,6 @@ async function enrichItems(items: ColdStartRecommendation[]): Promise<Recommende
     image: item.image,
     primaryCategory: item.primaryCategory,
     price: item.price,
-    availabilityMode: item.availabilityMode,
   }));
 }
 
@@ -431,7 +433,7 @@ export async function getSimilarRecommendations(
     const ids = similarItems.map((s) => s.targetId);
     const fullItems = await Product.find({ _id: { $in: ids }, isActive: true })
       .select(
-        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug availabilityMode',
+        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug',
       )
       .populate('primaryCategory', 'name')
       .lean();
@@ -455,7 +457,6 @@ export async function getSimilarRecommendations(
           reviews: full.reviews,
           tags: full.tags,
           slug: full.slug,
-          availabilityMode: full.availabilityMode,
         };
       });
   } catch (err: any) {
@@ -478,7 +479,7 @@ export async function enrichScoredItems(
     productIds.length > 0
       ? await Product.find({ _id: { $in: productIds }, isActive: true })
           .select(
-            '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug availabilityMode',
+            '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating reviews tags slug',
           )
           .populate('primaryCategory', 'name')
           .lean()
@@ -504,7 +505,6 @@ export async function enrichScoredItems(
         reviews: full.reviews,
         tags: full.tags,
         slug: full.slug,
-        availabilityMode: full.availabilityMode,
       };
     })
     .filter(Boolean);

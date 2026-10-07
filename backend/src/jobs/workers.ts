@@ -219,9 +219,7 @@ export const initWorkers = async () => {
                       _id: { $in: productIds },
                       isActive: true,
                     })
-                      .select(
-                        '_id title imageSrc category price rating reviews slug rentalEnabled availabilityMode rentalPricing securityDeposit isDepositRefundable',
-                      )
+                      .select('_id title imageSrc category price rating reviews slug')
                       .lean();
 
                     const enrichedComp = compItems
@@ -242,11 +240,6 @@ export const initWorkers = async () => {
                               rating: full.rating,
                               reviews: full.reviews,
                               slug: full.slug,
-                              rentalEnabled: full.rentalEnabled,
-                              availabilityMode: full.availabilityMode,
-                              rentalPricing: full.rentalPricing,
-                              securityDeposit: full.securityDeposit,
-                              isDepositRefundable: full.isDepositRefundable,
                             }
                           : null;
                       })
@@ -259,29 +252,6 @@ export const initWorkers = async () => {
                       targetId,
                       'product',
                       { limit: 12 },
-                    );
-                  const {
-                    enrichScoredItems: enrichHelper,
-                  } = require('../services/recommendation/recommendationEngine');
-                  const enrichedAlsoViewed = await enrichHelper(
-                    alsoViewed.map((i: any) => ({
-                      targetId: i.targetId,
-                      targetType: i.targetType,
-                      score: i.similarityScore,
-                    })),
-                  );
-                  await RecommendationCache.setAlsoViewed(targetId, enrichedAlsoViewed);
-                } else if (targetType === 'event') {
-                  await require('../services/recommendation/similarityEngine').findSimilarEvents(
-                    targetId,
-                    { limit: 8 },
-                  );
-
-                  const alsoViewed =
-                    await require('../services/recommendation/similarityEngine').getUsersAlsoViewed(
-                      targetId,
-                      'event',
-                      { limit: 8 },
                     );
                   const {
                     enrichScoredItems: enrichHelper,
@@ -315,9 +285,7 @@ export const initWorkers = async () => {
                 break;
               }
               case 'update-trending': {
-                for (const targetType of ['product', 'event', 'gallery']) {
-                  await calculateTrending(targetType, { limit: 20 });
-                }
+                await calculateTrending('product', { limit: 20 });
                 logger.info('[WORKER] Trending rankings updated');
                 break;
               }
@@ -329,9 +297,7 @@ export const initWorkers = async () => {
               case 'snapshot-trending': {
                 const seasonalCtx = await getCachedSeasonalContext();
                 const label = getPrimarySeasonalLabel(seasonalCtx);
-                for (const targetType of ['product', 'event', 'gallery']) {
-                  await saveTrendingSnapshot('hourly', targetType, label);
-                }
+                await saveTrendingSnapshot('hourly', 'product', label);
                 logger.info('[WORKER] Trending snapshots saved');
                 break;
               }

@@ -14,10 +14,8 @@ const ENTITY_MODEL_MAP: Record<string, string> = {
   Category: 'Category',
   Review: 'Review',
   Order: 'Order',
-  Event: 'Event',
   Media: 'Media',
   User: 'User',
-  ShowcaseCollection: 'ShowcaseCollection',
   InventoryLedger: 'InventoryLedger',
   InventoryReservation: 'InventoryReservation',
   Blog: 'Blog',
@@ -27,8 +25,6 @@ const ENTITY_MODEL_MAP: Record<string, string> = {
   EmailCampaign: 'EmailCampaign',
   ServiceArea: 'ServiceArea',
   Location: 'Location',
-  RentalOrder: 'RentalOrder',
-  EventJob: 'EventJob',
 };
 
 // Entity type → display name mapping
@@ -37,12 +33,8 @@ const ENTITY_DISPLAY_NAMES: Record<string, string> = {
   Category: 'Category',
   Review: 'Review',
   Order: 'Order',
-  Event: 'Event',
   Media: 'Media Asset',
   User: 'Customer',
-  ShowcaseCollection: 'Showcase Collection',
-  RentalOrder: 'Rental Order',
-  EventJob: 'Event Booking',
   Blog: 'Blog Post',
   ContentSection: 'Content Section',
   InAppNotification: 'Notification',
@@ -57,7 +49,6 @@ const UNIQUE_FIELDS: Record<string, string[]> = {
   Product: ['slug', 'sku', 'barcode'],
   Category: ['slug'],
   Blog: ['slug', 'id'],
-  ShowcaseCollection: [],
 };
 
 interface RecycleBinListParams {

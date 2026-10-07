@@ -21,7 +21,7 @@ async function runExplains() {
       .explain('executionStats');
 
     // 2. Search
-    const search = await Product.find({ $text: { $search: 'decor' }, isActive: true }).explain(
+    const search = await Product.find({ $text: { $search: 'pickle' }, isActive: true }).explain(
       'executionStats',
     );
 

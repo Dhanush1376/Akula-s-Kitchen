@@ -27,20 +27,4 @@ export const cmsService = {
     const response = await api.post('/cms/ai-generate', { text, style }, { timeout: 60000 });
     return response.data;
   },
-  analyzeShowcaseImage: async (imageUrl, providerId = null) => {
-    const response = await api.post(
-      '/cms/ai-vision-showcase',
-      { imageUrl, providerId },
-      { timeout: 60000 },
-    );
-    return response.data;
-  },
-  refineAiShowcase: async (previousData, prompt, providerId = null) => {
-    const response = await api.post(
-      '/cms/ai-vision-refine-showcase',
-      { previousData, prompt, providerId },
-      { timeout: 60000 },
-    );
-    return response.data;
-  },
 };

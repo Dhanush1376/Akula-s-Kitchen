@@ -11,7 +11,8 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
       ? footer.exploreLinks
       : [{ label: 'Collections', href: '/collections' }];
 
-  const studioLinks =
+  // `studioLinks` is the persisted CMS key for the footer's second link column.
+  const quickLinks =
     footer.studioLinks?.length > 0
       ? footer.studioLinks
       : [
@@ -50,7 +51,7 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
     } else {
       let copy = [];
       if (category === 'exploreLinks') copy = [...exploreLinks];
-      else if (category === 'studioLinks') copy = [...studioLinks];
+      else if (category === 'studioLinks') copy = [...quickLinks];
       else if (category === 'policyLinks') copy = [...policyLinks];
       else if (category === 'trustBadges') copy = [...trustBadges];
 
@@ -69,7 +70,7 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
       let newItem = { label: 'New Link', href: '/' };
 
       if (category === 'exploreLinks') copy = [...exploreLinks];
-      else if (category === 'studioLinks') copy = [...studioLinks];
+      else if (category === 'studioLinks') copy = [...quickLinks];
       else if (category === 'policyLinks') copy = [...policyLinks];
       else if (category === 'trustBadges') {
         copy = [...trustBadges];
@@ -89,7 +90,7 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
     } else {
       let copy = [];
       if (category === 'exploreLinks') copy = [...exploreLinks];
-      else if (category === 'studioLinks') copy = [...studioLinks];
+      else if (category === 'studioLinks') copy = [...quickLinks];
       else if (category === 'policyLinks') copy = [...policyLinks];
       else if (category === 'trustBadges') copy = [...trustBadges];
 
@@ -293,7 +294,7 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
 
           <div className="space-y-8 pt-6 border-t border-[var(--admin-border-subtle)]">
             {renderLinkEditor('Explore Links (Col 1)', exploreLinks, 'exploreLinks')}
-            {renderLinkEditor('Studio Links (Col 2)', studioLinks, 'studioLinks')}
+            {renderLinkEditor('Quick Links (Col 2)', quickLinks, 'studioLinks')}
             {renderLinkEditor('Policy Links (Bottom)', policyLinks, 'policyLinks')}
           </div>
 

@@ -94,11 +94,17 @@ export function useProductAI({
 
     const baseVariants = [...(aiAnalysisResult.suggested_variants || [])];
 
-    // Auto-map top-level materials and colors to variants for storefront filtering!
+    // Auto-map top-level ingredients/materials and colors to variants for storefront filtering!
     if (aiAnalysisResult.materials?.length > 0) {
       aiAnalysisResult.materials.forEach((m) => {
-        if (!baseVariants.some((v) => v.name.toLowerCase() === 'material' && v.value === m)) {
-          baseVariants.push({ name: 'Material', value: m, price: 0 });
+        if (
+          !baseVariants.some(
+            (v) =>
+              (v.name.toLowerCase() === 'material' || v.name.toLowerCase() === 'ingredients') &&
+              v.value === m,
+          )
+        ) {
+          baseVariants.push({ name: 'Ingredients', value: m, price: 0 });
         }
       });
     }
@@ -113,7 +119,6 @@ export function useProductAI({
 
     const fieldsToFill = [
       { key: 'title', value: aiAnalysisResult.english_title },
-      { key: 'teluguTitle', value: aiAnalysisResult.telugu_title },
       { key: 'slug', value: aiAnalysisResult.slug },
       {
         key: 'primaryCategory',
@@ -151,8 +156,6 @@ export function useProductAI({
             ? aiAnalysisResult.description.substring(0, 155) + '...'
             : ''),
       },
-      // Personalization config (from AI)
-      { key: '_personalization', value: aiAnalysisResult.personalization_enabled },
       // Customer note (from AI)
       { key: 'customerNote', value: aiAnalysisResult.customer_note },
       // Variants (from AI + manual mapping)
@@ -177,12 +180,12 @@ export function useProductAI({
 
       // Navigate/Scroll to different steps if they are on a different page for visual polish!
       if (field.key === 'tags') {
-        setCurrentStep(2); // Attributes step (new index 2)
-      } else if (field.key === 'seoTitle') {
-        setCurrentStep(3); // SEO step (new index 3)
+        setCurrentStep(2); // Attributes / Variants step (index 2)
       } else if (field.key === 'price') {
-        setCurrentStep(4); // Pricing & Stock step
-      } else if (field.key === '_personalization' || field.key === 'customerNote') {
+        setCurrentStep(3); // Pricing & Stock step (index 3)
+      } else if (field.key === 'seoTitle') {
+        setCurrentStep(4); // SEO & Publish step (index 4)
+      } else if (field.key === 'customerNote') {
         setCurrentStep(1); // Back to Product Info step to show note filling
       }
 
@@ -200,29 +203,7 @@ export function useProductAI({
         });
       }
 
-      // Apply personalization config from AI
-      if (field.key === '_personalization') {
-        const enabled = Boolean(aiAnalysisResult.personalization_enabled);
-        setFormData((prev) => ({
-          ...prev,
-          customizationConfig: {
-            ...prev.customizationConfig,
-            enabled: enabled,
-            required: enabled,
-            label:
-              aiAnalysisResult.personalization_label ||
-              prev.customizationConfig?.label ||
-              'Customization Note',
-            placeholder: (
-              aiAnalysisResult.personalization_placeholder ||
-              prev.customizationConfig?.placeholder ||
-              'Enter customization details'
-            ).replace(/\\n/g, '\n'),
-            helperText:
-              aiAnalysisResult.personalization_helper || prev.customizationConfig?.helperText || '',
-          },
-        }));
-      } else if (field.key === 'customerNote') {
+      if (field.key === 'customerNote') {
         // Build a rich customer note including quantity estimation
         let note = (field.value || '').replace(/\\n/g, '\n');
 

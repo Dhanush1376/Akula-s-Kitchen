@@ -220,10 +220,10 @@ export function AdminCategories() {
           label: 'Product',
           cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
         };
-      case 'event':
+      case 'global':
         return {
-          icon: 'celebration',
-          label: 'Event',
+          icon: 'public',
+          label: 'Global',
           cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
         };
       default:
@@ -298,7 +298,7 @@ export function AdminCategories() {
 
             {/* Desktop Scope Segmented Pill Switcher */}
             <div className="hidden sm:flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border">
-              {['All', 'product', 'event'].map((t) => (
+              {['All', 'product', 'global'].map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -363,7 +363,7 @@ export function AdminCategories() {
                   >
                     <option value="All">All Types</option>
                     <option value="product">Product</option>
-                    <option value="event">Event</option>
+                    <option value="global">Global</option>
                   </select>
                 </div>
 

@@ -23,7 +23,6 @@ export function RecommendationSystem({
   containerClassName = '',
   compact = false,
   horizontalScroll = false,
-  rentalOnly = false,
 }) {
   const { isAuthenticated } = useAuth();
   const [shouldFetch, setShouldFetch] = useState(false);
@@ -37,19 +36,21 @@ export function RecommendationSystem({
     return () => clearTimeout(timer);
   }, []);
 
-  const similarQuery = useSimilarRecommendations(targetType, currentProductId, 8, {
-    enabled: shouldFetch && !!currentProductId,
+  const cleanProductId = currentProductId ? String(currentProductId).split('___')[0] : null;
+
+  const similarQuery = useSimilarRecommendations(targetType, cleanProductId, 8, {
+    enabled: shouldFetch && !!cleanProductId,
   });
-  const completeQuery = useCompleteSetup(currentProductId, targetType, 8, {
-    enabled: shouldFetch && !!currentProductId,
+  const completeQuery = useCompleteSetup(cleanProductId, targetType, 8, {
+    enabled: shouldFetch && !!cleanProductId,
   });
-  const alsoViewedQuery = useAlsoViewed(currentProductId, targetType, 8, {
-    enabled: shouldFetch && !!currentProductId,
+  const alsoViewedQuery = useAlsoViewed(cleanProductId, targetType, 8, {
+    enabled: shouldFetch && !!cleanProductId,
   });
   const recentlyViewedQuery = useRecentlyViewed();
   const trendingQuery = useTrendingRecommendations(
     { limit: 12 },
-    { enabled: shouldFetch && !currentProductId },
+    { enabled: shouldFetch && !cleanProductId },
   );
 
   const similarList = similarQuery.data?.items || similarQuery.data || [];
@@ -80,11 +81,6 @@ export function RecommendationSystem({
         primaryCategory: item.product.primaryCategory,
         rating: item.product.rating || 0,
         slug: item.product.slug,
-        isRentalAvailable: item.product.isRentalAvailable,
-        rentalEnabled: item.product.rentalEnabled,
-        availabilityMode: item.product.availabilityMode,
-        rentalPricing: item.product.rentalPricing,
-        securityDeposit: item.product.securityDeposit,
       }))
       .filter((p) => p.id !== currentProductId)
       .slice(0, 8);
@@ -109,7 +105,7 @@ export function RecommendationSystem({
       ...trendingList,
     ];
     const uniqueIds = new Set();
-    let uniqueList = [];
+    const uniqueList = [];
     const currentIdStr = currentProductId ? String(currentProductId) : '';
 
     for (const item of combined) {
@@ -121,25 +117,6 @@ export function RecommendationSystem({
         uniqueIds.add(idStr);
         uniqueList.push(item);
       }
-    }
-
-    if (rentalOnly) {
-      uniqueList = uniqueList.filter(
-        (item) =>
-          item.isRentalAvailable ||
-          item.rentalEnabled ||
-          item.availabilityMode === 'both' ||
-          item.availabilityMode === 'rental' ||
-          item.availabilityMode === 'rent_only' ||
-          item.rentalPricing,
-      );
-    } else {
-      uniqueList = uniqueList.filter(
-        (item) =>
-          item.targetType !== 'event' &&
-          item.availabilityMode !== 'rental' &&
-          item.availabilityMode !== 'rent_only',
-      );
     }
 
     return uniqueList.slice(0, 16);
@@ -180,7 +157,7 @@ export function RecommendationSystem({
 
         {!hideHeader && (
           <SectionHeader
-            title={rentalOnly ? 'Rental Masterpieces' : 'You May Also Like'}
+            title="You May Also Like"
             seeAllLink="/collections"
             linkText="View All"
             size="sm"
@@ -249,7 +226,6 @@ export function RecommendationSystem({
                       }
                       category={matchedCategory}
                       compact={compact}
-                      cartType={rentalOnly ? 'rental' : 'purchase'}
                     />
                   </motion.div>
                 );

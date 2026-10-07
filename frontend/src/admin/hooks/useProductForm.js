@@ -11,20 +11,11 @@ export function useProductForm({ id, isEditMode }) {
   const [categoriesList, setCategoriesList] = useState([]);
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showRentalSettings, setShowRentalSettings] = useState(true);
 
   const initialData = useMemo(
     () => ({
       title: '',
-      teluguTitle: '',
       customerNote: '',
-      complimentaryGift: {
-        enabled: false,
-        name: '',
-        quantity: 1,
-        description: '',
-        displayBadge: '',
-      },
       slug: '',
       primaryCategory: '',
       secondaryCategories: [],
@@ -44,27 +35,8 @@ export function useProductForm({ id, isEditMode }) {
       featured: false,
       isActive: true,
       isNonRefundable: false,
-      showInGallery: false,
       variants: [],
-      rentalEnabled: false,
-      availabilityMode: 'purchase_only',
-      rentalPricing: {
-        rentalPrice: '',
-        rentalDurationDays: '',
-      },
-      securityDeposit: '',
-      isDepositRefundable: true,
-      rentalStock: '',
-      rentalMinDays: '1',
-      rentalMaxDays: '365',
-      customizationConfig: {
-        enabled: false,
-        required: false,
-        label: 'Customization Note',
-        placeholder: 'Enter customization details',
-        maxLength: 500,
-        helperText: '',
-      },
+      optionGroups: [],
       returnSettings: {
         isReturnable: true,
         returnWindowDays: 7,
@@ -99,11 +71,25 @@ export function useProductForm({ id, isEditMode }) {
   useEffect(() => {
     if (dbCategories.length > 0) {
       setCategoriesList([...dbCategories].sort());
+    } else {
+      // Direct load from /categories/active if React Query has not loaded or is empty
+      productService
+        .getActiveCategories()
+        .then((res) => {
+          const raw = res?.data || res;
+          if (Array.isArray(raw) && raw.length > 0) {
+            const names = raw.map((c) => (typeof c === 'string' ? c : c?.name)).filter(Boolean);
+            if (names.length > 0) {
+              setCategoriesList((prev) => Array.from(new Set([...prev, ...names])).sort());
+            }
+          }
+        })
+        .catch(() => {});
     }
   }, [dbCategories]);
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && id && id !== 'undefined') {
       const fetchProduct = async () => {
         setIsLoading(true);
         try {
@@ -123,16 +109,10 @@ export function useProductForm({ id, isEditMode }) {
             const finalImageSrc = finalImages[0] || '';
 
             setFormData({
+              _id: p._id || id,
+              id: p._id || id,
               title: p.title || p.name || '',
-              teluguTitle: p.teluguTitle || p.nameTE || '',
               customerNote: p.customerNote || '',
-              complimentaryGift: p.complimentaryGift || {
-                enabled: false,
-                name: '',
-                quantity: 1,
-                description: '',
-                displayBadge: '',
-              },
               slug: p.slug || '',
               primaryCategory: pCatName,
               secondaryCategories: pSecCats,
@@ -152,28 +132,8 @@ export function useProductForm({ id, isEditMode }) {
               featured: p.featured || false,
               isActive: p.isActive !== undefined ? p.isActive : true,
               isNonRefundable: p.isNonRefundable || false,
-              showInGallery: p.showInGallery || false,
               variants: Array.isArray(p.variants) ? p.variants : [],
-              rentalEnabled: p.rentalEnabled || false,
-              availabilityMode: p.availabilityMode || 'purchase_only',
-              rentalPricing: {
-                rentalPrice: p.rentalPricing?.rentalPrice ?? '',
-                rentalDurationDays: p.rentalPricing?.rentalDurationDays ?? '',
-              },
-              securityDeposit: p.securityDeposit || '',
-              isDepositRefundable:
-                p.isDepositRefundable !== undefined ? p.isDepositRefundable : true,
-              rentalStock: p.rentalStock !== undefined ? p.rentalStock : '',
-              rentalMinDays: p.rentalMinDays || '1',
-              rentalMaxDays: p.rentalMaxDays || '365',
-              customizationConfig: p.customizationConfig || {
-                enabled: false,
-                required: false,
-                label: 'Customization Note',
-                placeholder: 'Enter customization details',
-                maxLength: 500,
-                helperText: '',
-              },
+              optionGroups: Array.isArray(p.optionGroups) ? p.optionGroups : [],
               returnSettings: p.returnSettings || {
                 isReturnable: true,
                 returnWindowDays: 7,
@@ -184,7 +144,6 @@ export function useProductForm({ id, isEditMode }) {
               },
               __v: p.__v !== undefined ? p.__v : 0,
             });
-            if (p.rentalEnabled) setShowRentalSettings(true);
           }
         } catch (err) {
           toast.error(
@@ -198,7 +157,6 @@ export function useProductForm({ id, isEditMode }) {
     } else {
       setFormData(initialData);
       setCurrentStep(0);
-      setShowRentalSettings(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isEditMode, dbCategories]);
@@ -210,8 +168,6 @@ export function useProductForm({ id, isEditMode }) {
     setCategoriesList,
     isCustomCategory,
     setIsCustomCategory,
-    showRentalSettings,
-    setShowRentalSettings,
     currentStep,
     setCurrentStep,
     ...draftConfig,

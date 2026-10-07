@@ -8,13 +8,7 @@ const exportDb = async () => {
     const conn = await mongoose.connect(process.env.MONGO_URI);
     const db = mongoose.connection.db;
 
-    const collectionsToExport = [
-      'galleries',
-      'eventbookings',
-      'rentalorders',
-      'users',
-      'contentsections',
-    ];
+    const collectionsToExport = ['products', 'categories', 'users', 'contentsections'];
     const exportData = {};
 
     for (const collName of collectionsToExport) {

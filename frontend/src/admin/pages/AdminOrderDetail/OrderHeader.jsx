@@ -29,17 +29,6 @@ export function OrderHeader({ order, navigate, onPrintInvoice, onViewInvoice }) 
             <h2 className="text-[18px] sm:text-[20px] font-bold text-[var(--admin-text-primary)] tracking-tight whitespace-nowrap leading-tight">
               Order Details
             </h2>
-            {order.orderType && order.orderType !== 'purchase' && (
-              <span
-                className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-[4px] shadow-2xs border shrink-0 ${
-                  order.orderType === 'rental'
-                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800'
-                    : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800'
-                }`}
-              >
-                {order.orderType}
-              </span>
-            )}
           </div>
           {/* Status badge in top-right for mobile only */}
           <div className="sm:hidden shrink-0 flex items-center gap-1.5">

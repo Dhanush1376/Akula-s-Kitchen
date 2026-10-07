@@ -1,14 +1,16 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { QuickViewModal } from '../components/ui/QuickViewModal';
 
-const QuickViewContext = createContext();
+const defaultQuickView = {
+  openQuickView: () => {},
+  closeQuickView: () => {},
+};
+
+const QuickViewContext = createContext(defaultQuickView);
 
 export function useQuickView() {
   const context = useContext(QuickViewContext);
-  if (!context) {
-    throw new Error('useQuickView must be used within a QuickViewProvider');
-  }
-  return context;
+  return context || defaultQuickView;
 }
 
 export function QuickViewProvider({ children }) {

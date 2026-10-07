@@ -67,18 +67,10 @@ export async function getTrendingSearches(
     ]);
 
     const canonicalizeTerm = (term: string) => {
-      let t = term.trim().toLowerCase();
-      t = t.replace(/\bjewelry\b/g, 'jewellery');
-      t = t.replace(/\bpuja\b/g, 'pooja');
-      t = t.replace(/\bthamboolam\b/g, 'thambulam');
-      t = t.replace(/\btamboolam\b/g, 'thambulam');
-      t = t.replace(/\baarthi\b/g, 'harathi');
-      t = t.replace(/\baarathi\b/g, 'harathi');
-      return t;
+      return term.trim().toLowerCase();
     };
 
     const seen = new Set<string>();
-    const seenRoots = new Map<string, number>();
     const trending: { query: string; count: number }[] = [];
 
     const canAddTerm = (normalized: string) => {
@@ -96,11 +88,6 @@ export async function getTrendingSearches(
         }
       }
 
-      // Root diversity cap: max 2 tray suggestions to avoid monochromatic lists
-      if (normalized.includes('tray')) {
-        const trayCount = seenRoots.get('tray') || 0;
-        if (trayCount >= 2) return false;
-      }
       return true;
     };
 
@@ -109,9 +96,6 @@ export async function getTrendingSearches(
       if (!canAddTerm(canonical)) return false;
 
       seen.add(canonical);
-      if (canonical.includes('tray')) {
-        seenRoots.set('tray', (seenRoots.get('tray') || 0) + 1);
-      }
 
       const displayTerm = canonical
         .split(/\s+/)
@@ -346,8 +330,8 @@ function getCategoryIcon(category: string): string {
 /**
  * Get dynamic event collections.
  */
-export async function getEventCollections(limit: number = 8) {
-  const cacheKey = `event_collections_v3_${limit}`;
+export async function getCategoryCollections(limit: number = 8) {
+  const cacheKey = `category_collections_v1_${limit}`;
   const cached = await getSearchCache<any[]>('trending', cacheKey);
   if (cached) return cached;
 
@@ -387,7 +371,7 @@ export async function getEventCollections(limit: number = 8) {
  * Get aggregated discovery data for the search empty state.
  */
 export async function getDiscoveryData() {
-  const cacheKey = 'discovery_data_all_v3';
+  const cacheKey = 'discovery_data_all_v4';
   const cached = await getSearchCache<any>('trending', cacheKey);
   if (cached) return cached;
 
@@ -396,14 +380,14 @@ export async function getDiscoveryData() {
       getTrendingSearches({ limit: 10, days: 7 }),
       getPopularProducts(6),
       getNewArrivals(6),
-      getEventCollections(8),
+      getCategoryCollections(8),
     ]);
 
     const data = {
       trending,
       popularProducts: popular,
       newArrivals,
-      eventCollections: collections,
+      collections: collections,
     };
 
     await setSearchCache('trending', cacheKey, data, 15 * 60 * 1000); // 15 mins
@@ -414,7 +398,7 @@ export async function getDiscoveryData() {
       trending: [],
       popularProducts: [],
       newArrivals: [],
-      eventCollections: [],
+      collections: [],
     };
   }
 }
@@ -564,14 +548,7 @@ export async function getQueryInteractionBoosts(query: string): Promise<Record<s
           sessionId: { $in: sessionsWithSearch },
           timestamp: { $gte: cutoff },
           eventType: {
-            $in: [
-              'product_view',
-              'product_click',
-              'cart_add',
-              'purchase',
-              'booking',
-              'wishlist_add',
-            ],
+            $in: ['product_view', 'product_click', 'cart_add', 'purchase', 'wishlist_add'],
           },
           targetId: { $exists: true, $ne: null },
         },
@@ -586,19 +563,13 @@ export async function getQueryInteractionBoosts(query: string): Promise<Record<s
                 10,
                 {
                   $cond: [
-                    { $eq: ['$eventType', 'booking'] },
-                    10,
+                    { $eq: ['$eventType', 'cart_add'] },
+                    5,
                     {
                       $cond: [
-                        { $eq: ['$eventType', 'cart_add'] },
-                        5,
-                        {
-                          $cond: [
-                            { $eq: ['$eventType', 'wishlist_add'] },
-                            3,
-                            { $cond: [{ $eq: ['$eventType', 'product_click'] }, 2, 1] },
-                          ],
-                        },
+                        { $eq: ['$eventType', 'wishlist_add'] },
+                        3,
+                        { $cond: [{ $eq: ['$eventType', 'product_click'] }, 2, 1] },
                       ],
                     },
                   ],

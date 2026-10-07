@@ -60,7 +60,9 @@ export function DashboardHeader() {
         const rect = headerRef.current.getBoundingClientRect();
         const topThreshold = parseFloat(headerRef.current.style.top) || 0;
         setIsStuck((prev) => {
-          const current = rect.top <= topThreshold + 1;
+          // Only once the page has scrolled: at the top it can already sit at its sticky
+          // offset, and the frosted strip would then show over the decorative leaf.
+          const current = window.scrollY > 0 && rect.top <= topThreshold + 1;
           return prev === current ? prev : current;
         });
       }
@@ -90,10 +92,21 @@ export function DashboardHeader() {
       ref={headerRef}
       className={`sticky z-40 transition-all duration-300 flex justify-between items-center gap-4 h-[52px] mb-4 border-b ${
         isStuck
-          ? 'bg-white/95 backdrop-blur-md border-neutral-200 shadow-2xs -mx-margin-mobile lg:-mx-margin-desktop px-margin-mobile lg:px-margin-desktop'
-          : 'border-neutral-200 bg-white'
+          ? 'bg-white/85 backdrop-blur-xl border-transparent -mx-margin-mobile lg:-mx-margin-desktop px-margin-mobile lg:px-margin-desktop'
+          : // Clear at rest so the decorative leaf behind it isn't boxed in by a frosted strip
+            'border-neutral-200/40 bg-transparent'
       }`}
-      style={{ top: isNavbarHidden ? '0px' : `${navbarHeight}px` }}
+      style={{
+        top: isNavbarHidden ? '0px' : `${navbarHeight}px`,
+        // While stuck, fade the frosted strip out along its top and bottom so it blends
+        // into the page instead of showing hard edges (the text sits in the solid middle)
+        ...(isStuck && {
+          maskImage:
+            'linear-gradient(to bottom, transparent 0, #000 28%, #000 70%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, transparent 0, #000 28%, #000 70%, transparent 100%)',
+        }),
+      }}
     >
       {/* Mobile Back Button Navigation */}
       <div className="lg:hidden flex-1 min-w-0">

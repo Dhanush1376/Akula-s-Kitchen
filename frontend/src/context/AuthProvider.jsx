@@ -34,12 +34,14 @@ export function AuthProvider({ children }) {
     try {
       const cp = loadCachedProfile();
       const hs = hasSessionMarker();
-      // If the session marker is gone but the profile is cached, this is a zombie session!
-      if (!hs && cp) {
-        clearCachedProfile();
-        return { cachedProfile: null, hasStoredSession: false };
+      // If cached profile exists, ensure session marker is set and persist user across refreshes
+      if (cp) {
+        if (!hs) {
+          setSessionMarker();
+        }
+        return { cachedProfile: cp, hasStoredSession: true };
       }
-      return { cachedProfile: cp, hasStoredSession: hs };
+      return { cachedProfile: null, hasStoredSession: hs };
     } catch {
       return { cachedProfile: null, hasStoredSession: false };
     }
@@ -152,35 +154,48 @@ export function AuthProvider({ children }) {
                 return true;
               }
             } catch (retryErr) {
-              if (retryErr.response?.status === 401 || retryErr.response?.status === 403) {
-                logger.warn('[Auth] Retry session invalid (401/403) — logging out');
-                logout(true);
-                return false;
-              }
-              if (!retryErr.response && (cachedProfile || user)) {
+              logger.warn('[Auth] Retry getProfile failed — keeping current session', retryErr);
+              if (cachedProfile || user) {
                 setIsAuthenticated(true);
                 return true;
               }
             }
+          } else {
+            // No valid token obtained
+            clearAuthStorage();
+            clearCachedProfile();
+            setUser(null);
+            setIsAuthenticated(false);
+            return false;
           }
         } catch (refreshErr) {
-          logger.warn('[Auth] Token refresh attempt failed during session restoration', refreshErr);
-          if (
-            refreshErr.name !== 'CanceledError' &&
-            (refreshErr.response?.status === 401 ||
-              refreshErr.response?.status === 403 ||
-              refreshErr.code === 'ERR_NO_SESSION')
-          ) {
-            logout(true);
+          const isExplicitAuthReject =
+            refreshErr?.response?.status === 401 ||
+            refreshErr?.response?.status === 403 ||
+            refreshErr?.code === 'ERR_NO_SESSION';
+
+          if (isExplicitAuthReject) {
+            logger.warn('[Auth] Token refresh rejected by server — clearing expired session');
+            clearAuthStorage();
+            clearCachedProfile();
+            setUser(null);
+            setIsAuthenticated(false);
             return false;
+          }
+
+          logger.warn(
+            '[Auth] Token refresh attempt failed due to network/transient error — preserving session for offline retry',
+            refreshErr,
+          );
+          if (cachedProfile || user) {
+            setIsAuthenticated(true);
+            return true;
           }
         }
 
-        if (!cachedProfile && !user) {
-          console.warn(
-            '[AUTH_DEBUG] restoreSession failed network, no cachedProfile and no user. Logging out.',
-          );
-          logout(true);
+        if (cachedProfile || user) {
+          setIsAuthenticated(true);
+          return true;
         }
         return false;
       } finally {
@@ -317,7 +332,7 @@ export function AuthProvider({ children }) {
 
       setIsAuthModalOpen(false);
 
-      toast.success('Welcome back to the Studio!');
+      toast.success('Welcome back!');
 
       const searchParams = new URLSearchParams(window.location.search);
       const redirectUrl = searchParams.get('redirect');

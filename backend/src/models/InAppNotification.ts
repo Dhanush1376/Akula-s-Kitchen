@@ -7,15 +7,7 @@ export interface IInAppNotification extends ISoftDeleted {
   event: NotificationEvent;
   title: string;
   message: string;
-  type:
-    | 'order'
-    | 'payment'
-    | 'account'
-    | 'booking'
-    | 'rental'
-    | 'engagement'
-    | 'support'
-    | 'system';
+  type: 'order' | 'payment' | 'account' | 'engagement' | 'support' | 'system';
   priority: 'critical' | 'high' | 'normal' | 'low';
   read: boolean;
   archived: boolean;
@@ -32,7 +24,7 @@ const InAppNotificationSchema = new Schema(
     message: { type: String, required: true },
     type: {
       type: String,
-      enum: ['order', 'payment', 'account', 'booking', 'rental', 'engagement', 'support', 'system'],
+      enum: ['order', 'payment', 'account', 'engagement', 'support', 'system'],
       default: 'system',
     },
     priority: {

@@ -5,21 +5,23 @@ import { cmsCache } from '../utils/cache/MemoryCache';
 import { bumpPublicCacheVersion } from '../utils/cache/cacheVersion';
 import { invalidateSafetyLockCache } from '../utils/cache/safetyLockCache';
 
-const SENSITIVE_STUDIO_SETTINGS_KEYS = ['razorpaySecret', 'razorpayKeySecret'] as const;
-const ADMIN_ONLY_SECTION_KEYS = new Set(['studio_settings']);
+/** Persisted CMS section key that stores the business profile (name, contact, GST, payment ids). */
+const BUSINESS_SETTINGS_SECTION = 'studio_settings';
+const SENSITIVE_BUSINESS_SETTINGS_KEYS = ['razorpaySecret', 'razorpayKeySecret'] as const;
+const ADMIN_ONLY_SECTION_KEYS = new Set([BUSINESS_SETTINGS_SECTION]);
 
-export const sanitizeStudioSettings = (data: Record<string, unknown> | null | undefined) => {
+export const sanitizeBusinessSettings = (data: Record<string, unknown> | null | undefined) => {
   if (!data || typeof data !== 'object') return data;
   const sanitized = { ...data };
-  for (const key of SENSITIVE_STUDIO_SETTINGS_KEYS) {
+  for (const key of SENSITIVE_BUSINESS_SETTINGS_KEYS) {
     delete sanitized[key];
   }
   return sanitized;
 };
 
 const stripSensitiveFromSectionData = (key: string, data: any) => {
-  if (key === 'studio_settings') {
-    return sanitizeStudioSettings(data);
+  if (key === BUSINESS_SETTINGS_SECTION) {
+    return sanitizeBusinessSettings(data);
   }
   return data;
 };
@@ -91,13 +93,14 @@ class ContentService {
         admin_safety_lock: { safetyLock: false },
         admin_idle_timeout: { idleTimeout: 15 },
         admin_theme_mode: { themeMode: 'dark' },
-        studio_settings: {
+        admin_auto_publish: { autoPublish: false },
+        [BUSINESS_SETTINGS_SECTION]: {
           businessName: "Akula's Kitchen",
           tagline: '',
           businessEmail: '',
           phoneNumber: '',
           alternatePhone: '',
-          gstNumber: 'GSTIN123456789',
+          gstNumber: '',
           address: '',
           primaryColor: '#735c00',
           secondaryColor: '#F8F9FB',
@@ -108,14 +111,14 @@ class ContentService {
           codFee: '90',
           deliveryEstimate: '5-7',
           razorpayKeyId: '',
-          upiId: 'akulaskitchen@upi',
+          upiId: '',
           whatsappNumber: '',
           whatsappMessage: "Hello! Thank you for reaching Akula's Kitchen.",
         },
         custom_categories: {
           products: [],
-          events: [],
         },
+        storeSettings: {},
       };
 
       if (defaultData[key] !== undefined) {
@@ -130,7 +133,7 @@ class ContentService {
       }
     }
     if (section) {
-      if (key === 'studio_settings') {
+      if (key === BUSINESS_SETTINGS_SECTION) {
         section.data = stripSensitiveFromSectionData(key, section.data) as typeof section.data;
       }
       section.data = sanitizeArray(section.data);
@@ -139,7 +142,7 @@ class ContentService {
   }
 
   static async updateSection(key: string, newData: any, retry = 0): Promise<any> {
-    let payload = key === 'studio_settings' ? sanitizeStudioSettings(newData) : newData;
+    let payload = key === BUSINESS_SETTINGS_SECTION ? sanitizeBusinessSettings(newData) : newData;
     payload = sanitizeArray(payload);
     try {
       let section = await ContentSection.findOne({ sectionKey: key });
@@ -174,7 +177,7 @@ class ContentService {
       cmsCache.delete(`cms:content:${key}`);
       cmsCache.delete('cms:all_sections');
       cmsCache.delete('cms:published:flat');
-      cmsCache.delete(key); // Just in case cache key is set without prefix (like 'studio_settings')
+      cmsCache.delete(key); // Just in case cache key is set without prefix (like the business settings section)
       if (key === 'admin_safety_lock') {
         await invalidateSafetyLockCache();
       }

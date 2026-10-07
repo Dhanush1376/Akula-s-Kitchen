@@ -52,19 +52,6 @@ export const ProductionStageTranslations = {
   },
 };
 
-export const RentalStatusTranslations = {
-  reserved: { label: 'Reserved', description: 'Booked for a future date', tone: 'neutral' },
-  active: { label: 'Active', description: 'Currently with customer', tone: 'info' },
-  overdue: {
-    label: 'Overdue',
-    description: 'Past due date',
-    tone: 'error',
-    action: 'Contact customer',
-  },
-  returned: { label: 'Returned', description: 'Brought back, pending inspection', tone: 'warning' },
-  completed: { label: 'Completed', description: 'Inspected and closed', tone: 'success' },
-};
-
 export const ReturnStatusTranslations = {
   pending: {
     label: 'Needs Review',
@@ -85,8 +72,6 @@ export function getStatusTranslation(entityType, statusCode) {
       return OrderStatusTranslations[code] || { label: code || 'Unknown', tone: 'neutral' };
     case 'production':
       return ProductionStageTranslations[code] || { label: code || 'Unknown', tone: 'neutral' };
-    case 'rental':
-      return RentalStatusTranslations[code] || { label: code || 'Unknown', tone: 'neutral' };
     case 'return':
       return ReturnStatusTranslations[code] || { label: code || 'Unknown', tone: 'neutral' };
     default:

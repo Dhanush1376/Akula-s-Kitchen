@@ -32,7 +32,6 @@ function StarRating({ value = 0, size = 12 }) {
 
 export function DynamicRatingBadge({
   itemId,
-  itemType = 'product', // 'product' or 'event' (showcase)
   initialRating = 0,
   initialReviews = 0,
   compact = false,
@@ -177,7 +176,7 @@ export function DynamicRatingBadge({
     e.preventDefault();
     e.stopPropagation();
     setIsOpen(false);
-    const route = getProductRoute(itemType, itemId);
+    const route = getProductRoute(itemId);
     navigate(`${route}#reviews-section`);
   };
 

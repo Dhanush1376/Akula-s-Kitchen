@@ -1,5 +1,4 @@
 import AnalyticsEvent from '../../models/AnalyticsEvent';
-import { SYNONYM_MAP } from '../search/searchDictionaries';
 import { analyticsCache } from '../../utils/cache/MemoryCache';
 
 export class SearchIntelligenceService {
@@ -10,26 +9,9 @@ export class SearchIntelligenceService {
     const lowerQuery = query.toLowerCase().trim();
 
     // Quick exact matches
-    if (lowerQuery.includes('birthday') || lowerQuery.includes('bday')) return 'birthday';
-    if (lowerQuery.includes('rent') || lowerQuery.includes('hire')) return 'rental';
     if (lowerQuery.includes('premium') || lowerQuery.includes('luxury')) return 'premium';
     if (lowerQuery.includes('budget') || lowerQuery.includes('cheap')) return 'budget';
-    if (
-      lowerQuery.includes('diy') ||
-      lowerQuery.includes('kit') ||
-      lowerQuery.includes('do it yourself')
-    )
-      return 'diy';
-    if (lowerQuery.includes('corporate') || lowerQuery.includes('office')) return 'corporate';
-    if (lowerQuery.includes('gift') || lowerQuery.includes('return')) return 'gift';
-
-    // Synonym map checking
-    for (const [canonical, variants] of Object.entries(SYNONYM_MAP)) {
-      if (lowerQuery === canonical || variants.includes(lowerQuery)) {
-        if (canonical === 'birthday') return 'birthday';
-        // Add more canonical mappings if needed
-      }
-    }
+    if (lowerQuery.includes('gift') || lowerQuery.includes('hamper')) return 'gift';
 
     return 'other';
   }

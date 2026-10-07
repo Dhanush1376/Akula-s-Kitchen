@@ -1,8 +1,11 @@
 /**
  * Akula's Kitchen - Premium Transactional Email Templates
- * Fully responsive, warm luxury theme matching the website's aesthetic.
- * Featuring dark/light mode support, elegant serif typography, and clear layouts.
+ * Clean, modern, and simple layout in Heritage Olive Green (#283618)
+ * and Turmeric Golden Amber (#f7bb0e).
+ * Official domain: akulas.kitchen
  */
+
+import { getStoreConfigSync } from '../../config/storeConfig';
 
 // --- Shared Utility Components ---
 
@@ -21,12 +24,7 @@ export const escapeHtml = (unsafe: any) => {
 export const getPrimaryEntityName = (items: any[]): string | null => {
   if (!items || !Array.isArray(items) || items.length === 0) return null;
   const first =
-    items[0].title ||
-    items[0].name ||
-    items[0].showcaseTitle ||
-    items[0].productTitle ||
-    items[0].productId?.title ||
-    null;
+    items[0].title || items[0].name || items[0].productTitle || items[0].productId?.title || null;
   if (!first) return null;
   if (items.length > 1) {
     return `${first} (+${items.length - 1} more)`;
@@ -35,8 +33,8 @@ export const getPrimaryEntityName = (items: any[]): string | null => {
 };
 
 export const button = (text: string, url: string) => `
-  <div style="margin: 32px 0; text-align: center;">
-    <a href="${url}" style="background-color: #111827; color: #ffffff; padding: 12px 24px; text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 6px; display: inline-block;">
+  <div style="margin: 28px 0; text-align: center;">
+    <a href="${url}" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 12px 28px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 12px rgba(40, 54, 24, 0.18);">
       ${text}
     </a>
   </div>
@@ -45,17 +43,17 @@ export const button = (text: string, url: string) => `
 export const dataTable = (rows: { label: string; value: string }[]) => {
   const rowsHtml = rows
     .map(
-      (r) => `
-    <tr>
-      <td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 40%;">${r.label}</td>
-      <td style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 500;">${r.value}</td>
+      (r, idx) => `
+    <tr style="${idx < rows.length - 1 ? 'border-bottom: 1px solid #ede5d3;' : ''}">
+      <td style="padding: 9px 4px; color: #606c38; font-size: 13px; font-weight: 600; width: 40%; vertical-align: top;">${r.label}</td>
+      <td style="padding: 9px 4px; color: #283618; font-size: 13.5px; font-weight: 700; vertical-align: top;">${r.value}</td>
     </tr>
   `,
     )
     .join('');
 
   return `
-    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+    <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;">
       <table style="width: 100%; border-collapse: collapse;">
         ${rowsHtml}
       </table>
@@ -63,11 +61,9 @@ export const dataTable = (rows: { label: string; value: string }[]) => {
   `;
 };
 
-import { getStoreConfigSync } from '../../config/storeConfig';
-
 /**
- * Reusable HTML wrapper featuring a warm luxury card layout, CSS resets,
- * elegant serif branding typography, dark mode rendering, and brand alignment.
+ * Reusable HTML wrapper featuring a clean luxury card layout,
+ * heritage olive header banner with gold accent stripe, and minimalist footer.
  */
 export const getLuxuryEmailWrapper = (
   subtitle: string,
@@ -76,8 +72,9 @@ export const getLuxuryEmailWrapper = (
   preheaderText?: string,
 ): string => {
   const store = getStoreConfigSync();
-  const defaultFooter = `This is an automated transmission from ${store.name}. If you did not request this, please safely disregard this email or contact support.`;
-  const footerText = footerTextHtml || defaultFooter;
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const siteUrl = store.websiteUrl || 'https://akulas.kitchen';
+  const supportEmail = store.contact?.email || 'support@akulas.kitchen';
   const previewText = preheaderText || subtitle;
 
   return `<!DOCTYPE html>
@@ -88,61 +85,71 @@ export const getLuxuryEmailWrapper = (
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>${store.name}</title>
+  <title>${store.name} — ${subtitle}</title>
   <style>
-    /* Reset & Standard client overrides */
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
     table { border-collapse: collapse !important; }
-    body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f9fafb; color: #111827; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+    body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f7f4ec; color: #283618; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-    /* Core Layout */
-    .wrapper-table { background-color: #f9fafb; width: 100% !important; }
-    .email-container { max-width: 600px; margin: 0 auto !important; width: 100% !important; }
-    .main-card { background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 40px; }
-    .brand-header { padding-bottom: 24px; border-bottom: 1px solid #f3f4f6; margin-bottom: 32px; text-align: center; }
+    .wrapper-table { background-color: #f7f4ec; width: 100% !important; }
+    .email-container { max-width: 580px; margin: 0 auto !important; width: 100% !important; }
+    .main-card { background-color: #ffffff; border: 1px solid #e4dac7; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 20px rgba(40, 54, 24, 0.06); }
+    
+    /* Clean Brand Header */
+    .brand-header { background-color: #283618; border-bottom: 3px solid #f7bb0e; padding: 22px 20px; text-align: center; }
     .brand-link { text-decoration: none; display: inline-block; }
-    
-    /* Clean text header, easily replaceable by logo image */
-    .brand-name { font-size: 22px; font-weight: 600; color: #111827; display: block; margin: 0; letter-spacing: -0.5px; }
-    
-    .body-content { color: #374151; font-size: 15px; line-height: 1.6; text-align: left; }
-    .body-content h2 { color: #111827; font-size: 18px; font-weight: 600; margin: 0 0 16px 0; }
-    .body-content p { margin: 0 0 20px 0; }
+    .brand-name { font-size: 24px; font-weight: 800; color: #ffffff !important; display: block; margin: 0; letter-spacing: -0.3px; text-decoration: none; }
+    .brand-domain { color: #f7bb0e; font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; margin-top: 3px; }
 
-    /* Common Components */
-    .code-container { background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; margin: 24px 0; text-align: center; }
-    .code-label { display: block; color: #6b7280; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-    .code-display { margin: 0; letter-spacing: 6px; color: #111827; font-size: 36px; font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-align: center; }
-    
-    .button-wrapper { margin: 32px 0; text-align: center; }
-    .cta-button { background-color: #111827; color: #ffffff !important; padding: 12px 24px; text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 6px; display: inline-block; }
-    
-    .footer-divider { border-top: 1px solid #f3f4f6; margin-top: 32px; padding-top: 24px; text-align: center; }
-    .footer-text { color: #6b7280; font-size: 12px; line-height: 1.5; margin: 0 0 8px 0; }
-    .footer-text a { color: #111827; text-decoration: underline; }
+    /* Content Area */
+    .body-card-content { padding: 32px 32px 16px; }
+    .body-content { color: #2d3725; font-size: 14.5px; line-height: 1.6; text-align: left; }
+    .body-content h2 { color: #283618; font-size: 19px; font-weight: 800; margin: 0 0 14px 0; letter-spacing: -0.2px; }
+    .body-content h3 { color: #283618; font-size: 14px; font-weight: 700; margin: 20px 0 10px 0; }
+    .body-content p { margin: 0 0 16px 0; }
+    .body-content strong { color: #283618; }
 
-    /* Dark Mode styling */
+    /* Clean OTP / Code Display */
+    .code-container { background-color: #fdfbf6; border: 1.5px solid #283618; border-top: 3px solid #f7bb0e; padding: 20px 16px; border-radius: 10px; margin: 20px 0; text-align: center; }
+    .code-display { margin: 0; letter-spacing: 7px; color: #283618; font-size: 34px; font-weight: 800; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; text-align: center; }
+    
+    /* CTA Button */
+    .button-wrapper { margin: 26px 0; text-align: center; }
+    .cta-button { background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 12px 28px; text-decoration: none; font-size: 13.5px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 3px 10px rgba(40, 54, 24, 0.18); }
+    
+    /* Minimalist Footer */
+    .footer-divider { border-top: 1px solid #e8e1cf; padding: 22px 28px 24px; text-align: center; background-color: #faf8f2; }
+    .footer-brand { margin: 0 0 4px 0; font-size: 13px; font-weight: 700; color: #283618; }
+    .footer-support { margin: 0; color: #606c38; font-size: 12px; }
+    .footer-support a { color: #283618; font-weight: 600; text-decoration: underline; }
+
+    /* Dark Mode */
     @media (prefers-color-scheme: dark) {
-      body, .wrapper-table { background-color: #111827 !important; color: #f9fafb !important; }
-      .main-card { background-color: #1f2937 !important; border-color: #374151 !important; }
-      .brand-header { border-bottom-color: #374151 !important; }
+      body, .wrapper-table { background-color: #172011 !important; color: #fbf8ee !important; }
+      .main-card { background-color: #1f2a17 !important; border-color: #3b492b !important; }
+      .brand-header { background-color: #12180d !important; border-bottom-color: #f7bb0e !important; }
       .brand-name { color: #ffffff !important; }
-      .body-content { color: #d1d5db !important; }
-      .body-content h2 { color: #ffffff !important; }
-      .code-container { background-color: #374151 !important; border-color: #4b5563 !important; }
-      .code-label { color: #9ca3af !important; }
-      .code-display { color: #ffffff !important; }
-      .cta-button { background-color: #ffffff !important; color: #111827 !important; }
-      .footer-divider { border-top-color: #374151 !important; }
-      .footer-text { color: #9ca3af !important; }
-      .footer-text a { color: #ffffff !important; }
+      .body-card-content { background-color: #1f2a17 !important; }
+      .body-content { color: #e1e9d8 !important; }
+      .body-content h2, .body-content h3 { color: #fefae0 !important; }
+      .body-content strong { color: #ffffff !important; }
+      .code-container { background-color: #27361c !important; border-color: #606c38 !important; }
+      .code-display { color: #f7bb0e !important; }
+      .cta-button { background-color: #f7bb0e !important; color: #283618 !important; border-color: #f7bb0e !important; }
+      .footer-divider { background-color: #151e10 !important; border-top-color: #3b492b !important; }
+      .footer-brand { color: #fefae0 !important; }
+      .footer-support { color: #a4b395 !important; }
+      .footer-support a { color: #f7bb0e !important; }
     }
 
-    /* Mobile Adaptations */
     @media only screen and (max-width: 600px) {
-      .main-card { padding: 24px 16px !important; }
+      .body-card-content { padding: 22px 18px 14px !important; }
+      .footer-divider { padding: 18px 16px 20px !important; }
+      .brand-header { padding: 18px 14px !important; }
+      .brand-name { font-size: 21px !important; }
+      .code-display { font-size: 28px !important; letter-spacing: 5px !important; }
     }
   </style>
 </head>
@@ -156,21 +163,28 @@ export const getLuxuryEmailWrapper = (
         <table border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container">
           <tr>
             <td class="main-card">
+              <!-- Clean Brand Header -->
               <div class="brand-header">
-                <a href="${store.websiteUrl}" target="_blank" class="brand-link" style="display: block; text-align: center;">
-                  <h1 class="brand-name" style="color: #111827; margin: 0; font-size: 24px; text-decoration: none; font-weight: bold; text-align: center;">${store.name}</h1>
+                <a href="${siteUrl}" target="_blank" class="brand-link">
+                  <h1 class="brand-name">${store.name}</h1>
+                  <div class="brand-domain">${domain}</div>
                 </a>
               </div>
-              <div class="body-content">
-                ${bodyContentHtml}
+
+              <!-- Main Card Body -->
+              <div class="body-card-content">
+                <div class="body-content">
+                  ${bodyContentHtml}
+                </div>
               </div>
+
+              <!-- Minimalist Clean Footer -->
               <div class="footer-divider">
-                <p class="footer-text">
-                  ${footerText}
+                <p class="footer-brand">
+                  ${store.name} • <a href="${siteUrl}" target="_blank" style="color: #283618; text-decoration: none;">${domain}</a>
                 </p>
-                <p class="footer-text">
-                  ${store.name}<br/>
-                  <a href="${store.websiteUrl}" target="_blank">${store.websiteDomain}</a>
+                <p class="footer-support">
+                  ${footerTextHtml ? `${footerTextHtml} • ` : ''}Need help? <a href="mailto:${supportEmail}">${supportEmail}</a>
                 </p>
               </div>
             </td>
@@ -184,52 +198,47 @@ export const getLuxuryEmailWrapper = (
 };
 
 /**
- * Generates the premium OTP Authentication Email
+ * Generates the clean OTP Authentication Email
  */
 export const getOtpEmailTemplate = (otpCode: string, expiryMinutes: number = 5): string => {
   const store = getStoreConfigSync();
-  const preheader = `Use this code to verify your email. It expires in ${expiryMinutes} minutes.`;
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const preheader = `Your ${domain} verification code is ${otpCode}`;
   const body = `
-    <h2>Security Verification</h2>
-    <p>Please use the code below to securely access your ${store.name} account.</p>
+    <h2 style="text-align: center; margin-bottom: 6px;">Verification Code</h2>
+    <p style="text-align: center; color: #606c38; margin-bottom: 18px; font-size: 14px;">Use this code to sign in to <strong>${domain}</strong></p>
     <div class="code-container">
-      <span class="code-label">Verification Code</span>
       <div class="code-display">${otpCode}</div>
     </div>
-    <p style="color: #6b7280; font-size: 13px;">
-      This code will expire in ${expiryMinutes} minutes. For security, never share this code with anyone.
-    </p>
-    <p style="color: #6b7280; font-size: 13px;">
-      If you did not request this, you can safely ignore this email.
+    <p style="color: #606c38; font-size: 13px; text-align: center; margin: 12px 0 0 0;">
+      Expires in ${expiryMinutes} minutes. Never share this code.
     </p>
   `;
-  return getLuxuryEmailWrapper('Security Verification', body, undefined, preheader);
+  return getLuxuryEmailWrapper('Verification Code', body, undefined, preheader);
 };
 
 /**
- * Generates the premium Cash on Delivery Order Verification Email
+ * Generates the clean Cash on Delivery Order Verification Email
  */
 export const getCodOtpEmailTemplate = (otpCode: string, expiryMinutes: number = 5): string => {
-  const preheader = `Use this code to verify your COD order. It expires in ${expiryMinutes} minutes.`;
+  const store = getStoreConfigSync();
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const preheader = `Your COD verification code for ${domain} is ${otpCode}`;
   const body = `
-    <h2>Order Verification</h2>
-    <p>To confirm your Cash on Delivery order, please use the verification code below.</p>
+    <h2 style="text-align: center; margin-bottom: 6px;">Order Verification</h2>
+    <p style="text-align: center; color: #606c38; margin-bottom: 18px; font-size: 14px;">Use this Verification Code to confirm your Cash on Delivery order on <strong>${domain}</strong></p>
     <div class="code-container">
-      <span class="code-label">Verification Code</span>
       <div class="code-display">${otpCode}</div>
     </div>
-    <p style="color: #6b7280; font-size: 13px;">
-      This code will expire in ${expiryMinutes} minutes. For security, never share this code with anyone.
-    </p>
-    <p style="color: #6b7280; font-size: 13px;">
-      If you did not request this, you can safely ignore this email.
+    <p style="color: #606c38; font-size: 13px; text-align: center; margin: 12px 0 0 0;">
+      Expires in ${expiryMinutes} minutes.
     </p>
   `;
-  return getLuxuryEmailWrapper('COD Verification Code', body, undefined, preheader);
+  return getLuxuryEmailWrapper('Order Verification', body, undefined, preheader);
 };
 
 /**
- * Generates the premium Team Invitation Email
+ * Generates the clean Team Invitation Email
  */
 export const getTeamInviteEmailTemplate = (
   inviteUrl: string,
@@ -237,73 +246,64 @@ export const getTeamInviteEmailTemplate = (
   permissions: string,
 ): string => {
   const store = getStoreConfigSync();
-  const preheader = `You've been invited to join the ${store.name} team.`;
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const preheader = `You've been invited to join ${store.name}`;
   const body = `
-    <h2>Join the Workspace</h2>
-    <p>
-      You have been invited to join the ${store.name} workspace as a <strong>${role}</strong> with <strong>${permissions}</strong> access.
-    </p>
+    <h2>Team Invitation</h2>
+    <p>You have been invited to join the <strong>${store.name}</strong> team as a <strong>${escapeHtml(role)}</strong> (${escapeHtml(permissions)} access).</p>
     <div class="button-wrapper">
       <a href="${inviteUrl}" class="cta-button" target="_blank">Accept Invitation</a>
     </div>
-    <p style="color: #6b7280; font-size: 13px;">
-      If you decline or ignore this, the link will expire.
-    </p>
   `;
-  return getLuxuryEmailWrapper('Staff Workspace Invite', body, undefined, preheader);
+  return getLuxuryEmailWrapper('Team Invite', body, undefined, preheader);
 };
 
 /**
- * Generates the premium SMTP Diagnostic Test Email
+ * Generates the clean SMTP Diagnostic Test Email
  */
 export const getDiagnosticTestEmailTemplate = (
   host: string,
   user: string,
   timestamp: string,
 ): string => {
+  const store = getStoreConfigSync();
+  const domain = store.websiteDomain || 'akulas.kitchen';
   const body = `
-    <h2>Connection Test Successful</h2>
-    <p>
-      Your transactional email settings are working correctly. Connection details:
-    </p>
-    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin: 24px 0; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 13px; line-height: 1.6; color: #111827;">
-      <strong>SMTP Host:</strong> ${host}<br/>
-      <strong>SMTP Account:</strong> ${user}<br/>
-      <strong>Verified At:</strong> ${timestamp}<br/>
-      <strong>Status:</strong> Active
+    <h2>SMTP Connectivity Verified</h2>
+    <p>Email delivery is configured and active for <strong>${domain}</strong>.</p>
+    <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-left: 3px solid #283618; padding: 16px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 13px; line-height: 1.7; color: #283618;">
+      Host: ${host}<br/>
+      Account: ${user}<br/>
+      Verified: ${timestamp}
     </div>
-    <p style="color: #6b7280; font-size: 13px;">
-      You can now use this configuration to securely deliver emails in production.
-    </p>
   `;
-  return getLuxuryEmailWrapper('SMTP Connectivity Test', body);
+  return getLuxuryEmailWrapper('Connectivity Test', body);
 };
 
 /**
- * Generates the premium Order Confirmation Email (Admin & Customer)
+ * Generates the clean Order Confirmation Email
  */
 export const getOrderConfirmationTemplate = (orderDetails: any): string => {
-  const preheader = `Your order #${orderDetails.orderId} has been confirmed.`;
+  const store = getStoreConfigSync();
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const preheader = `Your order #${orderDetails.orderId} is confirmed`;
   const body = `
     <h2>Order Confirmed</h2>
-    <p>
-      Thank you for your purchase. We are processing your order and will notify you when it dispatches.
-    </p>
-    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin: 24px 0; font-size: 14px; line-height: 1.6; color: #111827;">
-      <strong>Order ID:</strong> #${orderDetails.orderId}<br/>
-      <strong>Total Amount:</strong> ₹${orderDetails.totalAmount}<br/>
-      <strong>Payment Status:</strong> ${orderDetails.paymentStatus}<br/>
-      <strong>Estimated Delivery:</strong> ${orderDetails.deliveryDate || '5-7 business days'}
+    <p>Thank you for your order! We are preparing it fresh.</p>
+    <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-left: 3px solid #f7bb0e; padding: 16px 20px; border-radius: 8px; margin: 20px 0; font-size: 14px; line-height: 1.7; color: #283618;">
+      <strong>Order ID:</strong> #${escapeHtml(orderDetails.orderId)}<br/>
+      <strong>Total:</strong> ₹${orderDetails.totalAmount}<br/>
+      <strong>Payment:</strong> ${escapeHtml(orderDetails.paymentStatus)}
     </div>
     <div class="button-wrapper">
-      <a href="${orderDetails.orderLink}" class="cta-button" target="_blank">Track Order Status</a>
+      <a href="${orderDetails.orderLink || `${store.websiteUrl}/dashboard/orders`}" class="cta-button" target="_blank">Track Order</a>
     </div>
   `;
-  return getLuxuryEmailWrapper('Order Confirmation', body, undefined, preheader);
+  return getLuxuryEmailWrapper('Order Confirmed', body, undefined, preheader);
 };
 
 /**
- * Generates the premium Admin Notification Email
+ * Generates the clean Admin Notification Email
  */
 export const getAdminNotificationTemplate = (
   title: string,
@@ -315,37 +315,33 @@ export const getAdminNotificationTemplate = (
     : '';
 
   const body = `
-    <h2>${title}</h2>
-    <p>${message}</p>
+    <h2>${escapeHtml(title)}</h2>
+    <p style="line-height: 1.6;">${message}</p>
     ${actionButton}
   `;
-  return getLuxuryEmailWrapper('Admin System Alert', body);
+  return getLuxuryEmailWrapper('Admin Alert', body);
 };
 
 /**
- * Generates the premium Welcome Email
+ * Generates the clean Welcome Email
  */
 export const getWelcomeEmailTemplate = (name: string, frontendUrl: string): string => {
   const store = getStoreConfigSync();
-  const preheader = `Welcome to ${store.name}. Thank you for joining us.`;
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const url = frontendUrl || store.websiteUrl || 'https://akulas.kitchen';
+  const preheader = `Welcome to ${store.name}`;
   const body = `
-    <h2>Welcome to ${store.name}</h2>
-    <p>Hello ${name},</p>
-    <p>
-      Thank you for joining our community. We invite you to explore our fresh batters, pickles, podis, namkeen and more.
-    </p>
+    <h2>Welcome to ${store.name}!</h2>
+    <p>Hi ${escapeHtml(name)}, thank you for joining our community.</p>
     <div class="button-wrapper">
-      <a href="${frontendUrl}" class="cta-button" target="_blank">Explore Studio</a>
+      <a href="${url}" class="cta-button" target="_blank">Explore Menu on ${domain}</a>
     </div>
-    <p style="color: #6b7280; font-size: 13px;">
-      If you have any questions or want to discuss a custom event setup, feel free to reply directly to this email. We are here to help.
-    </p>
   `;
-  return getLuxuryEmailWrapper(`Welcome to ${store.name}`, body, undefined, preheader);
+  return getLuxuryEmailWrapper('Welcome', body, undefined, preheader);
 };
 
 /**
- * Generates the premium Suspicious Login Alert Email
+ * Generates the clean Suspicious Login Alert Email
  */
 export const getSuspiciousLoginEmailTemplate = (
   name: string,
@@ -353,27 +349,16 @@ export const getSuspiciousLoginEmailTemplate = (
   ipAddress: string,
 ): string => {
   const store = getStoreConfigSync();
-  const preheader = `New login detected for your account.`;
+  const domain = store.websiteDomain || 'akulas.kitchen';
+  const preheader = `New login detected for your ${domain} account`;
   const body = `
-    <h2 style="color: #dc2626;">New Login Detected</h2>
-    <p>Hello ${name},</p>
-    <p>We detected a new login to your ${store.name} account.</p>
-    <div style="background-color: #fef2f2; border: 1px solid #fca5a5; padding: 20px; border-radius: 8px; margin: 24px 0; font-size: 14px; line-height: 1.6; color: #991b1b;">
-      <strong>Time:</strong> ${loginTime}<br/>
-      <strong>IP Address:</strong> ${ipAddress}<br/>
-      <strong>Device Info:</strong> ${ipAddress === '127.0.0.1' ? 'Local System' : 'Remote Client'}
+    <h2 style="color: #b91c1c;">New Login Detected</h2>
+    <p>Hi ${escapeHtml(name)}, a new login was detected on your account.</p>
+    <div style="background-color: #fdf6f0; border: 1px solid #fed7aa; border-left: 3px solid #ea580c; padding: 16px 20px; border-radius: 8px; margin: 20px 0; font-size: 14px; line-height: 1.7; color: #7c2d12;">
+      Time: ${escapeHtml(loginTime)}<br/>
+      IP: ${escapeHtml(ipAddress)}
     </div>
-    <p style="color: #dc2626; font-size: 13px; font-weight: 600;">
-      If this wasn't you, please contact our security team immediately to protect your account.
-    </p>
-    <p style="color: #6b7280; font-size: 13px;">
-      If this was you, you can safely ignore this email.
-    </p>
+    <p style="color: #b91c1c; font-size: 13px; font-weight: 600;">If this was not you, please contact support immediately.</p>
   `;
-  return getLuxuryEmailWrapper(
-    'Security Alert',
-    body,
-    'This is a critical security notification. If you did not log in, contact us immediately.',
-    preheader,
-  );
+  return getLuxuryEmailWrapper('Security Alert', body, undefined, preheader);
 };

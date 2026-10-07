@@ -19,12 +19,12 @@ async function run() {
 
   const testPayload = {
     to: simulatedCustomerEmail,
-    subject: "Exclusive Akula's Kitchen Preview: Handcrafted Brass Statues",
+    subject: "Akula's Kitchen Preview: This Week's Fresh Batches",
     html: `
       <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; border: 1px solid #e7e5e4; border-radius: 12px; overflow: hidden;">
         <div style="background-color: #1c1917; padding: 24px; text-align: center;">
           <h1 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: 0.5px;">Akula's Kitchen</h1>
-          <p style="color: #a8a29e; margin: 6px 0 0 0; font-size: 13px;">Traditional Artistry & Timeless Decor</p>
+          <p style="color: #a8a29e; margin: 6px 0 0 0; font-size: 13px;">Fresh · Tasty · Healthy</p>
         </div>
         <div style="padding: 32px 24px;">
           <h2 style="color: #1c1917; font-size: 18px; margin-top: 0;">Authoritative Dispatch Verification</h2>
@@ -37,7 +37,7 @@ async function run() {
             </p>
           </div>
           <div style="text-align: center; margin-top: 28px;">
-            <a href="https://akulas-kitchen.com" style="background-color: #854d0e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;">Explore Collection</a>
+            <a href="https://akulas.kitchen" style="background-color: #854d0e; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;">Shop Now</a>
           </div>
         </div>
         <div style="background-color: #fafaf9; border-top: 1px solid #e7e5e4; padding: 16px; text-align: center; font-size: 12px; color: #78716c;">

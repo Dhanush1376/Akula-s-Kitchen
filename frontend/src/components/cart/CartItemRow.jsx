@@ -1,28 +1,14 @@
-import {
-  X,
-  Minus,
-  Plus,
-  Ban,
-  CornerDownLeft,
-  Truck,
-  CalendarDays,
-  Lock,
-  Heart,
-  AlertTriangle,
-} from 'lucide-react';
+import { X, Minus, Plus, Ban, Heart, AlertTriangle } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { handleImageError, getOptimizedUrl, getBlurDataUri } from '../../utils/media/imageUtils';
 import { useProduct } from '../../hooks/useProductQueries';
 import { useConfig } from '../../context/ConfigContext';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 
 export const CartItemRow = React.memo(function CartItemRow({
   item,
-  activeCartMode,
   settings,
-  deliveryDateStr,
   removeItem,
   updateQuantity,
   handleMoveToWishlist,
@@ -43,7 +29,6 @@ export const CartItemRow = React.memo(function CartItemRow({
 
   const isItemNonRefundable = Boolean(
     item.isNonRefundable ||
-    activeCartMode === 'rental' ||
     realProduct?.isNonRefundable ||
     realProduct?.returnSettings?.isReturnable === false,
   );
@@ -63,7 +48,7 @@ export const CartItemRow = React.memo(function CartItemRow({
       {/* Top Right Close Icon */}
       <button
         onClick={() => {
-          removeItem(item.id || item._id, item.variant, item.type);
+          removeItem(item.id || item._id, item.configurationSignature);
           triggerNotification(`Removed "${item.title}"`);
         }}
         className="absolute top-3.5 right-3.5 text-neutral-400 hover:text-red-600 transition-colors cursor-pointer w-8 h-8 min-h-0 flex items-center justify-center rounded-full hover:bg-neutral-100 z-10"
@@ -82,7 +67,10 @@ export const CartItemRow = React.memo(function CartItemRow({
               </span>
             </div>
           )}
-          <Link to={`/product/${item.id || item._id}`} className="w-full h-full block">
+          <Link
+            to={`/product/${item.productId || (typeof item.id === 'string' && item.id.includes('___') ? item.id.split('___')[0] : item.id || item._id)}`}
+            className="w-full h-full block"
+          >
             <motion.img
               onError={handleImageError}
               whileHover={{ scale: 1.05 }}
@@ -98,16 +86,32 @@ export const CartItemRow = React.memo(function CartItemRow({
 
         {/* Right Details */}
         <div className="flex-1 min-w-0 pr-6 sm:pr-8 py-0.5">
-          {activeCartMode === 'rental' && (
-            <span className="inline-block bg-[#f7bb0e]/15 text-neutral-900 text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full mb-1.5 border border-[#f7bb0e]/30">
-              Rental Item
-            </span>
-          )}
-          <Link to={`/product/${item.id || item._id}`}>
+          <Link
+            to={`/product/${item.productId || (typeof item.id === 'string' && item.id.includes('___') ? item.id.split('___')[0] : item.id || item._id)}`}
+          >
             <h3 className="font-semibold text-[13.5px] sm:text-[14.5px] text-neutral-900 line-clamp-2 leading-snug hover:text-black transition-colors">
               {displayTitle}
             </h3>
           </Link>
+
+          {item.selectedOptions && item.selectedOptions.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {item.selectedOptions.map((opt, optIdx) => (
+                <span
+                  key={optIdx}
+                  className="inline-flex items-center text-[10.5px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/70"
+                >
+                  <span className="opacity-75 mr-1">{opt.groupName}:</span>
+                  <span className="font-bold">{opt.optionLabel}</span>
+                  {opt.priceAdjustment > 0 && (
+                    <span className="ml-1 text-[9.5px] font-semibold text-amber-700">
+                      (+₹{opt.priceAdjustment})
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Size / Pack & Quantity controls */}
           <div className="flex flex-wrap items-center gap-2.5 mt-2.5">
@@ -123,7 +127,12 @@ export const CartItemRow = React.memo(function CartItemRow({
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  updateQuantity(item.id || item._id, item.variant, item.quantity - 1);
+                  updateQuantity(
+                    item.id || item._id,
+                    item.variant,
+                    item.quantity - 1,
+                    item.configurationSignature,
+                  );
                 }}
                 className="w-8 sm:w-8.5 h-full flex items-center justify-center text-neutral-600 hover:text-black hover:bg-neutral-200/60 transition-colors cursor-pointer min-h-0"
                 aria-label="Decrease quantity"
@@ -139,7 +148,12 @@ export const CartItemRow = React.memo(function CartItemRow({
                   if (item.quantity >= maxQuantityPerItem) {
                     return;
                   }
-                  updateQuantity(item.id || item._id, item.variant, item.quantity + 1);
+                  updateQuantity(
+                    item.id || item._id,
+                    item.variant,
+                    item.quantity + 1,
+                    item.configurationSignature,
+                  );
                 }}
                 disabled={
                   item.quantity >= (item.stock || 999) || item.quantity >= maxQuantityPerItem
@@ -184,113 +198,44 @@ export const CartItemRow = React.memo(function CartItemRow({
             </span>
           )}
 
-          {/* Pricing & Policy below Quantity (only for purchase) */}
-          {activeCartMode === 'purchase' && (
-            <div className="mt-2.5 flex flex-col gap-1.5 w-full">
-              {/* Pricing Row */}
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="text-[15px] sm:text-[16px] font-bold text-neutral-950">
-                  ₹{item.price.toLocaleString()}
+          {/* Pricing & Policy below Quantity */}
+          <div className="mt-2.5 flex flex-col gap-1.5 w-full">
+            {/* Pricing Row */}
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="text-[15px] sm:text-[16px] font-bold text-neutral-950">
+                ₹{item.price.toLocaleString()}
+              </span>
+              {itemOldPrice > item.price && (
+                <span className="text-[12px] sm:text-[13px] text-neutral-400 line-through font-normal">
+                  ₹{itemOldPrice.toLocaleString()}
                 </span>
-                {itemOldPrice > item.price && (
-                  <span className="text-[12px] sm:text-[13px] text-neutral-400 line-through font-normal">
-                    ₹{itemOldPrice.toLocaleString()}
-                  </span>
-                )}
-                {savingsPct > 0 && (
-                  <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
-                    {savingsPct}% Off
-                  </span>
-                )}
-              </div>
+              )}
+              {savingsPct > 0 && (
+                <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
+                  {savingsPct}% Off
+                </span>
+              )}
+            </div>
 
-              {/* Delivery forecast strip */}
-              <div className="text-[11px] text-neutral-600 w-full">
-                <div className="flex flex-col gap-1">
-                  {isProductDataLoading ? (
-                    <div className="flex items-center gap-1.5 py-0.5 opacity-60">
-                      <div className="w-3 h-3 rounded-full bg-neutral-200 animate-pulse" />
-                      <div className="w-24 h-2.5 rounded-sm bg-neutral-200 animate-pulse" />
-                    </div>
-                  ) : isItemNonRefundable ? (
-                    <div className="flex items-center gap-1 text-amber-700 font-bold whitespace-nowrap text-[10px]">
-                      <Ban className="w-3 h-3" strokeWidth={2} />
-                      Non-Returnable (Perishable Food)
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 whitespace-nowrap text-[10.5px]">
-                      <CornerDownLeft className="w-3 h-3 text-neutral-500" strokeWidth={2} />
-                      <span>
-                        <strong className="text-neutral-950 font-bold">
-                          {item.product?.returnSettings?.returnWindow ||
-                            item.product?.returnSettings?.returnWindowDays ||
-                            settings?.returnsExchanges?.returnWindowDays ||
-                            14}
-                          d
-                        </strong>{' '}
-                        returns
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5 whitespace-nowrap text-[10.5px] text-neutral-600">
-                    <Truck className="w-3.5 h-3.5 text-neutral-500 shrink-0" strokeWidth={2} />
-                    <span>
-                      Delivery by{' '}
-                      <strong className="text-neutral-950 font-bold">{deliveryDateStr}</strong>
-                    </span>
+            {/* Policy strip */}
+            <div className="text-[11px] text-neutral-600 w-full">
+              <div className="flex flex-col gap-1">
+                {isProductDataLoading ? (
+                  <div className="flex items-center gap-1.5 py-0.5 opacity-60">
+                    <div className="w-3 h-3 rounded-full bg-neutral-200 animate-pulse" />
+                    <div className="w-24 h-2.5 rounded-sm bg-neutral-200 animate-pulse" />
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-amber-700 font-bold whitespace-nowrap text-[10px]">
+                    <Ban className="w-3 h-3" strokeWidth={2} />
+                    Non-Returnable (Perishable Food)
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
-
-      {/* Rental pricing & policy details */}
-      {activeCartMode === 'rental' && (
-        <div className="mt-3 pt-3 border-t border-neutral-200 flex flex-col gap-2.5 w-full text-[11px] text-neutral-600">
-          {/* Total Due Row */}
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[15px] font-bold text-neutral-950">
-              ₹{((item.price + (item.deposit || 0)) * item.quantity).toLocaleString()}
-            </span>
-            <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">
-              Total Due
-            </span>
-            <span className="text-neutral-300 mx-1 font-light">|</span>
-            <span className="text-[11px] text-neutral-600">
-              Fee:{' '}
-              <strong className="text-neutral-900 font-bold">₹{item.price.toLocaleString()}</strong>
-            </span>
-            <span className="text-neutral-300 font-light">•</span>
-            <span className="text-[11px] text-amber-700 font-bold">
-              Deposit: ₹{item.deposit?.toLocaleString() || 0}
-            </span>
-          </div>
-
-          {/* Duration & Deposit details */}
-          <div className="flex flex-col gap-1.5 mt-0.5 text-[10.5px]">
-            <div className="flex items-center gap-1.5">
-              <CalendarDays className="w-3.5 h-3.5 text-neutral-500 shrink-0" strokeWidth={2} />
-              <span>
-                Duration:{' '}
-                <span className="font-bold text-neutral-900 uppercase text-[9.5px] tracking-wider ml-1">
-                  Select at checkout <ArrowRight className="w-3 h-3 inline-block ml-0.5 -mt-0.5" />
-                </span>
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-neutral-500 shrink-0" strokeWidth={2} />
-              <span>
-                Refundable Deposit:{' '}
-                <strong className="text-neutral-900 ml-1">
-                  ₹{item.deposit?.toLocaleString() || 0}
-                </strong>
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Wishlist Button inside Card */}
       <div className="-mx-3 sm:-mx-3.5 -mb-3 sm:-mb-3.5 mt-2.5 border-t border-neutral-200 bg-neutral-50/70 hover:bg-neutral-100 transition-colors">

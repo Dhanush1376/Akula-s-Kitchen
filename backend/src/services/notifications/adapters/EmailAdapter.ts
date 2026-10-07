@@ -18,6 +18,7 @@ export class EmailAdapter {
       subject: payload.subject,
       html: payload.html,
       from: payload.from,
+      replyTo: payload.replyTo,
       attachments: payload.attachments,
     };
 

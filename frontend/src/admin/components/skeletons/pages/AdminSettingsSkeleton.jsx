@@ -40,7 +40,6 @@ export function AdminSettingsSkeleton({ hideHeader = false } = {}) {
               'Shipping & Orders',
               'Payments & Taxes',
               'Returns & Exchanges',
-              'Loyalty & Rewards',
               'Storefront & Customer Auth',
               'Global AI Platform',
               'Security & Operations',

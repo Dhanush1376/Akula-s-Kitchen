@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { DrawerDragHandle, useMobileDrawerEngine } from './drawer';
 
 const RecommendationSystem = React.lazy(() =>
   import('../sections/RecommendationSystem').then((m) => ({ default: m.RecommendationSystem })),
@@ -17,6 +18,11 @@ export function ProductGallery({ images = [], product }) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isSimilarOpen, setIsSimilarOpen] = useState(false);
+
+  const { dragProps, sheetTransition } = useMobileDrawerEngine({
+    isOpen: isSimilarOpen,
+    onClose: () => setIsSimilarOpen(false),
+  });
 
   const oldPrice =
     product?.strikingPrice || product?.oldPrice || product?.originalPrice || product?.mrp || 0;
@@ -117,7 +123,7 @@ export function ProductGallery({ images = [], product }) {
           <button
             key={idx}
             onClick={() => handleThumbnailClick(idx)}
-            className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[8px] lg:rounded-[10px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative group cursor-pointer ${
+            className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[14px] sm:rounded-[16px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative group cursor-pointer ${
               selectedIdx === idx
                 ? 'scale-[1.12] z-10 opacity-100'
                 : 'scale-[0.92] opacity-50 hover:opacity-85 hover:scale-100'
@@ -127,7 +133,7 @@ export function ProductGallery({ images = [], product }) {
               src={img}
               alt={`Thumbnail ${idx + 1}`}
               containerClassName="w-full h-full"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[8px] lg:rounded-[10px]"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[14px] sm:rounded-[16px]"
               width={100}
               height={100}
             />
@@ -136,7 +142,7 @@ export function ProductGallery({ images = [], product }) {
       </div>
 
       {/* Main Image Viewport - Native continuous horizontal scroll enabled */}
-      <div className="flex-1 w-full relative aspect-square max-h-[580px] rounded-[12px] md:rounded-[18px] lg:rounded-[22px] overflow-hidden bg-[#fafafa] group border-0 shadow-none">
+      <div className="flex-1 w-full relative aspect-square max-h-[580px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#fafafa] group border-0 shadow-none">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -293,8 +299,8 @@ export function ProductGallery({ images = [], product }) {
                       <OptimizedImage
                         src={img}
                         alt={`Lightbox view ${idx + 1}`}
-                        className="max-w-full max-h-full object-contain rounded-[14px] sm:rounded-[18px] lg:rounded-[22px] overflow-hidden shadow-sm"
-                        containerClassName="w-full h-full flex items-center justify-center overflow-hidden rounded-[14px] sm:rounded-[18px] lg:rounded-[22px]"
+                        className="max-w-full max-h-full object-contain rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm"
+                        containerClassName="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl sm:rounded-3xl"
                         aspectRatio="auto"
                         width={1600}
                         height={1600}
@@ -320,7 +326,7 @@ export function ProductGallery({ images = [], product }) {
                           });
                         }
                       }}
-                      className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[8px] lg:rounded-[10px] overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] snap-center outline-none group cursor-pointer ${
+                      className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[14px] sm:rounded-[16px] overflow-hidden relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] snap-center outline-none group cursor-pointer ${
                         selectedIdx === idx
                           ? 'scale-[1.12] z-10 opacity-100'
                           : 'scale-[0.92] opacity-50 hover:opacity-85 hover:scale-100'
@@ -330,7 +336,7 @@ export function ProductGallery({ images = [], product }) {
                         src={img}
                         alt={`Thumbnail ${idx + 1}`}
                         containerClassName="w-full h-full"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[8px] lg:rounded-[10px]"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[14px] sm:rounded-[16px]"
                         width={100}
                         height={100}
                       />
@@ -348,67 +354,74 @@ export function ProductGallery({ images = [], product }) {
         createPortal(
           <AnimatePresence>
             {isSimilarOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100000] pointer-events-auto overflow-hidden"
-              >
+              <div className="fixed inset-0 z-[100000] pointer-events-none">
                 {/* Backdrop */}
-                <div
-                  className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   onClick={() => setIsSimilarOpen(false)}
+                  className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto"
                 />
 
-                {/* Drawer Content */}
+                {/* Bottom Sheet Floating Shell */}
                 <motion.div
-                  initial={{ y: '100%' }}
-                  animate={{ y: 0 }}
-                  exit={{ y: '100%' }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="absolute bottom-0 left-0 w-full bg-surface shadow-2xl rounded-t-[18px] border-t border-black/10 pb-6 pt-1.5"
-                  onClick={(e) => e.stopPropagation()}
+                  initial={{ y: '100%', opacity: 0.5 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: '100%', opacity: 0 }}
+                  transition={sheetTransition}
+                  {...dragProps}
+                  className="fixed bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col max-w-[480px] sm:max-w-[500px] mx-auto"
+                  style={{
+                    marginBottom: 'env(safe-area-inset-bottom, 0px)',
+                  }}
                 >
-                  {/* Drag handle area (visual only) */}
-                  <div
-                    className="w-full flex justify-center pt-1 pb-2 cursor-pointer"
-                    onClick={() => setIsSimilarOpen(false)}
-                  >
-                    <div className="w-12 h-1.5 rounded-full bg-neutral-400" />
-                  </div>
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-2 px-5 pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[82dvh] overflow-hidden border border-black/[0.08]">
+                    {/* Handlebar for bottom sheet feel - moved right to the top rim */}
+                    <div
+                      className="w-full flex justify-center pt-1 pb-2 cursor-grab select-none"
+                      onClick={() => setIsSimilarOpen(false)}
+                    >
+                      <div className="w-9 h-1 rounded-full bg-neutral-300" />
+                    </div>
 
-                  <div className="px-4 pb-1 flex justify-between items-center">
-                    <h3 className="!font-label text-[13px] font-bold uppercase tracking-widest text-on-surface">
-                      Similar Delights
-                    </h3>
+                    {/* Circular close button */}
                     <button
                       onClick={() => setIsSimilarOpen(false)}
-                      className="w-8 h-8 min-h-0 min-w-0 p-0 aspect-square shrink-0 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center transition-colors cursor-pointer text-neutral-800"
+                      className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-10 cursor-pointer"
                       aria-label="Close similar delights"
                     >
-                      <X className="w-4 h-4 text-black" strokeWidth={1.8} />
+                      <X className="w-3.5 h-3.5 text-black" strokeWidth={2} />
                     </button>
-                  </div>
 
-                  <div className="px-4">
-                    <React.Suspense
-                      fallback={
-                        <div className="h-44 flex items-center justify-center text-sm text-on-surface-variant">
-                          Discovering...
-                        </div>
-                      }
-                    >
-                      <RecommendationSystem
-                        category={product.category}
-                        currentProductId={product._id || product.id}
-                        compact={true}
-                        horizontalScroll={true}
-                        hideHeader={true}
-                      />
-                    </React.Suspense>
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-3 pr-10 border-b border-black/[0.06]">
+                      <h3 className="font-sans text-[13px] font-bold uppercase tracking-wider text-neutral-900">
+                        Similar Delights
+                      </h3>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-3">
+                      <React.Suspense
+                        fallback={
+                          <div className="h-44 flex items-center justify-center text-sm text-neutral-500">
+                            Discovering...
+                          </div>
+                        }
+                      >
+                        <RecommendationSystem
+                          category={product.category}
+                          currentProductId={product._id || product.id}
+                          compact={true}
+                          horizontalScroll={true}
+                          hideHeader={true}
+                        />
+                      </React.Suspense>
+                    </div>
                   </div>
                 </motion.div>
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>,
           document.body,

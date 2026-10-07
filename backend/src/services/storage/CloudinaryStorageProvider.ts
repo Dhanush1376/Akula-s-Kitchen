@@ -18,10 +18,7 @@ export class CloudinaryStorageProvider implements StorageProvider {
       const cloudinary = getCloudinary();
 
       const uploadParams: any = {
-        folder:
-          folder.startsWith('akulas-kitchen/') || folder.startsWith('siri-arts-crafts/')
-            ? folder
-            : `akulas-kitchen/${folder}`,
+        folder: folder.startsWith('akulas-kitchen/') ? folder : `akulas-kitchen/${folder}`,
         public_id: securePublicId,
         resource_type: isVideo ? 'video' : isPdf ? 'raw' : 'image',
       };

@@ -117,9 +117,8 @@ export function SearchDiscovery({
         {/* Discovery Engine Modules */}
         {isMobile ? (
           <>
-            {/* Mobile Event Collections */}
-            {((discoveryData?.eventCollections && discoveryData.eventCollections.length > 0) ||
-              true) && (
+            {/* Mobile Collections */}
+            {((discoveryData?.collections && discoveryData.collections.length > 0) || true) && (
               <div className="mb-4 mt-2">
                 <div className="px-5 mb-3">
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 flex items-center gap-1.5">
@@ -128,8 +127,8 @@ export function SearchDiscovery({
                   </span>
                 </div>
                 <div className="flex gap-3 px-5 overflow-x-auto pb-2 no-scrollbar snap-x">
-                  {(discoveryData?.eventCollections?.length > 0
-                    ? discoveryData.eventCollections
+                  {(discoveryData?.collections?.length > 0
+                    ? discoveryData.collections
                     : fallbackCollections
                   ).map((col, idx) => (
                     <button
@@ -210,8 +209,7 @@ export function SearchDiscovery({
               <div className="col-span-12 lg:col-span-7 flex flex-col gap-6 relative">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-6">
                   {/* Explore Collections */}
-                  {((discoveryData?.eventCollections &&
-                    discoveryData.eventCollections.length > 0) ||
+                  {((discoveryData?.collections && discoveryData.collections.length > 0) ||
                     true) && (
                     <div className="col-span-2 sm:col-span-1">
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-3 flex items-center gap-1.5">
@@ -219,8 +217,8 @@ export function SearchDiscovery({
                         Explore Collections
                       </span>
                       <div className="flex flex-col gap-1.5">
-                        {(discoveryData?.eventCollections?.length > 0
-                          ? discoveryData.eventCollections
+                        {(discoveryData?.collections?.length > 0
+                          ? discoveryData.collections
                           : fallbackCollections
                         )
                           .slice(0, 6)

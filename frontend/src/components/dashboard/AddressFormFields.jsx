@@ -141,7 +141,7 @@ export function AddressFormFields({ addressFormData, setAddressFormData }) {
                 id="dashboard-address-pincode"
                 type="text"
                 required
-                placeholder="e.g. 560041"
+                placeholder="Enter 6-digit pincode"
                 className="form-field"
                 value={addressFormData.pincode}
                 onChange={(e) =>
@@ -160,7 +160,7 @@ export function AddressFormFields({ addressFormData, setAddressFormData }) {
                 id="dashboard-address-locality"
                 type="text"
                 required
-                placeholder="e.g. Sector 4 / Jayanagar"
+                placeholder="Locality, area, or sector"
                 className="form-field"
                 value={addressFormData.locality}
                 onChange={(e) =>
@@ -179,7 +179,7 @@ export function AddressFormFields({ addressFormData, setAddressFormData }) {
             <textarea
               id="dashboard-address-street"
               required
-              placeholder="Flat, House no., Building, Apartment details"
+              placeholder="Flat / House no., building, apartment, or street"
               className="form-field min-h-[70px]"
               value={addressFormData.addressString}
               onChange={(e) =>
@@ -198,7 +198,7 @@ export function AddressFormFields({ addressFormData, setAddressFormData }) {
               id="dashboard-address-landmark"
               type="text"
               required
-              placeholder="e.g. Near LPU Gate 1"
+              placeholder="Nearby landmark (optional)"
               className="form-field"
               value={addressFormData.landmark}
               onChange={(e) =>

@@ -9,41 +9,36 @@ import logger from '../src/config/logger';
 // Load env
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
+const toSlug = (term: string) => term.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+/**
+ * Seeds the base catalog registry for Akula's Kitchen: filterable attributes,
+ * common pack sizes and product-type tags with their everyday Telugu names.
+ * Every write is an upsert keyed by slug, so re-running is safe.
+ */
 const seedCatalog = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI as string);
+    const mongoUri = process.env.MONGO_URI;
+    if (!mongoUri) throw new Error('MONGO_URI is not set; refusing to guess a database.');
+    await mongoose.connect(mongoUri);
     logger.info('Connected to MongoDB');
 
-    // 1. Create Attributes
+    // 1. Attributes
     logger.info('Seeding Attributes...');
     const attributes = [
       {
-        name: 'Color',
-        slug: 'color',
-        description: 'Product colors',
+        name: 'Size',
+        slug: 'size',
+        description: 'Pack sizes',
         isFilterable: true,
         displayOrder: 1,
       },
       {
-        name: 'Material',
-        slug: 'material',
-        description: 'Product materials',
-        isFilterable: true,
-        displayOrder: 2,
-      },
-      {
-        name: 'Size',
-        slug: 'size',
-        description: 'Product sizes',
-        isFilterable: true,
-        displayOrder: 3,
-      },
-      {
         name: 'Tag',
         slug: 'tag',
-        description: 'Product tags and taxonomy',
+        description: 'Product types and taxonomy',
         isFilterable: true,
-        displayOrder: 4,
+        displayOrder: 2,
       },
     ];
 
@@ -54,100 +49,29 @@ const seedCatalog = async () => {
       });
     }
 
-    // 2. Create Base Canonical Colors
-    logger.info('Seeding Base Colors...');
-    const colors = [
-      { value: 'White', slug: 'white', sortOrder: 1 },
-      { value: 'Gold', slug: 'gold', sortOrder: 2 },
-      { value: 'Green', slug: 'green', sortOrder: 3 },
-      { value: 'Pink', slug: 'pink', sortOrder: 4 },
-      { value: 'Red', slug: 'red', sortOrder: 5 },
-      { value: 'Blue', slug: 'blue', sortOrder: 6 },
+    // 2. Common pack sizes
+    logger.info('Seeding Pack Sizes...');
+    const sizes = [
+      { value: '250 g', slug: '250-g', sortOrder: 1 },
+      { value: '500 g', slug: '500-g', sortOrder: 2 },
+      { value: '1 kg', slug: '1-kg', sortOrder: 3 },
     ];
 
-    const colorParents: Record<string, any> = {};
-
-    for (const color of colors) {
-      const doc = await CatalogValue.findOneAndUpdate(
-        { attributeSlug: 'color', slug: color.slug },
-        { ...color, attributeSlug: 'color', status: 'approved' },
-        { upsert: true, new: true },
-      );
-      colorParents[color.slug] = doc._id;
-    }
-
-    // 3. Create Child Colors (e.g. Emerald Green -> Green)
-    logger.info('Seeding Child Colors...');
-    const childColors = [
-      { value: 'Emerald Green', slug: 'emerald-green', parent: 'green' },
-      { value: 'Rose Gold', slug: 'rose-gold', parent: 'gold' },
-      { value: 'Off White', slug: 'off-white', parent: 'white' },
-    ];
-
-    for (const child of childColors) {
+    for (const size of sizes) {
       await CatalogValue.findOneAndUpdate(
-        { attributeSlug: 'color', slug: child.slug },
-        {
-          value: child.value,
-          slug: child.slug,
-          attributeSlug: 'color',
-          parentId: colorParents[child.parent],
-          status: 'approved',
-        },
+        { attributeSlug: 'size', slug: size.slug },
+        { ...size, attributeSlug: 'size', status: 'approved' },
         { upsert: true },
       );
     }
 
-    // 4. Create Synonyms for Colors
-    logger.info('Seeding Synonyms...');
-    const goldId = colorParents['gold'];
-    if (goldId) {
-      const synonyms = ['Golden', 'Gold Finish', 'Golden Yellow'];
-      for (const syn of synonyms) {
-        await CatalogSynonym.findOneAndUpdate(
-          { termSlug: syn.toLowerCase().replace(/[^a-z0-9]+/g, '-') },
-          {
-            valueId: goldId,
-            attributeSlug: 'color',
-            term: syn,
-            termSlug: syn.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            type: 'synonym',
-          },
-          { upsert: true },
-        );
-      }
-    }
-
-    // 5. Create Base Materials
-    logger.info('Seeding Base Materials...');
-    const materials = [
-      { value: 'Wood', slug: 'wood', sortOrder: 1 },
-      { value: 'Fabric', slug: 'fabric', sortOrder: 2 },
-      { value: 'Acrylic', slug: 'acrylic', sortOrder: 3 },
-      { value: 'Brass', slug: 'brass', sortOrder: 4 },
-      { value: 'Coconut Shell', slug: 'coconut-shell', sortOrder: 5 },
-    ];
-
-    for (const mat of materials) {
-      await CatalogValue.findOneAndUpdate(
-        { attributeSlug: 'material', slug: mat.slug },
-        { ...mat, attributeSlug: 'material', status: 'approved' },
-        { upsert: true },
-      );
-    }
-
-    // 6. Create Base Taxonomy Tags
-    logger.info('Seeding Base Tags...');
+    // 3. Product-type tags
+    logger.info('Seeding Product Type Tags...');
     const tags = [
-      { value: 'Wedding', slug: 'wedding', taxonomy: 'Event', sortOrder: 1 },
-      { value: 'Pooja', slug: 'pooja', taxonomy: 'Event', sortOrder: 2 },
-      {
-        value: 'Decorated Coconut',
-        slug: 'decorated-coconut',
-        taxonomy: 'Product Type',
-        sortOrder: 1,
-      },
-      { value: 'Ring Tray', slug: 'ring-tray', taxonomy: 'Product Type', sortOrder: 2 },
+      { value: 'Batter', slug: 'batter', taxonomy: 'Product Type', sortOrder: 1 },
+      { value: 'Pickle', slug: 'pickle', taxonomy: 'Product Type', sortOrder: 2 },
+      { value: 'Podi', slug: 'podi', taxonomy: 'Product Type', sortOrder: 3 },
+      { value: 'Namkeen', slug: 'namkeen', taxonomy: 'Product Type', sortOrder: 4 },
     ];
 
     const tagIds: Record<string, any> = {};
@@ -161,27 +85,24 @@ const seedCatalog = async () => {
       tagIds[tag.slug] = doc._id;
     }
 
-    // 7. Create Synonyms and Search Aliases for Tags
+    // 4. Everyday names customers search with
     logger.info('Seeding Tag Synonyms & Aliases...');
-    const coconutId = tagIds['decorated-coconut'];
-    if (coconutId) {
-      const syns = [
-        { term: 'wedding coconut', type: 'synonym' },
-        { term: 'coconut decor', type: 'synonym' },
-        { term: 'shadi nariyal', type: 'alias' },
-        { term: 'kobbari bondam', type: 'alias' },
-        { term: 'kobbari', type: 'alias' },
-      ];
-      for (const syn of syns) {
+    const aliases: Record<string, { term: string; type: 'synonym' | 'alias' }[]> = {
+      pickle: [
+        { term: 'pachadi', type: 'alias' },
+        { term: 'avakaya', type: 'alias' },
+      ],
+      podi: [{ term: 'karam podi', type: 'alias' }],
+      namkeen: [{ term: 'snacks', type: 'synonym' }],
+    };
+
+    for (const [tagSlug, terms] of Object.entries(aliases)) {
+      const valueId = tagIds[tagSlug];
+      if (!valueId) continue;
+      for (const { term, type } of terms) {
         await CatalogSynonym.findOneAndUpdate(
-          { termSlug: syn.term.toLowerCase().replace(/[^a-z0-9]+/g, '-') },
-          {
-            valueId: coconutId,
-            attributeSlug: 'tag',
-            term: syn.term,
-            termSlug: syn.term.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            type: syn.type,
-          },
+          { termSlug: toSlug(term) },
+          { valueId, attributeSlug: 'tag', term, termSlug: toSlug(term), type },
           { upsert: true },
         );
       }

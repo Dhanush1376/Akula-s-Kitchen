@@ -40,23 +40,11 @@ export class BackupPlanner {
       'products',
       'users',
       'orders',
-      'rentalorders',
-      'customorders',
       'paymentaudits',
       'refundrecords',
       'wallettransactions',
     ];
-    const tier2 = [
-      'categories',
-      'reviews',
-      'events',
-      'eventbookings',
-      'coupons',
-      'galleries',
-      'addresses',
-      'inventoryledgers',
-      'media',
-    ];
+    const tier2 = ['categories', 'reviews', 'coupons', 'addresses', 'inventoryledgers', 'media'];
     const tier3: string[] = [];
 
     try {

@@ -1072,17 +1072,6 @@ export function AdminCustomerDetailDrawer({
                                 <span className="font-mono text-[11px] font-medium text-[var(--admin-text-tertiary)] dark:text-stone-400">
                                   #{o.orderCode || String(orderId).slice(-8).toUpperCase()}
                                 </span>
-                                {o.orderType && o.orderType !== 'purchase' && (
-                                  <span
-                                    className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border shrink-0 ${
-                                      o.orderType === 'rental'
-                                        ? 'bg-indigo-50/80 text-indigo-700 border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800'
-                                        : 'bg-purple-50/80 text-purple-700 border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800'
-                                    }`}
-                                  >
-                                    {o.orderType}
-                                  </span>
-                                )}
                               </div>
                             </div>
                             <AdminStatusPill status={orderStatus} className="shrink-0" />

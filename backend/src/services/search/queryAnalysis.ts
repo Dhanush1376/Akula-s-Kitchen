@@ -1,11 +1,6 @@
 import logger from '../../config/logger';
 import { sanitizePromptInput, validateAIResponse } from '../../utils/security/aiSanitizer';
-import {
-  TRANSLITERATION_MAP,
-  SYNONYM_MAP,
-  CATEGORY_KEYWORDS,
-  EVENT_KNOWLEDGE_GRAPH,
-} from './searchDictionaries';
+import { TRANSLITERATION_MAP, SYNONYM_MAP, CATEGORY_KEYWORDS } from './searchDictionaries';
 import { getSearchCache, setSearchCache } from './searchCache';
 import {
   getSingularForm,
@@ -127,15 +122,6 @@ export function isNormalSearch(query: string): boolean {
     const inCat = Object.values(CATEGORY_KEYWORDS).some(
       (kws) => kws.includes(cleanWord) || kws.includes(singular),
     );
-    const inGraph = Object.values(EVENT_KNOWLEDGE_GRAPH).some(
-      (g) =>
-        g.aliases.includes(cleanWord) ||
-        g.aliases.includes(singular) ||
-        g.teluguAliases.includes(cleanWord) ||
-        g.teluguAliases.includes(singular) ||
-        g.searchTerms.includes(cleanWord) ||
-        g.searchTerms.includes(singular),
-    );
     const isColor = [
       'red',
       'yellow',
@@ -173,7 +159,7 @@ export function isNormalSearch(query: string): boolean {
       'cheap',
     ].includes(singular);
 
-    if (inTrans || inSyn || inCat || inGraph || isColor || isStyle) {
+    if (inTrans || inSyn || inCat || isColor || isStyle) {
       knownWordsCount++;
     } else {
       unknownWordsCount++;
@@ -280,27 +266,12 @@ export function analyzeQueryLocally(query: string): AIAnalysisResult {
 
   // Detect category
   let category: string | null = null;
-  const expandedFromGraph: string[] = [];
 
-  // 1. Check Event Knowledge Graph first
-  for (const [eventName, data] of Object.entries(EVENT_KNOWLEDGE_GRAPH)) {
-    if (
-      data.aliases.some((alias) => normalized.includes(alias)) ||
-      data.teluguAliases.some((alias) => normalized.includes(alias))
-    ) {
-      category = eventName;
-      expandedFromGraph.push(...data.searchTerms, ...data.products.map((p) => p.toLowerCase()));
+  // Check standard Category Keywords
+  for (const [catName, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some((kw) => normalized.includes(kw))) {
+      category = catName;
       break;
-    }
-  }
-
-  // 2. Check standard Category Keywords
-  if (!category) {
-    for (const [catName, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-      if (keywords.some((kw) => normalized.includes(kw))) {
-        category = catName;
-        break;
-      }
     }
   }
 
@@ -357,9 +328,7 @@ export function analyzeQueryLocally(query: string): AIAnalysisResult {
   if (teluguRegex.test(query)) detectedLanguage = 'telugu';
   else if (hindiRegex.test(query)) detectedLanguage = 'hindi';
 
-  const expandedTerms = [
-    ...new Set([...getTransliterationsAndSynonyms(cleanedQuery), ...expandedFromGraph]),
-  ];
+  const expandedTerms = [...new Set(getTransliterationsAndSynonyms(cleanedQuery))];
 
   // Construct dynamic expertResponse and intentSummary local fallbacks
   let intentSummary = 'Custom Search';
@@ -485,7 +454,7 @@ export async function analyzeQueryWithAI(query: string): Promise<AIAnalysisResul
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
         temperature: 0.1,

@@ -8,10 +8,6 @@
 export interface OrderTotalsInput {
   /** Sum of item price × quantity, before any adjustments. */
   subtotal: number;
-  /** @deprecated Discount amount (always 0). */
-  discount?: number;
-  /** Total refundable deposits (rentals); 0 for standard purchases. */
-  depositTotal: number;
   /** Whether this is a Cash-on-Delivery order. */
   isCod: boolean;
   /** COD surcharge from store settings. */
@@ -51,8 +47,6 @@ export interface OrderTotals {
 export const computeOrderTotals = (input: OrderTotalsInput): OrderTotals => {
   const {
     subtotal,
-    discount: _discount,
-    depositTotal,
     isCod,
     codFee: configuredCodFee,
     enableFreeShipping = true,
@@ -74,10 +68,10 @@ export const computeOrderTotals = (input: OrderTotalsInput): OrderTotals => {
   const isFreeShipping = enableFreeShipping && subtotal >= freeShippingThreshold;
   const shippingFee = subtotal === 0 ? 0 : isFreeShipping ? 0 : deliveryCharge;
 
-  // Preliminary payable amount before COD fee (subtotal + addedTax + shipping + deposit + platformFee)
+  // Preliminary payable amount before COD fee (subtotal + addedTax + shipping + platformFee)
   const preliminaryWithoutCod = Math.max(
     0,
-    subtotal + addedTax + shippingFee + depositTotal + resolvedPlatformFee,
+    subtotal + addedTax + shippingFee + resolvedPlatformFee,
   );
 
   // If order is completely free, no cash is collected on delivery, so COD fee is waived

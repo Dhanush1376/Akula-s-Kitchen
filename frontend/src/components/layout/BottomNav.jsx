@@ -6,7 +6,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { prefetchManager } from '../../utils/performance/prefetchManager';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useMemo, useState, useEffect } from 'react';
-import { Home, Store, Heart, ReceiptText, User } from 'lucide-react';
+import { Home, Store, Heart, ReceiptText, User, LogIn } from 'lucide-react';
 
 const ICONS = {
   home: Home,
@@ -14,12 +14,13 @@ const ICONS = {
   heart: Heart,
   receipt_long: ReceiptText,
   person: User,
+  login: LogIn,
 };
 
 export function BottomNav() {
   const location = useLocation();
   const { cartCount, setIsCartOpen, isCartOpen } = useCart();
-  const { isAuthenticated, openAuthModal, user } = useAuth();
+  const { isAuthenticated, openAuthModal, isAuthModalOpen, user } = useAuth();
 
   let wishlistCount = 0;
   try {
@@ -31,7 +32,7 @@ export function BottomNav() {
 
   const userId = user?._id || user?.id;
 
-  const { orders, rentals } = useDashboardData(userId);
+  const { orders } = useDashboardData(userId);
 
   const [orderViewsUpdated, setOrderViewsUpdated] = useState(0);
   useEffect(() => {
@@ -41,7 +42,7 @@ export function BottomNav() {
   }, []);
 
   const hasRecentOrderUpdates = useMemo(() => {
-    const allOrders = [...(orders || []), ...(rentals || [])];
+    const allOrders = orders || [];
     if (!allOrders.length) return false;
 
     const now = Date.now();
@@ -59,7 +60,7 @@ export function BottomNav() {
       return now - lastUpdate < 24 * 60 * 60 * 1000 && lastUpdate > lastViewTime;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders, rentals, orderViewsUpdated]);
+  }, [orders, orderViewsUpdated]);
 
   const navItems = [
     { label: 'Home', icon: 'home', path: '/' },
@@ -80,7 +81,7 @@ export function BottomNav() {
       : { label: 'Orders', icon: 'receipt_long', onClick: openAuthModal },
     isAuthenticated
       ? { label: 'Account', icon: 'person', path: '/dashboard', exact: true }
-      : { label: 'Account', icon: 'person', onClick: openAuthModal },
+      : { label: 'Sign In', icon: 'login', onClick: openAuthModal },
   ];
 
   const isActive = (path, exact) => {
@@ -97,7 +98,7 @@ export function BottomNav() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       aria-label="Primary"
-      className="bottom-nav lg:hidden fixed bottom-2.5 sm:bottom-3 left-3 right-3 max-w-[400px] mx-auto z-[var(--z-overlay)] bg-white/95 backdrop-blur-2xl border border-black/[0.08] rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.1)] px-2 py-1 select-none"
+      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto z-[var(--z-overlay)] bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.12),inset_0_1px_1.5px_rgba(255,255,255,0.95),0_1px_3px_rgba(0,0,0,0.05)] px-2 py-1 select-none"
       style={{
         marginBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
@@ -106,7 +107,9 @@ export function BottomNav() {
         {navItems.map((item) => {
           const active = item.isCart
             ? isCartOpen || location.pathname === '/cart'
-            : isActive(item.path, item.exact);
+            : item.label === 'Sign In' && isAuthModalOpen
+              ? true
+              : isActive(item.path, item.exact);
 
           return (
             <div
@@ -174,8 +177,8 @@ function NavIcon({ active, icon, label, badgeCount, showBadge }) {
       <div
         className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
           active
-            ? 'bg-neutral-100 text-black shadow-2xs'
-            : 'bg-transparent text-neutral-600 group-hover:bg-neutral-100/60 group-hover:text-black'
+            ? 'bg-white/90 text-black shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/80'
+            : 'bg-transparent text-neutral-600 group-hover:bg-white/50 group-hover:text-black'
         }`}
       >
         <Icon

@@ -5,13 +5,14 @@ import toast from 'react-hot-toast';
 import { getErrorMessage } from '../utils/core/errorHelpers';
 import { useAuth } from '../context/AuthContext';
 import { calculateCartSummary } from '../utils/ecommerce/cartCalculations';
+import { GuestCartService } from '../services/GuestCartService';
 import { logCartTrace, forensicHashId } from '../utils/forensic/cartTrace';
 import { useEffect, useRef } from 'react';
 const checkAuthLocal = () => hasSessionMarker();
 
 const emptyCart = {
   items: [],
-  summary: { subtotal: 0, depositTotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
+  summary: { subtotal: 0, total: 0, shippingFee: 0, platformFee: 0 },
 };
 const defaultCart = { purchaseCart: emptyCart };
 
@@ -73,8 +74,11 @@ export function useCartMutations() {
   const cartKey = isAuth ? user?._id || user?.id || 'authenticated' : 'guest';
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity, type }) => {
-      const res = await userService.addToCart(productId, quantity, type || 'purchase');
+    mutationFn: async ({ productId, quantity, selectedOptions, customizationNote }) => {
+      const res = await userService.addToCart(productId, quantity, {
+        selectedOptions,
+        customizationNote,
+      });
       logCartTrace('POST_RESPONSE', {
         cartKey,
         cartData: res.success ? res.data : res,
@@ -82,21 +86,23 @@ export function useCartMutations() {
       });
       return res.success ? res.data : res;
     },
-    onMutate: async ({ product, quantity }) => {
+    onMutate: async ({ product, quantity, selectedOptions, customizationNote }) => {
       logCartTrace('ON_MUTATE_START', { cartKey, source: 'addToCartMutation.onMutate' });
       await queryClient.cancelQueries({ queryKey: ['cart', cartKey] });
       const previousCart = queryClient.getQueryData(['cart', cartKey]);
 
       if (previousCart && product) {
-        const itemType = 'purchase';
         const targetCartKey = 'purchaseCart';
 
         const prevItems = previousCart[targetCartKey]?.items || [];
         const itemKey = product._id || product.id;
 
-        const existingIndex = prevItems.findIndex(
-          (item) => (item.product?._id || item.product?.id || item._id || item.id) === itemKey,
-        );
+        const targetSig = product.configurationSignature || 'default';
+        const existingIndex = prevItems.findIndex((item) => {
+          const itemId = item.product?._id || item.product?.id || item._id || item.id;
+          const itemSig = item.configurationSignature || 'default';
+          return itemId === itemKey && itemSig === targetSig;
+        });
 
         let updatedItems;
         if (existingIndex >= 0) {
@@ -106,21 +112,25 @@ export function useCartMutations() {
             quantity: updatedItems[existingIndex].quantity + (quantity || 1),
           };
         } else {
+          const optItemKey =
+            targetSig && targetSig !== 'default' ? `${itemKey}___${targetSig}` : itemKey;
           updatedItems = [
             ...prevItems,
             {
-              id: itemKey,
-              _id: itemKey,
+              id: optItemKey,
+              _id: optItemKey,
               quantity: quantity || 1,
-              type: itemType,
               product: product,
+              selectedOptions: selectedOptions || product?.selectedOptions || [],
+              customizationNote: customizationNote || product?.customizationNote || '',
+              configurationSignature: targetSig,
+              configuredUnitPrice: product.configuredUnitPrice || product.price,
             },
           ];
         }
 
         const { subtotal, total } = calculateCartSummary(
           updatedItems,
-          itemType,
           previousCart[targetCartKey]?.summary?.shippingFee || 0,
         );
 
@@ -166,6 +176,19 @@ export function useCartMutations() {
       if (context?.previousCart) {
         queryClient.setQueryData(['cart', cartKey], context.previousCart);
       }
+      // If error is Session expired, unauthorized or 401, seamlessly fallback to GuestCart
+      if (
+        err?.message?.includes('Session expired') ||
+        err?.message?.includes('Not authenticated') ||
+        err?.code === 'ERR_NO_SESSION' ||
+        err?.response?.status === 401
+      ) {
+        if (variables?.product) {
+          GuestCartService.addToCart(variables.product, variables.quantity || 1);
+          toast.success('Added to bag');
+          return;
+        }
+      }
       toast.error(getErrorMessage(err, 'Unable to add item to bag'));
     },
     onSettled: async () => {
@@ -179,11 +202,11 @@ export function useCartMutations() {
   });
 
   const removeFromCartMutation = useMutation({
-    mutationFn: async ({ productId }) => {
-      const res = await userService.removeFromCart(productId);
+    mutationFn: async ({ productId, configurationSignature }) => {
+      const res = await userService.removeFromCart(productId, configurationSignature);
       return res.success ? res.data : res;
     },
-    onMutate: async ({ productId }) => {
+    onMutate: async ({ productId, configurationSignature }) => {
       await queryClient.cancelQueries({ queryKey: ['cart', cartKey] });
       const previousCart = queryClient.getQueryData(['cart', cartKey]);
 
@@ -191,13 +214,17 @@ export function useCartMutations() {
         const targetCartKey = 'purchaseCart';
 
         const prevItems = previousCart[targetCartKey]?.items || [];
-        const updatedItems = prevItems.filter(
-          (item) => (item.product?._id || item.product?.id || item._id || item.id) !== productId,
-        );
+        const updatedItems = prevItems.filter((item) => {
+          const id = item.product?._id || item.product?.id || item._id || item.id;
+          if (configurationSignature) {
+            const sig = item.configurationSignature || 'default';
+            return !(id === productId && sig === configurationSignature);
+          }
+          return id !== productId;
+        });
 
         const { subtotal, total } = calculateCartSummary(
           updatedItems,
-          'purchase',
           previousCart[targetCartKey]?.summary?.shippingFee || 0,
         );
 

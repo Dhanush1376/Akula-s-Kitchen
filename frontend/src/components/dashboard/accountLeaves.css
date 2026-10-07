@@ -1,0 +1,269 @@
+/* ─── Banana leaves rising from the bottom corners of the account pages ─── */
+.acct-leaves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  height: 320px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Invisible strip the small falling pieces start from */
+.acct-leaves__canopy {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  width: 84%;
+  height: 45%;
+}
+
+/* In front of the big leaves: these drift down from the canopy above */
+.fl-layer.acct-leaves__fall {
+  z-index: 3;
+}
+
+/* Both leaves are cut from the same corner frame, so they keep its 919:683 size ratio.
+   They sit a little past the screen edges so their cut bases stay hidden as they sway. */
+.acct-leaf {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.acct-leaf--left {
+  left: -4%;
+  bottom: -5%;
+  width: min(62vw, 340px);
+  animation: acct-leaf-in-left 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.acct-leaf--right {
+  right: -4%;
+  bottom: -4%;
+  width: min(57vw, 312px);
+  animation: acct-leaf-in-right 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+/* Rising in, swaying and gusts all pivot where each stem enters the frame */
+.acct-leaf--left,
+.acct-leaf--left .acct-leaf__sway {
+  transform-origin: 0% 45%;
+}
+
+.acct-leaf--right,
+.acct-leaf--right .acct-leaf__sway {
+  transform-origin: 90% 100%;
+}
+
+.acct-leaf__sway {
+  position: relative;
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.acct-leaf__img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  /* Tight contact shadow that crisps the edge; the cast shadow below adds the depth */
+  filter: drop-shadow(0 1px 1.5px rgba(28, 40, 14, 0.22));
+}
+
+/* Shadow on the page behind each leaf. These leaves sit in the bottom corners, so a
+   shadow thrown down and to the side would vanish off screen; instead it leans slightly
+   towards the middle of the page, where it shows as a thin line of shade along the leaf's
+   upper edge. Same tint as the shop and wishlist leaves. */
+.acct-leaf__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  /* kept thin: a soft line of shade along the edge, not a halo */
+  filter: brightness(0.25) saturate(0.6) blur(6px);
+  opacity: 0.22;
+}
+
+.acct-leaf--left .acct-leaf__shadow {
+  translate: 6px -3px;
+}
+
+.acct-leaf--right .acct-leaf__shadow {
+  translate: -6px -3px;
+}
+
+/* Each leaf rises out of its corner, overshoots a touch and settles */
+@keyframes acct-leaf-in-left {
+  0% {
+    opacity: 0;
+    translate: -18% 40%;
+    rotate: 14deg;
+  }
+
+  60% {
+    opacity: 1;
+    translate: 0.5% -1.5%;
+    rotate: -2deg;
+  }
+
+  80% {
+    translate: 0 0.5%;
+    rotate: 0.6deg;
+  }
+
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+
+@keyframes acct-leaf-in-right {
+  0% {
+    opacity: 0;
+    translate: 18% 40%;
+    rotate: -14deg;
+  }
+
+  60% {
+    opacity: 1;
+    translate: -0.5% -1.5%;
+    rotate: 2deg;
+  }
+
+  80% {
+    translate: 0 0.5%;
+    rotate: -0.6deg;
+  }
+
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+
+@media (min-width: 768px) {
+  .acct-leaves {
+    height: 400px;
+  }
+
+  .acct-leaf--left {
+    left: -3%;
+    bottom: -12%;
+    width: min(30vw, 400px);
+  }
+
+  .acct-leaf--right {
+    right: -3%;
+    bottom: -10%;
+    width: min(28vw, 372px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acct-leaf {
+    animation: none;
+  }
+}
+
+/* ─── One leaf drooping in from the top-right corner ─── */
+.acct-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  height: 460px;
+  overflow: hidden;
+  pointer-events: none;
+  /* Fade in from the top so the leaf's cut edge, behind the glass header, never shows */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 64px, #000 170px);
+  mask-image: linear-gradient(to bottom, transparent 64px, #000 170px);
+}
+/* The corner frame's right leaf, flipped vertically: its stem now sits at the top-right
+   corner and the blade hangs down and to the left, while its cut edges run along the top
+   (faded out behind the header) and the right (off screen) */
+.acct-top-leaf {
+  position: absolute;
+  top: 30px;
+  /* far enough right to keep the "Need Help?" link clear */
+  right: -12%;
+  width: min(62vw, 300px);
+  transform: scaleY(-1);
+  animation: acct-top-leaf-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+/* Coordinates here are the image's own, before the flip: the stem is at its bottom right */
+.acct-top-leaf__sway {
+  position: relative;
+  pointer-events: auto;
+  cursor: pointer;
+  transform-origin: 90% 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.acct-top-leaf__img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  filter: drop-shadow(0 -1px 1.5px rgba(28, 40, 14, 0.22));
+}
+/* Thin shade like the other leaves; the vertical offset is flipped with the leaf so it
+   still falls down and to the right on screen */
+.acct-top-leaf__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  translate: 6px -10px;
+  filter: brightness(0.25) saturate(0.6) blur(6px);
+  opacity: 0.22;
+}
+@keyframes acct-top-leaf-in {
+  0% {
+    opacity: 0;
+    translate: 22% -35%;
+    rotate: -12deg;
+  }
+  60% {
+    opacity: 1;
+    translate: -0.5% 1.5%;
+    rotate: 2deg;
+  }
+  80% {
+    translate: 0 -0.5%;
+    rotate: -0.6deg;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+@media (min-width: 768px) {
+  .acct-top-leaf {
+    top: 30px;
+    right: -3%;
+    width: min(24vw, 340px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acct-top-leaf {
+    animation: none;
+  }
+}

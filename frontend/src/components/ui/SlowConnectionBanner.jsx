@@ -24,7 +24,7 @@ export function SlowConnectionBanner() {
         duration: 2500,
       });
     } else if (networkState === 'reconnecting') {
-      toast.loading('Reconnecting to the studio…', {
+      toast.loading('Reconnecting…', {
         id: 'network-toast',
         duration: 2000,
       });

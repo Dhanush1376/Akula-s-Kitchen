@@ -52,25 +52,25 @@ export function ContactInfoEditor({ content, onUpdate }) {
         </div>
       </div>
 
-      {/* 2. Studio Physical Address & Maps */}
+      {/* 2. Kitchen Address & Maps */}
       <div className="p-6 md:p-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6">
           <span className="material-symbols-outlined text-[150px]">location_on</span>
         </div>
         <div className="relative z-10 space-y-6">
           <span className="text-[14px] sm:text-[15px] font-semibold text-[var(--admin-text-primary)] tracking-tight block border-b border-[var(--admin-border-subtle)] pb-3 mb-6">
-            2. Studio Physical Address & Maps Navigation
+            2. Kitchen Address & Maps Navigation
           </span>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <AdminField
-              label="Studio Physical Address"
+              label="Kitchen Address"
               description="Location rendered on footer & contact pages"
             >
               <AdminInput
                 value={c.address || BRAND.address || ''}
                 onChange={(e) => onUpdate('contact', { address: e.target.value })}
-                placeholder="e.g. Studio Address, City, State"
+                placeholder="e.g. Street, City, State"
                 className="w-full !py-3 !text-[13px] bg-[var(--admin-surface-muted)] hover:bg-[var(--admin-surface)] rounded-md shadow-[var(--admin-shadow-xs)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] transition-colors"
               />
             </AdminField>
@@ -92,14 +92,14 @@ export function ContactInfoEditor({ content, onUpdate }) {
         </div>
       </div>
 
-      {/* 3. Studio Business Hours */}
+      {/* 3. Kitchen Opening Hours */}
       <div className="p-6 md:p-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6">
           <span className="material-symbols-outlined text-[150px]">schedule</span>
         </div>
         <div className="relative z-10 space-y-6">
           <span className="text-[14px] sm:text-[15px] font-semibold text-[var(--admin-text-primary)] tracking-tight block border-b border-[var(--admin-border-subtle)] pb-3 mb-6">
-            3. Studio Operating Schedule
+            3. Kitchen Opening Hours
           </span>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

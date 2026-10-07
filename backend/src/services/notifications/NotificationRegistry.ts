@@ -132,28 +132,6 @@ class Registry {
       ],
     });
 
-    // --- BOOKING EVENTS ---
-    this.register({
-      event: NotificationEvent.BOOKING_CREATED,
-      category: 'booking',
-      recipients: [
-        {
-          role: RecipientRole.CUSTOMER,
-          channels: [
-            { channel: NotificationChannel.EMAIL, enabled: true, priority: 'high' },
-            { channel: NotificationChannel.IN_APP, enabled: true },
-          ],
-        },
-        {
-          role: RecipientRole.ADMIN,
-          channels: [
-            { channel: NotificationChannel.EMAIL, enabled: true, priority: 'high' },
-            { channel: NotificationChannel.SLACK, enabled: true },
-          ],
-        },
-      ],
-    });
-
     // --- SYSTEM ALERTS ---
     this.register({
       event: NotificationEvent.DATABASE_ERROR,

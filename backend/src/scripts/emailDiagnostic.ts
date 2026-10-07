@@ -45,7 +45,7 @@ async function main() {
   const Inquiry = require('../models/Inquiry').default;
   const inquiry = await Inquiry.create({
     name: 'Email Diagnostic Test',
-    email: process.env.DIAGNOSTIC_TEST_EMAIL || process.env.ADMIN_EMAIL || 'test@example.com',
+    email: process.env.DIAGNOSTIC_TEST_EMAIL || process.env.ADMIN_EMAIL || 'support@akulas.kitchen',
     subject: `Diagnostic Test ${TRACE_MARKER}`,
     message: `This is an automated diagnostic test to trace the transactional email pipeline. Marker: ${TRACE_MARKER}`,
     phone: '',
@@ -104,7 +104,7 @@ async function main() {
   const { getOtpEmailTemplate } = require('../utils/email/emailTemplates');
 
   const testRecipient =
-    process.env.DIAGNOSTIC_TEST_EMAIL || process.env.ADMIN_EMAIL || 'test@example.com';
+    process.env.DIAGNOSTIC_TEST_EMAIL || process.env.ADMIN_EMAIL || 'support@akulas.kitchen';
 
   sendDirectEmail({
     email: testRecipient,

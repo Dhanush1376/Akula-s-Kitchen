@@ -8,7 +8,7 @@ import ForensicAuditPlugin from '../utils/ForensicAuditPlugin';
  * Replaces simple mutable state with an immutable, append-only double-entry ledger.
  *
  * Accounts:
- * - AVAILABLE: Stock ready to be sold/rented
+ * - AVAILABLE: Stock ready to be sold
  * - RESERVED: Stock temporarily held for a pending order
  * - SOLD: Stock permanently deducted for a completed order
  * - SUPPLIER: Source of new stock (restocks)
@@ -18,7 +18,7 @@ import ForensicAuditPlugin from '../utils/ForensicAuditPlugin';
 export interface IInventoryLedger extends ISoftDeleted {
   product: mongoose.Types.ObjectId;
   referenceId: string; // OrderId or ReservationId
-  referenceType: 'Order' | 'RentalOrder' | 'EventJob' | 'Manual';
+  referenceType: 'Order' | 'Manual';
   type: 'reservation' | 'confirmation' | 'cancellation' | 'restock' | 'shrinkage' | 'refund';
   quantity: number;
   fromAccount: 'AVAILABLE' | 'RESERVED' | 'SOLD' | 'SUPPLIER' | 'SHRINKAGE';

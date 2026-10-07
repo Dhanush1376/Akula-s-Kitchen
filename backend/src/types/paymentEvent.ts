@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 export interface IPaymentEvent extends mongoose.Document {
   eventId: string;
   orderId: mongoose.Types.ObjectId;
-  orderType: 'purchase' | 'rental' | 'custom';
+  orderType: 'purchase';
   eventType:
     | 'initiated'
     | 'processing'

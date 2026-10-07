@@ -2,7 +2,7 @@ import { SequenceGeneratorService } from './SequenceGeneratorService';
 import storeSettingsService from './StoreSettingsService';
 import logger from '../config/logger';
 import type { IOrderInvoice, IOrderStoreSnapshot, IOrderTaxSnapshot } from '../types/invoice';
-import { TaxEngine, type TaxCalculationResult } from './taxes/TaxEngine';
+import type { TaxCalculationResult } from './taxes/TaxEngine';
 
 /**
  * Enterprise InvoiceService
@@ -112,67 +112,22 @@ export class InvoiceService {
   ): IOrderTaxSnapshot {
     const { subtotal, discount, total } = orderTotals;
 
-    // Check if taxData is already a TaxCalculationResult from TaxEngine
-    if (
-      taxData &&
-      typeof taxData.taxAmount === 'number' &&
-      typeof taxData.taxableAmount === 'number'
-    ) {
-      const res = taxData as TaxCalculationResult;
-      return {
-        subtotal,
-        discount,
-        taxableAmount: res.taxableAmount,
-        totalTax: res.taxAmount,
-        taxAmount: res.taxAmount,
-        cgst: res.cgst,
-        sgst: res.sgst,
-        igst: res.igst,
-        grandTotal: total,
-        gstEnabled: res.gstEnabled,
-        taxInclusive: res.taxInclusive,
-        gstRate: res.gstRate,
-        cgstRate: res.cgstRate,
-        sgstRate: res.sgstRate,
-        isInterState: res.isInterState,
-        hsnCode: invoicingMeta?.hsnCode || settings?.taxes?.hsnCode || '',
-        invoiceFooter: invoicingMeta?.invoiceFooter || settings?.taxes?.invoiceFooter || '',
-        currency: 'INR',
-        currencySymbol: '₹',
-      };
-    }
-
-    // Fallback: derive using TaxEngine with store/customer context
-    const fallbackResult = TaxEngine.calculateTax({
-      subtotal,
-      discount,
-      storeState: settings?.contact?.state || 'AP',
-      customerState: settings?.contact?.state || 'AP',
-      taxConfig: {
-        gstEnabled: taxData?.gstEnabled ?? settings?.taxes?.gstEnabled ?? true,
-        taxInclusive: taxData?.taxInclusive ?? settings?.taxes?.taxInclusive ?? true,
-        gstRate: taxData?.gstRate ?? taxData?.taxRate ?? settings?.taxes?.gstRate ?? 0.18,
-        cgstRate: taxData?.cgstRate ?? settings?.taxes?.cgstRate ?? 0.09,
-        sgstRate: taxData?.sgstRate ?? settings?.taxes?.sgstRate ?? 0.09,
-      },
-    });
-
     return {
       subtotal,
       discount,
-      taxableAmount: fallbackResult.taxableAmount,
-      totalTax: fallbackResult.taxAmount,
-      taxAmount: fallbackResult.taxAmount,
-      cgst: fallbackResult.cgst,
-      sgst: fallbackResult.sgst,
-      igst: fallbackResult.igst,
+      taxableAmount: subtotal,
+      totalTax: 0,
+      taxAmount: 0,
+      cgst: 0,
+      sgst: 0,
+      igst: 0,
       grandTotal: total,
-      gstEnabled: fallbackResult.gstEnabled,
-      taxInclusive: fallbackResult.taxInclusive,
-      gstRate: fallbackResult.gstRate,
-      cgstRate: fallbackResult.cgstRate,
-      sgstRate: fallbackResult.sgstRate,
-      isInterState: fallbackResult.isInterState,
+      gstEnabled: false,
+      taxInclusive: false,
+      gstRate: 0,
+      cgstRate: 0,
+      sgstRate: 0,
+      isInterState: Boolean(taxData?.isInterState),
       hsnCode: invoicingMeta?.hsnCode || settings?.taxes?.hsnCode || '',
       invoiceFooter: invoicingMeta?.invoiceFooter || settings?.taxes?.invoiceFooter || '',
       currency: 'INR',

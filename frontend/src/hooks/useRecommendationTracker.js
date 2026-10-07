@@ -66,7 +66,7 @@ export function useRecommendationTracker({
     (eventType, tType, tId, metadata = {}) => {
       if (!tType || !tId) return;
       const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(tId);
-      const isValidTargetType = ['product', 'event', 'showcase'].includes(tType);
+      const isValidTargetType = ['product'].includes(tType);
       if (!isValidTargetType || !isValidObjectId) return;
 
       batchBufferRef.current.push({
@@ -92,7 +92,7 @@ export function useRecommendationTracker({
     (eventType, tType, tId, metadata = {}) => {
       if (!tType || !tId) return;
       const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(tId);
-      const isValidTargetType = ['product', 'event', 'showcase'].includes(tType);
+      const isValidTargetType = ['product'].includes(tType);
       if (!isValidTargetType || !isValidObjectId) return;
 
       recommendationService.trackEvent(eventType, tType, tId, {
@@ -135,7 +135,7 @@ export function useRecommendationTracker({
   useEffect(() => {
     if (!targetType || !targetId) return;
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(targetId);
-    const isValidTargetType = ['product', 'event', 'showcase'].includes(targetType);
+    const isValidTargetType = ['product'].includes(targetType);
     if (!isValidTargetType || !isValidObjectId) return;
 
     // Prevent duplicate tracking for the same item
@@ -201,7 +201,7 @@ export function useRecommendationTracker({
     return () => {
       if (!targetType || !targetId) return;
       const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(targetId);
-      const isValidTargetType = ['product', 'event', 'showcase'].includes(targetType);
+      const isValidTargetType = ['product'].includes(targetType);
       if (!isValidTargetType || !isValidObjectId) return;
 
       if (!mountTimeRef.current) return;

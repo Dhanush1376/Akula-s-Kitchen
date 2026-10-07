@@ -34,16 +34,14 @@ export function SearchSuggestionsList({
   const groupedSuggestions = useMemo(() => {
     const groups = [
       { id: 'categories', label: 'Categories', items: [] },
-      { id: 'collections', label: 'Collections & Events', items: [] },
       { id: 'products', label: 'Products', items: [] },
       { id: 'others', label: 'Suggestions', items: [] },
     ];
 
     displaySuggestions.forEach((item) => {
       if (item.type === 'category') groups[0].items.push(item);
-      else if (item.type === 'event') groups[1].items.push(item);
-      else if (item.type === 'product') groups[2].items.push(item);
-      else groups[3].items.push(item);
+      else if (item.type === 'product') groups[1].items.push(item);
+      else groups[2].items.push(item);
     });
 
     return groups.filter((g) => g.items.length > 0);
@@ -306,7 +304,7 @@ export function SearchSuggestionsList({
             }`}
           >
             We couldn't find anything matching your search. Try checking for typos, using broader
-            terms, or explore our curated collections.
+            terms, or browse the shop.
           </p>
           {isMobile && (
             <button

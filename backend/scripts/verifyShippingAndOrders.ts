@@ -232,8 +232,6 @@ async function run() {
   // Base delivery charge: 100, Threshold: 2000
   const mathBase = {
     subtotal: 1000,
-    discount: 0,
-    depositTotal: 0,
     isCod: false,
     codFee: 50,
     enableFreeShipping: true,
@@ -345,18 +343,17 @@ async function run() {
     comb5.total === 1130 - 500,
   );
 
-  // 6. Rental deposit + Platform fee
+  // 6. Platform fee on top of shipping
   const comb6 = computeOrderTotals({
     ...mathBase,
     subtotal: 1000,
-    depositTotal: 400,
     platformFee: 30,
   });
   record(
-    'Combination: rental deposit(400) + platformFee(30)',
-    1530,
+    'Combination: shipping(100) + platformFee(30)',
+    1130,
     comb6.total,
-    comb6.total === 1000 + 100 + 400 + 30,
+    comb6.total === 1000 + 100 + 30,
   );
 
   console.log('\n--- [3] ORDER LIMITS & BOUNDARY ENFORCEMENT ---');

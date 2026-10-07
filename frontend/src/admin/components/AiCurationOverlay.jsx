@@ -185,33 +185,19 @@ export function AiCurationOverlay({
                 </div>
               </div>
 
-              {/* Title Section (English & Telugu) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Title Section */}
+              <div>
                 {/* English Title */}
                 <div className="p-3 sm:p-3.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] space-y-1.5">
                   <span className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block">
-                    English Title
+                    Product Title
                   </span>
                   <input
                     type="text"
                     value={aiAnalysisResult.english_title || ''}
                     onChange={(e) => updateField('english_title', e.target.value)}
-                    placeholder="Product Title in English"
+                    placeholder="Product Title"
                     className="w-full bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] px-3 py-1.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] focus:border-[var(--admin-accent)] focus:bg-[var(--admin-surface)] outline-none transition-all"
-                  />
-                </div>
-
-                {/* Telugu Title */}
-                <div className="p-3 sm:p-3.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] space-y-1.5">
-                  <span className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block">
-                    Telugu Title (తెలుగు)
-                  </span>
-                  <input
-                    type="text"
-                    value={aiAnalysisResult.telugu_title || ''}
-                    onChange={(e) => updateField('telugu_title', e.target.value)}
-                    placeholder="తెలుగు శీర్షిక"
-                    className="w-full bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] px-3 py-1.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] TeluguScript focus:border-[var(--admin-accent)] focus:bg-[var(--admin-surface)] outline-none transition-all"
                   />
                 </div>
               </div>
@@ -367,7 +353,7 @@ export function AiCurationOverlay({
                           setMaterialInput('');
                         }
                       }}
-                      placeholder="+ Add material"
+                      placeholder="+ Add ingredient"
                       className="w-28 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] px-2 py-0.5 text-[11px] text-[var(--admin-text-primary)] focus:border-[var(--admin-accent)] outline-none"
                     />
                     {materialInput.trim() && (
@@ -401,76 +387,6 @@ export function AiCurationOverlay({
                   placeholder="Customer note / care instructions..."
                   className="w-full min-h-[96px] bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] p-3 text-[12px] text-[var(--admin-text-primary)] leading-relaxed focus:border-[var(--admin-accent)] focus:bg-[var(--admin-surface)] outline-none transition-all resize-y custom-scrollbar"
                 />
-              </div>
-
-              {/* Personalization Section */}
-              <div className="p-3 sm:p-3.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="material-symbols-outlined text-[16px] text-[var(--admin-accent)] shrink-0">
-                      tune
-                    </span>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--admin-text-primary)] truncate">
-                      Customization / Personalization
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={Boolean(aiAnalysisResult.personalization_enabled)}
-                    onClick={() =>
-                      updateField(
-                        'personalization_enabled',
-                        !aiAnalysisResult.personalization_enabled,
-                      )
-                    }
-                    className={`w-11 h-6 rounded-full transition-colors duration-200 relative focus:outline-none cursor-pointer min-h-0 p-0 shrink-0 ${
-                      aiAnalysisResult.personalization_enabled
-                        ? 'bg-[var(--admin-accent)]'
-                        : 'bg-[var(--admin-border-strong)]'
-                    }`}
-                    title={
-                      aiAnalysisResult.personalization_enabled
-                        ? 'Disable Personalization'
-                        : 'Enable Personalization'
-                    }
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-[var(--admin-surface)] rounded-full transition-transform duration-200 shadow-sm ${
-                        aiAnalysisResult.personalization_enabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {aiAnalysisResult.personalization_enabled && (
-                  <div className="space-y-2.5 pt-2.5 border-t border-[var(--admin-border-subtle)]">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-[var(--admin-text-secondary)] block mb-1">
-                        Field Label
-                      </span>
-                      <input
-                        type="text"
-                        value={aiAnalysisResult.personalization_label || ''}
-                        onChange={(e) => updateField('personalization_label', e.target.value)}
-                        placeholder="e.g. Customization Details"
-                        className="w-full bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] px-3 py-1.5 text-[12px] font-medium text-[var(--admin-text-primary)] focus:border-[var(--admin-accent)] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-[var(--admin-text-secondary)] block mb-1">
-                        Placeholder Instructions
-                      </span>
-                      <textarea
-                        rows={3}
-                        value={aiAnalysisResult.personalization_placeholder || ''}
-                        onChange={(e) => updateField('personalization_placeholder', e.target.value)}
-                        placeholder="Instructions for customer..."
-                        className="w-full min-h-[64px] bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] p-2.5 text-[11.5px] text-[var(--admin-text-primary)] focus:border-[var(--admin-accent)] outline-none resize-y leading-relaxed"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* SEO Collections & Search Tags */}

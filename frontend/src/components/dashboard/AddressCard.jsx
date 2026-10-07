@@ -11,14 +11,12 @@ export function AddressCard({ addr }) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
-      className={`bg-surface-bright border rounded-lg overflow-hidden shadow-2xs hover:shadow-sm transition-all text-left flex flex-col justify-between text-[11px] relative font-body ${
-        addr.isDefault
-          ? 'border-outline-variant/30 ring-1 ring-primary/10'
-          : 'border-outline-variant/20'
+      className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:border-neutral-300 hover:shadow-sm transition-all text-left flex flex-col justify-between text-[11px] relative font-body ${
+        addr.isDefault ? 'border-[#283618]/30 ring-1 ring-[#283618]/15' : 'border-neutral-200'
       }`}
     >
       {/* Card Header Strip */}
-      <div className="bg-surface-container-low px-4 py-3 flex items-center justify-between border-b border-outline-variant/15">
+      <div className="bg-neutral-50/50 backdrop-blur-xs px-4 py-3 flex items-center justify-between border-b border-neutral-200">
         <div className="flex items-center gap-2">
           <svg
             className="w-4 h-4 text-primary shrink-0"

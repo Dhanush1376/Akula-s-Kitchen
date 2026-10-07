@@ -20,20 +20,12 @@ export class UserWishlistService {
 
     const wishlistArray = user.wishlist || [];
 
-    const [products, showcases] = await Promise.all([
-      Product.find({ _id: { $in: wishlistArray } })
-        .select(
-          'name title price oldPrice strikingPrice rentalPrice imageSrc images primaryCategory isAvailable quantity availableQuantity slug',
-        )
-        .populate('primaryCategory', 'name')
-        .lean(),
-      require('../../models/ShowcaseCollection')
-        .default.find({ _id: { $in: wishlistArray } })
-        .select(
-          'title subtitle category rentalPrice description image gallery inclusions colorPalette setupTimeHours popularityScore isActive',
-        )
-        .lean(),
-    ]);
+    const products = await Product.find({ _id: { $in: wishlistArray } })
+      .select(
+        'name title price oldPrice strikingPrice imageSrc images primaryCategory isAvailable quantity availableQuantity slug',
+      )
+      .populate('primaryCategory', 'name')
+      .lean();
 
     const itemMap = new Map<string, any>();
     products.forEach((p: any) => {
@@ -41,12 +33,6 @@ export class UserWishlistService {
         ...p,
         itemType: 'product',
         category: p.primaryCategory?.name || 'General',
-      });
-    });
-    showcases.forEach((s: any) => {
-      itemMap.set(s._id.toString(), {
-        ...s,
-        itemType: 'event',
       });
     });
 

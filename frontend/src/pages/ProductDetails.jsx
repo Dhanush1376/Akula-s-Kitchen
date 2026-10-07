@@ -51,6 +51,7 @@ export function ProductDetails() {
     error,
   } = useProduct(id, {
     initialData: initialProduct,
+    initialDataUpdatedAt: 0,
   });
 
   // Track product view, dwell time, and scroll depth
@@ -92,7 +93,7 @@ export function ProductDetails() {
   useEffect(() => {
     if (product && user) {
       userService.trackRecentlyViewed(product._id || product.id || id).catch((err) => {
-        logger.error('Failed to track recently viewed masterpiece:', err);
+        logger.error('Failed to track recently viewed product:', err);
       });
     }
   }, [product, user, id]);

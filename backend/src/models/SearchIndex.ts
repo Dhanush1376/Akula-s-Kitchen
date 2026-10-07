@@ -2,7 +2,7 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface ISearchIndex extends Document {
   entityId: Types.ObjectId;
-  entityType: 'Product' | 'Event' | 'Gallery';
+  entityType: 'Product';
   title: string;
   slug?: string;
   image?: string;
@@ -29,7 +29,7 @@ export interface ISearchIndex extends Document {
 const SearchIndexSchema = new Schema<ISearchIndex>(
   {
     entityId: { type: Schema.Types.ObjectId, required: true, refPath: 'entityType' },
-    entityType: { type: String, required: true, enum: ['Product', 'Event', 'Gallery'] },
+    entityType: { type: String, required: true, enum: ['Product'] },
     title: { type: String, required: true },
     slug: { type: String },
     image: { type: String },

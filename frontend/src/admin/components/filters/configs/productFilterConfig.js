@@ -97,7 +97,7 @@ export const productFilterConfig = {
       defaultValue: { min: '', max: '' },
       isDefault: (val) => !val || (val.min === '' && val.max === ''),
       predicate: (p, val) => {
-        const price = Number(p.price ?? p.rentalPrice ?? 0);
+        const price = Number(p.price ?? 0);
         if (val.min !== '' && price < Number(val.min)) return false;
         if (val.max !== '' && price > Number(val.max)) return false;
         return true;
@@ -127,24 +127,6 @@ export const productFilterConfig = {
         if (val === 'missing_images') return 'Media: Missing Photos';
         if (val === 'has_images') return 'Media: Has Photos';
         return null;
-      },
-    },
-
-    // 7. Product Rental Availability (Rental vs Sale Only)
-    type: {
-      label: 'Rental Option',
-      defaultValue: 'All',
-      isDefault: (val) => val === 'All' || !val,
-      predicate: (p, val) => {
-        if (val === 'rental') return p.rawProduct?.rentalEnabled === true || p.isRental === true;
-        if (val === 'sale_only' || val === 'non_rental')
-          return !p.rawProduct?.rentalEnabled && !p.isRental;
-        return true;
-      },
-      getChipLabel: (val) => {
-        if (val === 'rental') return 'Rental Available';
-        if (val === 'sale_only' || val === 'non_rental') return 'Sale Only (Non-Rental)';
-        return `Type: ${val}`;
       },
     },
   },

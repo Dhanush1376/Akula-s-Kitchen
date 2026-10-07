@@ -19,7 +19,6 @@ import toast from 'react-hot-toast';
 import { logRenderMetrics } from '../../../utils/performance/profilerLogger';
 import { useCart } from '../../../context/CartContext';
 import { useWishlist } from '../../../context/WishlistContext';
-import { cmsService } from '../../../services/domainServices';
 import { useAuth } from '../../../context/AuthContext';
 import { useRecommendationTracker } from '../../../hooks/useRecommendationTracker';
 import { useUserAddresses, useAddressMutations } from '../../../hooks/useUserQueries';
@@ -31,7 +30,6 @@ import { CartItemRow } from '../CartItemRow';
 
 // Subcomponents
 import { CartEmptyState } from './CartEmptyState';
-import { CartModeSelector } from './CartModeSelector';
 import { CartSummary } from './CartSummary';
 import { CartAddressBar } from './CartAddressBar';
 
@@ -42,23 +40,11 @@ const RecommendationSystem = React.lazy(() =>
 );
 
 export function CartView({ isEmbedded = false }) {
-  const {
-    items,
-    removeItem,
-    updateQuantity,
-    cartCount,
-    summary,
-    totalMRP,
-    loading,
-    activeCartMode,
-    setActiveCartMode,
-    purchaseCartCount,
-    rentalCartCount,
-    customCartCount,
-  } = useCart();
+  const { items, removeItem, updateQuantity, cartCount, summary, totalMRP, loading } = useCart();
   const { addItem: addToWishlist } = useWishlist();
   const { runProtectedAction, isAuthenticated, user } = useAuth();
-  const { isStoreClosed, orderLimits, shippingSettings } = useConfig();
+  const { isStoreClosed, orderLimits, shippingSettings, storeSettings, estimatedDeliveryDays } =
+    useConfig();
   const maxItemsPerOrder = orderLimits?.maxItemsPerOrder ?? 20;
   const maxQuantityPerItem = orderLimits?.maxQuantityPerItem ?? 50;
   const minOrderValue = orderLimits?.minOrderValue ?? 0;
@@ -82,15 +68,7 @@ export function CartView({ isEmbedded = false }) {
     source: 'cart',
   });
 
-  const { data: settingsData, isLoading: settingsLoading } = useQuery({
-    queryKey: ['cms', 'section', 'storeSettings'],
-    queryFn: async () => {
-      const res = await cmsService.getSection('storeSettings');
-      return res.success ? res.data : res;
-    },
-    staleTime: 10 * 60 * 1000,
-  });
-  const settings = settingsData || {};
+  const settings = storeSettings || {};
 
   useEffect(() => {
     try {
@@ -105,11 +83,6 @@ export function CartView({ isEmbedded = false }) {
 
   const actualSubtotal = summary?.subtotal || 0;
   const discountOnMRP = Math.max(0, (totalMRP || 0) - actualSubtotal);
-
-  const depositTotal =
-    activeCartMode === 'rental'
-      ? items.reduce((acc, item) => acc + (item.deposit || 0) * item.quantity, 0)
-      : 0;
 
   const freeShippingThreshold = shippingSettings?.freeShippingThreshold ?? 2000;
   const enableFreeShipping = shippingSettings?.enableFreeShipping ?? true;
@@ -133,7 +106,7 @@ export function CartView({ isEmbedded = false }) {
         : 0;
   const platformFee = items.length > 0 ? Math.max(0, configuredPlatformFee) : 0;
 
-  const basePayableAmount = actualSubtotal + platformFee + shippingFee + depositTotal;
+  const basePayableAmount = actualSubtotal + platformFee + shippingFee;
 
   const finalPayableAmount = items.length > 0 ? basePayableAmount : 0;
 
@@ -238,16 +211,7 @@ export function CartView({ isEmbedded = false }) {
     setIsClearCartDialogOpen(false);
   };
 
-  const deliveryTimelineDays = settings.deliveryTimelineDays || 5;
-  const deliveryDateObj = new Date();
-  deliveryDateObj.setDate(deliveryDateObj.getDate() + deliveryTimelineDays);
-  const deliveryDateStr = deliveryDateObj.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    weekday: 'short',
-  });
-
-  if (settingsLoading || (loading && items.length === 0)) {
+  if (loading && items.length === 0) {
     return <CartSkeleton />;
   }
 
@@ -319,29 +283,13 @@ export function CartView({ isEmbedded = false }) {
         />
       )}
 
-      <CartModeSelector
-        activeCartMode={activeCartMode}
-        setActiveCartMode={setActiveCartMode}
-        purchaseCartCount={purchaseCartCount}
-        rentalCartCount={rentalCartCount}
-        customCartCount={customCartCount}
-      />
-
       <div className="mb-3 lg:mb-4">
-        <CheckoutSteps
-          steps={
-            activeCartMode === 'rental'
-              ? ['BAG', 'DURATION', 'ADDRESS', 'VERIFY', 'PAYMENT']
-              : ['BAG', 'ADDRESS', 'PAYMENT']
-          }
-          currentStep={0}
-          orderType={activeCartMode}
-        />
+        <CheckoutSteps steps={['BAG', 'ADDRESS', 'PAYMENT']} currentStep={0} />
       </div>
 
       <div className="max-w-[1240px] mx-auto px-3 sm:px-6">
         {items.length === 0 ? (
-          <CartEmptyState activeCartMode={activeCartMode} />
+          <CartEmptyState />
         ) : (
           <>
             {/* Page Header */}
@@ -440,9 +388,7 @@ export function CartView({ isEmbedded = false }) {
                         <CartItemRow
                           key={uniqueKey}
                           item={item}
-                          activeCartMode={activeCartMode}
                           settings={settings}
-                          deliveryDateStr={deliveryDateStr}
                           removeItem={removeItem}
                           updateQuantity={updateQuantity}
                           handleMoveToWishlist={handleMoveToWishlist}
@@ -456,12 +402,21 @@ export function CartView({ isEmbedded = false }) {
                 <div className="mt-2 lg:mt-6">
                   <React.Suspense fallback={<Skeleton className="h-52 w-full rounded-2xl" />}>
                     <RecommendationSystem
-                      category={items.length > 0 ? items[0].category : undefined}
-                      currentProductId={items.length > 0 ? items[0].id || items[0]._id : undefined}
+                      category={
+                        items.length > 0
+                          ? items[0].product?.category || items[0].category
+                          : undefined
+                      }
+                      currentProductId={
+                        items.length > 0
+                          ? items[0].product?._id ||
+                            items[0].product?.id ||
+                            String(items[0].id || items[0]._id).split('___')[0]
+                          : undefined
+                      }
                       hideHeader={false}
                       horizontalScroll={true}
                       compact={true}
-                      rentalOnly={false}
                     />
                   </React.Suspense>
                 </div>
@@ -476,7 +431,6 @@ export function CartView({ isEmbedded = false }) {
               >
                 <CartSummary
                   loading={loading}
-                  activeCartMode={activeCartMode}
                   cartCount={cartCount}
                   totalMRP={totalMRP}
                   actualSubtotal={actualSubtotal}
@@ -484,7 +438,6 @@ export function CartView({ isEmbedded = false }) {
                   platformFee={platformFee}
                   shippingFee={shippingFee}
                   finalPayableAmount={finalPayableAmount}
-                  depositTotal={depositTotal}
                   runProtectedAction={runProtectedAction}
                   navigate={navigate}
                   orderLimitError={orderLimitError}
@@ -552,31 +505,37 @@ export function CartView({ isEmbedded = false }) {
                   }
                   runProtectedAction(() => {
                     sessionStorage.removeItem('akula_checkout_step');
-                    navigate('/checkout', {
-                      state: { checkoutMode: activeCartMode },
-                    });
+                    navigate('/checkout');
                   });
                 }}
-                className={`h-11 px-6 rounded-lg font-sans text-xs uppercase tracking-wider font-extrabold shadow-sm active:scale-[0.97] transition-all flex items-center justify-center gap-1.5 border shrink-0 ${
+                className={`h-11 pl-4 pr-1.5 py-1 rounded-full font-sans text-xs uppercase tracking-wider font-extrabold shadow-sm active:scale-[0.98] transition-all flex items-center justify-between gap-2.5 border shrink-0 group ${
                   isStoreClosed || orderLimitError
                     ? 'bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed'
                     : 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] hover:bg-[#eab00d] shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] cursor-pointer'
                 }`}
               >
                 {isStoreClosed ? (
-                  <>
+                  <div className="flex items-center gap-1.5 px-2">
                     <Lock className="w-3.5 h-3.5 text-neutral-500" />
                     <span>Paused</span>
-                  </>
+                  </div>
                 ) : orderLimitError ? (
-                  <>
+                  <div className="flex items-center gap-1.5 px-2">
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
                     <span>{orderLimitButtonText || 'Limits Not Met'}</span>
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <span>Proceed to Checkout</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span className="font-extrabold text-[12px] uppercase tracking-wider text-neutral-950">
+                      Checkout
+                    </span>
+                    <span className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                      <ArrowRight
+                        className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                        strokeWidth={2.5}
+                        aria-hidden="true"
+                      />
+                    </span>
                   </>
                 )}
               </button>

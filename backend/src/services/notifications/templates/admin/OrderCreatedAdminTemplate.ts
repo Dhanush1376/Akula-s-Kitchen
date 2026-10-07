@@ -41,7 +41,6 @@ export const OrderCreatedAdminTemplate = (data: any) => {
       data: {
         'Gross Revenue': `₹${finance.grossRevenue}`,
         'Net Revenue': `₹${finance.netRevenue}`,
-        GST: `₹${finance.taxes.total}`,
         'Gateway Fee': `₹${finance.fees.gatewayFee}`,
         'Est. Profit': `₹${finance.profitability.estimatedProfit}`,
       },

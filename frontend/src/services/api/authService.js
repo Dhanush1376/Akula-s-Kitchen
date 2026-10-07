@@ -33,7 +33,7 @@ export const authService = {
     return response.data;
   },
   requestOTP: async (identifier) => {
-    const response = await api.post('/auth/request-otp', { identifier });
+    const response = await api.post('/auth/request-otp', { identifier }, { timeout: 30000 });
     return response.data;
   },
   verifyOTP: async (challengeId, otp) => {

@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
 import { ISoftDeleted } from '../utils/SoftDeletePlugin';
 
+export interface ISelectedOptionSnapshot {
+  groupId: string;
+  groupName: string;
+  optionId: string;
+  optionLabel: string;
+  priceAdjustment: number;
+}
+
 export interface IUser extends ISoftDeleted {
   id: string;
   name: string;
@@ -28,16 +36,15 @@ export interface IUser extends ISoftDeleted {
   gender?: string;
   dateOfBirth?: string;
   wishlist: mongoose.Types.ObjectId[];
+
   cart: Array<{
     product: mongoose.Types.ObjectId;
     quantity: number;
     variant?: string;
-    type?: 'purchase' | 'rental';
-    rentalInfo?: {
-      startDate: Date;
-      endDate: Date;
-    };
     customizationNote?: string;
+    selectedOptions?: ISelectedOptionSnapshot[];
+    configurationSignature?: string;
+    configuredUnitPrice?: number;
   }>;
   recentlyViewed?: Array<{
     product: mongoose.Types.ObjectId;
@@ -54,8 +61,6 @@ export interface IUser extends ISoftDeleted {
       promotions: boolean;
       security: boolean;
       newsletter: boolean;
-      bookingUpdates: boolean;
-      rentalUpdates: boolean;
     };
   };
   accountPreferences?: {
@@ -72,7 +77,7 @@ export interface IUser extends ISoftDeleted {
   isLocked?: boolean;
   lockUntil?: Date;
   walletBalance?: number;
-  siriCoins: number;
+  rewardCoins: number;
   loyaltyTier: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
   referralCode?: string;
   referredBy?: mongoose.Types.ObjectId;

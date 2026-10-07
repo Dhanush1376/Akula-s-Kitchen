@@ -16,7 +16,6 @@ export interface IUserPreferenceProfile extends Document {
     categories: string[];
     avgPrice: number;
     totalSpent: number;
-    bookingCount: number;
   };
   profileVersion: number;
   lastRebuiltAt: Date;
@@ -57,14 +56,13 @@ const UserPreferenceProfileSchema: Schema = new Schema(
       categories: [{ type: String }],
       avgPrice: { type: Number, default: 0 },
       totalSpent: { type: Number, default: 0 },
-      bookingCount: { type: Number, default: 0 },
     },
     profileVersion: { type: Number, default: 1 },
     lastRebuiltAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // ── Indexes ──
@@ -75,6 +73,6 @@ UserPreferenceProfileSchema.index({ engagementScore: -1 });
 
 const UserPreferenceProfile = mongoose.model<IUserPreferenceProfile>(
   'UserPreferenceProfile',
-  UserPreferenceProfileSchema
+  UserPreferenceProfileSchema,
 );
 export default UserPreferenceProfile;

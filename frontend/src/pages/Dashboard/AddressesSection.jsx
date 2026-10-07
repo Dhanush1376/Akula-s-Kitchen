@@ -1,9 +1,9 @@
-import { Plus, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDashboard } from '../../context/DashboardContext';
 import { AddressCard } from '../../components/dashboard/AddressCard';
 
-export function AddressesSection() {
+export function AddressesSection({ isDrawer = false }) {
   const {
     isAddressesLoading,
     addresses,
@@ -22,14 +22,20 @@ export function AddressesSection() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.3 }}
-      className="space-y-4 text-left"
+      className={`space-y-3.5 text-left ${isDrawer ? 'pb-2' : ''}`}
     >
-      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 flex items-center justify-between shadow-2xs font-sans mb-4">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-[#283618]">pin_drop</span>
-          <h2 className="text-[13px] sm:text-[14px] font-bold text-neutral-900 tracking-wide uppercase">
+      {/* Header Bar — Compact, clean font, reduced padding */}
+      <div className="bg-white/90 border border-neutral-200/80 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs font-sans mb-3 backdrop-blur-md">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-md bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+            <MapPin className="w-3.5 h-3.5" strokeWidth={2} />
+          </div>
+          <span className="text-[12px] font-semibold text-neutral-900 tracking-normal font-sans">
             Saved Delivery Addresses
-          </h2>
+          </span>
+          <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100/90 px-1.5 py-0.5 rounded-full border border-neutral-200/50">
+            {addresses?.length || 0}
+          </span>
         </div>
         <button
           onClick={() => {
@@ -54,21 +60,25 @@ export function AddressesSection() {
             });
             setIsAddressModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-bold text-neutral-950 bg-[#f7bb0e] hover:bg-[#eab00d] transition-all uppercase tracking-wider cursor-pointer shadow-xs active:scale-95"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white bg-[#283618] hover:bg-[#1f2b13] transition-all tracking-normal cursor-pointer shadow-2xs active:scale-95 group shrink-0"
           title="Add New Delivery Destination"
         >
-          <Plus size={14} strokeWidth={2.5} />
+          <Plus size={12} strokeWidth={2.4} />
           <span>Add New</span>
         </button>
       </div>
 
       {isAddressesLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div
+          className={isDrawer ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}
+        >
           <div className="h-40 bg-white border border-outline-variant/20 rounded-lg animate-pulse" />
           <div className="h-40 bg-white border border-outline-variant/20 rounded-lg animate-pulse" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div
+          className={isDrawer ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}
+        >
           <AnimatePresence>
             {[...addresses]
               .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))

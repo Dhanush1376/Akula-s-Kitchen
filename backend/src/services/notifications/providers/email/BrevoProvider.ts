@@ -1,12 +1,13 @@
 import logger from '../../../../config/logger';
 import { IEmailProvider, EmailSendOptions, EmailSendResult } from '../../types';
-import { getStoreConfigSync } from '../../../../config/storeConfig';
+import { resolveSender } from '../../../../config/emailSender';
 
 export class BrevoProvider implements IEmailProvider {
   name = 'Brevo';
 
   isConfigured(): boolean {
-    return Boolean(process.env.BREVO_API_KEY);
+    const key = process.env.BREVO_API_KEY;
+    return Boolean(key && !key.startsWith('xsmtpsib-'));
   }
 
   async sendEmail(options: EmailSendOptions): Promise<EmailSendResult> {
@@ -15,17 +16,19 @@ export class BrevoProvider implements IEmailProvider {
     }
 
     const apiKey = process.env.BREVO_API_KEY!;
-    const store = getStoreConfigSync();
-    const senderEmail =
-      process.env.SMTP_FROM_EMAIL || store.contact.email || `noreply@${store.websiteDomain}`;
-    const senderName = options.from || process.env.SMTP_FROM_NAME || store.name;
+    // Never fall back to the store's public support email: it may be a personal inbox.
+    const sender = resolveSender({ name: options.from, replyTo: options.replyTo });
 
     const body: any = {
-      sender: { name: senderName, email: senderEmail },
+      sender: { name: sender.name, email: sender.email },
       to: [{ email: options.to }],
       subject: options.subject,
       htmlContent: options.html,
     };
+
+    if (sender.replyTo) {
+      body.replyTo = { email: sender.replyTo };
+    }
 
     if (options.headers && Object.keys(options.headers).length > 0) {
       body.headers = options.headers;

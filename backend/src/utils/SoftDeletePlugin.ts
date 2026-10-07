@@ -35,11 +35,8 @@ const PROTECTED_RESOURCES: Record<string, (doc: any) => boolean> = {
  */
 const extractEntityName = (doc: any): string => {
   return (
-    doc.bookingId ||
-    doc.rentalOrderId ||
     doc.returnId ||
     doc.exchangeId ||
-    doc.customOrderId ||
     doc.orderId ||
     doc.title ||
     doc.productTitle ||
@@ -141,13 +138,7 @@ const extractCloudinaryPublicIds = (doc: any, modelName?: string): string[] => {
     }
   }
 
-  const imageArrayFields = [
-    'images',
-    'gallery',
-    'attachments',
-    'inspirationImages',
-    'referenceImages',
-  ];
+  const imageArrayFields = ['images', 'gallery', 'attachments'];
   for (const field of imageArrayFields) {
     if (Array.isArray(doc[field])) {
       for (const url of doc[field]) {

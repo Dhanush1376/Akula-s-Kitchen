@@ -8,7 +8,6 @@ import { MainDeliveryView } from './components/MainDeliveryView';
 export default function CheckoutAddressStep() {
   const {
     activeItems,
-    hasRentalItems,
     setActiveStep,
     activeSelectedAddress,
     savedAddresses,
@@ -74,7 +73,6 @@ export default function CheckoutAddressStep() {
     <>
       <MainDeliveryView
         activeSelectedAddress={activeSelectedAddress}
-        hasRentalItems={hasRentalItems}
         setIsSelectingList={setIsSelectingList}
         handleAddNew={handleAddNew}
         activeItems={activeItems}

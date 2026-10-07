@@ -1,0 +1,35 @@
+/* ─── Falling leaves & petals (shared by the wishlist and shop leaves) ─── */
+.fl-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.fl-piece {
+  position: absolute;
+  height: auto;
+  /* the page-level layer is 0x0, so the global img max-width: 100% would collapse pieces */
+  max-width: none;
+  user-select: none;
+  /* hidden until its flight path (set from FallingLeaves.jsx) takes over */
+  opacity: 0;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 2px 2px rgba(40, 54, 24, 0.18));
+}
+
+/* Page-level layer: pieces are positioned in document coordinates and drift over the page */
+.fl-layer--page {
+  inset: auto;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 30;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fl-layer {
+    display: none;
+  }
+}

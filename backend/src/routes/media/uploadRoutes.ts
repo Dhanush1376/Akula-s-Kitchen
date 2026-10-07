@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
 import { uploadLimiter, signedUrlLimiter } from '../../middleware/rateLimiter';
-import { uploadProducts, uploadGallery, uploadCMS, uploadReviews } from '../../middleware/upload';
+import { uploadProducts, uploadCMS, uploadReviews } from '../../middleware/upload';
 import getCloudinary from '../../config/cloudinary';
 import ApiResponse from '../../utils/ApiResponse';
 import ApiError from '../../utils/ApiError';
@@ -27,20 +27,10 @@ const checkContentLength = (req: Request, res: Response, next: import('express')
 
 const ALLOWED_UPLOAD_FOLDERS = new Set([
   'akulas-kitchen/direct-uploads',
-  'akulas-kitchen/identity_docs',
   'akulas-kitchen/products',
-  'akulas-kitchen/events',
   'akulas-kitchen/reviews',
-  'siri-arts-crafts/direct-uploads',
-  'siri-arts-crafts/identity_docs',
-  'siri-arts-crafts/products',
-  'siri-arts-crafts/events',
-  'event_decor_ecommerce/assets',
-  'event_decor_ecommerce/gallery',
   'products',
-  'events',
   'reviews',
-  'siri-arts-crafts/reviews',
 ]);
 
 /**
@@ -63,16 +53,7 @@ router.get(
       throw new ApiError(400, 'Invalid upload folder');
     }
 
-    const adminOnlyFolders = new Set([
-      'products',
-      'events',
-      'akulas-kitchen/products',
-      'akulas-kitchen/events',
-      'siri-arts-crafts/products',
-      'siri-arts-crafts/events',
-      'event_decor_ecommerce/gallery',
-      'event_decor_ecommerce/assets',
-    ]);
+    const adminOnlyFolders = new Set(['products', 'akulas-kitchen/products']);
     if (adminOnlyFolders.has(folder)) {
       const userRole = req.user?.role || 'customer';
       if (!STAFF_ROLES.includes(userRole as any)) {
@@ -108,19 +89,6 @@ router.get(
 );
 
 // C-02: Multipart routes use multer (not express.json) — safe for large video uploads up to multer limits
-router.post(
-  '/inspirations',
-  uploadLimiter,
-  requireAuth,
-  checkContentLength,
-  ...uploadGallery.array('images', 5),
-  (req, res) => {
-    const files = req.files as Express.Multer.File[];
-    const imageUrls = files.map((file: any) => file.path);
-    res.status(200).json({ success: true, images: imageUrls });
-  },
-);
-
 router.post(
   '/products',
   uploadLimiter,

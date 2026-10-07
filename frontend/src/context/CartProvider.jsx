@@ -16,13 +16,10 @@ export function CartProvider({ children }) {
   const { maxItemsPerOrder = 5, maxQuantityPerItem = 10 } = useConfig();
   const queryClient = useQueryClient();
 
-  const [activeCartMode, setActiveCartMode] = useState(() => {
-    return persistentStorage.getItem('akula_cart_mode', { fallback: 'purchase' });
-  });
-
+  // Earlier builds kept a second cart "mode" in storage; it no longer exists.
   useEffect(() => {
-    persistentStorage.setItem('akula_cart_mode', activeCartMode);
-  }, [activeCartMode]);
+    persistentStorage.removeItem('akula_cart_mode');
+  }, []);
 
   const emptySummary = useMemo(
     () => ({ subtotal: 0, shippingFee: 0, platformFee: 0, total: 0 }),
@@ -100,10 +97,8 @@ export function CartProvider({ children }) {
     };
   }, [isAuthenticated, cartData, guestCart, emptyCart]);
 
-  const customCart = emptyCart;
-
-  const items = activeCartMode === 'custom' ? customCart.items : purchaseCart.items;
-  const summary = activeCartMode === 'custom' ? customCart.summary : purchaseCart.summary;
+  const items = purchaseCart.items;
+  const summary = purchaseCart.summary;
 
   const {
     addItem: optAddItem,
@@ -112,8 +107,6 @@ export function CartProvider({ children }) {
     clearCart: optClearCart,
   } = useOptimisticCartMutation({
     isAuthenticated,
-    activeCartMode,
-    setActiveCartMode,
     runProtectedAction, // Note: we'll bypass this in useOptimisticCartMutation shortly
     setIsCartOpen,
     emptySummary,
@@ -124,19 +117,62 @@ export function CartProvider({ children }) {
   // Abstracted Cart Actions
   const addItem = useCallback(
     (product) => {
+      // Ensure default size / options are always selected if not already present
+      let enrichedProduct = { ...product };
+      if (
+        (!enrichedProduct.selectedOptions || enrichedProduct.selectedOptions.length === 0) &&
+        Array.isArray(enrichedProduct.optionGroups) &&
+        enrichedProduct.optionGroups.length > 0
+      ) {
+        const defaults = [];
+        enrichedProduct.optionGroups.forEach((group) => {
+          const defaultOpt =
+            (group.options || []).find(
+              (opt) => (opt.default || opt.isDefault) && opt.available !== false,
+            ) || (group.options || []).find((opt) => opt.available !== false);
+
+          if (defaultOpt) {
+            defaults.push({
+              groupId: String(group.groupId || group.id || group._id || group.name),
+              groupName: group.name,
+              optionId: String(
+                defaultOpt.optionId || defaultOpt.id || defaultOpt._id || defaultOpt.value,
+              ),
+              optionLabel: defaultOpt.label,
+              priceAdjustment: Number(defaultOpt.priceAdjustment) || 0,
+            });
+          }
+        });
+        if (defaults.length > 0) {
+          enrichedProduct.selectedOptions = defaults;
+          const totalAdj = defaults.reduce((sum, d) => sum + (d.priceAdjustment || 0), 0);
+          const baseP = Number(enrichedProduct.basePrice ?? enrichedProduct.price ?? 0);
+          enrichedProduct.configuredUnitPrice = Math.max(0, baseP + totalAdj);
+          enrichedProduct.price = enrichedProduct.configuredUnitPrice;
+          enrichedProduct.configurationSignature = defaults
+            .slice()
+            .sort((a, b) => a.groupId.localeCompare(b.groupId))
+            .map((d) => `${d.groupId}:${d.optionId}`)
+            .join('|');
+        }
+      }
+
       if (isAuthenticated) {
         setIsCartOpen(true);
-        optAddItem(product);
+        optAddItem(enrichedProduct);
       } else {
         const currentGuestCart = GuestCartService.getCart();
         const targetCartKey = 'purchaseCart';
         const currentItems = currentGuestCart[targetCartKey]?.items || [];
-        const itemId = product._id || product.id;
-        const existingItem = currentItems.find(
-          (item) => (item.product?._id || item.product?.id || item._id || item.id) === itemId,
-        );
+        const itemId = enrichedProduct._id || enrichedProduct.id;
+        const sig = enrichedProduct.configurationSignature || 'default';
+        const existingItem = currentItems.find((item) => {
+          const pId = item.product?._id || item.product?.id || item._id || item.id;
+          const iSig = item.configurationSignature || 'default';
+          return pId === itemId && iSig === sig;
+        });
         const currentQty = existingItem ? Number(existingItem.quantity) || 0 : 0;
-        const requestedQty = Number(product.quantity) || 1;
+        const requestedQty = Number(enrichedProduct.quantity) || 1;
 
         if (!existingItem && currentItems.length >= maxItemsPerOrder) {
           toast.error(`Maximum ${maxItemsPerOrder} different products allowed per order`);
@@ -148,53 +184,57 @@ export function CartProvider({ children }) {
         }
 
         setIsCartOpen(true);
-        GuestCartService.addToCart(product, product.quantity || 1, 'purchase');
+        GuestCartService.addToCart(enrichedProduct, enrichedProduct.quantity || 1);
         setGuestCart(GuestCartService.getCart());
       }
     },
     [isAuthenticated, optAddItem, setIsCartOpen, maxItemsPerOrder, maxQuantityPerItem],
   );
 
-  const attemptAddToCart = useCallback(
-    (product) => {
-      const itemType = product.type || 'purchase';
-      if (itemType !== activeCartMode) {
-        toast(`Switched to ${itemType === 'custom' ? 'Custom' : 'Purchase'} Cart to add this item`);
-        setActiveCartMode(itemType);
-      }
-      addItem(product);
-    },
-    [activeCartMode, addItem],
-  );
+  const attemptAddToCart = useCallback((product) => addItem(product), [addItem]);
 
   const removeItem = useCallback(
-    (id) => {
+    (id, configurationSignature) => {
+      let rawId = id;
+      let sig = configurationSignature;
+      if (typeof id === 'string' && id.includes('___')) {
+        const parts = id.split('___');
+        rawId = parts[0];
+        if (!sig) sig = parts[1];
+      }
       if (isAuthenticated) {
-        optRemoveItem(id);
+        optRemoveItem(rawId, sig);
       } else {
-        GuestCartService.removeFromCart(id, activeCartMode);
+        GuestCartService.removeFromCart(rawId, sig);
         setGuestCart(GuestCartService.getCart());
       }
     },
-    [isAuthenticated, optRemoveItem, activeCartMode],
+    [isAuthenticated, optRemoveItem],
   );
 
   const updateQuantity = useCallback(
-    (id, variantOrQuantity, maybeQuantity) => {
+    (id, variantOrQuantity, maybeQuantity, maybeSig) => {
       const quantity = maybeQuantity !== undefined ? maybeQuantity : variantOrQuantity;
+      let rawId = id;
+      let sig = maybeSig;
+      if (typeof id === 'string' && id.includes('___')) {
+        const parts = id.split('___');
+        rawId = parts[0];
+        if (!sig) sig = parts[1];
+      }
       const numQty = Number(quantity) || 1;
       const clampedQuantity = Math.max(0, Math.min(maxQuantityPerItem, numQty));
       if (numQty > maxQuantityPerItem) {
         toast.error(`Maximum allowed quantity is ${maxQuantityPerItem} per product`);
       }
       if (isAuthenticated) {
-        optUpdateQuantity(id, variantOrQuantity, clampedQuantity);
+        optUpdateQuantity(rawId, variantOrQuantity, clampedQuantity, sig);
       } else {
-        GuestCartService.updateQuantity(id, clampedQuantity, activeCartMode);
+        GuestCartService.updateQuantity(rawId, clampedQuantity, sig);
         setGuestCart(GuestCartService.getCart());
       }
     },
-    [isAuthenticated, optUpdateQuantity, activeCartMode, maxQuantityPerItem],
+    [isAuthenticated, optUpdateQuantity, maxQuantityPerItem],
   );
 
   const clearCart = useCallback(() => {
@@ -207,15 +247,6 @@ export function CartProvider({ children }) {
   }, [isAuthenticated, optClearCart]);
 
   const cartCount = useMemo(() => items.reduce((acc, item) => acc + item.quantity, 0), [items]);
-
-  const purchaseCartCount = useMemo(
-    () => purchaseCart.items.reduce((acc, item) => acc + item.quantity, 0),
-    [purchaseCart.items],
-  );
-  const customCartCount = useMemo(
-    () => customCart.items.reduce((acc, item) => acc + item.quantity, 0),
-    [customCart.items],
-  );
 
   const subtotal = summary?.subtotal || 0;
 
@@ -245,11 +276,7 @@ export function CartProvider({ children }) {
     () => ({
       items,
       cartCount,
-      purchaseCartCount,
-      customCartCount,
       purchaseCart,
-      customCart,
-      activeCartMode,
       subtotal,
       totalMRP,
       summary: summary || emptySummary,
@@ -260,11 +287,7 @@ export function CartProvider({ children }) {
     [
       items,
       cartCount,
-      purchaseCartCount,
-      customCartCount,
       purchaseCart,
-      customCart,
-      activeCartMode,
       subtotal,
       totalMRP,
       summary,
@@ -285,17 +308,8 @@ export function CartProvider({ children }) {
       updateQuantity,
       clearCart,
       setIsCartOpen,
-      setActiveCartMode,
     }),
-    [
-      addItem,
-      attemptAddToCart,
-      removeItem,
-      updateQuantity,
-      clearCart,
-      setIsCartOpen,
-      setActiveCartMode,
-    ],
+    [addItem, attemptAddToCart, removeItem, updateQuantity, clearCart, setIsCartOpen],
   );
 
   return (

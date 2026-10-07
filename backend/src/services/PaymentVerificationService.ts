@@ -136,9 +136,7 @@ export class PaymentVerificationService {
       const userId = attempt.userId.toString();
 
       const expectedAmount = Math.round(
-        attempt.type === 'purchase' || attempt.type === 'rental'
-          ? (attempt.orderData.total ?? attempt.orderData.totalAmount) * 100
-          : attempt.orderData.depositAmount * 100,
+        (attempt.orderData.total ?? attempt.orderData.totalAmount) * 100,
       );
 
       const isAmountValid = Number(fetchedPayment.amount) === expectedAmount;
@@ -378,8 +376,6 @@ export class PaymentVerificationService {
               razorpayOrderId: razorpay_order_id,
               razorpayPaymentId: razorpay_payment_id,
               razorpaySignature: razorpay_signature,
-              isCustomOrder: orderData.isCustomOrder,
-              customOrderId: orderData.customOrderId,
             },
           ],
           { session },

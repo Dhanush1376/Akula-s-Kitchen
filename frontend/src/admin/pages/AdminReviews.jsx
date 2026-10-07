@@ -427,9 +427,6 @@ export function AdminReviews() {
                 r.product?.imageSrc ||
                 r.product?.images?.[0] ||
                 r.product?.image ||
-                r.showcase?.image ||
-                r.showcase?.coverImage ||
-                r.showcase?.gallery?.[0] ||
                 r.productSnapshot?.imageSrc ||
                 r.productSnapshot?.image ||
                 null;

@@ -290,7 +290,9 @@ export const getCustomerList = async (req: Request, res: Response) => {
     sortOptions[sortField] = sortOrder;
 
     const customers = await User.find(query)
-      .select('name email phone loyaltyTier createdAt isVerified siriCoins addresses cart wishlist')
+      .select(
+        'name email phone loyaltyTier createdAt isVerified rewardCoins addresses cart wishlist',
+      )
       .sort(sortOptions)
       .skip((page - 1) * limit)
       .limit(limit)
@@ -403,7 +405,7 @@ export const exportCustomers = async (req: Request, res: Response) => {
     }
 
     const customers = await User.find(query)
-      .select('name email phone loyaltyTier createdAt isVerified siriCoins cart wishlist')
+      .select('name email phone loyaltyTier createdAt isVerified rewardCoins cart wishlist')
       .sort({ createdAt: -1 })
       .lean();
 

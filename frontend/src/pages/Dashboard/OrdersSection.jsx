@@ -8,12 +8,14 @@ import { OrderDetail } from '../../components/dashboard/OrderDetail';
 import { OrdersListSkeleton } from '../../components/ui';
 
 export function OrdersSection() {
-  const { selectedOrderId, isOrdersLoading, orderItems, setOrderFilter } = useDashboard();
+  const { selectedOrderId, isOrdersLoading, filteredOrders, setOrderFilter } = useDashboard();
 
   useEffect(() => {
     // Default to all orders when accessing the orders route
     setOrderFilter('PURCHASE');
   }, [setOrderFilter]);
+
+  const ordersList = filteredOrders || [];
 
   return (
     <motion.div
@@ -37,7 +39,7 @@ export function OrdersSection() {
                 My Orders
               </span>
               <span className="text-[10.5px] font-bold text-neutral-600 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-full ml-1">
-                {orderItems.length}
+                {ordersList.length}
               </span>
             </div>
           </div>
@@ -48,21 +50,15 @@ export function OrdersSection() {
           ) : (
             <motion.div layout className="space-y-3">
               <AnimatePresence>
-                {orderItems.map(({ order, item, itemIdx }, idx) => (
-                  <OrderCard
-                    key={`${order._id || idx}-${itemIdx}`}
-                    order={order}
-                    item={item}
-                    itemIdx={itemIdx}
-                    idx={idx}
-                  />
+                {ordersList.map((order, idx) => (
+                  <OrderCard key={order._id || order.id || idx} order={order} idx={idx} />
                 ))}
               </AnimatePresence>
             </motion.div>
           )}
 
           {/* Empty State */}
-          {orderItems.length === 0 && !isOrdersLoading && (
+          {ordersList.length === 0 && !isOrdersLoading && (
             <div className="bg-white border border-neutral-200 rounded-lg p-8 sm:p-10 text-center shadow-sm flex flex-col items-center justify-center min-h-[30vh]">
               <div className="w-12 h-12 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-500 mb-3">
                 <ShoppingBag className="w-5 h-5 text-neutral-600" strokeWidth={1.8} />
@@ -75,10 +71,16 @@ export function OrdersSection() {
 
               <Link
                 to="/collections"
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#f7bb0e] hover:bg-[#eab00d] text-neutral-950 font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-[0.98]"
+                className="inline-flex items-center justify-between gap-3.5 pl-6 pr-2 py-1.5 min-h-[46px] rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12.5px] uppercase tracking-wider transition-all shadow-sm hover:shadow-md active:scale-[0.98] border border-[#283618] group select-none cursor-pointer"
               >
                 <span>Browse Delicacies</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                  <ArrowRight
+                    className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                  />
+                </span>
               </Link>
             </div>
           )}

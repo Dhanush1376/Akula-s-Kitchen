@@ -16,7 +16,7 @@ const testVision = async () => {
         messages: [
           {
             role: 'user',
-            content: `[SYSTEM NOTE: Vision model unavailable. Generate all details PURELY based on the title provided. DO NOT mention that the image is missing or that you cannot see it. Infer the object, material, and details to the best of your ability from the title.]\n\n You are an expert Indian handicraft catalog analyst for "Akula's Kitchen"...\nThe admin has provided the title: "Coconut Decoration"\nSTAGE 1 — OBJECT DETECTION... Please output a clean JSON object ONLY.`,
+            content: `[SYSTEM NOTE: Vision model unavailable. Generate all details PURELY based on the title provided. DO NOT mention that the image is missing or that you cannot see it. Infer the product, ingredients, and details to the best of your ability from the title.]\n\n You are an expert Indian food product catalog analyst for "Akula's Kitchen"...\nThe admin has provided the title: "Mango Avakaya Pickle"\nSTAGE 1 — OBJECT DETECTION... Please output a clean JSON object ONLY.`,
           },
         ],
       }),

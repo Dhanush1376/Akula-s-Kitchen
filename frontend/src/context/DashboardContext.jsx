@@ -162,12 +162,8 @@ export function DashboardProvider({ children }) {
 
   // Dashboard counts
   const dashboardCounts = useMemo(() => {
-    if (!allOrders) return { activeRentals: 0, upcomingReturns: 0, purchaseOrders: 0 };
-    return {
-      activeRentals: 0,
-      upcomingReturns: 0,
-      purchaseOrders: allOrders.length,
-    };
+    if (!allOrders) return { purchaseOrders: 0 };
+    return { purchaseOrders: allOrders.length };
   }, [allOrders]);
 
   const orderItems = useMemo(() => {
@@ -186,7 +182,7 @@ export function DashboardProvider({ children }) {
 
   const selectedItem = useMemo(() => {
     if (!selectedOrder) return null;
-    // For normalized rentals (and any single-item order), fall back to items[0]
+    // Fall back to the first item when no item index is selected
     return selectedOrder.items?.[selectedOrderItemIndex] || selectedOrder.items?.[0] || null;
   }, [selectedOrder, selectedOrderItemIndex]);
 

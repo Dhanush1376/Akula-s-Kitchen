@@ -70,21 +70,27 @@ export const toggleWishlistSchema = z.object({
 });
 
 export const addToCartSchema = z.object({
-  body: z.object({
-    productId: z.string().min(1, 'Product ID is required'),
-    quantity: z.number().int().positive().optional(),
-    type: z.enum(['purchase', 'rental']).optional(),
-    rentalInfo: z
-      .object({
-        startDate: z.string(),
-        endDate: z.string(),
-        duration: z.number(),
-      })
-      .optional()
-      .nullable(),
-    deposit: z.number().nonnegative().optional(),
-    customizationNote: z.string().max(2000).optional(),
-  }),
+  body: z
+    .object({
+      productId: z.string().min(1, 'Product ID is required'),
+      quantity: z.number().int().positive().optional(),
+      customizationNote: z.string().max(2000).optional(),
+      selectedOptions: z
+        .array(
+          z.object({
+            groupId: z.string(),
+            groupName: z.string().optional(),
+            optionId: z.string(),
+            optionLabel: z.string().optional(),
+            priceAdjustment: z.number().optional(),
+          }),
+        )
+        .optional(),
+      variant: z.string().optional(),
+      configurationSignature: z.string().optional(),
+      isNonRefundable: z.boolean().optional(),
+    })
+    .passthrough(),
 });
 
 export const syncCartSchema = z.object({
@@ -93,17 +99,20 @@ export const syncCartSchema = z.object({
       z.object({
         product: z.string().min(1, 'Product ID is required'),
         quantity: z.number().int().positive(),
-        type: z.enum(['purchase', 'rental']).optional(),
-        rentalInfo: z
-          .object({
-            startDate: z.string(),
-            endDate: z.string(),
-            duration: z.number(),
-          })
-          .optional()
-          .nullable(),
-        deposit: z.number().nonnegative().optional(),
         customizationNote: z.string().max(2000).optional(),
+        selectedOptions: z
+          .array(
+            z.object({
+              groupId: z.string(),
+              groupName: z.string().optional(),
+              optionId: z.string(),
+              optionLabel: z.string().optional(),
+              priceAdjustment: z.number().optional(),
+            }),
+          )
+          .optional(),
+        configurationSignature: z.string().optional(),
+        configuredUnitPrice: z.number().optional(),
       }),
     ),
   }),

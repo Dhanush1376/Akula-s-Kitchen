@@ -17,7 +17,7 @@ const NAV_ITEMS = [
     path: '/admin/homepage',
     category: 'Navigation',
     icon: 'home',
-    keywords: 'banners, hero, slides, showcase, carousel',
+    keywords: 'banners, hero, slides, featured, carousel',
   },
   {
     label: 'Website Content CMS',

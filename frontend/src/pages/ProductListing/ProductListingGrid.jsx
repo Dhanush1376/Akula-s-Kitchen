@@ -37,7 +37,7 @@ export const ProductListingGrid = React.memo(
   }) => {
     return (
       <main
-        id="artisan-collection"
+        id="shop-collection"
         className="max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop relative pb-8 lg:pb-24"
       >
         <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 xl:gap-12">

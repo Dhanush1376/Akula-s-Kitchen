@@ -13,8 +13,6 @@ export function useCheckoutFlow({
   isAuthenticated,
   user,
   activeItems,
-  orderType,
-  checkoutMode,
   removeItem,
   clearCart,
   navigate,
@@ -306,12 +304,19 @@ export function useCheckoutFlow({
 
     const orderData = {
       items: activeItems.map((item) => {
+        const rawProductId =
+          item.productId ||
+          (item.id && typeof item.id === 'string' && item.id.includes('___')
+            ? item.id.split('___')[0]
+            : item.product?._id || item.product?.id || item.id || item._id);
         const key = `${item.id || item._id}-${item.variant || 'default'}`;
         return {
-          productId: item.id || item._id,
+          productId: rawProductId,
           quantity: item.quantity,
           variant: item.variant || 'Default',
           customizationNote: customizationNotes[key] || undefined,
+          selectedOptions: item.selectedOptions || [],
+          configurationSignature: item.configurationSignature || 'default',
         };
       }),
       shippingAddress: buildShippingAddress(),

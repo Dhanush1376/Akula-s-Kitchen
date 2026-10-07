@@ -20,7 +20,7 @@ const signOrderPayment = (orderId: string, paymentId: string): string =>
 
 /** Seed a verified customer + a product and return their ids. */
 const seedUserAndProduct = async () => {
-  const category = await Category.create({ name: 'Decor', slug: `decor-${Date.now()}` } as any);
+  const category = await Category.create({ name: 'Pickles', slug: `pickles-${Date.now()}` } as any);
   const user = await User.create({
     name: 'Test Buyer',
     email: `buyer_${Date.now()}@example.com`,
@@ -29,12 +29,12 @@ const seedUserAndProduct = async () => {
     walletBalance: 0,
   } as any);
   const product = await Product.create({
-    title: 'Fairy Lights',
-    slug: `fairy-lights-${Date.now()}`,
+    title: 'Mango Avakaya Pickle (500 g)',
+    slug: `mango-avakaya-${Date.now()}`,
     primaryCategory: category._id,
     price: 500,
     imageSrc: 'https://example.com/img.webp',
-    description: 'Warm white string lights',
+    description: 'Traditional Andhra mango pickle',
     stock: 100,
   } as any);
   return { user, product };

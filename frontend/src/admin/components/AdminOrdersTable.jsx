@@ -246,17 +246,6 @@ export function AdminOrdersTable({
                             />
                           )}
                         </div>
-                        {o.orderType && o.orderType !== 'purchase' && (
-                          <span
-                            className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded w-max border ${
-                              o.orderType === 'rental'
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200/70 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800'
-                                : 'bg-purple-50 text-purple-700 border-purple-200/70 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800'
-                            }`}
-                          >
-                            {o.orderType}
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className="min-w-[120px] max-w-[150px]">
@@ -541,17 +530,6 @@ export function AdminOrdersTable({
                       <span className="font-mono text-[11px] font-medium text-[var(--admin-text-tertiary)] dark:text-stone-400">
                         #{o.orderCode || o.id.substring(o.id.length - 8).toUpperCase()}
                       </span>
-                      {o.orderType && o.orderType !== 'purchase' && (
-                        <span
-                          className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border shrink-0 ${
-                            o.orderType === 'rental'
-                              ? 'bg-indigo-50/80 text-indigo-700 border-indigo-200/80 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800'
-                              : 'bg-purple-50/80 text-purple-700 border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800'
-                          }`}
-                        >
-                          {o.orderType}
-                        </span>
-                      )}
                     </div>
                   </div>
                   <AdminStatusPill status={o.status} className="shrink-0" />
@@ -581,13 +559,25 @@ export function AdminOrdersTable({
                     </div>
                     <p
                       className="text-[12px] font-bold text-[var(--admin-text-primary)] truncate mt-0.5"
-                      title={firstItem.name}
+                      title={firstItem.name || firstItem.title}
                     >
-                      {firstItem.name || 'Order Item'}
+                      {firstItem.name || firstItem.title || 'Order Item'}
                       <span className="ml-1 text-[var(--admin-text-secondary)] font-medium">
                         (x{firstItem.qty || firstItem.quantity || 1})
                       </span>
                     </p>
+                    {firstItem.selectedOptions && firstItem.selectedOptions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {firstItem.selectedOptions.map((opt, optIdx) => (
+                          <span
+                            key={optIdx}
+                            className="text-[9px] font-medium bg-amber-50 text-amber-900 border border-amber-200/60 px-1 py-0.2 rounded"
+                          >
+                            {opt.groupName}: {opt.optionLabel}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {o.needByDate ? (
                       <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold truncate block mt-0.5 flex items-center gap-1">
                         <span className="material-symbols-outlined text-[12px]">
@@ -825,18 +815,33 @@ export function AdminOrdersTable({
                               All Items ({o.items.length})
                             </span>
                             {o.items.map((it, i) => (
-                              <div key={i} className="flex justify-between items-center py-0.5">
-                                <span className="truncate text-stone-800 dark:text-stone-200 font-medium max-w-[200px]">
-                                  {it.name}{' '}
-                                  <span className="text-stone-400">
-                                    x{it.qty || it.quantity || 1}
+                              <div
+                                key={i}
+                                className="flex flex-col py-0.5 border-b border-stone-200/40 dark:border-stone-700/40 last:border-0"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="truncate text-stone-800 dark:text-stone-200 font-medium max-w-[200px]">
+                                    {it.name || it.title}{' '}
+                                    <span className="text-stone-400">
+                                      x{it.qty || it.quantity || 1}
+                                    </span>
                                   </span>
-                                </span>
-                                <span className="font-bold text-stone-700 dark:text-stone-300 shrink-0">
-                                  {it.price
-                                    ? formatCurrency(it.price * (it.qty || it.quantity || 1))
-                                    : ''}
-                                </span>
+                                  <span className="font-bold text-stone-700 dark:text-stone-300 shrink-0">
+                                    {it.price
+                                      ? formatCurrency(it.price * (it.qty || it.quantity || 1))
+                                      : ''}
+                                  </span>
+                                </div>
+                                {it.selectedOptions && it.selectedOptions.length > 0 && (
+                                  <span className="text-[9.5px] text-stone-500 dark:text-stone-400 truncate mt-0.5">
+                                    {it.selectedOptions
+                                      .map(
+                                        (opt) =>
+                                          `${opt.groupName}: ${opt.optionLabel}${opt.priceAdjustment > 0 ? ` (+₹${opt.priceAdjustment})` : ''}`,
+                                      )
+                                      .join(' • ')}
+                                  </span>
+                                )}
                               </div>
                             ))}
                           </div>

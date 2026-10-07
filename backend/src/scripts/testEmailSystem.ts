@@ -103,15 +103,12 @@ async function run() {
     const { sendEmail } = require('../services/emailProvider');
     const result = await sendEmail({
       to: testRecipient,
-      subject: "[TEST] Akula's Kitchen Email System Diagnostic",
-      html: `
-        <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #111827;">Email System Test</h2>
-          <p>This is a diagnostic email sent by the Akula's Kitchen email system test script.</p>
-          <p>If you receive this, the email provider is working correctly.</p>
-          <p style="color: #6b7280; font-size: 12px;">Sent at: ${new Date().toISOString()}</p>
-        </div>
-      `,
+      subject: "Akula's Kitchen — Email Diagnostic Test",
+      html: require('../utils/email/emailTemplates').getDiagnosticTestEmailTemplate(
+        process.env.SMTP_HOST || 'smtp.gmail.com',
+        testRecipient,
+        new Date().toLocaleString('en-IN'),
+      ),
     });
     console.log(`  ✅ Email accepted by provider!`);
     console.log(`  Provider MessageId: ${result.messageId}`);

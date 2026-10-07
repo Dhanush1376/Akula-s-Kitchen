@@ -47,18 +47,12 @@ export const logCartTrace = (event, data = {}) => {
 
   // Safely extract cart counts
   let purchaseItemCount = data.purchaseItemCount;
-  let rentalItemCount = data.rentalItemCount;
   let productIdHashes = data.productIdHashes || [];
 
   if (data.cartData) {
     const pItems = data.cartData?.purchaseCart?.items || [];
-    const rItems = data.cartData?.rentalCart?.items || [];
     purchaseItemCount = pItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
-    rentalItemCount = rItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
-    productIdHashes = [
-      ...pItems.map((i) => forensicHashId(i.product?._id || i.product?.id || i.id)),
-      ...rItems.map((i) => forensicHashId(i.product?._id || i.product?.id || i.id)),
-    ];
+    productIdHashes = pItems.map((i) => forensicHashId(i.product?._id || i.product?.id || i.id));
   }
 
   // Format for the console
@@ -67,7 +61,6 @@ export const logCartTrace = (event, data = {}) => {
     wallClock: wc,
     event,
     purchaseItemCount,
-    rentalItemCount,
     productIdHashes,
     ...data,
   };

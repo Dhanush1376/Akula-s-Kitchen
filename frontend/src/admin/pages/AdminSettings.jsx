@@ -19,7 +19,6 @@ import { ProfilePanel } from '../components/settings/ProfilePanel';
 import AiSettingsPanel from '../components/settings/AiSettingsPanel';
 import { SecurityPanel } from '../components/settings/SecurityPanel';
 import {
-  LoyaltySettingsPanel,
   StorefrontSettingsPanel,
   StoreDetailsLegalPanel,
   ShippingOrdersPanel,
@@ -383,6 +382,7 @@ export function AdminSettings({ hideHeader = false }) {
       }
 
       try {
+        // `studio_settings` is the persisted CMS section key for the business profile.
         const cmsRes = await cmsService.getSection('studio_settings');
         const rawSection = cmsRes?.data ?? cmsRes;
         const sectionData = rawSection?.data ?? rawSection;
@@ -643,10 +643,12 @@ export function AdminSettings({ hideHeader = false }) {
     }
     setSaving(true);
     try {
-      const [payRes, taxRes] = await Promise.all([
-        storeSettingsService.updateSection('payments', storeSettings.payments || {}),
-        storeSettingsService.updateSection('taxes', storeSettings.taxes || {}),
-      ]);
+      // Save sequentially to avoid parallel version conflict on the singleton document
+      const payRes = await storeSettingsService.updateSection(
+        'payments',
+        storeSettings.payments || {},
+      );
+      const taxRes = await storeSettingsService.updateSection('taxes', storeSettings.taxes || {});
 
       setStoreSettings((prev) => ({
         ...prev,
@@ -710,8 +712,6 @@ export function AdminSettings({ hideHeader = false }) {
         'rates',
       ],
     },
-
-    { id: 'loyalty', title: 'Loyalty & Rewards', icon: 'card_giftcard' },
     {
       id: 'storefront',
       title: 'Storefront & Customer Auth',
@@ -987,16 +987,6 @@ export function AdminSettings({ hideHeader = false }) {
                 onPaymentsChange={handleStoreSettingsChange('payments')}
                 onTaxesChange={handleStoreSettingsChange('taxes')}
                 handleSave={handlePaymentsTaxesSave}
-                saving={saving}
-              />
-            )}
-
-            {sectionsList[activeSection].id === 'loyalty' && (
-              <LoyaltySettingsPanel
-                formData={storeSettings.loyalty || {}}
-                handleChange={handleStoreSettingsChange('loyalty')}
-                handleCustomChange={handleStoreSettingsCustomChange('loyalty')}
-                handleSave={handleStoreSettingsSave('loyalty')}
                 saving={saving}
               />
             )}

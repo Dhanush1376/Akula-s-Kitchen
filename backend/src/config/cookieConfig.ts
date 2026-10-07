@@ -44,7 +44,7 @@ export const getBaseCookieOptions = (): CookieOptions => {
 /**
  * Auth cookies MUST be HttpOnly to prevent XSS exfiltration.
  */
-export const getAuthCookieOptions = (maxAgeMs: number, path: string = '/api'): CookieOptions => {
+export const getAuthCookieOptions = (maxAgeMs: number, path: string = '/'): CookieOptions => {
   return {
     ...getBaseCookieOptions(),
     httpOnly: true,

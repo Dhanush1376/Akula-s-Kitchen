@@ -20,7 +20,7 @@ export class AdminRefundApprovalService {
       amount: number;
       currency?: string;
       originalTransactionId: string;
-      entityType: 'Order' | 'Rental' | 'EventJob';
+      entityType: 'Order';
       entityId: mongoose.Types.ObjectId | string;
       isPartial?: boolean;
       reason?: string;

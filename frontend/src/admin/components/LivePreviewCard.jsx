@@ -44,7 +44,6 @@ export function LivePreviewCard({ formData, mobileTab, categoriesList = [] }) {
         <div className="w-full max-w-[300px] sm:max-w-[320px] mx-auto">
           <ProductCard
             title={formData.title || 'Product Title'}
-            teluguTitle={formData.teluguTitle}
             price={Number(formData.price || 0)}
             oldPrice={formData.oldPrice ? Number(formData.oldPrice) : null}
             imageSrc={formData.imageSrc}
@@ -59,9 +58,6 @@ export function LivePreviewCard({ formData, mobileTab, categoriesList = [] }) {
                 : []
             }
             stock={formData.stock !== '' ? Number(formData.stock) : 10}
-            rentalEnabled={formData.rentalEnabled}
-            availabilityMode={formData.availabilityMode}
-            rentalPricing={formData.rentalPricing}
             isNonRefundable={formData.isNonRefundable}
             rating={0}
             onQuickView={(e) => e.preventDefault()}

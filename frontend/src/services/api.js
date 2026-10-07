@@ -9,6 +9,7 @@ import {
   clearAuthStorage,
   getFallbackRefreshToken,
   setFallbackRefreshToken,
+  clearFallbackRefreshToken,
 } from '../utils/auth/authStorage';
 import { clearCachedProfile } from '../utils/auth/authSessionCache';
 import { createRequestInterceptor } from './interceptors/requestInterceptor';
@@ -91,56 +92,81 @@ const dispatchUnauthorized = () => {
     return;
   }
   if (!hasLocalAuthMarker()) {
-    // Already unauthorized, avoid infinite loop of queryClient.clear() triggers
+    // Already unauthorized, avoid redundant notifications
     return;
   }
-  toast.error('Session Error 3: API returned 401/403 unhandled.');
+  logger.warn('[API] 401/403 received — session expired. Clearing credentials and notifying app.');
   setAccessToken(null);
   clearAuthStorage();
   clearCachedProfile();
-  window.dispatchEvent(new Event('auth-unauthorized'));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth-unauthorized'));
+  }
 };
 
-export const refreshAccessToken = async (retryCount = 0) => {
+export const refreshAccessToken = async () => {
   if (!hasLocalAuthMarker()) {
     return null;
   }
-  if (retryCount >= 3) {
-    logger.warn('[API] Max refresh retry attempts reached. Preserving session.');
-    return getAccessToken() || null;
+
+  if (refreshPromise) {
+    return refreshPromise;
   }
-  if (!refreshPromise) {
-    refreshPromise = api
-      .post('/auth/refresh', buildRefreshBody(), { _skipAuthRetry: true, _disableRetry: true })
-      .then((res) => {
+
+  refreshPromise = (async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      // Check if another tab or request already provided an access token
+      const currentToken = getAccessToken();
+      if (currentToken && attempt > 0) {
+        return currentToken;
+      }
+
+      try {
+        const res = await api.post('/auth/refresh', buildRefreshBody(), {
+          _skipAuthRetry: true,
+          _disableRetry: true,
+        });
         const payload = res.data?.data || res.data;
-        return applyRefreshPayload(payload);
-      })
-      .catch(async (err) => {
-        if (err.response?.status === 409) {
+        const newToken = applyRefreshPayload(payload);
+        return newToken;
+      } catch (err) {
+        const status = err.response?.status;
+        if (status === 409) {
           logger.warn(
-            `[API] 409 Conflict (concurrent refresh). Retrying attempt ${retryCount + 1}/3...`,
+            `[API] 409 Conflict (concurrent refresh). Retrying attempt ${attempt + 1}/3...`,
           );
-          await new Promise((r) => setTimeout(r, 300 * (retryCount + 1)));
-          refreshPromise = null;
-          const currentToken = getAccessToken();
-          if (currentToken) {
-            return currentToken;
+          // The old fallback token was already used by another tab/request; clear it so retry uses cookie
+          clearFallbackRefreshToken();
+          await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+
+          const tokenNow = getAccessToken();
+          if (tokenNow) {
+            return tokenNow;
           }
-          return refreshAccessToken(retryCount + 1);
+          continue;
         }
-        if (err.response?.status === 401 || err.response?.status === 403) {
+
+        if (status === 401 || status === 403) {
+          clearFallbackRefreshToken();
           dispatchUnauthorized();
+          throw err;
         }
+
+        // On transient network errors, brief pause and retry
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 500));
+          continue;
+        }
+
         throw err;
-      })
-      .finally(() => {
-        // Only nullify if it hasn't been nullified by the retry catch block
-        if (refreshPromise) {
-          refreshPromise = null;
-        }
-      });
-  }
+      }
+    }
+
+    return getAccessToken() || null;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
   return refreshPromise;
 };
 

@@ -48,8 +48,8 @@ describe('Marketing Campaigns & Lifecycle Automation System', () => {
     });
 
     unsubscribedUser = await User.create({
-      name: 'Pooja Hegde',
-      email: 'pooja.unsub@example.com',
+      name: 'Unsubscribed Customer',
+      email: 'unsubscribed.customer@example.com',
       role: 'customer',
       loyaltyTier: 'Bronze',
       notificationPreferences: {
@@ -141,7 +141,7 @@ describe('Marketing Campaigns & Lifecycle Automation System', () => {
       const emails = recipients.map((r) => r.email);
       expect(emails).toContain('ravi.verma@example.com');
       expect(emails).toContain('ananya.rao@example.com');
-      expect(emails).not.toContain('pooja.unsub@example.com');
+      expect(emails).not.toContain('unsubscribed.customer@example.com');
     });
 
     it('identifies active cart holders correctly', async () => {

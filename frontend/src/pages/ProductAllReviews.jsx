@@ -250,7 +250,7 @@ export function ProductAllReviews() {
 
         {/* Unified Top Dashboard */}
         <div className="bg-white rounded-[24px] border border-black/5 p-4 sm:p-5 lg:p-6 shadow-sm flex flex-col lg:flex-row gap-5 lg:gap-8 items-stretch">
-          {/* Column 1: Masterpiece Reference */}
+          {/* Column 1: Product Reference */}
           {product && (
             <div className="flex-1 flex flex-row gap-4 items-center border-b lg:border-b-0 lg:border-r border-[#F3EFE7] pb-6 lg:pb-0 lg:pr-6 shrink-0 lg:max-w-[320px] w-full">
               <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-[12px] overflow-hidden shrink-0 bg-neutral-50 shadow-2xs border border-[#E2DACB]">
@@ -360,7 +360,7 @@ export function ProductAllReviews() {
           </div>
         )}
 
-        {/* Results Showcase Grid */}
+        {/* Results Grid */}
         {filteredReviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-[24px] border border-[#EBEBEB] shadow-sm p-8">
             <span className="material-symbols-outlined text-4xl text-[#F7BB0E]/35 mb-3 block">

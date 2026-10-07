@@ -402,7 +402,7 @@ export function ProductReviewImages() {
                   </div>
                 )}
 
-                {/* Related Masterpiece Info */}
+                {/* Related Product Info */}
                 {product && (
                   <Link
                     to={`/product/${id}`}
@@ -418,7 +418,7 @@ export function ProductReviewImages() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[8px] sm:text-[9px] uppercase tracking-widest text-primary font-bold font-label leading-none mb-0.5">
-                        masterpiece
+                        product
                       </p>
                       <p className="text-xs sm:text-[13px] font-semibold text-neutral-800 truncate leading-tight group-hover:text-primary transition-colors">
                         {product.title}

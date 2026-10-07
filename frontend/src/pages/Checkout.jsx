@@ -32,7 +32,6 @@ function CheckoutContent() {
     savedAddresses,
     setSelectedAddressId,
     navigate,
-    orderType,
     checkoutSteps,
   } = useCheckout();
 
@@ -76,7 +75,6 @@ function CheckoutContent() {
       <CheckoutSteps
         steps={checkoutSteps}
         currentStep={activeStep}
-        orderType={orderType}
         onStepClick={(stepIndex) => {
           if (stepIndex === 0) {
             navigate('/cart');
@@ -164,18 +162,18 @@ function CheckoutContent() {
                               setSelectedAddressId(addr._id || addr.id);
                               setIsAddressDropdownOpen(false);
                             }}
-                            className={`p-2.5 rounded-lg text-[11px] cursor-pointer hover:bg-neutral-50 transition-colors flex items-start gap-2.5 ${isSelected ? 'bg-[#fef9e7] text-neutral-900 font-bold border border-[#fae182]' : 'text-neutral-700'}`}
+                            className={`p-2.5 rounded-lg text-[11px] cursor-pointer hover:bg-neutral-50 transition-colors flex items-start gap-2.5 ${isSelected ? 'bg-[#283618]/10 text-neutral-900 font-bold border border-[#283618]/25' : 'text-neutral-700'}`}
                           >
                             <div className="mt-0.5 shrink-0">
                               <div
                                 className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
                                   isSelected
-                                    ? 'border-neutral-900 bg-white'
+                                    ? 'border-[#283618] bg-white'
                                     : 'border-neutral-300 bg-white'
                                 }`}
                               >
                                 {isSelected && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e]" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#283618]" />
                                 )}
                               </div>
                             </div>
@@ -197,7 +195,7 @@ function CheckoutContent() {
                     )}
                     <div className="mt-2 pt-2 border-t border-black/5 flex justify-end">
                       <Link
-                        to="/dashboard?tab=addresses"
+                        to="/dashboard?drawer=addresses"
                         className="text-[10px] font-extrabold text-neutral-900 uppercase tracking-widest hover:text-[#d99b00] flex items-center gap-1"
                       >
                         Manage Addresses

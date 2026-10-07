@@ -31,13 +31,7 @@ const AdminInviteModal = lazy(() =>
 export function MainLayout() {
   const { pathname } = useLocation();
   const { isStoreClosed } = useConfig();
-  const {
-    isCartOpen,
-    setIsCartOpen,
-    _purchaseCartCount = 0,
-    _rentalCartCount = 0,
-    _activeCartMode,
-  } = useCart();
+  const { isCartOpen, setIsCartOpen } = useCart();
 
   // Scroll to top on route change with a slight delay to allow exit animations if any
   useEffect(() => {
@@ -62,13 +56,15 @@ export function MainLayout() {
 
   const fallbackVariant = getRouteSkeletonVariant(pathname);
 
+  const isOrderSuccess = pathname === '/order-success' || pathname.startsWith('/order-success');
+
   return (
     <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
       <SEO />
 
-      <GlobalAnnouncementBanner />
-      <TopNavbar />
-      {isCartOpen && location.pathname !== '/cart' && (
+      {!isOrderSuccess && <GlobalAnnouncementBanner />}
+      {!isOrderSuccess && <TopNavbar />}
+      {isCartOpen && pathname !== '/cart' && !isOrderSuccess && (
         <Suspense fallback={null}>
           <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </Suspense>

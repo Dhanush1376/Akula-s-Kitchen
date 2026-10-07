@@ -49,12 +49,7 @@ export const orderFilterConfig = {
       defaultValue: 'All Time',
       isDefault: (val) => val === 'All Time' || !val,
       predicate: (o, val, state) => {
-        const deliveryDate =
-          o.deliveryDate ||
-          o.eventDate ||
-          o.rawOrder?.deliveryDate ||
-          o.rawOrder?.eventDate ||
-          o.rawOrder?.rentalStartDate;
+        const deliveryDate = o.deliveryDate || o.rawOrder?.deliveryDate;
         if (!deliveryDate) return false;
         return isWithinPeriod(deliveryDate, val, state?.customDeliveryRange);
       },

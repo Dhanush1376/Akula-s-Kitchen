@@ -34,7 +34,7 @@ const signWebhookPayload = (rawBody: Buffer, secret = WEBHOOK_SECRET): string =>
   crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
 const seedCustomerAndProduct = async () => {
-  const category = await Category.create({ name: 'Festive', slug: `festive-${Date.now()}` } as any);
+  const category = await Category.create({ name: 'Batters', slug: `batters-${Date.now()}` } as any);
   const user = await User.create({
     name: 'Adversarial Tester',
     email: `adversary_${Date.now()}_${Math.random().toString(36).slice(2, 6)}@example.com`,
@@ -43,12 +43,12 @@ const seedCustomerAndProduct = async () => {
     walletBalance: 0,
   } as any);
   const product = await Product.create({
-    title: 'Silk Toran',
-    slug: `silk-toran-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    title: 'Idli Batter (1 kg)',
+    slug: `idli-batter-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     primaryCategory: category._id,
     price: 1500,
-    imageSrc: 'https://example.com/toran.webp',
-    description: 'Handcrafted door hanging',
+    imageSrc: 'https://example.com/idli-batter.webp',
+    description: 'Freshly ground idli batter',
     stock: 50,
   } as any);
   return { user, product };
@@ -72,10 +72,10 @@ const seedPaymentAttempt = async (opts: {
       orderItems: [
         {
           productId: opts.productId,
-          title: 'Silk Toran',
+          title: 'Idli Batter (1 kg)',
           price: opts.total,
           quantity: 1,
-          imageSrc: 'https://example.com/toran.webp',
+          imageSrc: 'https://example.com/idli-batter.webp',
         },
       ],
       shippingAddress: {

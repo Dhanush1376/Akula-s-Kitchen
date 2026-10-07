@@ -1,7 +1,6 @@
-import { CheckCircle2, Heart, ShoppingBag } from 'lucide-react';
+import { CheckCircle2, Heart, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useRecommendationTracker } from '../../hooks/useRecommendationTracker';
@@ -11,6 +10,8 @@ import { QuickViewModal } from '../ui/QuickViewModal';
 import { WishlistPageSkeleton } from '../ui/Skeleton';
 import { useConfig } from '../../context/ConfigContext';
 import { RecommendationSystem } from '../sections/RecommendationSystem';
+import { WishlistEmptyState } from './WishlistEmptyState';
+import { WishlistLeaf } from './WishlistLeaf';
 
 export function WishlistView({ isEmbedded = false }) {
   const { storeName } = useConfig();
@@ -89,7 +90,10 @@ export function WishlistView({ isEmbedded = false }) {
     : 'max-w-[1440px] mx-auto px-4 sm:px-8';
 
   return (
-    <div className="w-full">
+    <div className="relative w-full">
+      {/* Decorative banana leaf at the top of the page, with or without saved items */}
+      {!isEmbedded && <WishlistLeaf />}
+
       {!isEmbedded && (
         <SEO
           title="My Wishlist"
@@ -115,15 +119,19 @@ export function WishlistView({ isEmbedded = false }) {
 
       {/* Wishlist Content */}
       <div className={containerClasses}>
-        <div className="relative z-0 mt-5 sm:mt-8">
+        <div
+          className={`relative z-10 mt-5 sm:mt-8${
+            !isEmbedded && enhancedItems.length > 0 ? ' wl-leaf-clearance' : ''
+          }`}
+        >
           {/* Header Row: Title, Item Count & Controls */}
           {enhancedItems.length > 0 && (
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#ede8e1]">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#283618]">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+              <div className="flex items-center gap-3 md:gap-4">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-none">
                   Wishlist
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#283618]/10 text-[#283618] border border-[#283618]/20">
+                <span className="px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-[12px] md:text-[13px] font-extrabold bg-white/20 backdrop-blur-md text-white border border-white/40 shadow-xs drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
                   {enhancedItems.length} {enhancedItems.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
@@ -176,26 +184,7 @@ export function WishlistView({ isEmbedded = false }) {
 
           {/* Empty State */}
           {enhancedItems.length === 0 ? (
-            <div className="space-y-12">
-              <div className="flex flex-col items-center justify-center min-h-[50vh] py-12 text-center bg-white rounded-3xl border border-[#ede8e1] p-8 max-w-2xl mx-auto shadow-2xs">
-                <div className="w-20 h-20 rounded-full bg-neutral-50 border border-[#ede8e1] flex items-center justify-center mb-5 text-[#283618]">
-                  <Heart className="w-8 h-8 text-[#283618]" strokeWidth={1.5} />
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-[#283618] mb-2">
-                  Your wishlist is empty
-                </h2>
-                <p className="text-neutral-500 text-xs sm:text-sm font-normal max-w-sm mb-6 leading-relaxed">
-                  Explore our batters, fresh podis, and pickles to save them for later.
-                </p>
-                <Link
-                  to="/shop"
-                  className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-[#283618] hover:bg-[#1f2a13] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs active:scale-95"
-                >
-                  <ShoppingBag className="w-4 h-4" strokeWidth={2} />
-                  Explore Shop
-                </Link>
-              </div>
-            </div>
+            <WishlistEmptyState />
           ) : filteredItems.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -212,9 +201,16 @@ export function WishlistView({ isEmbedded = false }) {
               <button
                 type="button"
                 onClick={() => setSelectedCategory(null)}
-                className="h-9 px-4 rounded-full bg-[#283618] hover:bg-[#1f2a13] text-white text-xs font-semibold transition-all cursor-pointer"
+                className="inline-flex items-center justify-between gap-3 pl-5 pr-1.5 py-1 min-h-[42px] rounded-full bg-[#283618] hover:bg-[#1f2a13] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
               >
-                View All Saved Items
+                <span>View All Saved Items</span>
+                <span className="w-7 h-7 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                  <ArrowRight
+                    className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                  />
+                </span>
               </button>
             </motion.div>
           ) : (

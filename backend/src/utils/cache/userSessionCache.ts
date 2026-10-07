@@ -148,7 +148,6 @@ export const cacheCart = async (
         hashedUserId: forensicHashId(userId),
         cartCacheKey: key,
         purchaseItemCount: cartData?.purchaseCart?.items?.length ?? 0,
-        rentalItemCount: cartData?.rentalCart?.items?.length ?? 0,
         timestamp: Date.now(),
       });
     }

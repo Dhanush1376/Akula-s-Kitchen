@@ -141,8 +141,8 @@ export function useProductSubmission({
             const { uploadDirectToCloudinary } = await import('../../services/api/_shared');
             const res = await uploadDirectToCloudinary(uploadData, false, 'products');
 
-            if (res.success && res.images) {
-              uploadedImages = res.images;
+            if (res.success && (res.images || res.url)) {
+              uploadedImages = res.images || [res.url];
             } else {
               throw new Error('Failed to upload images');
             }
@@ -170,17 +170,7 @@ export function useProductSubmission({
 
       const payload = {
         title: formData.title,
-        teluguTitle: formData.teluguTitle || undefined,
         customerNote: formData.customerNote || undefined,
-        complimentaryGift: formData.complimentaryGift?.enabled
-          ? {
-              enabled: true,
-              name: formData.complimentaryGift.name || undefined,
-              quantity: Number(formData.complimentaryGift.quantity) || 1,
-              description: formData.complimentaryGift.description || undefined,
-              displayBadge: formData.complimentaryGift.displayBadge || undefined,
-            }
-          : { enabled: false },
         slug:
           formData.slug ||
           formData.title
@@ -216,29 +206,39 @@ export function useProductSubmission({
         featured: Boolean(formData.featured),
         isActive: Boolean(formData.isActive),
         isNonRefundable: !formData.returnSettings?.isReturnable,
-        showInGallery: Boolean(formData.showInGallery),
         variants: formData.variants,
-        // Rental fields
-        rentalEnabled: Boolean(formData.rentalEnabled),
-        availabilityMode: formData.availabilityMode || 'purchase_only',
-        rentalPricing: {
-          rentalPrice: Number(formData.rentalPricing?.rentalPrice) || 0,
-          rentalDurationDays: Number(formData.rentalPricing?.rentalDurationDays) || 1,
-        },
-        securityDeposit: Number(formData.securityDeposit) || 0,
-        isDepositRefundable:
-          formData.isDepositRefundable !== undefined ? Boolean(formData.isDepositRefundable) : true,
-        rentalStock: Number(formData.rentalStock) || Number(formData.stock) || 0,
-        rentalMinDays: Number(formData.rentalMinDays) || 1,
-        rentalMaxDays: Number(formData.rentalMaxDays) || 365,
-        customizationConfig: {
-          enabled: Boolean(formData.customizationConfig?.enabled),
-          required: Boolean(formData.customizationConfig?.required),
-          label: formData.customizationConfig?.label || 'Customization Note',
-          placeholder: formData.customizationConfig?.placeholder || 'Enter customization details',
-          maxLength: Number(formData.customizationConfig?.maxLength) || 500,
-          helperText: formData.customizationConfig?.helperText || '',
-        },
+        optionGroups: Array.isArray(formData.optionGroups)
+          ? formData.optionGroups.map((grp) => {
+              let style = String(grp.displayStyle || '')
+                .toUpperCase()
+                .trim();
+              if (style === 'CARDS') {
+                style = grp.type === 'MULTI_SELECT' ? 'CHECKBOX_CARDS' : 'RADIO_CARDS';
+              } else if (style === 'PILLS') {
+                style = 'BUTTON_GROUP';
+              } else if (
+                !['RADIO_CARDS', 'CHECKBOX_CARDS', 'DROPDOWN', 'BUTTON_GROUP'].includes(style)
+              ) {
+                style = grp.type === 'MULTI_SELECT' ? 'CHECKBOX_CARDS' : 'RADIO_CARDS';
+              }
+              return {
+                ...grp,
+                groupId: grp.groupId || grp.id || grp._id,
+                displayStyle: style,
+                options: (grp.options || []).map((opt, oIdx) => ({
+                  ...opt,
+                  optionId: opt.optionId || opt.id || opt._id || opt.value,
+                  label: opt.label,
+                  value: opt.value || opt.label.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+                  priceAdjustment: Number(opt.priceAdjustment) || 0,
+                  available: opt.available !== false,
+                  default: Boolean(opt.default ?? opt.isDefault),
+                  isDefault: Boolean(opt.default ?? opt.isDefault),
+                  sortOrder: opt.sortOrder ?? oIdx,
+                })),
+              };
+            })
+          : [],
         returnSettings: formData.returnSettings
           ? {
               returnWindow: Number(formData.returnSettings.returnWindowDays) || 0,
@@ -249,11 +249,20 @@ export function useProductSubmission({
           : undefined,
       };
 
-      const idempotencyKey = `product_${isEditMode ? 'update' : 'create'}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+      const effectiveId =
+        id && id !== 'undefined' && id !== 'null' ? id : formData?._id || formData?.id;
+      const isActuallyUpdating = Boolean(
+        (isEditMode || formData?._id) &&
+        effectiveId &&
+        effectiveId !== 'undefined' &&
+        effectiveId !== 'null',
+      );
 
-      const res = isEditMode
+      const idempotencyKey = `product_${isActuallyUpdating ? 'update' : 'create'}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+      const res = isActuallyUpdating
         ? await productService.update(
-            id,
+            effectiveId,
             { ...payload, __v: formData.__v },
             { headers: { 'X-Idempotency-Key': idempotencyKey } },
           )
@@ -264,21 +273,20 @@ export function useProductSubmission({
       if (res.success) {
         await deleteDraft(); // Delete draft on success
         toast.success(
-          isEditMode
+          isActuallyUpdating
             ? 'Product updated (Changes may take 1-2 mins to reflect)'
             : 'Product published (Changes may take 1-2 mins to reflect)',
         );
 
         // Use the server-returned entity to update the cache directly
-        const returnedProduct = res.data?.product || res.data;
-        if (returnedProduct?._id) {
-          queryClient.setQueryData(['product', returnedProduct._id], returnedProduct);
+        const returnedProduct = res.data?.product || res.data?.data || res.data;
+        const savedId = returnedProduct?._id || returnedProduct?.id || effectiveId;
+        if (savedId) {
+          queryClient.setQueryData(['product', savedId], returnedProduct);
         }
 
         queryClient.invalidateQueries({ queryKey: ['products'] });
         queryClient.invalidateQueries({ queryKey: ['product_categories'] });
-        queryClient.invalidateQueries({ queryKey: ['gallery'] });
-        queryClient.invalidateQueries({ queryKey: ['showcases'] });
         if (refreshProducts) {
           try {
             await refreshProducts();
@@ -292,13 +300,15 @@ export function useProductSubmission({
           // If staying on page, update formData with the real Cloudinary URLs and clear pendingUploads
           setFormData((prev) => ({
             ...prev,
+            _id: savedId || prev._id,
+            id: savedId || prev.id,
             imageSrc: finalImageSrc,
             images: Array.from(new Set([finalImageSrc, ...finalImages].filter(Boolean))),
             pendingUploads: [],
-            __v: returnedProduct.__v || prev.__v + 1,
+            __v: returnedProduct?.__v !== undefined ? returnedProduct.__v : (prev.__v || 0) + 1,
           }));
-          if (!isEditMode && res.data?.product?._id) {
-            window.history.replaceState(null, '', `/admin/products/edit/${res.data.product._id}`);
+          if (savedId) {
+            window.history.replaceState(null, '', `/admin/products/edit/${savedId}`);
           }
         }
       }

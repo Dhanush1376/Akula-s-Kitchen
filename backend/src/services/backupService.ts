@@ -56,7 +56,6 @@ export class BackupService {
       'inventoryreservations',
       'categories',
       'reviews',
-      'customorders',
       'wallettransactions',
       'paymentaudits',
     ];
@@ -208,7 +207,7 @@ export class BackupService {
     try {
       logger.info(`[BackupService] Starting mongodump (BSON) export...`);
       // We only dump critical collections to keep size manageable and focused
-      const collections = ['products', 'users', 'orders', 'inventoryledgers', 'customorders'];
+      const collections = ['products', 'users', 'orders', 'inventoryledgers'];
 
       for (const coll of collections) {
         logger.info(`[BackupService] Dumping ${coll}...`);
@@ -254,7 +253,7 @@ export class BackupService {
 
     fs.writeFileSync(path.join(targetDir, 'REASON.txt'), reason);
 
-    const collections = ['products', 'users', 'orders', 'inventoryledgers', 'customorders'];
+    const collections = ['products', 'users', 'orders', 'inventoryledgers'];
 
     for (const coll of collections) {
       try {

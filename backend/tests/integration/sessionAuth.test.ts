@@ -61,7 +61,7 @@ describe('SessionAuthService refresh-token rotation (integration)', () => {
     // the raw driver to bypass that guard.
     await UsedRefreshToken.collection.updateOne(
       { tokenHash: SessionAuthService.hashRefreshToken(original) },
-      { $set: { createdAt: new Date(Date.now() - 60_000) } },
+      { $set: { createdAt: new Date(Date.now() - 150_000) } },
     );
 
     // Replaying the already-used `original` must be treated as theft.

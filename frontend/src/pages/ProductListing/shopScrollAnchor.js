@@ -29,10 +29,10 @@ export function scrollToShopAnchor({ smooth = true, forceDirection = true } = {}
         return;
       }
 
-      // Fallback to artisan-collection top if anchor not rendered
-      const artisan = document.getElementById('artisan-collection');
-      if (artisan) {
-        const docTop = artisan.getBoundingClientRect().top + window.scrollY;
+      // Fallback to the product grid top if anchor not rendered
+      const grid = document.getElementById('shop-collection');
+      if (grid) {
+        const docTop = grid.getBoundingClientRect().top + window.scrollY;
         const targetY = Math.max(0, Math.round(docTop - sortBarHeight));
         window.scrollTo({ top: targetY, behavior: smooth ? 'smooth' : 'instant' });
         return;

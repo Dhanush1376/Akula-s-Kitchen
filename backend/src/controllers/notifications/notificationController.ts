@@ -12,6 +12,7 @@ import ApiError from '../../utils/ApiError';
 import logger from '../../config/logger';
 import { getFrontendUrl } from '../../utils/getFrontendUrl';
 import { EmailAdapter } from '../../services/notifications/adapters/EmailAdapter';
+import { resolveSender } from '../../config/emailSender';
 
 // A transparent 1x1 pixel image GIF buffer for email open tracking
 const transparentGif = Buffer.from(
@@ -80,8 +81,6 @@ export const saveConsentPreference = asyncHandler(async (req: Request, res: Resp
           security: user.notificationPreferences?.categories?.security ?? true,
           newsletter:
             marketingEmails ?? user.notificationPreferences?.categories?.newsletter ?? true,
-          bookingUpdates: user.notificationPreferences?.categories?.bookingUpdates ?? true,
-          rentalUpdates: user.notificationPreferences?.categories?.rentalUpdates ?? true,
         },
       };
       await user.save();
@@ -360,8 +359,9 @@ export const testSmtpLive = asyncHandler(async (req: Request, res: Response) => 
           </p>
         </div>
       `,
-      from: `"System Admin" <${process.env.SMTP_FROM || 'admin@akulas.kitchen'}>`,
+      // No sender override: the test must show the configured production identity.
     };
+    const sender = resolveSender();
 
     const result = await adapter.send({ email: toEmail }, payload, 'high');
 
@@ -375,6 +375,8 @@ export const testSmtpLive = asyncHandler(async (req: Request, res: Response) => 
             port: process.env.SMTP_PORT || 'unknown',
             recipient: toEmail,
             provider: result.provider,
+            sender: `${sender.name} <${sender.email}>`,
+            replyTo: sender.replyTo || null,
           },
         }),
       );

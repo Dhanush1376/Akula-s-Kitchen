@@ -1,5 +1,12 @@
 import React from 'react';
-import { Receipt, ChevronDown, CreditCard, AlertTriangle, Download } from 'lucide-react';
+import {
+  Receipt,
+  ChevronDown,
+  CreditCard,
+  AlertTriangle,
+  FileText,
+  ArrowRight,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useConfig } from '../../../context/ConfigContext';
@@ -129,9 +136,15 @@ export default function OrderPricingSummaryCard({
                 () => setIsResuming(false),
               );
             }}
-            className="px-4 py-2 bg-[#f7bb0e] hover:bg-[#eab00d] text-neutral-950 font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm transition-all border border-[#f7bb0e] disabled:opacity-50 cursor-pointer"
+            className="h-10 pl-4 pr-1.5 py-1 bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-full shadow-sm transition-all border border-[#283618] disabled:opacity-50 cursor-pointer flex items-center justify-between gap-2.5 group active:scale-[0.98]"
           >
-            {isResuming ? 'Processing...' : 'Complete Payment'}
+            <span>{isResuming ? 'Processing...' : 'Complete Payment'}</span>
+            <span className="w-7 h-7 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+              <ArrowRight
+                className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                strokeWidth={2.5}
+              />
+            </span>
           </button>
         </div>
       )}
@@ -139,14 +152,16 @@ export default function OrderPricingSummaryCard({
       {/* Invoice Download Action Bar */}
       <div className="p-3.5 sm:p-4 bg-white flex flex-col sm:flex-row justify-between items-center gap-3">
         <span className="text-[11.5px] text-neutral-500 font-medium">
-          Official tax invoice is available for your records
+          Official invoice is available for your records
         </span>
         <button
           onClick={() => downloadInvoice(order._id)}
-          className="w-full sm:w-auto px-4 py-2 bg-[#f7bb0e] hover:bg-[#eab00d] text-neutral-950 font-bold uppercase tracking-wider text-xs rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 border border-[#f7bb0e] cursor-pointer active:scale-[0.98]"
+          className="w-full sm:w-auto h-10 pl-4 pr-1.5 py-1 bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold uppercase tracking-wider text-[11px] rounded-full shadow-sm transition-all flex items-center justify-between sm:justify-center gap-2.5 border border-[#283618] cursor-pointer active:scale-[0.98] group"
         >
-          <Download className="w-3.5 h-3.5" />
-          <span>Download Invoice</span>
+          <span>View Invoice</span>
+          <span className="w-7 h-7 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+            <FileText className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
+          </span>
         </button>
       </div>
     </div>

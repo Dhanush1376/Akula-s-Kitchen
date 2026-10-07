@@ -7,15 +7,7 @@ export interface OrderSummaryProps {
 }
 
 export const OrderSummary = ({ subtotal, shipping, tax, discount, total }: OrderSummaryProps) => {
-  const taxHtml =
-    tax !== undefined
-      ? `
-    <tr>
-      <td style="padding: 8px 0; color: #6b7280; font-size: 15px;">Tax</td>
-      <td align="right" style="padding: 8px 0; color: #111827; font-size: 15px;">₹${tax}</td>
-    </tr>
-  `
-      : '';
+  const taxHtml = '';
 
   const discountHtml = discount
     ? `

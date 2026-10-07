@@ -63,10 +63,11 @@ class SessionAuthService {
     // 1. Detect if this token was already used (Replay attack detection)
     const isUsed = await UsedRefreshToken.findOne({ tokenHash });
     if (isUsed) {
-      const usedDate = (isUsed as any).createdAt ? new Date((isUsed as any).createdAt) : null;
+      const usedDate = isUsed.createdAt ? new Date(isUsed.createdAt) : null;
       const timeSinceUsedMs =
         usedDate && !isNaN(usedDate.getTime()) ? Date.now() - usedDate.getTime() : 0;
-      const GRACE_PERIOD_MS = 60000;
+      // Generous 120-second grace period allows page reloads, multiple tabs, and React StrictMode to safely succeed
+      const GRACE_PERIOD_MS = 120000;
 
       if (timeSinceUsedMs < GRACE_PERIOD_MS) {
         logger.warn(
@@ -75,16 +76,11 @@ class SessionAuthService {
         throw new ApiError(409, 'Session refreshed concurrently in another tab.');
       }
 
-      // Replay detected outside grace period — revoke entire refresh-token family (RFC 6749 rotation)
-      logger.error(
-        `[SECURITY ALERT] Refresh token reuse detected for userId: ${isUsed.userId}! Revoking all sessions. Potential token theft.`,
+      // Replay detected outside grace period
+      logger.warn(
+        `[AUTH] Stale refresh token used for userId: ${isUsed.userId} outside grace period (${Math.round(timeSinceUsedMs / 1000)}s).`,
       );
-      await RefreshToken.deleteMany({ userId: isUsed.userId }, {
-        bypassDestructionGuard: true,
-      } as any);
-      await UsedRefreshToken.deleteMany({ userId: isUsed.userId }, {
-        bypassDestructionGuard: true,
-      } as any);
+      await this.revokeAllSessions(isUsed.userId.toString());
       throw new ApiError(401, 'Session expired. Please log in again.');
     }
 

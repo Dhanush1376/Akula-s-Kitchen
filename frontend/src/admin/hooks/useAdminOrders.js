@@ -31,9 +31,6 @@ const mapDbOrderToFrontend = (o) => {
         name: item.title || item.name || 'Item',
         qty: item.quantity || item.qty || 1,
         price: item.price || 0,
-        type: item.type || 'purchase',
-        rentalInfo: item.rentalInfo || null,
-        deposit: item.deposit || 0,
         image:
           item.imageSrc ||
           item.image ||
@@ -103,9 +100,6 @@ const mapDbOrderToFrontend = (o) => {
     qrCodeData: o.qrCodeData,
     shippingAddress: o.shippingAddress,
     needByDate: o.needByDate,
-    orderType: o.orderType || 'purchase',
-    rentalInfo: o.rentalInfo || null,
-    depositTotal: o.depositTotal || 0,
 
     cardState: o.cardState || 'normal',
   };

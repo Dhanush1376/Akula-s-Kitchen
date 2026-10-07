@@ -25,8 +25,6 @@ import {
   clearCustomerRefreshCookie,
   CUSTOMER_REFRESH_COOKIE,
   ADMIN_REFRESH_COOKIE,
-  LEGACY_CUSTOMER_REFRESH_COOKIE,
-  LEGACY_ADMIN_REFRESH_COOKIE,
   clearAdminRefreshCookie,
   setAdminRefreshCookie,
 } from '../../utils/security/authCookies';
@@ -152,15 +150,14 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const refreshSession = asyncHandler(async (req: Request, res: Response) => {
-  // Prefer the HttpOnly cookie (authoritative, rotated server-side) over any
-  // client-persisted fallback token. This avoids false-positive replay
-  // detection when a stale localStorage fallback is sent alongside a fresh
-  // cookie, which would otherwise revoke the whole session family.
+  // Check all variations of cookie names (__Secure- prefixed and plain)
   const cookieToken = String(
     req.cookies?.[CUSTOMER_REFRESH_COOKIE] ||
       req.cookies?.[ADMIN_REFRESH_COOKIE] ||
-      req.cookies?.[LEGACY_CUSTOMER_REFRESH_COOKIE] ||
-      req.cookies?.[LEGACY_ADMIN_REFRESH_COOKIE] ||
+      req.cookies?.['akula_refresh_token'] ||
+      req.cookies?.['__Secure-akula_refresh_token'] ||
+      req.cookies?.['akula_admin_refresh_token'] ||
+      req.cookies?.['__Secure-akula_admin_refresh_token'] ||
       '',
   ).trim();
   const bodyToken = String(req.body?.refreshToken || req.headers['x-refresh-token'] || '').trim();
@@ -169,7 +166,10 @@ export const refreshSession = asyncHandler(async (req: Request, res: Response) =
   const refreshToken = cookieToken || bodyToken;
 
   if (!refreshToken) {
-    logger.warn('[AUTH] Refresh attempted without refresh token cookie/body');
+    logger.warn(
+      '[AUTH] Refresh attempted without refresh token cookie/body. Cookies present:',
+      Object.keys(req.cookies || {}),
+    );
     throw new ApiError(401, 'Refresh session is missing');
   }
 
@@ -177,10 +177,9 @@ export const refreshSession = asyncHandler(async (req: Request, res: Response) =
   const result = await SessionAuthService.refreshSession(refreshToken, userAgent);
 
   if (result.refreshToken) {
+    setCustomerRefreshCookie(res, result.refreshToken);
     if ((STAFF_ROLES as readonly string[]).includes(result.user.role)) {
       setAdminRefreshCookie(res, result.refreshToken);
-    } else {
-      setCustomerRefreshCookie(res, result.refreshToken);
     }
   }
 
@@ -201,8 +200,6 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = String(
     req.cookies?.[CUSTOMER_REFRESH_COOKIE] ||
       req.cookies?.[ADMIN_REFRESH_COOKIE] ||
-      req.cookies?.[LEGACY_CUSTOMER_REFRESH_COOKIE] ||
-      req.cookies?.[LEGACY_ADMIN_REFRESH_COOKIE] ||
       req.body?.refreshToken ||
       req.headers['x-refresh-token'] ||
       '',
@@ -350,10 +347,9 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
   logger.info(`[AUTH] Google auth session created for user ${r.user._id}`);
   await invalidateUserSessionCaches(String(r.user._id));
 
+  setCustomerRefreshCookie(res, r.refreshToken);
   if ((STAFF_ROLES as readonly string[]).includes(r.user.role)) {
     setAdminRefreshCookie(res, r.refreshToken);
-  } else {
-    setCustomerRefreshCookie(res, r.refreshToken);
   }
 
   const csrfToken = regenerateCsrfToken(res);

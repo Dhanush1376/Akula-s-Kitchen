@@ -2,16 +2,12 @@ export const MEDIA_FOLDERS = {
   products: 'akulas-kitchen/products',
   products_gallery: 'akulas-kitchen/products/gallery',
   categories: 'akulas-kitchen/categories',
-  showcases: 'akulas-kitchen/showcases',
-  gallery: 'akulas-kitchen/gallery',
-  events: 'akulas-kitchen/events',
   blogs: 'akulas-kitchen/blogs',
   users_profile: 'akulas-kitchen/users/profile',
   users_gallery: 'akulas-kitchen/users/gallery',
   banners: 'akulas-kitchen/banners',
   logos: 'akulas-kitchen/logos',
   videos: 'akulas-kitchen/videos',
-  videos_showcases: 'akulas-kitchen/videos/showcases',
   videos_promotions: 'akulas-kitchen/videos/promotions',
   temp: 'akulas-kitchen/temp',
   cms: 'akulas-kitchen/cms',
@@ -25,7 +21,6 @@ export const buildFolder = (module: string, subPath?: string): string => {
 
 export const UPLOAD_LIMITS = {
   products: 5 * 1024 * 1024, // 5MB
-  gallery: 10 * 1024 * 1024, // 10MB
   avatars: 2 * 1024 * 1024, // 2MB
   cms: 5 * 1024 * 1024, // 5MB
   videos: 100 * 1024 * 1024, // 100MB

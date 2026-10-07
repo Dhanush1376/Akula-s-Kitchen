@@ -24,11 +24,7 @@ export async function rebuildUserProfile(userId: string): Promise<void> {
           count: { $sum: 1 },
           highValue: {
             $sum: {
-              $cond: [
-                { $in: ['$eventType', ['purchase', 'booking', 'wishlist_add', 'cart_add']] },
-                3,
-                1,
-              ],
+              $cond: [{ $in: ['$eventType', ['purchase', 'wishlist_add', 'cart_add']] }, 3, 1],
             },
           },
         },
@@ -46,11 +42,7 @@ export async function rebuildUserProfile(userId: string): Promise<void> {
           count: { $sum: 1 },
           highValue: {
             $sum: {
-              $cond: [
-                { $in: ['$eventType', ['purchase', 'booking', 'wishlist_add', 'cart_add']] },
-                3,
-                1,
-              ],
+              $cond: [{ $in: ['$eventType', ['purchase', 'wishlist_add', 'cart_add']] }, 3, 1],
             },
           },
         },
@@ -83,12 +75,12 @@ export async function rebuildUserProfile(userId: string): Promise<void> {
       .limit(10)
       .lean();
 
-    // Purchase/booking history
+    // Purchase history
     const purchaseAgg = await UserInteraction.aggregate([
       {
         $match: {
           userId: userOid,
-          eventType: { $in: ['purchase', 'booking'] },
+          eventType: 'purchase',
           timestamp: { $gte: ninetyDaysAgo },
         },
       },
@@ -96,7 +88,6 @@ export async function rebuildUserProfile(userId: string): Promise<void> {
         $group: {
           _id: null,
           categories: { $addToSet: '$metadata.category' },
-          bookingCount: { $sum: { $cond: [{ $eq: ['$eventType', 'booking'] }, 1, 0] } },
           totalCount: { $sum: 1 },
         },
       },
@@ -166,7 +157,6 @@ export async function rebuildUserProfile(userId: string): Promise<void> {
         categories: purchaseAgg.length > 0 ? (purchaseAgg[0].categories || []).filter(Boolean) : [],
         avgPrice: 0, // Would need product price join â€” simplified for now
         totalSpent: 0,
-        bookingCount: purchaseAgg.length > 0 ? purchaseAgg[0].bookingCount : 0,
       },
       lastRebuiltAt: new Date(),
     };

@@ -53,7 +53,7 @@ export class LoyaltyService {
 
     return {
       walletBalance: 0,
-      siriCoins: user.siriCoins || 0,
+      rewardCoins: user.rewardCoins || 0,
       loyaltyTier: user.loyaltyTier || settings.loyalty.tiers?.[0]?.name || 'Bronze',
       referralCode: user.referralCode,
       referralsCount: user.referralsCount || 0,
@@ -173,7 +173,7 @@ export class LoyaltyService {
 
       // Atomically update User rewards (reward coins only)
       if (coinsEarned > 0) {
-        await User.findByIdAndUpdate(userId, { $inc: { siriCoins: coinsEarned } }, { session });
+        await User.findByIdAndUpdate(userId, { $inc: { rewardCoins: coinsEarned } }, { session });
       }
 
       // 2. Update Order Document for idempotency tracking
@@ -270,7 +270,7 @@ export class LoyaltyService {
       if (settings.loyalty.reviewCoinsBonus && settings.loyalty.reviewCoinsBonus > 0) {
         await User.findByIdAndUpdate(
           userId,
-          { $inc: { siriCoins: settings.loyalty.reviewCoinsBonus } },
+          { $inc: { rewardCoins: settings.loyalty.reviewCoinsBonus } },
           { session },
         );
       }
@@ -315,8 +315,8 @@ export class LoyaltyService {
           [
             {
               $set: {
-                siriCoins: {
-                  $max: [0, { $subtract: [{ $ifNull: ['$siriCoins', 0] }, order.coinsEarned] }],
+                rewardCoins: {
+                  $max: [0, { $subtract: [{ $ifNull: ['$rewardCoins', 0] }, order.coinsEarned] }],
                 },
               },
             },

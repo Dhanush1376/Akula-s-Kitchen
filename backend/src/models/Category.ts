@@ -5,7 +5,7 @@ import { AssetLifecyclePlugin } from '../utils/AssetLifecyclePlugin';
 export interface ICategory extends ISoftDeleted {
   name: string;
   slug: string;
-  type: 'product' | 'event' | 'gallery' | 'global';
+  type: 'product' | 'global';
   description?: string;
   icon?: string;
   imageSrc?: string;
@@ -22,7 +22,7 @@ const CategorySchema: Schema = new Schema(
     slug: { type: String, required: true, unique: true, index: true },
     type: {
       type: String,
-      enum: ['product', 'event', 'gallery', 'global'],
+      enum: ['product', 'global'],
       default: 'global',
       index: true,
     },

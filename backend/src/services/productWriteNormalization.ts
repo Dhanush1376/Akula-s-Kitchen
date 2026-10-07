@@ -6,61 +6,8 @@ import ApiError from '../utils/ApiError';
 import { NormalizationEngine } from './NormalizationEngine';
 
 // Product write-path normalization helpers extracted from productService.ts:
-// smart rental pricing, image de-duplication/limits, and category resolution.
+// image de-duplication/limits and category resolution.
 // Pure input-shaping used by ProductService create/update — no query/cache concerns.
-
-export function enforceSmartPricing(data: Partial<IProduct>, existingProduct?: IProduct) {
-  // If securityDeposit is already provided explicitly, preserve it
-  if (data.securityDeposit !== undefined && Number(data.securityDeposit) > 0) {
-    return;
-  }
-  if (
-    existingProduct?.securityDeposit !== undefined &&
-    Number(existingProduct.securityDeposit) > 0
-  ) {
-    return;
-  }
-
-  const price = data.price !== undefined ? Number(data.price) : Number(existingProduct?.price || 0);
-
-  // Try to find category name from primaryCategory object if populated, or fallback
-  let categoryName = '';
-  if (data.primaryCategory) {
-    categoryName =
-      typeof data.primaryCategory === 'object' && (data.primaryCategory as any).name
-        ? (data.primaryCategory as any).name
-        : String(data.primaryCategory);
-  } else if (existingProduct?.primaryCategory) {
-    categoryName =
-      typeof existingProduct.primaryCategory === 'object' &&
-      (existingProduct.primaryCategory as any).name
-        ? (existingProduct.primaryCategory as any).name
-        : String(existingProduct.primaryCategory);
-  }
-  const category = categoryName.toLowerCase();
-
-  if (price > 0 && category) {
-    let depositRate: number;
-
-    if (category.includes('furniture')) {
-      depositRate = 0.3;
-    } else if (category.includes('electronic')) {
-      depositRate = 0.5;
-    } else if (category.includes('camera')) {
-      depositRate = 0.6;
-    } else {
-      if (price <= 5000) depositRate = 0.3;
-      else if (price <= 25000) depositRate = 0.4;
-      else if (price <= 100000) depositRate = 0.5;
-      else depositRate = 0.6;
-    }
-
-    const deposit = Math.round(price * depositRate);
-    if (data.securityDeposit === undefined) {
-      data.securityDeposit = deposit;
-    }
-  }
-}
 
 export function normalizeProductImages(data: Partial<IProduct>, existingProduct?: IProduct) {
   const rawImages = Array.isArray(data.images) ? data.images : undefined;

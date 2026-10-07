@@ -117,7 +117,35 @@ export const uploadDirectToCloudinary = async (
     return res.data;
   });
 
-  const results = await Promise.all(uploadPromises);
+  let results;
+  try {
+    results = await Promise.all(uploadPromises);
+  } catch (directErr) {
+    logger.warn(
+      '[UPLOAD] Direct Cloudinary upload failed, attempting fallback to backend upload:',
+      directErr.message,
+    );
+    try {
+      const backendFormData = new FormData();
+      for (const f of files) {
+        if (f instanceof File || f instanceof Blob) {
+          backendFormData.append('images', f, f.name || 'image.jpg');
+        }
+      }
+      const backendRes = await api.post('/upload/products', backendFormData);
+      if (backendRes.data?.success && backendRes.data?.images) {
+        return {
+          success: true,
+          url: backendRes.data.images[0],
+          images: backendRes.data.images,
+        };
+      }
+    } catch (fallbackErr) {
+      logger.error('[UPLOAD] Fallback upload also failed:', fallbackErr);
+    }
+    throw directErr;
+  }
+
   const urls = results.map((r) => r.secure_url || r.url);
 
   if (isSingle) {

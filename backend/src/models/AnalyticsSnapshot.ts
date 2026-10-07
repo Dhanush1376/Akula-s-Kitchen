@@ -12,9 +12,7 @@ export interface IAnalyticsSnapshot extends Document {
     totalRevenue: number;
     orderCount: number;
     avgOrderValue: number;
-    rentalRevenue: number;
     purchaseRevenue: number;
-    customOrderRevenue: number;
     cartAbandonmentRate: number;
     checkoutCompletionRate: number;
 
@@ -49,7 +47,6 @@ export interface IAnalyticsSnapshot extends Document {
       inactive: number;
       cartAbandoners: number;
       frequentBuyers: number;
-      rentalFocused: number;
       couponHeavy: number;
       premium: number;
       vip: number;
@@ -126,9 +123,7 @@ const AnalyticsSnapshotSchema: Schema = new Schema(
       totalRevenue: { type: Number, default: 0 },
       orderCount: { type: Number, default: 0 },
       avgOrderValue: { type: Number, default: 0 },
-      rentalRevenue: { type: Number, default: 0 },
       purchaseRevenue: { type: Number, default: 0 },
-      customOrderRevenue: { type: Number, default: 0 },
       cartAbandonmentRate: { type: Number, default: 0 },
       checkoutCompletionRate: { type: Number, default: 0 },
 
@@ -164,7 +159,6 @@ const AnalyticsSnapshotSchema: Schema = new Schema(
         inactive: { type: Number, default: 0 },
         cartAbandoners: { type: Number, default: 0 },
         frequentBuyers: { type: Number, default: 0 },
-        rentalFocused: { type: Number, default: 0 },
         couponHeavy: { type: Number, default: 0 },
         premium: { type: Number, default: 0 },
         vip: { type: Number, default: 0 },

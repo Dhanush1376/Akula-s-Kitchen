@@ -5,10 +5,10 @@ import path from 'path';
 const API_BASE = 'http://localhost:5000/api/search';
 
 const queries = [
-  'wedding',
-  'pelli decoration',
-  'wedding decor under 50k',
-  'yellow flowers wedding stage',
+  'pickle',
+  'avakaya pickle',
+  'idli batter under 200',
+  'spicy karam podi',
   'traditional',
 ];
 

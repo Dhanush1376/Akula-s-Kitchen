@@ -1,20 +1,13 @@
 import { ArrowLeft, ShieldCheck, Check } from 'lucide-react';
 import React from 'react';
 import { m as motion } from 'framer-motion';
-export function CheckoutSteps({
-  currentStep,
-  onStepClick,
-  steps = ['BAG', 'ADDRESS', 'PAYMENT'],
-  orderType = 'purchase',
-}) {
+export function CheckoutSteps({ currentStep, onStepClick, steps = ['BAG', 'ADDRESS', 'PAYMENT'] }) {
   const getStepLabel = (step) => {
     switch (step) {
       case 'BAG':
         return 'Cart';
       case 'ADDRESS':
         return 'Delivery';
-      case 'DURATION':
-        return 'Rental Period';
       case 'VERIFY':
         return 'Confirm';
       case 'PAYMENT':

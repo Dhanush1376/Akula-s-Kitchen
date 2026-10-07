@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { useRazorpay } from '../hooks/useRazorpay';
 import storeSettingsService from '../services/api/storeSettingsService';
 import { useQuery } from '@tanstack/react-query';
-import logger from '../utils/core/logger';
 import { PINCODE_MAP, UPI_REGEX } from './checkoutConstants';
 import { persistentStorage } from '../utils/storage/persistentStorage';
 import toast from 'react-hot-toast';
@@ -29,14 +28,11 @@ export function useCheckout() {
 }
 
 export function CheckoutProvider({ children }) {
-  const { purchaseCart, customCart, clearCart, removeItem, claimedCoupon, setClaimedCoupon } =
-    useCart();
+  const { purchaseCart, clearCart, removeItem, claimedCoupon, setClaimedCoupon } = useCart();
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const { processPayment } = useRazorpay();
   const navigate = useNavigate();
   const location = useLocation();
-  const checkoutMode = location.state?.checkoutMode || 'purchase';
-  const hasRentalItems = false;
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -58,25 +54,10 @@ export function CheckoutProvider({ children }) {
   });
   const settings = settingsData || {};
 
-  const activeItems = React.useMemo(() => {
-    try {
-      if (checkoutMode === 'custom') {
-        return customCart?.items || [];
-      }
-      return purchaseCart?.items || [];
-    } catch (e) {
-      logger.warn('Failed to parse activeItems in checkout', e);
-      return [];
-    }
-  }, [checkoutMode, purchaseCart?.items, customCart?.items]);
+  const activeItems = React.useMemo(() => purchaseCart?.items || [], [purchaseCart?.items]);
   const items = activeItems;
 
-  const subtotal = React.useMemo(() => {
-    if (checkoutMode === 'custom') {
-      return customCart?.summary?.subtotal || 0;
-    }
-    return purchaseCart?.summary?.subtotal || 0;
-  }, [checkoutMode, purchaseCart?.summary?.subtotal, customCart?.summary?.subtotal]);
+  const subtotal = purchaseCart?.summary?.subtotal || 0;
 
   // Empty line since we moved useEffect down
 
@@ -157,8 +138,6 @@ export function CheckoutProvider({ children }) {
     isAuthenticated,
     user,
     activeItems,
-    orderType: checkoutMode,
-    checkoutMode,
     removeItem,
     clearCart,
     navigate,
@@ -271,8 +250,6 @@ export function CheckoutProvider({ children }) {
     handleConfirmOrder,
     PINCODE_MAP,
     UPI_REGEX,
-    hasRentalItems,
-    orderType: checkoutMode,
     checkoutSteps,
     hasCustomizableItems,
     customizationNotes,

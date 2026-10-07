@@ -3,7 +3,6 @@ import { computeOrderTotals, OrderTotalsInput } from '../orderTotals';
 
 const base: OrderTotalsInput = {
   subtotal: 1000,
-  depositTotal: 0,
   isCod: false,
   codFee: 90,
   freeShippingThreshold: 2000,
@@ -62,11 +61,6 @@ describe('computeOrderTotals', () => {
     );
   });
 
-  it('includes refundable deposits in the payable amount', () => {
-    const t = computeOrderTotals({ ...base, subtotal: 1000, depositTotal: 500 });
-    expect(t.total).toBe(1000 + 100 + 500);
-  });
-
   it('always returns walletDeduction as 0 since wallet feature is retired', () => {
     const t = computeOrderTotals({
       ...base,
@@ -78,10 +72,9 @@ describe('computeOrderTotals', () => {
     expect(t.total).toBe(1100); // 1000 + 100 shipping
   });
 
-  it('composes platformFee with COD, shipping, and deposit correctly', () => {
+  it('composes platformFee with COD and shipping correctly', () => {
     const t = computeOrderTotals({
       subtotal: 1500,
-      depositTotal: 300,
       isCod: true,
       codFee: 90,
       freeShippingThreshold: 2000,
@@ -90,10 +83,10 @@ describe('computeOrderTotals', () => {
       useWallet: true,
       walletBalance: 500,
     });
-    // preliminary = 1500 + 100(shipping) + 49(platformFee) + 90(cod) + 300(deposit) = 2039
+    // preliminary = 1500 + 100(shipping) + 49(platformFee) + 90(cod) = 1739
     expect(t.platformFee).toBe(49);
-    expect(t.preliminaryTotal).toBe(2039);
+    expect(t.preliminaryTotal).toBe(1739);
     expect(t.walletDeduction).toBe(0);
-    expect(t.total).toBe(2039);
+    expect(t.total).toBe(1739);
   });
 });

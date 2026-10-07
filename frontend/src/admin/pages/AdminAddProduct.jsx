@@ -3,7 +3,6 @@ import { m as motion, AnimatePresence } from 'framer-motion';
 import { ProductMediaStep } from './steps/ProductMediaStep';
 import { ProductInfoStep } from './steps/ProductInfoStep';
 import { ProductVariantsStep } from './steps/ProductVariantsStep';
-import { ProductSeoStep } from './steps/ProductSeoStep';
 import { ProductPricingStep } from './steps/ProductPricingStep';
 import { ProductReviewStep } from './steps/ProductReviewStep';
 import { SkeletonWizard } from '../components/AdminUIKit';
@@ -36,17 +35,23 @@ const WIZARD_STEPS = [
   { id: 'basics', label: 'Basic Info', icon: 'info' },
   { id: 'variants', label: 'Variants', icon: 'style' },
   { id: 'pricing', label: 'Pricing', icon: 'payments' },
-  { id: 'seo', label: 'SEO', icon: 'search' },
-  { id: 'review', label: 'Publish', icon: 'publish' },
+  { id: 'review', label: 'SEO & Publish', icon: 'publish' },
 ];
 
 export function AdminAddProduct({ editId }) {
   const { id: routeId } = useParams();
   const queryClient = useQueryClient();
-  const id = editId || routeId;
+  const rawId = editId || routeId;
+  const id = rawId && rawId !== 'undefined' && rawId !== 'null' ? rawId : undefined;
   const navigate = useNavigate();
   const { refreshProducts } = useAdmin();
   const isEditMode = Boolean(id);
+
+  useEffect(() => {
+    if (routeId === 'undefined' || routeId === 'null') {
+      navigate('/admin/products/add', { replace: true });
+    }
+  }, [routeId, navigate]);
 
   const [mobileTab, setMobileTab] = useState('form');
   const [isCompressing, setIsCompressing] = useState(false);
@@ -61,8 +66,6 @@ export function AdminAddProduct({ editId }) {
     setCategoriesList,
     isCustomCategory,
     setIsCustomCategory,
-    showRentalSettings,
-    setShowRentalSettings,
     currentStep,
     setCurrentStep,
     formData,
@@ -77,6 +80,13 @@ export function AdminAddProduct({ editId }) {
     lastSavedAt,
     blocker,
   } = useProductForm({ id, isEditMode });
+
+  useEffect(() => {
+    if (currentStep >= WIZARD_STEPS.length) {
+      setCurrentStep(WIZARD_STEPS.length - 1);
+    }
+  }, [currentStep, setCurrentStep]);
+
   const [serverData, _setServerData] = useState(null);
   const [showConflictModal, setShowConflictModal] = useState(false);
 
@@ -479,28 +489,21 @@ export function AdminAddProduct({ editId }) {
                   <ProductPricingStep
                     formData={formData}
                     setFormData={setFormData}
-                    showRentalSettings={showRentalSettings}
-                    setShowRentalSettings={setShowRentalSettings}
                     focusedField={focusedField}
                     handleAIFill={handleAIFill}
                     isAIGenerating={isAIGenerating}
                   />
                 )}
 
-                {/* STEP 4: SEO */}
+                {/* STEP 4: SEO & PUBLISH */}
                 {currentStep === 4 && (
-                  <ProductSeoStep
+                  <ProductReviewStep
                     formData={formData}
                     setFormData={setFormData}
                     focusedField={focusedField}
                     handleAIFill={handleAIFill}
                     isAIGenerating={isAIGenerating}
                   />
-                )}
-
-                {/* STEP 5: REVIEW */}
-                {currentStep === 5 && (
-                  <ProductReviewStep formData={formData} setFormData={setFormData} />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -533,10 +536,8 @@ export function AdminAddProduct({ editId }) {
                       </>
                     ) : (
                       <>
-                        <span className="material-symbols-outlined text-[16px]">
-                          {isEditMode ? 'save' : 'publish'}
-                        </span>
-                        <span>{isEditMode ? 'Update Draft' : 'Save Draft'}</span>
+                        <span className="material-symbols-outlined text-[16px]">save</span>
+                        <span>{isEditMode ? 'Update' : 'Save'}</span>
                       </>
                     )}
                   </button>

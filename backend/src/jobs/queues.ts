@@ -28,8 +28,12 @@ export const connection = new IORedis(redisUrl, {
   retryStrategy: (retries: number) => {
     const requireRedis = process.env.REQUIRE_REDIS === 'true';
     const isProduction = process.env.NODE_ENV === 'production';
-    if (!requireRedis && !isProduction && retries > 5) {
-      return null; // Stop reconnecting after 5 attempts if not required
+    if (
+      !requireRedis &&
+      !isProduction &&
+      (retries > 1 || redisUrl.includes('example.com') || redisUrl.includes('dummy'))
+    ) {
+      return null; // Stop reconnecting immediately if not required or dummy host
     }
     return Math.min(retries * 100, 3000);
   },

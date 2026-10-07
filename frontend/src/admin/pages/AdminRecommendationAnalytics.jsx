@@ -229,16 +229,13 @@ export function AdminRecommendationAnalytics() {
     }
   }, [searchParams]);
 
-  const KNOWN_EVENT_CATEGORIES = useMemo(() => [], []);
-
   const KNOWN_PRODUCT_CATEGORIES = useMemo(() => ['Order Checkout'], []);
 
-  // Dynamically collect all available product & event categories from live logs and affinities
-  const { productCategoriesList, eventCategoriesList } = useMemo(() => {
+  // Dynamically collect all available product categories from live logs and affinities
+  const { productCategoriesList } = useMemo(() => {
     const prodSet = new Set(KNOWN_PRODUCT_CATEGORIES);
-    const evtSet = new Set(KNOWN_EVENT_CATEGORIES);
 
-    const checkAndAdd = (catName, dom) => {
+    const checkAndAdd = (catName) => {
       if (
         !catName ||
         catName === 'General' ||
@@ -246,17 +243,10 @@ export function AdminRecommendationAnalytics() {
         catName === 'Account Registration'
       )
         return;
-      const clean = catName.trim();
-      const isEvent = dom === 'event';
-
-      if (isEvent) {
-        evtSet.add(clean);
-      } else {
-        prodSet.add(clean);
-      }
+      prodSet.add(catName.trim());
     };
 
-    userLogs.forEach((l) => checkAndAdd(l.category, l.domain));
+    userLogs.forEach((l) => checkAndAdd(l.category));
     if (stats?.userMetrics?.topAffinities) {
       stats.userMetrics.topAffinities.forEach((a) => checkAndAdd(String(a._id)));
     }
@@ -266,9 +256,8 @@ export function AdminRecommendationAnalytics() {
 
     return {
       productCategoriesList: Array.from(prodSet).sort(),
-      eventCategoriesList: Array.from(evtSet).sort(),
     };
-  }, [userLogs, stats, KNOWN_PRODUCT_CATEGORIES, KNOWN_EVENT_CATEGORIES]);
+  }, [userLogs, stats, KNOWN_PRODUCT_CATEGORIES]);
 
   const fetchLogs = useCallback(
     async (type = selectedFilter) => {

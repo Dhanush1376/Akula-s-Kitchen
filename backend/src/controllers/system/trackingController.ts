@@ -11,24 +11,18 @@ import { sanitizeTrackingMetadata } from '../../utils/security/aiSanitizer';
 const VALID_EVENT_TYPES = new Set([
   'product_view',
   'product_click',
-  'gallery_view',
-  'gallery_click',
-  'event_view',
-  'event_click',
-  'showcase_view',
   'wishlist_add',
   'wishlist_remove',
   'cart_add',
   'cart_remove',
   'purchase',
-  'booking',
   'search',
   'category_explore',
   'review_read',
   'review_submit',
 ]);
 
-const VALID_TARGET_TYPES = new Set(['product', 'event', 'gallery', 'showcase']);
+const VALID_TARGET_TYPES = new Set(['product']);
 
 const isValidInteractionPayload = (
   eventType: string,
@@ -89,7 +83,7 @@ export const trackEvent = async (req: Request, res: Response) => {
     }).catch(() => {});
 
     // If significant activity, enqueue profile rebuild
-    if (userId && ['purchase', 'booking', 'wishlist_add', 'cart_add'].includes(eventType)) {
+    if (userId && ['purchase', 'wishlist_add', 'cart_add'].includes(eventType)) {
       if (isQueuesReady()) {
         recommendationQueue
           .add(

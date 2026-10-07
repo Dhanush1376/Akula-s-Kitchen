@@ -10,7 +10,7 @@ export interface TaxEngineConfig {
 }
 
 export interface TaxCalculationParams {
-  /** Taxable subtotal (for purchase: product subtotal; for rental: rentalCharge) */
+  /** Taxable subtotal (product subtotal) */
   subtotal: number;
   /** @deprecated Retained for backwards compatibility; always treated as 0 */
   discount?: number;
@@ -54,14 +54,13 @@ export class TaxEngine {
    */
   public static calculateTax(params: TaxCalculationParams): TaxCalculationResult {
     const { subtotal = 0, storeState, customerState } = params;
-    const config = params.taxConfig || params.taxSettings || {};
 
     // Validate customer destination state
     const canonicalCustomerState = canonicalizeState(customerState);
     if (!canonicalCustomerState) {
       throw new ApiError(
         400,
-        'Destination state is required and must be a valid Indian State or Union Territory for delivery and tax compliance.',
+        'Destination state is required and must be a valid Indian State or Union Territory for delivery.',
       );
     }
 
@@ -69,83 +68,24 @@ export class TaxEngine {
     const canonicalStoreState = canonicalizeState(storeState) || 'AP';
     const isInterState = canonicalStoreState !== canonicalCustomerState;
 
-    const gstEnabled = Boolean(config.gstEnabled ?? true);
-    const taxInclusive = Boolean(config.taxInclusive ?? true);
-    const gstRate = Math.max(0, Number(config.gstRate ?? 0.18));
-    const cgstRate = Math.max(0, Number(config.cgstRate ?? gstRate / 2));
-    const sgstRate = Math.max(0, Number(config.sgstRate ?? gstRate / 2));
-
-    // Taxable base is strictly subtotal, never negative
+    // Zero taxes website-wide
     const taxableBase = Math.max(0, Number(subtotal.toFixed(2)));
-
-    if (!gstEnabled || gstRate <= 0 || taxableBase === 0) {
-      return {
-        taxableBase,
-        taxableAmount: taxableBase,
-        taxAmount: 0,
-        cgst: 0,
-        sgst: 0,
-        igst: 0,
-        isInterState,
-        taxInclusive,
-        isTaxInclusive: taxInclusive,
-        gstEnabled,
-        isGstEnabled: gstEnabled,
-        gstRate,
-        cgstRate,
-        sgstRate,
-        customerState: canonicalCustomerState,
-        storeState: canonicalStoreState,
-      };
-    }
-
-    let taxableAmount: number;
-    let taxAmount: number;
-
-    if (taxInclusive) {
-      // Product prices already include GST — extract the basic taxable value
-      taxableAmount = Number((taxableBase / (1 + gstRate)).toFixed(2));
-      taxAmount = Number((taxableBase - taxableAmount).toFixed(2));
-    } else {
-      // GST is on top of the taxable base
-      taxableAmount = taxableBase;
-      taxAmount = Number((taxableAmount * gstRate).toFixed(2));
-    }
-
-    let cgst: number;
-    let sgst: number;
-    let igst: number;
-
-    if (isInterState) {
-      // Inter-state: Full tax goes to IGST
-      igst = taxAmount;
-      cgst = 0;
-      sgst = 0;
-    } else {
-      // Intra-state: Split between CGST and SGST
-      const totalRatio = cgstRate + sgstRate > 0 ? cgstRate + sgstRate : gstRate;
-      const cgstFraction = cgstRate / (totalRatio || 1);
-      cgst = Number((taxAmount * cgstFraction).toFixed(2));
-      // Reconcile SGST to guarantee cgst + sgst === taxAmount down to the paise
-      sgst = Number((taxAmount - cgst).toFixed(2));
-      igst = 0;
-    }
 
     return {
       taxableBase,
-      taxableAmount,
-      taxAmount,
-      cgst,
-      sgst,
-      igst,
+      taxableAmount: taxableBase,
+      taxAmount: 0,
+      cgst: 0,
+      sgst: 0,
+      igst: 0,
       isInterState,
-      taxInclusive,
-      isTaxInclusive: taxInclusive,
-      gstEnabled,
-      isGstEnabled: gstEnabled,
-      gstRate,
-      cgstRate,
-      sgstRate,
+      taxInclusive: false,
+      isTaxInclusive: false,
+      gstEnabled: false,
+      isGstEnabled: false,
+      gstRate: 0,
+      cgstRate: 0,
+      sgstRate: 0,
       customerState: canonicalCustomerState,
       storeState: canonicalStoreState,
     };

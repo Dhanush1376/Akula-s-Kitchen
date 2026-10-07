@@ -7,17 +7,11 @@ import logger from '../../config/logger';
  */
 const SIGNAL_WEIGHTS: Record<string, { weight: number; halfLifeDays: number }> = {
   purchase: { weight: 10, halfLifeDays: 30 },
-  booking: { weight: 10, halfLifeDays: 30 },
   wishlist_add: { weight: 7, halfLifeDays: 14 },
   cart_add: { weight: 6, halfLifeDays: 7 },
   review_submit: { weight: 5, halfLifeDays: 30 },
   product_click: { weight: 3, halfLifeDays: 3 },
-  event_click: { weight: 3, halfLifeDays: 3 },
-  gallery_click: { weight: 2, halfLifeDays: 3 },
   product_view: { weight: 1.5, halfLifeDays: 3 },
-  event_view: { weight: 1.5, halfLifeDays: 3 },
-  gallery_view: { weight: 1, halfLifeDays: 3 },
-  showcase_view: { weight: 1, halfLifeDays: 3 },
   search: { weight: 4, halfLifeDays: 7 },
   category_explore: { weight: 2, halfLifeDays: 5 },
   review_read: { weight: 0.5, halfLifeDays: 3 },
@@ -216,10 +210,7 @@ export async function computeEngagementScore(userId: string): Promise<number> {
             $sum: {
               $cond: [
                 {
-                  $in: [
-                    '$eventType',
-                    ['purchase', 'booking', 'wishlist_add', 'cart_add', 'review_submit'],
-                  ],
+                  $in: ['$eventType', ['purchase', 'wishlist_add', 'cart_add', 'review_submit']],
                 },
                 1,
                 0,

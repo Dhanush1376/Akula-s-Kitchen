@@ -31,8 +31,29 @@ const envSchema = z
     SMTP_PORT: z.coerce.number().optional(),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
-    SMTP_FROM_EMAIL: z.string().email('Invalid SMTP_FROM_EMAIL format'),
+    // Sender identity (see config/emailSender.ts). BREVO_* take precedence over SMTP_*.
+    BREVO_SENDER_EMAIL: z
+      .string()
+      .email('Invalid BREVO_SENDER_EMAIL format')
+      .optional()
+      .or(z.literal('')),
+    BREVO_SENDER_NAME: z.string().optional(),
+    BREVO_REPLY_TO_EMAIL: z
+      .string()
+      .email('Invalid BREVO_REPLY_TO_EMAIL format')
+      .optional()
+      .or(z.literal('')),
+    SMTP_FROM_EMAIL: z
+      .string()
+      .email('Invalid SMTP_FROM_EMAIL format')
+      .optional()
+      .or(z.literal('')),
     SMTP_FROM_NAME: z.string().default("Akula's Kitchen"),
+    SMTP_REPLY_TO_EMAIL: z
+      .string()
+      .email('Invalid SMTP_REPLY_TO_EMAIL format')
+      .optional()
+      .or(z.literal('')),
 
     // Payments
     RAZORPAY_KEY_ID: z.string().min(1, 'RAZORPAY_KEY_ID is required'),
@@ -134,6 +155,14 @@ const envSchema = z
     {
       message:
         "Production security checks failed. Ensure no 'change_me' secrets, use MongoDB Atlas (no localhost), strong webhook secrets, secure Redis, admin password 12+ chars, and disabled dev-only flags.",
+    },
+  )
+  .refine(
+    (data) =>
+      data.NODE_ENV !== 'production' || Boolean(data.BREVO_SENDER_EMAIL || data.SMTP_FROM_EMAIL),
+    {
+      message:
+        'Production requires an explicit sender: set BREVO_SENDER_EMAIL (e.g. orders@akulas.kitchen) or SMTP_FROM_EMAIL.',
     },
   )
   .refine(

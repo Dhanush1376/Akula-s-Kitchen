@@ -63,6 +63,13 @@ export function StickyMobileATC({ product, triggerRef }) {
   }, [isVisible, isScrollingDown]);
 
   const handleAddToCart = () => {
+    if (product?.optionGroups && product.optionGroups.length > 0) {
+      if (triggerRef?.current) {
+        triggerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        triggerRef.current.click();
+      }
+      return;
+    }
     addItem({
       id: productId,
       title: product.title,
@@ -70,6 +77,7 @@ export function StickyMobileATC({ product, triggerRef }) {
       imageSrc: product.imageSrc || product.image,
       formattedPrice: `Rs. ${product.price?.toLocaleString()}`,
       quantity: 1,
+      isNonRefundable: true,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

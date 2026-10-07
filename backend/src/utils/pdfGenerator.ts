@@ -15,6 +15,9 @@ export type InvoicePdfData = {
   paymentMethod?: string;
   invoice?: any;
   store?: any;
+  codFee?: number;
+  platformFee?: number;
+  discount?: number;
 };
 
 const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any): void => {
@@ -33,14 +36,14 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
 
   const storeName = storeSnap?.name || legalDetails.legalName || storeConfig.name;
   const tagline = storeSnap?.tagline || settings?.general?.tagline || '';
-  const gstin = taxSnap?.gstNumber || legalDetails.gstin || '';
-  const cin = storeSnap?.cin || legalDetails.cin || '';
+  const gstin = '';
+  const cin = '';
   const storeAddress = storeSnap?.address || legalDetails.address;
 
-  const isGstEnabled = taxSnap?.gstEnabled ?? settings?.taxes?.gstEnabled ?? true;
-  const isTaxInclusive = taxSnap?.taxInclusive ?? settings?.taxes?.taxInclusive ?? true;
-  const isInterState = Boolean(taxSnap?.isInterState);
-  const gstRate = Number(taxSnap?.gstRate ?? settings?.taxes?.gstRate ?? 0.18);
+  const isGstEnabled = false;
+  const isTaxInclusive = false;
+  const isInterState = false;
+  const gstRate = 0;
   const cgstRate = Number(taxSnap?.cgstRate ?? settings?.taxes?.cgstRate ?? gstRate / 2);
   const sgstRate = Number(taxSnap?.sgstRate ?? settings?.taxes?.sgstRate ?? gstRate / 2);
   const hsnCode = taxSnap?.hsnCode || settings?.taxes?.hsnCode || '';
@@ -86,15 +89,6 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
     currentY += 11;
   }
 
-  if (cin) {
-    doc
-      .fillColor(textColor)
-      .font('Helvetica-Bold')
-      .fontSize(8.5)
-      .text(`CIN: ${cin}`, 50, currentY + 1);
-    currentY += 11;
-  }
-
   // Right: Invoice Info
   const invoiceNum =
     invoiceSnap?.number ||
@@ -137,8 +131,8 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
     doc.text(`HSN / SAC: ${hsnCode}`, 50, rightY, { align: 'right' });
   }
 
-  // Separator
-  doc.moveTo(50, 145).lineTo(550, 145).lineWidth(1).strokeColor(grayColor).stroke();
+  // Separator (Thin 0.5 Hairline)
+  doc.moveTo(50, 145).lineTo(550, 145).lineWidth(0.5).strokeColor(lightGray).stroke();
 
   // --- ADDRESSES ---
   const addrY = 160;
@@ -190,7 +184,7 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   const gstRatePercent = (gstRate * 100).toFixed(1);
 
   if (!isGstEnabled) {
-    doc.text('ITEM DESIGN CURATION', 50, tableTop);
+    doc.text('ITEM DETAILS', 50, tableTop);
     doc.text('QTY', 300, tableTop, { align: 'center', width: 40 });
     doc.text('UNIT PRICE', 360, tableTop, { align: 'right', width: 80 });
     doc.text('TOTAL', 460, tableTop, { align: 'right', width: 90 });
@@ -305,8 +299,18 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   const platformFeeVal = Number((orderData as any).platformFee || 0);
   const totalVal = Number(orderData.total || 0);
 
+  const codFeeVal = Number((orderData as any).codFee || (orderData as any).tax?.codFee || 0);
+  let resolvedCodFee = codFeeVal;
+  if (
+    resolvedCodFee === 0 &&
+    paymentModeStr.includes('COD') &&
+    totalVal > subtotalVal + shippingVal + platformFeeVal - discountVal
+  ) {
+    resolvedCodFee = totalVal - (subtotalVal + shippingVal + platformFeeVal - discountVal);
+  }
+
   doc.fillColor(grayColor).font('Helvetica-Bold').fontSize(9);
-  doc.text('Gross Subtotal:', 350, y, { align: 'right', width: 100 });
+  doc.text('Subtotal (Excl. Shipping Charges):', 230, y, { align: 'right', width: 220 });
   doc
     .fillColor(textColor)
     .font('Helvetica-Bold')
@@ -314,38 +318,49 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   y += 15;
 
   if (discountVal > 0) {
-    doc.fillColor(grayColor).text('Coupon Discount:', 350, y, { align: 'right', width: 100 });
+    doc.fillColor(grayColor).text('Coupon Discount:', 230, y, { align: 'right', width: 220 });
     doc
       .fillColor(textColor)
       .text(`- Rs. ${discountVal.toFixed(2)}`, 460, y, { align: 'right', width: 90 });
     y += 15;
   }
 
-  if (shippingVal > 0) {
-    doc.fillColor(grayColor).text('Shipping Fee:', 350, y, { align: 'right', width: 100 });
-    doc
-      .fillColor(textColor)
-      .text(`Rs. ${shippingVal.toFixed(2)}`, 460, y, { align: 'right', width: 90 });
-    y += 15;
-  }
+  doc.fillColor(grayColor).text('Shipping Charges:', 230, y, { align: 'right', width: 220 });
+  doc
+    .fillColor(textColor)
+    .text(shippingVal > 0 ? `Rs. ${shippingVal.toFixed(2)}` : 'FREE', 460, y, {
+      align: 'right',
+      width: 90,
+    });
+  y += 15;
 
   if (platformFeeVal > 0) {
-    doc.fillColor(grayColor).text('Platform Fee:', 350, y, { align: 'right', width: 100 });
+    doc
+      .fillColor(grayColor)
+      .text('Packaging & Platform Fee:', 230, y, { align: 'right', width: 220 });
     doc
       .fillColor(textColor)
       .text(`Rs. ${platformFeeVal.toFixed(2)}`, 460, y, { align: 'right', width: 90 });
     y += 15;
   }
 
+  if (resolvedCodFee > 0) {
+    doc.fillColor(grayColor).text('COD Handling Fee:', 230, y, { align: 'right', width: 220 });
+    doc
+      .fillColor(textColor)
+      .text(`Rs. ${resolvedCodFee.toFixed(2)}`, 460, y, { align: 'right', width: 90 });
+    y += 15;
+  }
+
   if (!isTaxInclusive && isGstEnabled && taxSnap && Number(taxSnap.taxAmount) > 0) {
-    doc.fillColor(grayColor).text('Tax (GST):', 350, y, { align: 'right', width: 100 });
+    doc.fillColor(grayColor).text('Tax (GST):', 230, y, { align: 'right', width: 220 });
     doc
       .fillColor(textColor)
       .text(`Rs. ${Number(taxSnap.taxAmount).toFixed(2)}`, 460, y, { align: 'right', width: 90 });
     y += 15;
   }
 
-  doc.moveTo(350, y).lineTo(550, y).lineWidth(1).strokeColor(textColor).stroke();
+  doc.moveTo(350, y).lineTo(550, y).lineWidth(0.5).strokeColor(lightGray).stroke();
   y += 10;
 
   // Grand Total
@@ -359,6 +374,30 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   doc.fillColor(brandColor).font('Helvetica-Bold').fontSize(12);
   doc.text(`Rs. ${totalVal.toFixed(2)}`, 460, y - 1, { align: 'right', width: 90 });
   y += 25;
+
+  // Terms & Conditions / Return Policy Box (Sharp Monochrome)
+  const noticeY = Math.min(Math.max(y + 15, 520), 610);
+  doc
+    .rect(50, noticeY, 500, 48)
+    .fillColor('#f9fafb')
+    .strokeColor('#d1d5db')
+    .lineWidth(0.5)
+    .fillAndStroke();
+  doc
+    .fillColor(textColor)
+    .font('Helvetica-Bold')
+    .fontSize(8)
+    .text('TERMS & CONDITIONS / RETURN POLICY', 60, noticeY + 7);
+  doc
+    .fillColor(grayColor)
+    .font('Helvetica')
+    .fontSize(7.5)
+    .text(
+      "1. Perishable Goods Policy: All freshly prepared culinary food items are strictly non-returnable and non-exchangeable once dispatched or delivered in compliance with food safety regulations.\n2. Transit Damage: Report any transit damage or outer seal discrepancy within 24 hours of delivery with package unboxing proof.\n3. Declaration: This is an authorized computer-generated commercial invoice issued by Akula's Kitchen and requires no physical signatures.",
+      60,
+      noticeY + 18,
+      { width: 480, lineGap: 1.5 },
+    );
 
   // --- TAX BREAKDOWN (Only when GST is enabled) ---
   if (isGstEnabled) {

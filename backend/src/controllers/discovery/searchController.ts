@@ -95,7 +95,7 @@ export const searchResults = async (req: Request, res: Response) => {
     const safeSort = VALID_SORTS.has(sort || '') ? sort : undefined;
 
     // Validate type parameter against whitelist
-    const VALID_TYPES = new Set(['all', 'product', 'event', '']);
+    const VALID_TYPES = new Set(['all', 'product', '']);
     const safeType = VALID_TYPES.has(type || '') ? type : undefined;
 
     const start = performance.now();

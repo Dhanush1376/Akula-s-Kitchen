@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import SoftDeletePlugin, { ISoftDeleted, SoftDeleteModel } from '../utils/SoftDeletePlugin';
 
 /**
- * ServiceArea — Delivery/rental service radius configuration.
+ * ServiceArea — Delivery service radius configuration.
  *
  * Each document defines a circular service area with a center point
  * and radius. Used to validate whether a customer's address is within

@@ -92,11 +92,11 @@ export const getCTR = async (req: Request, res: Response) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const [totalViews, totalClicks] = await Promise.all([
       UserInteraction.countDocuments({
-        eventType: { $in: ['product_view', 'gallery_view', 'category_explore'] },
+        eventType: { $in: ['product_view', 'category_explore'] },
         timestamp: { $gte: thirtyDaysAgo },
       }),
       UserInteraction.countDocuments({
-        eventType: { $in: ['product_click', 'cart_add', 'wishlist_add', 'purchase', 'booking'] },
+        eventType: { $in: ['product_click', 'cart_add', 'wishlist_add', 'purchase'] },
         timestamp: { $gte: thirtyDaysAgo },
       }),
     ]);
@@ -354,11 +354,11 @@ export const getConversionImpact = async (req: Request, res: Response) => {
 
     const [totalConversions, recoConversions] = await Promise.all([
       UserInteraction.countDocuments({
-        eventType: { $in: ['purchase', 'booking'] },
+        eventType: 'purchase',
         timestamp: { $gte: thirtyDaysAgo },
       }),
       UserInteraction.countDocuments({
-        eventType: { $in: ['purchase', 'booking'] },
+        eventType: 'purchase',
         'metadata.source': {
           $in: ['recommendation', 'trending', 'similar', 'seasonal', 'for-you'],
         },
@@ -491,27 +491,6 @@ function humanizeWebActivity(
     };
   }
 
-  // Event booking status lookup
-  if (p.includes('/booking-success/') || p.includes('/events/dashboard')) {
-    const rawBooking = pagePath.split('/').filter(Boolean).pop() || '';
-    return {
-      userName: customerName || 'Customer',
-      userRole: 'customer',
-      customerName,
-      customerEmail,
-      customerPhone,
-      customerId,
-      orderCode: rawBooking.toUpperCase(),
-      actionText: rawBooking
-        ? `Checked event booking #${rawBooking.toUpperCase()} status`
-        : 'Checked event booking status',
-      detailText: rawBooking ? `Booking #${rawBooking.toUpperCase()}` : 'Event Booking',
-      icon: 'celebration',
-      badgeColor: '#f59e0b',
-      type: 'views',
-    };
-  }
-
   // Cart
   if (p.includes('/cart')) {
     return {
@@ -575,32 +554,6 @@ function humanizeWebActivity(
       detailText: 'Catalog Browsing',
       icon: 'storefront',
       badgeColor: '#3b82f6',
-      type: 'views',
-    };
-  }
-
-  // Gallery
-  if (p.includes('/gallery')) {
-    return {
-      userName,
-      userRole,
-      actionText: 'Browsed wedding & event showcase gallery',
-      detailText: 'Event Showcase',
-      icon: 'photo_library',
-      badgeColor: '#06b6d4',
-      type: 'views',
-    };
-  }
-
-  // Events / Packages
-  if (p.includes('/events') || p.includes('/event/')) {
-    return {
-      userName,
-      userRole,
-      actionText: 'Visited legacy events page',
-      detailText: 'Event Themes',
-      icon: 'celebration',
-      badgeColor: '#f59e0b',
       type: 'views',
     };
   }
@@ -737,7 +690,6 @@ const formatStaffAuditAction = (log: any): string => {
   if (path.includes('/analytics')) return 'Generated business performance analytics';
   if (path.includes('/settings')) return 'Adjusted store operational settings';
   if (path.includes('/backup')) return 'Verified backup center integrity';
-  if (path.includes('/events')) return 'Updated event booking catalog';
   if (path.includes('/reviews')) return 'Moderated customer product reviews';
   if (path.includes('/returns')) return 'Processed customer return or exchange';
   if (path.includes('/team')) return 'Updated staff permissions & team members';
@@ -947,12 +899,8 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
           badgeColor = '#64748b';
       }
 
-      const isEventDomain =
-        item.targetType === 'event' ||
-        item.targetType === 'gallery' ||
-        item.targetType === 'showcase';
-      const logDomain = isEventDomain ? 'event' : 'product';
-      const logCategory = cleanCat || (logDomain === 'event' ? 'Event Themes' : 'Products');
+      const logDomain = 'product';
+      const logCategory = cleanCat || 'Products';
 
       formattedLogs.push({
         id: `ui_${item._id}`,
@@ -998,13 +946,6 @@ export const getLiveUserLogs = async (req: Request, res: Response) => {
       let domain = 'general';
       let eventCat = '';
       if (
-        pagePath.includes('/events') ||
-        pagePath.includes('/event/') ||
-        pagePath.includes('/gallery')
-      ) {
-        domain = 'event';
-        eventCat = pagePath.includes('/events') ? 'Event Packages' : 'Event Showcase';
-      } else if (
         pagePath.includes('/product') ||
         pagePath.includes('/catalog') ||
         pagePath.includes('/shop') ||

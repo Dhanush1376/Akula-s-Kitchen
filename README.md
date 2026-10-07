@@ -158,7 +158,7 @@ Copy `backend/.env.example` to `backend/.env` and set **`BREVO_API_KEY`** (recom
 
 ### 8. Performance
 
-- Public GET APIs (`/products`, `/events`, `/gallery`) use **Redis response cache** (120–300s TTL) when `REDIS_URL` is set, plus HTTP `Cache-Control` / ETag versioning. See [docs/CACHE.md](docs/CACHE.md) for TTLs and invalidation triggers.
+- Public GET APIs (`/products`, `/categories`, `/cms`) use **Redis response cache** (120–300s TTL) when `REDIS_URL` is set, plus HTTP `Cache-Control` / ETag versioning. See [docs/CACHE.md](docs/CACHE.md) for TTLs and invalidation triggers.
 - `ensureIndexes()` runs in the **background** after boot so HTTP binds immediately; run `npm run create-indexes` in CI/CD before first production deploy.
 - Stale pending-order cleanup uses a **MongoDB cursor + bulkWrite** (batched, memory-safe).
 - Cron jobs use **Redis SETNX locks** when `REDIS_URL` is set so horizontal scaling does not double-run stock release, email DLQ, or CMS cleanup.
@@ -248,7 +248,14 @@ JWT_SECRET=your_secure_jwt_secret
 JWT_EXPIRES_IN=15m
 OTP_EXPIRY_MINUTES=5
 
-# SMTP Transporter Configs
+# Email (Brevo). Send from the authenticated brand domain, not a personal Gmail.
+# Setup, DNS (SPF/DKIM/DMARC/BIMI): docs/email-brand-authentication.md
+BREVO_API_KEY=your_brevo_rest_api_key
+BREVO_SENDER_EMAIL=orders@akulas.kitchen
+BREVO_SENDER_NAME=Akula's Kitchen
+BREVO_REPLY_TO_EMAIL=support@akulas.kitchen
+
+# Optional SMTP fallback (local development)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
@@ -274,7 +281,7 @@ RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
 Create a `/frontend/.env` file with reference to `/frontend/.env.example`:
 
 ```env
-VITE_API_URL=https://eventdecor-lztd.onrender.com/api
+VITE_API_URL=https://akula-s-kitchen.onrender.com/api
 VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
 ```
 

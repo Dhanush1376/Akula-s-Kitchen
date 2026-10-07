@@ -46,16 +46,13 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
 
   const id = item._id || item.id;
   const image = item.imageSrc || item.image;
-  const title = item.title || 'Untitled Masterpiece';
+  const title = item.title || 'Untitled product';
   const category = item.category;
   const price = item.price || item.basePrice;
   const oldPrice = item.oldPrice;
   const score = item.score;
 
-  const targetType = item.targetType || item.type || 'product';
-
-  const link =
-    targetType === 'event' ? `/events/${item.slug || id}` : `/product/${item.slug || id}`;
+  const link = `/product/${item.slug || id}`;
 
   const wishlisted = isWishlisted(id);
 
@@ -90,13 +87,13 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (targetType === 'product') {
-      addItem({ id, title, price, imageSrc: image, quantity: 1, variant: 'Default' });
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
-    } else {
+    if (item?.optionGroups && item.optionGroups.length > 0) {
       navigate(link);
+      return;
     }
+    addItem({ id, title, price, imageSrc: image, quantity: 1, variant: 'Default' });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   };
 
   return (
@@ -193,24 +190,22 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
                   <>
                     <Check className="text-[16px]" strokeWidth={1.5} /> Added
                   </>
-                ) : targetType === 'event' ? (
-                  'View Event'
+                ) : item?.optionGroups && item.optionGroups.length > 0 ? (
+                  'Choose Options'
                 ) : (
                   'Add to Bag'
                 )}
               </button>
 
-              {(onQuickView || targetType === 'product') && (
-                <button
-                  onClick={(e) => {
-                    handleQuickViewAction(e, item);
-                  }}
-                  className="w-12 h-12 flex items-center justify-center shrink-0 rounded-xl bg-white/20 backdrop-blur-xl text-white border border-white/30 hover:bg-white/30 transition-all"
-                  aria-label="Quick View"
-                >
-                  <Eye className="text-[18px]" strokeWidth={1.5} />
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  handleQuickViewAction(e, item);
+                }}
+                className="w-12 h-12 flex items-center justify-center shrink-0 rounded-xl bg-white/20 backdrop-blur-xl text-white border border-white/30 hover:bg-white/30 transition-all"
+                aria-label="Quick View"
+              >
+                <Eye className="text-[18px]" strokeWidth={1.5} />
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -226,7 +221,11 @@ export const PremiumRecommendationCard = React.memo(function PremiumRecommendati
             }`}
           >
             <span className="material-symbols-outlined text-[20px]">
-              {added ? 'check' : targetType === 'event' ? 'arrow_forward' : 'add'}
+              {added
+                ? 'check'
+                : item?.optionGroups && item.optionGroups.length > 0
+                  ? 'tune'
+                  : 'add'}
             </span>
           </button>
         </div>

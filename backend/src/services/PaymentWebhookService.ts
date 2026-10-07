@@ -214,12 +214,7 @@ export class PaymentWebhookService {
               [
                 {
                   aggregateId: attempt.orderData.pendingOrderId.toString(),
-                  aggregateType:
-                    attempt.type === 'purchase'
-                      ? 'Order'
-                      : attempt.type === 'rental'
-                        ? 'RentalOrder'
-                        : 'EventJob',
+                  aggregateType: 'Order',
                   eventType: 'PaymentFailed',
                   payload: {
                     razorpayPaymentId: paymentEntity?.id,

@@ -22,7 +22,7 @@ export function AddressList({
         </span>
         <button
           onClick={handleAddNew}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#fef9e7] border border-[#fae182] text-[11px] font-extrabold text-neutral-950 hover:bg-[#fae182] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white text-[11px] font-extrabold uppercase tracking-wider transition-all shadow-xs cursor-pointer active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
           <span>Add New</span>
@@ -40,7 +40,7 @@ export function AddressList({
               onClick={() => setSelectedAddressId(addrId)}
               className={`relative p-4 sm:p-5 rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden ${
                 isSelected
-                  ? 'border-[#f7bb0e] ring-2 ring-[#f7bb0e]/20 bg-[#fffdfa] shadow-sm'
+                  ? 'border-[#283618] ring-2 ring-[#283618]/20 bg-[#f9faf7] shadow-sm'
                   : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md'
               }`}
             >
@@ -49,10 +49,10 @@ export function AddressList({
                 <div className="pt-0.5 shrink-0">
                   <div
                     className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-colors ${
-                      isSelected ? 'border-neutral-950 bg-white' : 'border-neutral-300 bg-white'
+                      isSelected ? 'border-[#283618] bg-white' : 'border-neutral-300 bg-white'
                     }`}
                   >
-                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#f7bb0e]" />}
+                    {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#283618]" />}
                   </div>
                 </div>
 
@@ -65,7 +65,7 @@ export function AddressList({
                       Default
                     </span>
                     {addr.tag && (
-                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 bg-[#fef9e7] text-neutral-900 border border-[#fae182] rounded-md">
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 bg-[#283618]/10 text-[#283618] border border-[#283618]/20 rounded-md">
                         {addr.tag}
                       </span>
                     )}
@@ -113,10 +113,12 @@ export function AddressList({
         <div className="max-w-2xl w-full mx-auto">
           <button
             onClick={() => setIsSelectingList(false)}
-            className="w-full bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] py-3.5 sm:py-4 rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] transition-all text-center cursor-pointer flex items-center justify-center gap-2"
+            className="w-full h-12 pl-5 pr-1.5 py-1 bg-[#283618] hover:bg-[#1f2b13] text-white border border-[#283618] rounded-full text-xs font-extrabold uppercase tracking-wider shadow-sm transition-all flex items-center justify-between group cursor-pointer active:scale-[0.98]"
           >
             <span>Confirm Selected Address</span>
-            <Check className="w-4 h-4" strokeWidth={2.5} />
+            <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+              <Check className="w-4 h-4" strokeWidth={2.5} />
+            </span>
           </button>
         </div>
       </div>

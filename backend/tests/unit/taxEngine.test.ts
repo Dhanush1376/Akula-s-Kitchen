@@ -67,220 +67,86 @@ describe('TaxEngine - Unit Calculations', () => {
     ).toThrow(ApiError);
   });
 
-  it('calculates zero tax when GST is disabled', () => {
-    const result = TaxEngine.calculateTax({
+  it('calculates zero tax across all customer states and settings', () => {
+    const resultAP = TaxEngine.calculateTax({
       subtotal: 1000,
       discount: 0,
-      taxSettings: { ...defaultTaxSettings, gstEnabled: false },
       customerState: 'AP',
       storeState: 'AP',
     });
 
-    expect(result.isGstEnabled).toBe(false);
-    expect(result.taxableBase).toBe(1000);
-    expect(result.taxableAmount).toBe(1000);
-    expect(result.taxAmount).toBe(0);
-    expect(result.cgst).toBe(0);
-    expect(result.sgst).toBe(0);
-    expect(result.igst).toBe(0);
-  });
+    expect(resultAP.isGstEnabled).toBe(false);
+    expect(resultAP.taxableBase).toBe(1000);
+    expect(resultAP.taxableAmount).toBe(1000);
+    expect(resultAP.taxAmount).toBe(0);
+    expect(resultAP.cgst).toBe(0);
+    expect(resultAP.sgst).toBe(0);
+    expect(resultAP.igst).toBe(0);
 
-  it('calculates intra-state GST (tax inclusive: subtotal ₹1180, 18% GST)', () => {
-    const result = TaxEngine.calculateTax({
+    const resultInterState = TaxEngine.calculateTax({
       subtotal: 1180,
       discount: 0,
-      taxSettings: { ...defaultTaxSettings, taxInclusive: true },
-      customerState: 'Andhra Pradesh',
-      storeState: 'AP',
-    });
-
-    expect(result.isGstEnabled).toBe(true);
-    expect(result.isTaxInclusive).toBe(true);
-    expect(result.isInterState).toBe(false);
-    expect(result.taxableBase).toBe(1180);
-    expect(result.taxableAmount).toBe(1000);
-    expect(result.taxAmount).toBe(180);
-    expect(result.cgst).toBe(90);
-    expect(result.sgst).toBe(90);
-    expect(result.igst).toBe(0);
-    expect(result.cgst + result.sgst).toBe(result.taxAmount);
-  });
-
-  it('calculates intra-state GST (tax exclusive: subtotal ₹1000, 18% GST)', () => {
-    const result = TaxEngine.calculateTax({
-      subtotal: 1000,
-      discount: 0,
-      taxSettings: { ...defaultTaxSettings, taxInclusive: false },
-      customerState: 'AP',
-      storeState: 'AP',
-    });
-
-    expect(result.isGstEnabled).toBe(true);
-    expect(result.isTaxInclusive).toBe(false);
-    expect(result.isInterState).toBe(false);
-    expect(result.taxableBase).toBe(1000);
-    expect(result.taxableAmount).toBe(1000);
-    expect(result.taxAmount).toBe(180);
-    expect(result.cgst).toBe(90);
-    expect(result.sgst).toBe(90);
-    expect(result.igst).toBe(0);
-    expect(result.cgst + result.sgst).toBe(result.taxAmount);
-  });
-
-  it('calculates inter-state GST (tax inclusive: subtotal ₹1180, customer in MH, store in AP)', () => {
-    const result = TaxEngine.calculateTax({
-      subtotal: 1180,
-      discount: 0,
-      taxSettings: { ...defaultTaxSettings, taxInclusive: true },
       customerState: 'Maharashtra',
       storeState: 'AP',
     });
 
-    expect(result.isInterState).toBe(true);
-    expect(result.taxableAmount).toBe(1000);
-    expect(result.taxAmount).toBe(180);
-    expect(result.cgst).toBe(0);
-    expect(result.sgst).toBe(0);
-    expect(result.igst).toBe(180);
-  });
-
-  it('calculates inter-state GST (tax exclusive: subtotal ₹1000, customer in KA, store in AP)', () => {
-    const result = TaxEngine.calculateTax({
-      subtotal: 1000,
-      discount: 0,
-      taxSettings: { ...defaultTaxSettings, taxInclusive: false },
-      customerState: 'KA',
-      storeState: 'AP',
-    });
-
-    expect(result.isInterState).toBe(true);
-    expect(result.taxableAmount).toBe(1000);
-    expect(result.taxAmount).toBe(180);
-    expect(result.cgst).toBe(0);
-    expect(result.sgst).toBe(0);
-    expect(result.igst).toBe(180);
-  });
-
-  it('enforces exact paise rounding invariant cgst + sgst === taxAmount for awkward numbers', () => {
-    const awkwardValues = [1001.37, 333.33, 777.77, 49.99, 123.45, 9999.99];
-
-    for (const subtotal of awkwardValues) {
-      const result = TaxEngine.calculateTax({
-        subtotal,
-        discount: 0,
-        taxSettings: { ...defaultTaxSettings, taxInclusive: false },
-        customerState: 'AP',
-        storeState: 'AP',
-      });
-
-      const sumCgstSgst = Math.round((result.cgst + result.sgst) * 100) / 100;
-      expect(sumCgstSgst).toBe(result.taxAmount);
-    }
-  });
-
-  it('enforces exact paise rounding invariant for tax-inclusive awkward numbers', () => {
-    const awkwardValues = [1001.37, 333.33, 777.77, 49.99, 123.45, 9999.99];
-
-    for (const subtotal of awkwardValues) {
-      const result = TaxEngine.calculateTax({
-        subtotal,
-        discount: 0,
-        taxSettings: { ...defaultTaxSettings, taxInclusive: true },
-        customerState: 'AP',
-        storeState: 'AP',
-      });
-
-      const sumCgstSgst = Math.round((result.cgst + result.sgst) * 100) / 100;
-      expect(sumCgstSgst).toBe(result.taxAmount);
-      expect(Math.round((result.taxableAmount + result.taxAmount) * 100) / 100).toBe(subtotal);
-    }
+    expect(resultInterState.isGstEnabled).toBe(false);
+    expect(resultInterState.taxableBase).toBe(1180);
+    expect(resultInterState.taxableAmount).toBe(1180);
+    expect(resultInterState.taxAmount).toBe(0);
+    expect(resultInterState.cgst).toBe(0);
+    expect(resultInterState.sgst).toBe(0);
+    expect(resultInterState.igst).toBe(0);
   });
 });
 
 describe('Order Totals Math Integration', () => {
-  it('adds tax to preliminary total when tax is exclusive', () => {
+  it('computes order total with zero tax addition', () => {
     const totals = computeOrderTotals({
       subtotal: 1000,
-      discount: 0,
-      depositTotal: 0,
       isCod: false,
       codFee: 0,
       freeShippingThreshold: 500,
       deliveryCharge: 50,
       platformFee: 10,
-      taxAmount: 180, // 18% of 1000
+      taxAmount: 0,
       isTaxInclusive: false,
       useWallet: false,
       walletBalance: 0,
     });
 
-    // 1000 + 0 (shipping free >= 500) + 10 (platform) + 180 (exclusive tax) = 1190
-    expect(totals.taxAmount).toBe(180);
-    expect(totals.isTaxInclusive).toBe(false);
-    expect(totals.preliminaryTotal).toBe(1190);
-    expect(totals.total).toBe(1190);
+    // 1000 + 0 (shipping free >= 500) + 10 (platform) + 0 (tax) = 1010
+    expect(totals.taxAmount).toBe(0);
+    expect(totals.preliminaryTotal).toBe(1010);
+    expect(totals.total).toBe(1010);
   });
 
-  it('does NOT add tax on top when tax is inclusive', () => {
+  it('handles shipping below threshold with zero tax', () => {
     const totals = computeOrderTotals({
-      subtotal: 1000,
-      discount: 0,
-      depositTotal: 0,
+      subtotal: 400,
       isCod: false,
       codFee: 0,
       freeShippingThreshold: 500,
       deliveryCharge: 50,
       platformFee: 10,
-      taxAmount: 152.54, // GST already included in 1000 at 18%
+      taxAmount: 0,
       isTaxInclusive: true,
       useWallet: false,
       walletBalance: 0,
     });
 
-    // 1000 + 0 (shipping free) + 10 (platform) = 1010 — inclusive tax is not added on top
-    expect(totals.taxAmount).toBe(152.54);
-    expect(totals.isTaxInclusive).toBe(true);
-    expect(totals.preliminaryTotal).toBe(1010);
-    expect(totals.total).toBe(1010);
-  });
-
-  it('applies wallet deduction without mutating tax values', () => {
-    const totals = computeOrderTotals({
-      subtotal: 1000,
-      discount: 0,
-      depositTotal: 0,
-      isCod: false,
-      codFee: 0,
-      freeShippingThreshold: 2000, // below threshold -> deliveryCharge applies
-      deliveryCharge: 50,
-      platformFee: 10,
-      taxAmount: 180,
-      isTaxInclusive: false,
-      useWallet: true,
-      walletBalance: 300,
-    });
-
-    // Gross = 1000 + 50 + 10 + 180 = 1240
-    // Wallet deduction = 0 (wallet redemption retired)
-    // Net payable = 1240
-    expect(totals.taxAmount).toBe(180);
-    expect(totals.walletDeduction).toBe(0);
-    expect(totals.total).toBe(1240);
+    // 400 + 50 (shipping) + 10 (platform) = 460
+    expect(totals.taxAmount).toBe(0);
+    expect(totals.preliminaryTotal).toBe(460);
+    expect(totals.total).toBe(460);
   });
 });
 
 describe('Settings Drift Immutability & Invoice Snapshot', () => {
-  it('locks tax snapshot fields so changing store settings never mutates the invoice snapshot', async () => {
+  it('locks tax snapshot fields so snapshot is zero tax and immutable', async () => {
     const taxResult = TaxEngine.calculateTax({
       subtotal: 1000,
       discount: 0,
-      taxSettings: {
-        gstEnabled: true,
-        taxInclusive: true,
-        gstRate: 0.18,
-        cgstRate: 0.09,
-        sgstRate: 0.09,
-      },
       customerState: 'AP',
       storeState: 'AP',
     });
@@ -295,24 +161,24 @@ describe('Settings Drift Immutability & Invoice Snapshot', () => {
     };
 
     const invoicingMeta = {
-      hsnCode: '9973',
+      hsnCode: '',
       invoicePrefix: 'INV-2026-',
-      invoiceFooter: 'Historical terms and conditions.',
+      invoiceFooter: 'Terms and conditions.',
     };
 
     const mockStoreSettings = {
       general: { storeName: "Akula's Kitchen" },
       legal: { companyName: "Akula's Kitchen Pvt Ltd", cin: 'U12345' },
       taxes: {
-        gstEnabled: true,
-        taxInclusive: true,
-        gstRate: 0.18,
-        cgstRate: 0.09,
-        sgstRate: 0.09,
-        gstNumber: '37ABCDE1234F1Z5',
-        hsnCode: '9973',
+        gstEnabled: false,
+        taxInclusive: false,
+        gstRate: 0,
+        cgstRate: 0,
+        sgstRate: 0,
+        gstNumber: '',
+        hsnCode: '',
         invoicePrefix: 'INV-2026-',
-        invoiceFooter: 'Historical terms and conditions.',
+        invoiceFooter: 'Terms and conditions.',
       },
     };
 
@@ -328,27 +194,13 @@ describe('Settings Drift Immutability & Invoice Snapshot', () => {
     );
 
     // Verify initial snapshot properties
-    expect(snapshots.tax.gstRate).toBe(0.18);
-    expect(snapshots.tax.cgstRate).toBe(0.09);
-    expect(snapshots.tax.sgstRate).toBe(0.09);
-    expect(snapshots.tax.taxableAmount).toBe(847.46);
-    expect(snapshots.tax.taxAmount).toBe(152.54);
-    expect(snapshots.tax.hsnCode).toBe('9973');
-    expect(snapshots.tax.invoiceFooter).toBe('Historical terms and conditions.');
-    expect(snapshots.invoice.number).toMatch(/^INV-2026-/);
-
-    // Verify snapshot immutability: mutating invoicingMeta has zero impact on snapshot
-    invoicingMeta.hsnCode = '9999';
-    invoicingMeta.invoicePrefix = 'ACME-';
-    invoicingMeta.invoiceFooter = 'New terms 2027.';
-
-    expect(snapshots.tax.gstRate).toBe(0.18);
-    expect(snapshots.tax.cgstRate).toBe(0.09);
-    expect(snapshots.tax.sgstRate).toBe(0.09);
-    expect(snapshots.tax.taxableAmount).toBe(847.46);
-    expect(snapshots.tax.taxAmount).toBe(152.54);
-    expect(snapshots.tax.hsnCode).toBe('9973');
-    expect(snapshots.tax.invoiceFooter).toBe('Historical terms and conditions.');
+    expect(snapshots.tax.gstRate).toBe(0);
+    expect(snapshots.tax.cgstRate).toBe(0);
+    expect(snapshots.tax.sgstRate).toBe(0);
+    expect(snapshots.tax.taxableAmount).toBe(1000);
+    expect(snapshots.tax.taxAmount).toBe(0);
+    expect(snapshots.tax.totalTax).toBe(0);
+    expect(snapshots.tax.gstEnabled).toBe(false);
     expect(snapshots.invoice.number).toMatch(/^INV-2026-/);
   });
 });

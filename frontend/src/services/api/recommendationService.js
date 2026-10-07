@@ -19,7 +19,8 @@ export const recommendationService = {
    * Get similar items for a given item.
    */
   getSimilar: async (targetType, targetId, limit = 8, options = {}) => {
-    const response = await api.get(`/recommendations/similar/${targetType}/${targetId}`, {
+    const cleanId = targetId ? String(targetId).split('___')[0] : targetId;
+    const response = await api.get(`/recommendations/similar/${targetType}/${cleanId}`, {
       params: { limit },
       signal: options.signal,
     });
@@ -57,7 +58,8 @@ export const recommendationService = {
    * Get complementary items for "Complete the Setup".
    */
   getCompleteSetup: async (targetId, targetType = 'product', limit = 6, options = {}) => {
-    const response = await api.get(`/recommendations/complete-setup/${targetId}`, {
+    const cleanId = targetId ? String(targetId).split('___')[0] : targetId;
+    const response = await api.get(`/recommendations/complete-setup/${cleanId}`, {
       params: { targetType, limit },
       signal: options.signal,
     });
@@ -68,7 +70,8 @@ export const recommendationService = {
    * Get "Users Also Viewed" items.
    */
   getAlsoViewed: async (targetId, targetType = 'product', limit = 8, options = {}) => {
-    const response = await api.get(`/recommendations/also-viewed/${targetId}`, {
+    const cleanId = targetId ? String(targetId).split('___')[0] : targetId;
+    const response = await api.get(`/recommendations/also-viewed/${cleanId}`, {
       params: { targetType, limit },
       signal: options.signal,
     });

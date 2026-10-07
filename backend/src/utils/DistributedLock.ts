@@ -111,7 +111,7 @@ export class DistributedLock {
    * @param failClosed If true (default), throws 503 when Redis is down instead of silently bypassing.
    *   Set to false ONLY for non-critical operations where eventual consistency is acceptable.
    *
-   *   CRITICAL: For event bookings and rental bookings, this MUST be true to prevent double bookings.
+   *   CRITICAL: For stock reservations and payments, this MUST be true to prevent double processing.
    */
   static async withLock<T>(
     resourceKey: string,

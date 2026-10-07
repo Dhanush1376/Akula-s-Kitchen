@@ -78,7 +78,7 @@ export class ErrorBoundary extends Component {
             <p className="font-body-md text-on-surface-variant/70 mb-8 text-sm lg:text-base leading-relaxed max-w-sm mx-auto">
               {isChunkError
                 ? 'A new version of the app is available. Please refresh to get the latest experience.'
-                : "Our studio encountered an unexpected error. We've been notified and are working on it."}
+                : "Something went wrong on our side. We've been notified and are working on it."}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

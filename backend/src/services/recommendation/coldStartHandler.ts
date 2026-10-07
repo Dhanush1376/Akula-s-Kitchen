@@ -21,7 +21,6 @@ export interface ColdStartRecommendation {
   primaryCategory?: string;
   price?: number;
   oldPrice?: number;
-  availabilityMode?: string;
 }
 
 /**
@@ -53,7 +52,7 @@ export async function getColdStartFeed(
     // 2. Featured/popular products from DB
     const featuredProducts = await Product.find({ isActive: true, featured: true })
       .select(
-        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating tags availabilityMode',
+        '_id title imageSrc primaryCategory price oldPrice strikingPrice mrp originalPrice rating tags',
       )
       .populate('primaryCategory', 'name')
       .sort({ rating: -1, reviews: -1 })
@@ -93,7 +92,6 @@ export async function getColdStartFeed(
           (product as any).strikingPrice ||
           (product as any).mrp ||
           (product as any).originalPrice,
-        availabilityMode: product.availabilityMode,
       });
     }
 

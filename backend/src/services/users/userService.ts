@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../../models/User';
 import logger from '../../config/logger';
 import Product from '../../models/Product';
@@ -11,6 +12,7 @@ import { getFrontendUrl } from '../../utils/getFrontendUrl';
 import { getTeamInviteEmailTemplate } from '../../utils/email/emailTemplates';
 import storeSettingsService from '../StoreSettingsService';
 import { computeOrderTotals } from '../orders/orderTotals';
+import { ProductConfigurationService } from '../products/ProductConfigurationService';
 
 export class UserService {
   static async updateUserRole(targetUserId: string, newRole: string, actorRole: string) {
@@ -83,10 +85,8 @@ export class UserService {
         productHash: hashId(item.product),
         rawProductValue,
         hasProductId: !!item.product,
-        cartType: item.type,
         quantity: item.quantity,
         hasVariant: !!item.variant,
-        hasRentalInfo: !!item.rentalInfo,
         timestamp: ts,
       });
 
@@ -163,7 +163,6 @@ export class UserService {
         continue;
       }
 
-      const itemType = item.type || 'purchase';
       const quantity = Number(item.quantity) || 0;
 
       if (quantity <= 0) {
@@ -173,19 +172,29 @@ export class UserService {
         continue;
       }
 
-      const key = `${item.product}_${itemType}_${item.variant || 'Default'}_${JSON.stringify(item.rentalInfo || {})}`;
+      const configResult = ProductConfigurationService.validateAndCalculateConfiguration(
+        product,
+        item.selectedOptions || [],
+        false,
+      );
+
+      const sig = configResult.configurationSignature || item.configurationSignature || 'default';
+      const key = `${item.product}_${item.variant || 'Default'}_${sig}`;
 
       if (aggregatedCartMap.has(key)) {
         cartChanged = true;
         const existing = aggregatedCartMap.get(key);
         existing.quantity += quantity;
+        existing.configuredUnitPrice = configResult.configuredUnitPrice;
       } else {
         aggregatedCartMap.set(key, {
           product: product,
           quantity,
           variant: item.variant || 'Default',
-          type: itemType,
-          rentalInfo: item.rentalInfo,
+          customizationNote: item.customizationNote,
+          selectedOptions: configResult.selectedOptions,
+          configurationSignature: configResult.configurationSignature,
+          configuredUnitPrice: configResult.configuredUnitPrice,
         });
       }
     }
@@ -196,14 +205,7 @@ export class UserService {
         item.quantity = 50;
         cartChanged = true;
       }
-      const availableStock =
-        item.type === 'rental'
-          ? Number(item.product.rentalStock) > 0
-            ? Number(item.product.rentalStock)
-            : Number(item.product.stock) > 0
-              ? Number(item.product.stock)
-              : 10
-          : (item.product.stock ?? 10);
+      const availableStock = item.product.stock ?? 10;
       if (item.quantity > availableStock) {
         item.quantity = availableStock;
         cartChanged = true;
@@ -224,38 +226,24 @@ export class UserService {
         product: item.product._id,
         quantity: item.quantity,
         variant: item.variant,
-        type: item.type,
-        rentalInfo: item.rentalInfo,
+        customizationNote: item.customizationNote,
+        selectedOptions: item.selectedOptions,
+        configurationSignature: item.configurationSignature,
+        configuredUnitPrice: item.configuredUnitPrice,
       }));
       await User.findOneAndUpdate({ _id: user._id }, { $set: { cart: user.cart } });
     }
 
     const settings = await storeSettingsService.getSettings();
 
-    const computeSummary = (items: any[], isRental: boolean) => {
-      let subtotal = 0;
-      let depositTotal = 0;
-
-      items.forEach((item) => {
-        let itemPrice = item.product.price;
-
-        if (isRental) {
-          if (
-            item.product.rentalPricing?.rentalPrice !== undefined &&
-            item.product.rentalPricing?.rentalPrice !== null
-          ) {
-            itemPrice = item.product.rentalPricing.rentalPrice;
-          }
-          depositTotal += (item.product.securityDeposit || 0) * item.quantity;
-        }
-
-        subtotal += itemPrice * item.quantity;
-      });
+    const computeSummary = (items: any[]) => {
+      const subtotal = items.reduce((sum, item) => {
+        const unitPrice = item.configuredUnitPrice ?? item.product.price ?? 0;
+        return sum + unitPrice * item.quantity;
+      }, 0);
 
       const totals = computeOrderTotals({
         subtotal,
-        discount: 0,
-        depositTotal,
         isCod: false,
         codFee: 0,
         enableFreeShipping: settings.shipping.enableFreeShipping,
@@ -266,16 +254,12 @@ export class UserService {
 
       return {
         subtotal,
-        depositTotal,
         shippingFee: totals.shippingFee,
         platformFee: totals.platformFee,
         discount: 0,
         total: totals.total,
       };
     };
-
-    const purchaseItems = validatedCart.filter((item) => item.type === 'purchase');
-    const rentalItems = validatedCart.filter((item) => item.type === 'rental');
 
     const mapSafeCartItem = (item: any) => {
       const p = item.product;
@@ -288,37 +272,26 @@ export class UserService {
         oldPrice: p.oldPrice,
         imageSrc: p.imageSrc,
         stock: p.stock,
-        rentalStock: p.rentalStock,
         isActive: p.isActive,
-        rentalPricing: p.rentalPricing,
-        securityDeposit: p.securityDeposit,
-        isDepositRefundable: p.isDepositRefundable,
-        rentalMinDays: p.rentalMinDays,
-        rentalMaxDays: p.rentalMaxDays,
-        customizationConfig: p.customizationConfig,
         returnSettings: p.returnSettings,
-        availabilityMode: p.availabilityMode,
-        rentalEnabled: p.rentalEnabled,
+        optionGroups: p.optionGroups || [],
       };
 
       return {
         product: safeProduct,
         quantity: item.quantity,
         variant: item.variant,
-        type: item.type,
-        rentalInfo: item.rentalInfo,
         customizationNote: item.customizationNote,
+        selectedOptions: item.selectedOptions || [],
+        configurationSignature: item.configurationSignature || '',
+        configuredUnitPrice: item.configuredUnitPrice ?? p.price,
       };
     };
 
     return {
       purchaseCart: {
-        items: purchaseItems.map(mapSafeCartItem),
-        summary: computeSummary(purchaseItems, false),
-      },
-      rentalCart: {
-        items: rentalItems.map(mapSafeCartItem),
-        summary: computeSummary(rentalItems, true),
+        items: validatedCart.map(mapSafeCartItem),
+        summary: computeSummary(validatedCart),
       },
     };
   }
@@ -364,24 +337,28 @@ export class UserService {
     return invite;
   }
 
-  static async trackRecentlyViewed(userId: string, productId: string) {
-    const user = await User.findById(userId);
-    if (!user) throw new ApiError(404, 'User not found');
-
-    if (!user.recentlyViewed) user.recentlyViewed = [];
-
-    user.recentlyViewed = user.recentlyViewed.filter(
-      (item: any) => item.product.toString() !== productId,
-    );
-
-    user.recentlyViewed.unshift({ product: productId as any, viewedAt: new Date() });
-
-    if (user.recentlyViewed.length > 20) {
-      user.recentlyViewed = user.recentlyViewed.slice(0, 20);
+  static async trackRecentlyViewed(userId: string, rawProductId: string) {
+    const cleanId = String(rawProductId || '').split('___')[0];
+    if (!mongoose.Types.ObjectId.isValid(cleanId)) {
+      return [];
     }
 
-    await user.save();
-    return user.recentlyViewed;
+    const objId = new mongoose.Types.ObjectId(cleanId);
+    await User.updateOne({ _id: userId }, { $pull: { recentlyViewed: { product: objId } } });
+    await User.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          recentlyViewed: {
+            $each: [{ product: objId, viewedAt: new Date() }],
+            $position: 0,
+            $slice: 30,
+          },
+        },
+      },
+    );
+
+    return [{ product: objId, viewedAt: new Date() }];
   }
 
   static async updatePreferences(
@@ -486,7 +463,7 @@ export class UserService {
       'passwordHash',
       'twoFactorSecret',
       'walletBalance',
-      'siriCoins',
+      'rewardCoins',
       'loyaltyTier',
       'isVerified',
       'phoneVerified',
