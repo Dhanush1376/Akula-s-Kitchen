@@ -26,16 +26,21 @@ export function useOrderTracking({ orderId, trackingToken }) {
   const [operatorNote, setOperatorNote] = useState('');
 
   const fetchTrackingDetails = useCallback(async () => {
-    if (!trackingToken) {
+    if (!trackingToken && !user) {
       setError(
-        'A valid tracking link with security token is required. Check your order confirmation email.',
+        'A valid tracking link with security token is required. Check your order confirmation email or sign in to your account.',
       );
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
-      const res = await orderService.getPublicTrack(orderId, trackingToken);
+      let res;
+      if (trackingToken) {
+        res = await orderService.getPublicTrack(orderId, trackingToken);
+      } else {
+        res = await orderService.getById(orderId);
+      }
       setOrder(res.data || res);
       setError(null);
     } catch (err) {
@@ -46,7 +51,7 @@ export function useOrderTracking({ orderId, trackingToken }) {
     } finally {
       setLoading(false);
     }
-  }, [orderId, trackingToken]);
+  }, [orderId, trackingToken, user]);
 
   const getNextStatus = useCallback((current) => {
     const idx = trackingSteps.indexOf(current);

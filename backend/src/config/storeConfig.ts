@@ -61,7 +61,10 @@ export function resolveStoreIdentity(settings?: any): StoreIdentity {
 
   const name = dbGeneral?.storeName?.trim() || envName?.trim() || "Akula's Kitchen";
   const logo = dbGeneral?.logo?.trim() || '';
-  const websiteUrl = envUrl?.trim() || 'https://akulas.kitchen';
+  let websiteUrl = envUrl?.trim() || 'https://akulas.kitchen';
+  if (websiteUrl.includes('localhost') || websiteUrl.includes('127.0.0.1')) {
+    websiteUrl = 'https://akulas.kitchen';
+  }
   const websiteDomain = extractDomain(websiteUrl);
 
   const email =

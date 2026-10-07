@@ -1,5 +1,5 @@
 import logger from '../../../config/logger';
-import { getFrontendUrl } from '../../../utils/getFrontendUrl';
+import { getPublicOrderTrackingUrl } from '../../../utils/email/emailUrlUtils';
 
 export class DeliveryEnricher {
   /**
@@ -9,12 +9,8 @@ export class DeliveryEnricher {
     if (!order) return {};
 
     try {
-      const frontendUrl = getFrontendUrl();
       const isCod = order.paymentMethod === 'cod' || order.paymentMethod === 'Cash on Delivery';
-
-      const trackingUrl = order.trackingNumber
-        ? `${frontendUrl}/track/${order._id}?token=${order.publicTrackingToken || ''}`
-        : null;
+      const trackingUrl = getPublicOrderTrackingUrl(order);
 
       // Estimate ETA based on order creation date if no explicit ETA exists
       const orderDate = new Date(order.createdAt || Date.now());

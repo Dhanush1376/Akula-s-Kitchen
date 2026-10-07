@@ -36,3 +36,36 @@ export const getFrontendUrl = (): string => {
   // 5. Local development fallback
   return 'http://localhost:5173';
 };
+
+/**
+ * Resolves the public, Internet-accessible website URL for emails, SMS, and public customer links.
+ * GUARANTEED to NEVER return localhost or 127.0.0.1.
+ */
+export const getPublicWebsiteUrl = (): string => {
+  const siteUrl = process.env.SITE_URL || process.env.VITE_SITE_URL;
+  if (siteUrl && !siteUrl.includes('localhost') && !siteUrl.includes('127.0.0.1')) {
+    return siteUrl.replace(/\/$/, '');
+  }
+
+  const frontendUrl = process.env.FRONTEND_URL;
+  if (frontendUrl && !frontendUrl.includes('localhost') && !frontendUrl.includes('127.0.0.1')) {
+    return frontendUrl.replace(/\/$/, '');
+  }
+
+  return 'https://akulas.kitchen';
+};
+
+/**
+ * Sanitizes any URL to ensure localhost / 127.0.0.1 never leaks into outgoing emails.
+ */
+export const sanitizePublicUrl = (url?: string): string => {
+  if (!url || typeof url !== 'string') return getPublicWebsiteUrl();
+  const trimmed = url.trim();
+  if (trimmed.includes('localhost') || trimmed.includes('127.0.0.1')) {
+    return trimmed.replace(
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
+      'https://akulas.kitchen',
+    );
+  }
+  return trimmed;
+};

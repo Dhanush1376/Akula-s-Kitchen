@@ -250,48 +250,51 @@
               <table class="product-table">
                 <thead>
                   <tr>
-                    <th>Item</th>
-                    <th style="text-align: center; width: 40px;">Qty</th>
-                    <th style="text-align: right; width: 80px;">Price</th>
+                    <th style="padding: 10px 12px; text-align: left;">Item Details</th>
+                    <th style="padding: 10px 8px; text-align: center; width: 50px;">Qty</th>
+                    <th style="padding: 10px 12px; text-align: right; width: 90px;">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {{#each items}}
                   <tr>
-                    <td>
+                    <td style="padding: 12px 12px; vertical-align: middle;">
                       <table border="0" cellpadding="0" cellspacing="0">
                         <tr>
-                          {{#if this.image}}
-                          <td style="padding-right: 12px; vertical-align: middle;">
-                            <img src="{{this.image}}" class="product-image" alt="{{this.name}}">
+                          <td style="padding-right: 12px; vertical-align: middle; width: 48px;">
+                            {{#if this.image}}
+                            <img src="{{this.image}}" class="product-image" alt="{{this.name}}" width="44" height="44" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; display: block;" onerror="this.src='{{../websiteUrl}}/MainLogo_bg.png';" />
+                            {{else}}
+                            <div style="width: 44px; height: 44px; background-color: #f1f5f9; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center; line-height: 44px; font-size: 11px; font-weight: 700; color: #475569;">AK</div>
+                            {{/if}}
                           </td>
-                          {{/if}}
                           <td style="vertical-align: middle;">
-                            <strong style="display: block; font-size: 13px; color: #0f172a;">{{this.name}}</strong>
+                            <strong style="display: block; font-size: 13.5px; color: #0f172a; margin-bottom: 2px;">{{this.name}}</strong>
+                            <span style="font-size: 12px; color: #64748b;">Qty: {{this.quantity}} × {{formatCurrency this.price}}</span>
                             {{#if this.variant}}
-                            <span style="font-size: 11px; color: #64748b;">{{this.variant}}</span>
+                            <span style="font-size: 11px; color: #64748b;"> • {{this.variant}}</span>
                             {{/if}}
                           </td>
                         </tr>
                       </table>
                     </td>
-                    <td style="text-align: center; vertical-align: middle;">{{this.quantity}}</td>
-                    <td style="text-align: right; vertical-align: middle;">{{formatCurrency this.price}}</td>
+                    <td style="padding: 12px 8px; text-align: center; vertical-align: middle; font-weight: 600; color: #334155;">{{this.quantity}}</td>
+                    <td style="padding: 12px 12px; text-align: right; vertical-align: middle; font-weight: 700; color: #0f172a; font-family: monospace; white-space: nowrap;">{{formatCurrency this.price}}</td>
                   </tr>
                   {{/each}}
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="2" style="text-align: right; padding-top: 16px; border: none; color: #64748b;">Subtotal:</td>
-                    <td style="text-align: right; padding-top: 16px; border: none;">{{formatCurrency subtotal}}</td>
+                    <td colspan="2" style="text-align: right; padding: 10px 12px 6px; border: none; color: #64748b; font-size: 13.5px;">Subtotal:</td>
+                    <td style="text-align: right; padding: 10px 12px 6px; border: none; font-family: monospace; font-weight: 600; white-space: nowrap;">{{formatCurrency subtotal}}</td>
                   </tr>
                   <tr>
-                    <td colspan="2" style="text-align: right; border: none; color: #64748b;">Shipping:</td>
-                    <td style="text-align: right; border: none;">{{formatCurrency shipping}}</td>
+                    <td colspan="2" style="text-align: right; padding: 6px 12px; border: none; color: #64748b; font-size: 13.5px;">Shipping Fee:</td>
+                    <td style="text-align: right; padding: 6px 12px; border: none; font-family: monospace; font-weight: 600; white-space: nowrap;">{{#if shipping}}{{formatCurrency shipping}}{{else}}<span style="color: #16a34a; font-weight: 700;">FREE</span>{{/if}}</td>
                   </tr>
-                  <tr class="total-row">
-                    <td colspan="2" style="text-align: right; border-bottom: none; padding-top: 12px;">Total:</td>
-                    <td style="text-align: right; border-bottom: none; padding-top: 12px;">{{formatCurrency total}}</td>
+                  <tr class="total-row" style="border-top: 2px solid #0f172a; background-color: #f8fafc;">
+                    <td colspan="2" style="text-align: right; padding: 12px 14px; font-weight: 800; font-size: 14px; text-transform: uppercase; color: #0f172a; letter-spacing: 0.03em;">Grand Total:</td>
+                    <td style="text-align: right; padding: 12px 14px; font-weight: 800; font-size: 17px; font-family: monospace; white-space: nowrap; color: #0f172a;">{{formatCurrency total}}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -300,6 +303,16 @@
                 <strong style="color: #0f172a; display: block; margin-bottom: 6px;">Shipping Address:</strong>
                 {{shippingAddress}}
               </div>
+
+              <!-- Track Order CTA Button -->
+              <div class="button-wrapper" style="margin: 32px 0 16px; text-align: center;">
+                <a href="{{trackingUrl}}" class="cta-button" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 12px rgba(40, 54, 24, 0.22); letter-spacing: 0.02em;">
+                  Track Your Order
+                </a>
+              </div>
+              <p style="text-align: center; margin: 0 0 24px 0; font-size: 12px; color: #64748b;">
+                Instant live tracking • No login required
+              </p>
 
 
 

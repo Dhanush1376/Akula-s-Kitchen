@@ -111,13 +111,19 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
 
 export const getOrderPublicTrack = asyncHandler(async (req: Request, res: Response) => {
   const trackingToken = String(req.query.token || '').trim();
-  if (!trackingToken) {
+  const orderId = req.params.id;
+
+  let order: any;
+  if (trackingToken) {
+    order = await LogisticsService.verifyTrackingTokenAndGetOrder(trackingToken);
+  } else if ((req as any).user) {
+    order = await Order.findById(orderId);
+    if (!order) throw new ApiError(404, 'Order not found');
+  } else {
     throw new ApiError(401, 'Valid tracking token is required');
   }
 
-  const order = await LogisticsService.verifyTrackingTokenAndGetOrder(trackingToken);
   const trackingData = await LogisticsService.formatPublicTrackingData(order);
-
   res.status(200).json(new ApiResponse(true, 'Order public tracking fetched', trackingData));
 });
 

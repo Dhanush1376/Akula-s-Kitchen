@@ -39,8 +39,8 @@ export const InvoiceTable = (rows: InvoiceRow[], subtotal: number, tax: number, 
           <td align="right" style="padding: 12px 8px; color: #111827; font-size: 14px; font-weight: 500;">₹${subtotal}</td>
         </tr>
         <tr>
-          <td colspan="3" align="right" style="padding: 16px 8px 8px 8px; color: #111827; font-size: 16px; font-weight: 600;">Total</td>
-          <td align="right" style="padding: 16px 8px 8px 8px; color: #111827; font-size: 16px; font-weight: 600;">₹${total}</td>
+          <td colspan="3" align="right" style="padding: 16px 8px 8px 8px; color: #111827; font-size: 15px; font-weight: 800; text-transform: uppercase;">Grand Total</td>
+          <td align="right" style="padding: 16px 8px 8px 8px; color: #111827; font-size: 18px; font-weight: 800; font-family: monospace;">₹${Number(total || 0).toLocaleString('en-IN')}</td>
         </tr>
       </tfoot>
     </table>

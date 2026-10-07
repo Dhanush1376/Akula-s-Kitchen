@@ -144,11 +144,18 @@ export const trackEmailOpen = asyncHandler(async (req: Request, res: Response) =
  */
 export const trackEmailClick = asyncHandler(async (req: Request, res: Response) => {
   const { token } = req.params;
-  const targetUrl = req.query.url as string;
+  const rawTargetUrl = req.query.url as string;
+  const publicBaseUrl = 'https://akulas.kitchen';
 
-  if (!targetUrl) {
-    return res.redirect(getFrontendUrl());
+  if (!rawTargetUrl) {
+    return res.redirect(publicBaseUrl);
   }
+
+  // Ensure target URL never redirects visitors to localhost
+  const targetUrl = rawTargetUrl.replace(
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
+    publicBaseUrl,
+  );
 
   try {
     const log = await NotificationLog.findOne({ trackingToken: token });

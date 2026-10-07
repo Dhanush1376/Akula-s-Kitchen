@@ -1,9 +1,13 @@
 import { Header, Footer, OrderSummary, ProductCard, Timeline } from '../../components';
-import { getFrontendUrl } from '../../../../utils/getFrontendUrl';
+import {
+  getPublicWebsiteUrl,
+  resolveEmailImageUrl,
+  getPublicOrderTrackingUrl,
+} from '../../../../utils/email/emailUrlUtils';
 
 export const OrderCreatedCustomerTemplate = (data: any) => {
   const { customerInfo, orderDetails, products, deliveryInfo } = data;
-  const frontendUrl = getFrontendUrl();
+  const publicBaseUrl = getPublicWebsiteUrl();
 
   const firstTitle = products?.[0]?.name || products?.[0]?.title || 'Items';
   const moreCount = products && products.length > 1 ? ` (+${products.length - 1} more)` : '';
@@ -12,22 +16,25 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
     orderDetails.invoiceNumber ||
     (orderDetails.id ? `INV-${String(orderDetails.id).slice(-8).toUpperCase()}` : '');
 
-  const productsHtml = products
+  const trackUrl = getPublicOrderTrackingUrl({ _id: orderDetails.id || orderDetails._id });
+  const grandTotal = orderDetails.total ?? orderDetails.totalAmount ?? 0;
+
+  const productsHtml = (products || [])
     .map((p: any) =>
       ProductCard({
-        name: p.name,
-        price: p.price,
-        quantity: p.quantity,
-        image: p.image,
+        name: p.name || p.title || 'Item',
+        price: p.price || 0,
+        quantity: p.quantity || 1,
+        image: resolveEmailImageUrl(p.image || p.imageSrc),
         variant: p.variant,
       }),
     )
     .join('');
 
   const content = `
-    ${Header(`${frontendUrl}/MainLogo_bg.png`)}
+    ${Header(`${publicBaseUrl}/MainLogo_bg.png`)}
     
-    <h2 style="color: #111827; margin-bottom: 16px;">Thank you for your order, ${customerInfo.name}!</h2>
+    <h2 style="color: #111827; margin-bottom: 16px;">Thank you for your order, ${customerInfo.name || 'Customer'}!</h2>
     <p style="color: #4b5563; font-size: 16px; line-height: 1.5; margin-bottom: 24px;">
       We've received your order for <strong>${productTitle}</strong>${invoiceRef ? ` (Reference: <strong>${invoiceRef}</strong>)` : ''} and are getting it ready for shipment.
     </p>
@@ -39,18 +46,31 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
         subtotal: orderDetails.subtotal,
         shipping: orderDetails.shipping,
         discount: orderDetails.discount,
-        total: orderDetails.total,
+        total: grandTotal,
       })}
     </div>
+
+    <!-- Track Order CTA Button -->
+    <div style="text-align: center; margin: 32px 0 16px;">
+      <a href="${trackUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 14px rgba(40, 54, 24, 0.22); letter-spacing: 0.02em;">
+        Track Your Order
+      </a>
+    </div>
+    <p style="text-align: center; margin: 0 0 24px 0; font-size: 12px; color: #64748b;">
+      Instant live tracking • No login required
+    </p>
 
     <h3 style="color: #111827; margin-top: 32px; margin-bottom: 16px; font-size: 18px;">What's next?</h3>
     ${Timeline([
       { title: 'Order Placed', status: 'completed', time: new Date().toLocaleDateString() },
       { title: 'Processing', status: 'current', description: 'We are preparing your items.' },
       { title: 'Shipped', status: 'upcoming' },
-      { title: 'Delivered', status: 'upcoming', time: `Est. ${deliveryInfo.expectedDelivery}` },
+      {
+        title: 'Delivered',
+        status: 'upcoming',
+        time: `Est. ${deliveryInfo?.expectedDelivery || 'in 3-5 days'}`,
+      },
     ])}
-
 
     ${Footer("Akula's Kitchen", 'support@akulas.kitchen', '')}
   `;
@@ -60,6 +80,6 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
     subject: invoiceRef
       ? `Order Confirmed: ${productTitle} (${invoiceRef})`
       : `Order Confirmed: ${productTitle}`,
-    preheader: `We've received your order for ${productTitle} and are getting it ready.`,
+    preheader: `We've received your order for ${productTitle} and are getting it ready. Grand Total: ₹${grandTotal}`,
   };
 };

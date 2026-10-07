@@ -286,17 +286,25 @@ export const getDiagnosticTestEmailTemplate = (
 export const getOrderConfirmationTemplate = (orderDetails: any): string => {
   const store = getStoreConfigSync();
   const domain = store.websiteDomain || 'akulas.kitchen';
-  const preheader = `Your order #${orderDetails.orderId} is confirmed`;
+  const grandTotal = orderDetails.totalAmount ?? orderDetails.total ?? 0;
+  const preheader = `Your order #${orderDetails.orderId} is confirmed — Grand Total: ₹${grandTotal}`;
+  const rawTrackLink =
+    orderDetails.orderLink || `https://akulas.kitchen/track/${orderDetails.orderId || ''}`;
+  const trackLink =
+    rawTrackLink.includes('localhost') || rawTrackLink.includes('127.0.0.1')
+      ? `https://akulas.kitchen/track/${orderDetails.orderId || ''}`
+      : rawTrackLink;
+
   const body = `
     <h2>Order Confirmed</h2>
-    <p>Thank you for your order! We are preparing it fresh.</p>
+    <p>Thank you for your order! We are preparing it fresh with heritage recipes.</p>
     <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-left: 3px solid #f7bb0e; padding: 16px 20px; border-radius: 8px; margin: 20px 0; font-size: 14px; line-height: 1.7; color: #283618;">
       <strong>Order ID:</strong> #${escapeHtml(orderDetails.orderId)}<br/>
-      <strong>Total:</strong> ₹${orderDetails.totalAmount}<br/>
-      <strong>Payment:</strong> ${escapeHtml(orderDetails.paymentStatus)}
+      <strong>Grand Total:</strong> <strong style="font-size: 16px; color: #283618;">₹${grandTotal}</strong><br/>
+      <strong>Payment Status:</strong> ${escapeHtml(orderDetails.paymentStatus || 'Confirmed')}
     </div>
     <div class="button-wrapper">
-      <a href="${orderDetails.orderLink || `${store.websiteUrl}/dashboard/orders`}" class="cta-button" target="_blank">Track Order</a>
+      <a href="${trackLink}" class="cta-button" target="_blank">Track Your Order</a>
     </div>
   `;
   return getLuxuryEmailWrapper('Order Confirmed', body, undefined, preheader);
@@ -328,7 +336,11 @@ export const getAdminNotificationTemplate = (
 export const getWelcomeEmailTemplate = (name: string, frontendUrl: string): string => {
   const store = getStoreConfigSync();
   const domain = store.websiteDomain || 'akulas.kitchen';
-  const url = frontendUrl || store.websiteUrl || 'https://akulas.kitchen';
+  const rawUrl = frontendUrl || store.websiteUrl || 'https://akulas.kitchen';
+  const url =
+    rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1')
+      ? 'https://akulas.kitchen'
+      : rawUrl;
   const preheader = `Welcome to ${store.name}`;
   const body = `
     <h2>Welcome to ${store.name}!</h2>

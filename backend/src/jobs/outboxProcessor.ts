@@ -161,12 +161,15 @@ export async function processEvent(event: any): Promise<void> {
           const firstTitle = order.items?.[0]?.title || (order.items?.[0] as any)?.name;
           const moreCount = order.items?.length > 1 ? ` (+${order.items.length - 1} more)` : '';
           const productTitle = firstTitle ? `${firstTitle}${moreCount}` : 'Order';
+          const orderObj = order as any;
+          const grandTotal =
+            orderObj.total ?? orderObj.tax?.grandTotal ?? orderObj.invoice?.total ?? 0;
           await createAdminNotification({
-            title: `New Order: ${productTitle}`,
-            message: `${productTitle} placed by ${(order.user as any)?.name || order.shippingAddress?.name || 'Customer'} (₹${order.total})`,
+            title: `New Order: ${productTitle} (₹${grandTotal})`,
+            message: `${productTitle} placed by ${(order.user as any)?.name || order.shippingAddress?.name || 'Customer'} (Grand Total: ₹${grandTotal})`,
             type: 'order',
             actionLink: `/admin/orders/${order._id}`,
-            metadata: { outboxEventId: event._id.toString() },
+            metadata: { outboxEventId: event._id.toString(), grandTotal },
           });
         }
       } else if (eventName === 'ORDER_ORDERSTATUSUPDATED') {

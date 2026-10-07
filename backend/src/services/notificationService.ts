@@ -36,8 +36,17 @@ handlebars.registerHelper('formatDate', function (dateString) {
 // Rewrite links in HTML to include click tracking
 const rewriteLinks = (html: string, token: string): string => {
   const backendUrl = getBackendUrl();
+  const isLocalBackend =
+    !backendUrl || backendUrl.includes('localhost') || backendUrl.includes('127.0.0.1');
+
   // Match href="url", ensuring we do not rewrite mailto:, anchors, unsubscribe, or tracking URLs
-  return html.replace(/href="([^"]+)"/gi, (match, url) => {
+  return html.replace(/href="([^"]+)"/gi, (match, rawUrl) => {
+    // Sanitize any localhost that might have leaked into links
+    let url = rawUrl.replace(
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
+      'https://akulas.kitchen',
+    );
+
     if (
       url.startsWith('mailto:') ||
       url.startsWith('#') ||
@@ -45,8 +54,14 @@ const rewriteLinks = (html: string, token: string): string => {
       url.includes('/api/v1/notifications/track/') ||
       url.includes('/unsubscribe')
     ) {
-      return match;
+      return `href="${url}"`;
     }
+
+    // Never wrap with a localhost click tracking redirect in outgoing emails
+    if (isLocalBackend) {
+      return `href="${url}"`;
+    }
+
     return `href="${backendUrl}/api/v1/notifications/track/click/${token}?url=${encodeURIComponent(url)}"`;
   });
 };
@@ -54,6 +69,9 @@ const rewriteLinks = (html: string, token: string): string => {
 // Append 1x1 tracking pixel to HTML body
 const appendTrackingPixel = (html: string, token: string): string => {
   const backendUrl = getBackendUrl();
+  if (!backendUrl || backendUrl.includes('localhost') || backendUrl.includes('127.0.0.1')) {
+    return html;
+  }
   const pixelUrl = `${backendUrl}/api/v1/notifications/track/open/${token}`;
   const pixel = `<img src="${pixelUrl}" width="1" height="1" style="display:none !important; visibility:hidden; width:1px; height:1px;" alt="" />`;
 
@@ -315,7 +333,11 @@ export const sendDirectEmailProcessor = async (options: EmailOptions) => {
 
     // Add Unsubscribe link to marketing emails
     const backendUrl = getBackendUrl();
-    const unsubscribeLink = `${backendUrl}/api/notifications/unsubscribe?email=${encodeURIComponent(emailVal)}`;
+    const unsubBase =
+      backendUrl && !backendUrl.includes('localhost') && !backendUrl.includes('127.0.0.1')
+        ? backendUrl
+        : 'https://akula-s-kitchen.onrender.com';
+    const unsubscribeLink = `${unsubBase}/api/notifications/unsubscribe?email=${encodeURIComponent(emailVal)}`;
     bodyHtml = replacePlaceholders(bodyHtml, { unsubscribe_link: unsubscribeLink });
 
     // Enforce our premium card-based SaaS wrapper for plain HTML content

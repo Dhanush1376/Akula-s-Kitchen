@@ -5,41 +5,52 @@ import {
   dataTable,
   getPrimaryEntityName,
 } from './emailTemplates';
-import { getBackendUrl } from '../getBackendUrl';
 import { getStoreConfigSync } from '../../config/storeConfig';
-
-const resolveImageUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-
-  const backend = getBackendUrl();
-  const isLocal = backend.includes('localhost');
-  if (isLocal) {
-    return 'https://placehold.co/100x100/283618/ffffff?text=Item';
-  }
-
-  return url.startsWith('/') ? `${backend}${url}` : `${backend}/${url}`;
-};
+import {
+  resolveEmailImageUrl,
+  getPublicOrderTrackingUrl,
+  getPublicWebsiteUrl,
+  resolveOrderGrandTotal,
+} from './emailUrlUtils';
 
 const itemsTable = (items: any[]) => {
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return `
+      <div style="margin-bottom: 20px; border-radius: 8px; padding: 16px; background-color: #faf7f0; border: 1px solid #e5dcce; text-align: center; color: #606c38; font-size: 13px;">
+        No itemized products available.
+      </div>
+    `;
+  }
+
   const itemsHtml = items
     .map((item) => {
-      const itemImage = item.imageSrc
-        ? `<img src="${escapeHtml(resolveImageUrl(item.imageSrc))}" alt="${escapeHtml(item.title || item.name)}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #e2dac7;" />`
-        : `<div style="width: 48px; height: 48px; background-color: #f4efe2; border-radius: 6px; border: 1px solid #e2dac7; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #606c38; font-weight: 700;">AK</div>`;
+      const imgUrl = resolveEmailImageUrl(
+        item.imageSrc ||
+          item.image ||
+          item.imageUrl ||
+          (Array.isArray(item.images) ? item.images[0] : ''),
+      );
+      const itemName = escapeHtml(item.title || item.name || item.productTitle || 'Heritage Item');
+      const itemPrice = Number(item.price || 0);
+      const itemQty = Number(item.quantity || 1);
+      const rowTotal = itemPrice * itemQty;
+
+      const itemImage = `
+        <img src="${escapeHtml(imgUrl)}" alt="${itemName}" width="48" height="48" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #e2dac7; display: block;" />
+      `;
 
       return `
     <tr style="border-bottom: 1px solid #ede5d4;">
-      <td style="padding: 10px 0; width: 58px; vertical-align: middle;">
+      <td style="padding: 12px 10px 12px 14px; width: 56px; vertical-align: middle;">
         ${itemImage}
       </td>
-      <td style="padding: 10px 6px; font-size: 13.5px; color: #2d3725; vertical-align: middle;">
-        <strong style="color: #283618; font-size: 14px;">${escapeHtml(item.title || item.name || 'Item')}</strong><br/>
-        <span style="color: #606c38; font-size: 12px;">Qty: ${item.quantity || 1} × ${formatCurrency(item.price)}</span>
+      <td style="padding: 12px 10px; font-size: 13.5px; color: #2d3725; vertical-align: middle;">
+        <strong style="color: #283618; font-size: 14px; display: block; margin-bottom: 2px;">${itemName}</strong>
+        <span style="color: #606c38; font-size: 12px;">Qty: ${itemQty} × ${formatCurrency(itemPrice)}</span>
         ${item.variant ? `<span style="color: #606c38; font-size: 12px;"> • ${escapeHtml(item.variant)}</span>` : ''}
       </td>
-      <td style="padding: 10px 0; font-size: 13.5px; text-align: right; color: #283618; font-family: monospace; font-weight: 700; vertical-align: middle;">
-        ${formatCurrency(item.price * (item.quantity || 1))}
+      <td style="padding: 12px 14px 12px 10px; font-size: 13.5px; text-align: right; color: #283618; font-family: monospace; font-weight: 700; vertical-align: middle; white-space: nowrap;">
+        ${formatCurrency(rowTotal)}
       </td>
     </tr>
   `;
@@ -47,12 +58,12 @@ const itemsTable = (items: any[]) => {
     .join('');
 
   return `
-    <div style="margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #e5dcce;">
-      <table style="width: 100%; border-collapse: collapse;">
+    <div style="margin-bottom: 22px; border-radius: 8px; overflow: hidden; border: 1px solid #e5dcce; background-color: #ffffff;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr style="background-color: #f5f0e3; border-bottom: 2px solid #283618; text-align: left;">
-            <th colspan="2" style="padding: 8px 10px; font-size: 11px; font-weight: 800; color: #283618; text-transform: uppercase; letter-spacing: 0.05em;">Item</th>
-            <th style="padding: 8px 10px; font-size: 11px; font-weight: 800; color: #283618; text-transform: uppercase; letter-spacing: 0.05em; text-align: right;">Total</th>
+            <th colspan="2" style="padding: 10px 14px; font-size: 11px; font-weight: 800; color: #283618; text-transform: uppercase; letter-spacing: 0.06em;">Item Details</th>
+            <th style="padding: 10px 14px; font-size: 11px; font-weight: 800; color: #283618; text-transform: uppercase; letter-spacing: 0.06em; text-align: right;">Total</th>
           </tr>
         </thead>
         <tbody style="background-color: #ffffff;">
@@ -69,54 +80,81 @@ const totalsSummary = (
   tax: number,
   total: number,
   discount: number = 0,
+  platformFee: number = 0,
+  codFee: number = 0,
 ) => `
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="width: 100%; border-collapse: collapse; margin-bottom: 22px;">
     <tr>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #606c38; text-align: right; width: 65%;">Subtotal:</td>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 35%;">${formatCurrency(subtotal)}</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #606c38; text-align: right; width: 62%;">Subtotal:</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 38%; white-space: nowrap;">${formatCurrency(subtotal)}</td>
     </tr>
     ${
       discount > 0
         ? `
     <tr>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #2e7d32; text-align: right; width: 65%; font-weight: 600;">Discount:</td>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #2e7d32; text-align: right; font-family: monospace; font-weight: 700; width: 35%;">-${formatCurrency(discount)}</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #2e7d32; text-align: right; width: 62%; font-weight: 600;">Discount:</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #2e7d32; text-align: right; font-family: monospace; font-weight: 700; width: 38%; white-space: nowrap;">-${formatCurrency(discount)}</td>
     </tr>
     `
         : ''
     }
     <tr>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #606c38; text-align: right; width: 65%;">Shipping:</td>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 35%;">${formatCurrency(shipping)}</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #606c38; text-align: right; width: 62%;">Shipping Fee:</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 38%; white-space: nowrap;">${shipping === 0 ? '<span style="color: #2e7d32; font-weight: 700;">FREE</span>' : formatCurrency(shipping)}</td>
     </tr>
+    ${
+      platformFee > 0
+        ? `
+    <tr>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #606c38; text-align: right; width: 62%;">Platform Fee:</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 38%; white-space: nowrap;">${formatCurrency(platformFee)}</td>
+    </tr>
+    `
+        : ''
+    }
+    ${
+      codFee > 0
+        ? `
+    <tr>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #606c38; text-align: right; width: 62%;">COD Handling Fee:</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 38%; white-space: nowrap;">${formatCurrency(codFee)}</td>
+    </tr>
+    `
+        : ''
+    }
     ${
       tax > 0
         ? `
     <tr>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #606c38; text-align: right; width: 65%;">Tax:</td>
-      <td style="padding: 4px 0; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 35%;">${formatCurrency(tax)}</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #606c38; text-align: right; width: 62%;">Taxes (GST):</td>
+      <td style="padding: 6px 14px; font-size: 13.5px; color: #283618; text-align: right; font-family: monospace; font-weight: 600; width: 38%; white-space: nowrap;">${formatCurrency(tax)}</td>
     </tr>
     `
         : ''
     }
-    <tr style="border-top: 2px solid #283618;">
-      <td style="padding: 10px 8px; font-size: 14px; font-weight: 800; color: #283618; text-align: right; width: 65%; text-transform: uppercase;">Grand Total:</td>
-      <td style="padding: 10px 8px; font-size: 17px; font-weight: 800; color: #283618; text-align: right; font-family: monospace; width: 35%; background-color: #faf5e6; border-radius: 6px;">${formatCurrency(total)}</td>
+    <tr style="border-top: 2px solid #283618; background-color: #faf5e6;">
+      <td style="padding: 12px 14px; font-size: 14px; font-weight: 800; color: #283618; text-align: right; width: 62%; text-transform: uppercase; letter-spacing: 0.04em;">Grand Total:</td>
+      <td style="padding: 12px 14px; font-size: 18px; font-weight: 900; color: #283618; text-align: right; font-family: monospace; width: 38%; white-space: nowrap;">${formatCurrency(total)}</td>
     </tr>
   </table>
 `;
 
 const addressBlock = (title: string, address: any) => {
   if (!address) return '';
+  const addrText = typeof address === 'string' ? address : address.address || '';
+  const name = address.name || 'Customer';
+  const phone = address.phone || '';
+  const cityState = [address.city, address.state, address.pincode].filter(Boolean).join(', ');
+
   return `
     <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
       <h3 style="color: #283618; font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px 0;">${title}</h3>
       <p style="color: #2d3725; font-size: 13px; line-height: 1.5; margin: 0;">
-        <strong>${escapeHtml(address.name)}</strong><br/>
-        ${escapeHtml(address.address)}<br/>
+        <strong>${escapeHtml(name)}</strong><br/>
+        ${escapeHtml(addrText)}<br/>
         ${address.locality ? escapeHtml(address.locality) + '<br/>' : ''}
-        ${escapeHtml(address.city)}, ${escapeHtml(address.state)} ${escapeHtml(address.pincode)}<br/>
-        Phone: ${escapeHtml(address.phone)}
+        ${cityState ? escapeHtml(cityState) + '<br/>' : ''}
+        ${phone ? `Phone: ${escapeHtml(phone)}` : ''}
       </p>
     </div>
   `;
@@ -127,6 +165,7 @@ const addressBlock = (title: string, address: any) => {
 export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
   const store = getStoreConfigSync();
   const domain = store.websiteDomain || 'akulas.kitchen';
+  const grandTotal = resolveOrderGrandTotal(order);
   const displayId =
     order.invoice?.number ||
     order.invoiceNumber ||
@@ -135,37 +174,60 @@ export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
   const headingText = primaryItem
     ? `Your ${escapeHtml(primaryItem)} Order is Confirmed`
     : 'Order Confirmed';
-  const preheader = `Your order #${displayId} on ${domain} is confirmed`;
+  const preheader = `Your order #${displayId} on ${domain} is confirmed — Grand Total: ${formatCurrency(grandTotal)}`;
+  const trackUrl = getPublicOrderTrackingUrl(order);
+
+  const subtotal =
+    order.subtotal ||
+    (order.items || []).reduce(
+      (acc: number, it: any) => acc + Number(it.price || 0) * Number(it.quantity || 1),
+      0,
+    );
+  const shippingFee = order.shippingFee ?? order.courierCharges ?? 0;
+  const tax = order.tax?.totalTax || 0;
+  const discount = order.discount || 0;
+  const platformFee = order.platformFee || 0;
+  const codFee = order.codFee || 0;
+
+  const paymentDetailsBlock = `
+    <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+      <h3 style="color: #283618; font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px 0;">Payment Details</h3>
+      <p style="color: #2d3725; font-size: 13px; line-height: 1.5; margin: 0;">
+        Method: <strong>${escapeHtml(order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod || 'Online')}</strong><br/>
+        Status: <strong style="color: #2e7d32;">${escapeHtml(order.paymentStatus || 'Paid')}</strong><br/>
+        Invoice: <strong>${escapeHtml(displayId)}</strong><br/>
+        Grand Total: <strong>${formatCurrency(grandTotal)}</strong>
+      </p>
+    </div>
+  `;
 
   const body = `
     <h2>${headingText}</h2>
-    <p>Hi ${escapeHtml(user?.name || order.shippingAddress?.name || 'Customer')}, thank you for your order! We are preparing it fresh.</p>
+    <p>Hi ${escapeHtml(user?.name || order.shippingAddress?.name || 'Customer')}, thank you for your order! We are preparing it fresh with heritage recipes.</p>
     
-    <h3 style="color: #283618; margin-top: 20px;">Order Summary</h3>
+    <h3 style="color: #283618; margin-top: 22px; margin-bottom: 10px;">Order Summary</h3>
     ${itemsTable(order.items)}
-    ${totalsSummary(order.subtotal, order.shippingFee || order.courierCharges || 0, order.tax?.totalTax || 0, order.total, order.discount || 0)}
+    ${totalsSummary(subtotal, shippingFee, tax, grandTotal, discount, platformFee, codFee)}
     
-    <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
-      <div style="flex: 1; min-width: 220px;">
-        ${addressBlock('Shipping Address', order.shippingAddress)}
-      </div>
-      <div style="flex: 1; min-width: 220px;">
-        <div style="background-color: #faf7f0; border: 1px solid #e5dcce; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
-          <h3 style="color: #283618; font-size: 12.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px 0;">Payment Details</h3>
-          <p style="color: #2d3725; font-size: 13px; line-height: 1.5; margin: 0;">
-            Method: <strong>${escapeHtml(order.paymentMethod || 'Online')}</strong><br/>
-            Status: <strong style="color: #2e7d32;">${escapeHtml(order.paymentStatus || 'Paid')}</strong><br/>
-            Invoice: <strong>${escapeHtml(displayId)}</strong>
-          </p>
-        </div>
-      </div>
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; border-collapse: separate; border-spacing: 0;">
+      <tr>
+        <td width="48%" valign="top" style="vertical-align: top; padding-right: 8px;">
+          ${addressBlock('Shipping Address', order.shippingAddress)}
+        </td>
+        <td width="48%" valign="top" style="vertical-align: top; padding-left: 8px;">
+          ${paymentDetailsBlock}
+        </td>
+      </tr>
+    </table>
 
-    <div style="margin: 24px 0; text-align: center;">
-      <a href="${store.websiteUrl}/dashboard/orders" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 12px 28px; text-decoration: none; font-size: 13.5px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 3px 10px rgba(40, 54, 24, 0.18);">
-        Track Order on ${domain}
+    <div style="margin: 32px 0 20px; text-align: center;">
+      <a href="${trackUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 14px rgba(40, 54, 24, 0.22); letter-spacing: 0.02em;">
+        Track Your Order
       </a>
     </div>
+    <p style="text-align: center; margin: 0 0 10px 0; font-size: 12px; color: #606c38;">
+      Instant live tracking • No login required
+    </p>
   `;
 
   return {
@@ -177,6 +239,9 @@ export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
 export const buildOrderConfirmationAdminEmail = (order: any) => {
   const store = getStoreConfigSync();
   const domain = store.websiteDomain || 'akulas.kitchen';
+  const publicBaseUrl = getPublicWebsiteUrl();
+  const grandTotal = resolveOrderGrandTotal(order);
+
   const itemTitle =
     order.items && order.items.length > 0
       ? order.items[0].title || order.items[0].name || order.items[0].productTitle || 'Product'
@@ -190,12 +255,45 @@ export const buildOrderConfirmationAdminEmail = (order: any) => {
     order.invoiceNumber ||
     (order._id ? `INV-${String(order._id).slice(-8).toUpperCase()}` : 'Pending');
 
+  const subtotal =
+    order.subtotal ||
+    (order.items || []).reduce(
+      (acc: number, it: any) => acc + Number(it.price || 0) * Number(it.quantity || 1),
+      0,
+    );
+  const shippingFee = order.shippingFee ?? order.courierCharges ?? 0;
+  const tax = order.tax?.totalTax || 0;
+  const discount = order.discount || 0;
+  const platformFee = order.platformFee || 0;
+  const codFee = order.codFee || 0;
+  const orderAdminLink = `${publicBaseUrl}/admin/orders/${order._id || ''}`;
+
   const body = `
     <h2>New Order: ${escapeHtml(productName)}</h2>
-    <p style="color: #606c38; font-size: 13.5px; margin-top: -6px; margin-bottom: 16px;">
+    <p style="color: #606c38; font-size: 13.5px; margin-top: -6px; margin-bottom: 18px;">
       Invoice: <strong style="color: #283618;">${escapeHtml(invoiceNumber)}</strong> • Customer: <strong>${escapeHtml(customerName)}</strong>
     </p>
     
+    <!-- Prominent Grand Total Banner -->
+    <div style="background-color: #faf5e6; border: 2px solid #283618; border-radius: 10px; padding: 16px 20px; margin-bottom: 22px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td align="left" valign="middle">
+            <span style="font-size: 11px; font-weight: 800; color: #606c38; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 4px;">Grand Total Amount</span>
+            <strong style="font-size: 26px; font-weight: 900; color: #283618; font-family: monospace; display: block; line-height: 1.1;">${formatCurrency(grandTotal)}</strong>
+          </td>
+          <td align="right" valign="middle">
+            <span style="background-color: #283618; color: #ffffff; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">
+              ${escapeHtml(order.paymentStatus || 'PAID')}
+            </span>
+            <span style="display: block; font-size: 11.5px; color: #606c38; margin-top: 5px; font-weight: 600;">
+              via ${escapeHtml(order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod || 'Online')}
+            </span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
     ${dataTable([
       { label: 'Item', value: `<strong>${escapeHtml(productName)}</strong>` },
       { label: 'Customer', value: escapeHtml(customerName) },
@@ -207,21 +305,35 @@ export const buildOrderConfirmationAdminEmail = (order: any) => {
         label: 'Phone',
         value: escapeHtml(order.shippingAddress?.phone || order.user?.phone || 'N/A'),
       },
-      { label: 'Total', value: formatCurrency(order.total) },
       {
-        label: 'Payment',
+        label: 'Grand Total',
+        value: `<strong style="color: #283618; font-size: 15px; font-family: monospace;">${formatCurrency(grandTotal)}</strong>`,
+      },
+      {
+        label: 'Payment Method',
         value: `${escapeHtml(order.paymentMethod || 'N/A')} (${escapeHtml(order.paymentStatus || 'Pending')})`,
+      },
+      {
+        label: 'Invoice Ref',
+        value: `<code>${escapeHtml(invoiceNumber)}</code>`,
       },
     ])}
     
-    <h3 style="color: #283618;">Items</h3>
+    <h3 style="color: #283618; margin-top: 24px; margin-bottom: 10px;">Ordered Products</h3>
     ${itemsTable(order.items)}
+    ${totalsSummary(subtotal, shippingFee, tax, grandTotal, discount, platformFee, codFee)}
     
-    ${addressBlock('Shipping Address', order.shippingAddress)}
+    ${addressBlock('Delivery Address', order.shippingAddress)}
+
+    <div style="margin: 28px 0 12px 0; text-align: center;">
+      <a href="${orderAdminLink}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 13px 30px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 12px rgba(40, 54, 24, 0.2);">
+        Manage Order in Admin Panel
+      </a>
+    </div>
   `;
 
   return {
-    subject: `[New Order] ${productName} by ${customerName}`,
+    subject: `[New Order] ${productName} by ${customerName} (${formatCurrency(grandTotal)})`,
     html: getLuxuryEmailWrapper('Admin Alert', body),
   };
 };
@@ -231,8 +343,20 @@ export const buildOrderStatusChangeEmail = (order: any, oldStatus: string, newSt
   const domain = store.websiteDomain || 'akulas.kitchen';
   const primaryItem = getPrimaryEntityName(order.items) || 'Order';
   const invoiceNumber = order.invoiceNumber || order.invoice?.number;
+  const grandTotal = resolveOrderGrandTotal(order);
+  const trackUrl = getPublicOrderTrackingUrl(order);
 
   const preheader = `Your order status is now ${newStatus}`;
+
+  const subtotal =
+    order.subtotal ||
+    (order.items || []).reduce(
+      (acc: number, it: any) => acc + Number(it.price || 0) * Number(it.quantity || 1),
+      0,
+    );
+  const shippingFee = order.shippingFee ?? order.courierCharges ?? 0;
+  const tax = order.tax?.totalTax || 0;
+  const discount = order.discount || 0;
 
   const body = `
     <h2>Order Status Updated</h2>
@@ -242,17 +366,24 @@ export const buildOrderStatusChangeEmail = (order: any, oldStatus: string, newSt
       { label: 'Order Item', value: `<strong>${escapeHtml(primaryItem)}</strong>` },
       { label: 'Status', value: `<strong>${escapeHtml(newStatus)}</strong>` },
       ...(invoiceNumber ? [{ label: 'Invoice No', value: escapeHtml(invoiceNumber) }] : []),
+      {
+        label: 'Grand Total',
+        value: `<strong style="font-family: monospace;">${formatCurrency(grandTotal)}</strong>`,
+      },
     ])}
     
-    <h3 style="color: #283618; margin-top: 20px;">Order Summary</h3>
+    <h3 style="color: #283618; margin-top: 22px; margin-bottom: 10px;">Order Summary</h3>
     ${itemsTable(order.items)}
-    ${totalsSummary(order.subtotal, order.shippingFee || order.courierCharges || 0, order.tax?.totalTax || 0, order.total, order.discount || 0)}
+    ${totalsSummary(subtotal, shippingFee, tax, grandTotal, discount)}
 
-    <div style="margin: 24px 0; text-align: center;">
-      <a href="${store.websiteUrl}/dashboard/orders" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 12px 28px; text-decoration: none; font-size: 13.5px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 3px 10px rgba(40, 54, 24, 0.18);">
-        View Order on ${domain}
+    <div style="margin: 30px 0 20px; text-align: center;">
+      <a href="${trackUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 14px rgba(40, 54, 24, 0.22);">
+        Track Your Order
       </a>
     </div>
+    <p style="text-align: center; margin: 0; font-size: 12px; color: #606c38;">
+      Instant live tracking • No login required
+    </p>
   `;
 
   return {
@@ -270,6 +401,8 @@ export const buildPaymentFailedEmail = (order: any, reason: string) => {
     order.invoiceNumber ||
     order.orderUuid ||
     (order._id ? `ORD-${String(order._id).slice(-8).toUpperCase()}` : '');
+  const grandTotal = resolveOrderGrandTotal(order);
+  const checkoutUrl = `${getPublicWebsiteUrl()}/checkout`;
 
   const preheader = `Payment issue with your ${primaryItem} order`;
 
@@ -280,12 +413,15 @@ export const buildPaymentFailedEmail = (order: any, reason: string) => {
     ${dataTable([
       { label: 'Item', value: `<strong>${escapeHtml(primaryItem)}</strong>` },
       { label: 'Reason', value: escapeHtml(reason) },
-      { label: 'Amount', value: formatCurrency(order.total || 0) },
+      {
+        label: 'Amount',
+        value: `<strong style="font-family: monospace;">${formatCurrency(grandTotal)}</strong>`,
+      },
       ...(displayRef ? [{ label: 'Ref', value: escapeHtml(displayRef) }] : []),
     ])}
     
-    <div style="margin: 24px 0; text-align: center;">
-      <a href="${store.websiteUrl}/checkout" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 12px 28px; text-decoration: none; font-size: 13.5px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 3px 10px rgba(40, 54, 24, 0.18);">
+    <div style="margin: 28px 0; text-align: center;">
+      <a href="${checkoutUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 13px 32px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 12px rgba(40, 54, 24, 0.18);">
         Retry Payment on ${domain}
       </a>
     </div>

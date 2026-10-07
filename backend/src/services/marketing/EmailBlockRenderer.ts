@@ -85,9 +85,14 @@ export class EmailBlockRenderer {
     if (!rawUrl || typeof rawUrl !== 'string') return '#';
     let url = rawUrl.trim();
 
-    // If relative, prepend frontend storefront url
+    // If relative, prepend public storefront url
     if (url.startsWith('/')) {
-      url = `${getFrontendUrl()}${url}`;
+      const { getPublicWebsiteUrl } = require('../../utils/getFrontendUrl');
+      url = `${getPublicWebsiteUrl()}${url}`;
+    }
+
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+      url = url.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, 'https://akulas.kitchen');
     }
 
     if (!url.startsWith('http://') && !url.startsWith('https://')) {

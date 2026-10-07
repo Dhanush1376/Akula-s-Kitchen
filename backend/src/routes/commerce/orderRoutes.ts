@@ -59,8 +59,8 @@ const paymentVerifyLimiter = createRateLimiter('paymentVerify', {
   keyGenerator: accountKeyGenerator,
 });
 
-// Public Logistics Tracking Scan Routes (token required)
-router.get('/:id/public-track', trackingLimiter, getOrderPublicTrack);
+// Public Logistics Tracking Scan Routes (token required, or optional authenticated user)
+router.get('/:id/public-track', optionalAuth, trackingLimiter, getOrderPublicTrack);
 router.patch(
   '/:id/public-status',
   optionalAuth,

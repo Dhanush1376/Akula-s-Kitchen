@@ -1,3 +1,5 @@
+import { resolveEmailImageUrl } from '../../../utils/email/emailUrlUtils';
+
 export interface ProductCardProps {
   image?: string;
   name: string;
@@ -8,11 +10,11 @@ export interface ProductCardProps {
 }
 
 export const ProductCard = ({ image, name, variant, price, quantity, sku }: ProductCardProps) => {
-  const imageHtml = image
-    ? `<td width="80" valign="top" style="padding-right: 16px;">
-         <img src="${image}" alt="${name}" width="80" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;" />
-       </td>`
-    : '';
+  const resolvedImg = resolveEmailImageUrl(image);
+  const imageHtml = `
+    <td width="72" valign="middle" style="padding-right: 14px; width: 72px;">
+      <img src="${resolvedImg}" alt="${name}" width="64" height="64" style="width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; display: block;" />
+    </td>`;
 
   const variantHtml = variant
     ? `<p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Variant: ${variant}</p>`

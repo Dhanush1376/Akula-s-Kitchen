@@ -1,6 +1,11 @@
 import { emailQueue, notificationQueue } from '../../jobs/queues';
 import logger from '../../config/logger';
-import { getFrontendUrl } from '../../utils/getFrontendUrl';
+import {
+  resolveEmailImageUrl,
+  getPublicOrderTrackingUrl,
+  getPublicWebsiteUrl,
+  resolveOrderGrandTotal,
+} from '../../utils/email/emailUrlUtils';
 
 export class OrderNotificationService {
   /**
@@ -8,7 +13,9 @@ export class OrderNotificationService {
    */
   static async dispatchOrderConfirmation(order: any, user: any, adminEmails: string[]) {
     try {
-      const frontendUrl = getFrontendUrl();
+      const publicBaseUrl = getPublicWebsiteUrl();
+      const grandTotal = resolveOrderGrandTotal(order);
+      const trackingUrl = getPublicOrderTrackingUrl(order);
 
       const itemTitle =
         order.items && order.items.length > 0
@@ -37,22 +44,25 @@ export class OrderNotificationService {
           user?.phone ||
           (typeof order.shippingAddress === 'object' ? order.shippingAddress.phone : ''),
         orderId: displayInvoice,
-        rawOrderId: order._id.toString(),
+        rawOrderId: (order._id || '').toString(),
         orderDate: order.createdAt || new Date().toISOString(),
         paymentMethod:
           order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment (Razorpay)',
-        items: order.items.map((i: any) => ({
-          name: i.title || i.name,
+        items: (order.items || []).map((i: any) => ({
+          name: i.title || i.name || 'Item',
           variant: i.variant,
-          quantity: i.quantity,
-          price: i.price,
-          image: i.imageSrc,
+          quantity: i.quantity || 1,
+          price: i.price || 0,
+          image: resolveEmailImageUrl(i.imageSrc || i.image || i.imageUrl),
         })),
-        subtotal: order.subtotal,
+        subtotal: order.subtotal || 0,
         shipping: order.shippingFee || order.courierCharges || 0,
-        total: order.total,
+        total: grandTotal,
+        grandTotal: grandTotal,
         shippingAddress: order.shippingAddress,
-        dashboardUrl: `${frontendUrl}/dashboard?tab=orders`,
+        trackingUrl,
+        dashboardUrl: `${publicBaseUrl}/dashboard/orders`,
+        websiteUrl: publicBaseUrl,
         currentYear: new Date().getFullYear(),
         invoiceNumber: displayInvoice,
         store: order.store,
@@ -71,7 +81,7 @@ export class OrderNotificationService {
         });
       }
 
-      const adminSubject = `[New Order] ${productName} placed by ${customerName}`;
+      const adminSubject = `[New Order] ${productName} placed by ${customerName} (₹${grandTotal})`;
 
       // Dispatch to admins
       if (adminEmails && adminEmails.length > 0) {
@@ -86,11 +96,17 @@ export class OrderNotificationService {
       // Admin UI Notification
       await notificationQueue.add('adminNotification', {
         title: adminSubject,
-        message: `${user.name || 'A customer'} placed a new order (₹${order.total}).`,
+        message: `${user?.name || 'A customer'} placed a new order (₹${grandTotal}).`,
         type: 'order',
         actionLink: `/admin/orders/${order._id}`,
         metadata: {
-          image: order.items && order.items.length > 0 ? order.items[0].imageSrc : null,
+          image:
+            order.items && order.items.length > 0
+              ? resolveEmailImageUrl(
+                  order.items[0].imageSrc || order.items[0].image || order.items[0].imageUrl,
+                )
+              : null,
+          grandTotal,
         },
       });
     } catch (err) {
@@ -107,6 +123,7 @@ export class OrderNotificationService {
         logger.info(`[ORDER NOTIFICATION] Skipping failure email — user ${user._id} has no email`);
         return;
       }
+      const grandTotal = resolveOrderGrandTotal(order);
       await emailQueue.add('orderFailureEmail', {
         to: user.email,
         subject: `Payment Failed for Order #${order._id}`,
@@ -115,7 +132,8 @@ export class OrderNotificationService {
           customerName: user.name,
           orderId: order._id.toString(),
           reason,
-          total: order.total,
+          total: grandTotal,
+          grandTotal,
         },
       });
     } catch (err) {
