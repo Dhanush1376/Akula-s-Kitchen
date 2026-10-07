@@ -125,6 +125,8 @@ ops/archive/
 *.pptx
 uploads/
 backend/uploads/
+!frontend/public/uploads/
+!frontend/public/uploads/**
 email-previews/
 backend/email-previews/
 

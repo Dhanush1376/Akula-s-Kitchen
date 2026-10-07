@@ -6,6 +6,12 @@ import cloudImageMappings from '../../assets/cloud_image_mappings.json';
  */
 export const resolveStaticAssetUrl = (localPath) => {
   if (!localPath) return localPath;
+  if (
+    typeof localPath === 'string' &&
+    /https?:\/\/(localhost|127\.0\.0\.1):5000/i.test(localPath)
+  ) {
+    localPath = localPath.replace(/https?:\/\/(localhost|127\.0\.0\.1):5000/i, '');
+  }
   if (localPath.includes('cloudinary.com')) return localPath;
   const key = localPath.startsWith('/') ? localPath : `/${localPath}`;
   return cloudImageMappings[key] || localPath;
@@ -45,6 +51,11 @@ const urlCache = new Map();
  */
 export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', format = 'auto') => {
   if (!url) return '';
+
+  // Strip localhost development origins to keep relative URLs ('self') compatible with CSP
+  if (typeof url === 'string' && /https?:\/\/(localhost|127\.0\.0\.1):5000/i.test(url)) {
+    url = url.replace(/https?:\/\/(localhost|127\.0\.0\.1):5000/i, '');
+  }
 
   // Fix for old cloudinary cloud name
   if (url.includes('dwy7sz5eh')) {

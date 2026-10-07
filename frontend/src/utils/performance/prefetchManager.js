@@ -32,6 +32,13 @@ class PrefetchManager {
 
     const task = this.prefetchRouteInternal(route, opts)
       .catch((err) => {
+        if (
+          err?.message?.includes('dynamically imported module') ||
+          err?.message?.includes('MIME type') ||
+          err?.name === 'TypeError'
+        ) {
+          return;
+        }
         logger.warn(`Prefetch failed for ${route}`, err);
       })
       .finally(() => {
@@ -105,7 +112,11 @@ class PrefetchManager {
         }
       }
     } catch (e) {
-      if (kind !== 'silent') {
+      if (
+        kind !== 'silent' &&
+        !e?.message?.includes('dynamically imported module') &&
+        !e?.message?.includes('MIME type')
+      ) {
         logger.warn(`Prefetch failed for ${route}`, e);
       }
     }
@@ -146,6 +157,17 @@ class PrefetchManager {
     const task = importer()
       .then(() => {
         this.prefetchedModules.add(key);
+      })
+      .catch((err) => {
+        // Silently swallow speculative chunk prefetch errors when a new deploy invalidates old hashes
+        if (
+          err?.message?.includes('dynamically imported module') ||
+          err?.message?.includes('MIME type') ||
+          err?.name === 'TypeError'
+        ) {
+          return;
+        }
+        throw err;
       })
       .finally(() => {
         this.inFlightRoutePrefetches.delete(inFlightKey);

@@ -108,8 +108,7 @@ export class CloudinaryAdapter {
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, buffer);
 
-        const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-        const fileUrl = `${backendUrl}/uploads/${safeFolder}/${filename}`;
+        const fileUrl = `/uploads/${safeFolder}/${filename}`;
 
         return {
           publicId: options.publicId || `local_${Date.now()}`,
