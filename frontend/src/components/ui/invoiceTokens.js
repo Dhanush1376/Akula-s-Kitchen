@@ -7,9 +7,9 @@
 
 export const CANONICAL_INVOICE = {
   // Dimension tokens
-  CANVAS_WIDTH: 540,
-  CANVAS_PADDING: 20,
-  CONTENT_WIDTH: 500,
+  CANVAS_WIDTH: 480,
+  CANVAS_PADDING: 12,
+  CONTENT_WIDTH: 456,
   OUTER_RADIUS: 0,
   CARD_RADIUS: 0,
 
@@ -38,34 +38,34 @@ export const CANONICAL_INVOICE = {
 
   // Proportional Font Sizes
   TYPOGRAPHY: {
-    storeName: '18px',
-    legalName: '10px',
-    headerDetails: '10.5px',
-    headerTitle: '17px',
-    cardLabel: '9.5px',
-    cardTitle: '12.5px',
-    cardBody: '10.5px',
-    cardPin: '11px',
-    tableHeader: '10px',
-    tableItem: '11px',
-    tableTotal: '11px',
-    subtotalsLabel: '11px',
-    subtotalsValue: '11px',
-    grandTotalLabel: '11.5px',
-    grandTotalValue: '15.5px',
-    gstHeader: '9.5px',
-    gstRow: '10px',
-    gstTotal: '10px',
-    scanLabel: '8.5px',
-    footerText: '8.5px',
+    storeName: '13.5px',
+    legalName: '8px',
+    headerDetails: '8px',
+    headerTitle: '14.5px',
+    cardLabel: '7.5px',
+    cardTitle: '10px',
+    cardBody: '8px',
+    cardPin: '8.5px',
+    tableHeader: '8px',
+    tableItem: '8.5px',
+    tableTotal: '8.5px',
+    subtotalsLabel: '8px',
+    subtotalsValue: '8.5px',
+    grandTotalLabel: '9.5px',
+    grandTotalValue: '13px',
+    gstHeader: '7.5px',
+    gstRow: '8px',
+    gstTotal: '8px',
+    scanLabel: '7px',
+    footerText: '7px',
   },
 
   // QR and Barcode Geometry
   BARCODE: {
-    width: 1.3,
-    height: 38,
+    width: 1.1,
+    height: 22,
   },
   QR: {
-    size: 72,
+    size: 40,
   },
 };

@@ -251,5 +251,45 @@ describe('email sender identity', () => {
 
       expect(warn).not.toHaveBeenCalled();
     });
+
+    it('warns in any environment when an SMTP relay key sends mail through Gmail', async () => {
+      // The setup that showed the owner's Gmail address and photo to customers
+      Object.assign(process.env, {
+        NODE_ENV: 'development',
+        ...BRAND_ENV,
+        BREVO_API_KEY: 'xsmtpsib-unit-test-relay-key-not-real',
+        SMTP_HOST: 'smtp.gmail.com',
+        SMTP_USER: 'owner@gmail.com',
+        SMTP_PASS: 'not-a-real-password',
+      });
+      const logger = (await import('../../src/config/logger')).default;
+      const warn = vi.spyOn(logger, 'warn');
+      const { auditSenderConfig, getDeliveryRoute } = await loadSender();
+
+      expect(getDeliveryRoute()).toBe('gmail-smtp');
+      auditSenderConfig();
+
+      expect(warn).toHaveBeenCalledOnce();
+      const message = String(warn.mock.calls[0][0]);
+      expect(message).toContain('Gmail SMTP');
+      expect(message).toContain('xsmtpsib');
+      // Never echoes credentials
+      expect(message).not.toContain('not-real');
+    });
+  });
+
+  describe('getDeliveryRoute', () => {
+    it('uses the Brevo API with a REST key, and Brevo SMTP relay when pointed at it', async () => {
+      const { getDeliveryRoute } = await loadSender();
+      expect(getDeliveryRoute()).toBe('brevo-api');
+
+      Object.assign(process.env, {
+        BREVO_API_KEY: '',
+        SMTP_HOST: 'smtp-relay.brevo.com',
+        SMTP_USER: 'brevo-login@example.com',
+        SMTP_PASS: 'not-a-real-password',
+      });
+      expect(getDeliveryRoute()).toBe('smtp');
+    });
   });
 });

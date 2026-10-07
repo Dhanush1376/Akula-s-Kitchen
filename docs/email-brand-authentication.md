@@ -16,6 +16,40 @@ Nothing below is active until those steps are completed.
 
 ---
 
+## 0. Why emails still show the personal Gmail address and photo
+
+Checked on 8 Oct 2026 in `backend/.env.local` and the server logs:
+
+- `BREVO_API_KEY` holds a Brevo **SMTP relay key** (`xsmtpsib-…`). Brevo's HTTP API only
+  accepts a **REST API key** (`xkeysib-…`), so the app skips Brevo entirely.
+- It then falls back to `SMTP_HOST=smtp.gmail.com` with a Gmail account. **Gmail always
+  sends as the signed-in Gmail account**, whatever From address the app asks for, so
+  recipients see that address and its Google profile photo.
+- The logs show 0 emails sent through Brevo and 18 through Gmail SMTP (latest 7 Oct).
+  `BREVO_SENDER_EMAIL` is already set to an `@akulas.kitchen` address, but it cannot take
+  effect on the Gmail route.
+
+The server now logs a warning at startup whenever mail is about to go out through Gmail.
+
+**Fix (pick one, in `backend/.env.local` for local runs and on Render for production):**
+
+1. **Recommended: use the Brevo API.** In Brevo → SMTP & API → **API Keys**, create a key
+   (it starts with `xkeysib-`) and put it in `BREVO_API_KEY`. Nothing else changes; mail
+   goes through Brevo as `BREVO_SENDER_EMAIL`.
+2. **Or use Brevo's SMTP relay with the existing `xsmtpsib-` key.** In Brevo → SMTP & API
+   → **SMTP**, note the SMTP server and login, then set
+   `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, `SMTP_USER=<Brevo SMTP login>`,
+   `SMTP_PASS=<the xsmtpsib- key>`, and clear `BREVO_API_KEY`.
+
+Either way, Brevo only sends as `orders@akulas.kitchen` once that address is a verified
+sender or `akulas.kitchen` is an authenticated domain (section 3); domain authentication
+is what makes the mail pass DMARC and avoids "via brevo" labels. Restart the server, then
+send the admin SMTP live test (section 11): its response shows the provider (`Brevo` for
+option 1, `SMTP` for option 2, with `host: smtp-relay.brevo.com`) and the sender used. The personal photo disappears as soon as mail stops coming from the Gmail
+address; until BIMI is in place, Gmail shows a letter avatar instead.
+
+---
+
 ## 1. Current email architecture
 
 All mail goes out through Brevo's HTTP API (`https://api.brevo.com/v3/smtp/email`). SMTP is a

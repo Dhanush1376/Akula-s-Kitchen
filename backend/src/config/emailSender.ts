@@ -101,11 +101,40 @@ export function resolveSender(override?: {
 }
 
 /**
- * Startup check. Warns (never blocks) when production would send from a personal
- * mailbox, so a development sender cannot silently become the production sender.
+ * Which route outgoing mail will actually take, mirroring services/emailProvider.ts:
+ * Brevo's HTTP API needs a REST key (xkeysib-…); otherwise mail falls back to SMTP_*.
+ */
+export function getDeliveryRoute(): 'brevo-api' | 'gmail-smtp' | 'smtp' | 'none' {
+  const key = clean(process.env.BREVO_API_KEY);
+  if (key && !key.startsWith('xsmtpsib-')) return 'brevo-api';
+  if (clean(process.env.SMTP_USER) && clean(process.env.SMTP_PASS)) {
+    const host = clean(process.env.SMTP_HOST) || 'smtp.gmail.com';
+    return /gmail|googlemail/i.test(host) ? 'gmail-smtp' : 'smtp';
+  }
+  return 'none';
+}
+
+/**
+ * Startup check. Warns (never blocks) when mail cannot go out as the configured sender:
+ * in any environment when it would be relayed through Gmail (which always sends as the
+ * Gmail account and shows its profile photo), and in production when the sender is a
+ * personal mailbox, so a development sender cannot silently become the production sender.
  */
 export function auditSenderConfig(): void {
   const { email, replyTo } = getSenderIdentity();
+
+  if (getDeliveryRoute() === 'gmail-smtp') {
+    const keyHint = clean(process.env.BREVO_API_KEY).startsWith('xsmtpsib-')
+      ? 'BREVO_API_KEY is a Brevo SMTP relay key (xsmtpsib-…), which the Brevo API cannot use, so '
+      : '';
+    logger.warn(
+      `[EMAIL SENDER] ${keyHint}mail is going out through Gmail SMTP. Gmail always sends as the ` +
+        `signed-in Gmail account, so recipients see that address and its profile photo, not ` +
+        `@${emailDomain(email)}. Set BREVO_API_KEY to a Brevo REST API key (xkeysib-…), or point ` +
+        'SMTP_* at smtp-relay.brevo.com (see docs/email-brand-authentication.md).',
+    );
+  }
+
   if (process.env.NODE_ENV !== 'production') return;
 
   if (isPersonalMailbox(email)) {

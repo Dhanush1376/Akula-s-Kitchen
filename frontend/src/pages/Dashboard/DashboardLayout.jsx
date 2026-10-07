@@ -152,28 +152,30 @@ export function DashboardLayout() {
               onClick={() => setSelectedInvoiceOrder(null)}
             />
             {/* Modal Container */}
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 250 }}
-              onClick={(e) => e.stopPropagation()}
-              className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[18px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[18px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:translate-x-0 print:translate-y-0 print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
-            >
-              <React.Suspense
-                fallback={
-                  <div className="p-8">
-                    <Skeleton className="h-80 w-full rounded-lg" />
-                  </div>
-                }
+            <div className="fixed inset-0 z-[101] flex items-center justify-center p-2 sm:p-4 pointer-events-none no-print">
+              <motion.div
+                initial={{ scale: 0.94, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.94, opacity: 0, y: 15 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                onClick={(e) => e.stopPropagation()}
+                className="invoice-modal-container pointer-events-auto w-full max-w-[500px] h-fit max-h-[96vh] bg-surface rounded-[16px] shadow-[0_25px_65px_-15px_rgba(0,0,0,0.35)] border border-outline-variant/30 overflow-y-auto no-scrollbar p-2 sm:p-2.5 print:static print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
               >
-                <InvoiceTemplate
-                  order={selectedInvoiceOrder}
-                  user={user}
-                  onClose={() => setSelectedInvoiceOrder(null)}
-                />
-              </React.Suspense>
-            </motion.div>
+                <React.Suspense
+                  fallback={
+                    <div className="p-6">
+                      <Skeleton className="h-72 w-full rounded-lg" />
+                    </div>
+                  }
+                >
+                  <InvoiceTemplate
+                    order={selectedInvoiceOrder}
+                    user={user}
+                    onClose={() => setSelectedInvoiceOrder(null)}
+                  />
+                </React.Suspense>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>

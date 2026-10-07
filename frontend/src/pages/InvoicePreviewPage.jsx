@@ -206,8 +206,10 @@ export default function InvoicePreviewPage() {
             onClick={() => setShowModal(false)}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] no-print"
           />
-          <div className="invoice-modal-container fixed bottom-0 left-0 right-0 lg:top-0 lg:bottom-0 lg:my-auto lg:h-fit lg:rounded-[18px] mx-auto w-full max-w-[580px] max-h-[92vh] bg-surface rounded-t-[18px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-outline-variant/30 z-[101] overflow-y-auto no-scrollbar pt-2.5 pb-2 px-3 sm:pt-3 sm:pb-2.5 sm:px-4 print:static print:p-0 print:border-none print:shadow-none print:bg-white">
-            <InvoiceTemplate order={currentOrder} onClose={() => setShowModal(false)} />
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-2 sm:p-4 pointer-events-none no-print">
+            <div className="invoice-modal-container pointer-events-auto w-full max-w-[500px] h-fit max-h-[96vh] bg-surface rounded-[16px] shadow-[0_25px_65px_-15px_rgba(0,0,0,0.35)] border border-outline-variant/30 overflow-y-auto no-scrollbar p-2 sm:p-2.5 print:static print:p-0 print:border-none print:shadow-none print:bg-white">
+              <InvoiceTemplate order={currentOrder} onClose={() => setShowModal(false)} />
+            </div>
           </div>
         </>
       )}
