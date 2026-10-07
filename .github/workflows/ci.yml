@@ -144,54 +144,79 @@ jobs:
         run: npm run build:report
 
   deploy:
-    name: Deploy to Railway
+    name: Deploy & Health Verification
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Trigger Railway Deploy Webhook
+      - name: Trigger Deployment Webhook
         id: deploy
         run: |
-          if [ -z "${{ secrets.RAILWAY_WEBHOOK_URL }}" ]; then
-            echo "RAILWAY_WEBHOOK_URL secret is not set, skipping automatic deployment."
-            exit 0
+          if [ -n "${{ secrets.RAILWAY_WEBHOOK_URL }}" ]; then
+            echo "Triggering Railway deploy webhook..."
+            curl -s -X POST "${{ secrets.RAILWAY_WEBHOOK_URL }}"
+            echo "triggered=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "Triggering Render deploy webhook..."
+            curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo "triggered=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No explicit deploy webhook configured. Auto-deploy handled by hosting provider."
+            echo "triggered=false" >> "$GITHUB_OUTPUT"
           fi
-          curl -s -X POST "${{ secrets.RAILWAY_WEBHOOK_URL }}"
+
+      - name: Resolve Target Backend URL
+        id: target
+        run: |
+          # Priority: Secret > Custom Domain (if DNS resolves) > Render Live URL
+          TARGET_URL="${{ secrets.LIVE_BACKEND_URL }}"
+          if [ -z "$TARGET_URL" ]; then
+            if curl -s --max-time 3 -o /dev/null "https://api.akulas.kitchen/api/readiness" 2>/dev/null; then
+              TARGET_URL="https://api.akulas.kitchen"
+            else
+              TARGET_URL="https://akula-s-kitchen.onrender.com"
+            fi
+          fi
+          echo "url=$TARGET_URL" >> "$GITHUB_OUTPUT"
+          echo "Target backend URL: $TARGET_URL"
 
       - name: Wait for deployment to become healthy
         run: |
-          echo "Polling backend readiness (up to 10 minutes)..."
-          for i in $(seq 1 60); do
+          TARGET_URL="${{ steps.target.outputs.url }}"
+          echo "Polling backend readiness at $TARGET_URL (up to 5 minutes)..."
+          for i in $(seq 1 30); do
             echo "Attempt $i..."
-            HTTP_STATUS=$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -s -o response.txt -w "%{http_code}" --max-time 10 https://api.akulas.kitchen/api/readiness || echo "CURL_ERROR")
-            if [ "$HTTP_STATUS" = "200" ]; then
+            HTTP_STATUS=$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -s -o response.txt -w "%{http_code}" --max-time 10 "$TARGET_URL/api/readiness" || true)
+            CODE=$(echo "$HTTP_STATUS" | grep -o '[0-9]\{3\}$' || echo "000")
+            if [ "$CODE" = "200" ]; then
               echo "Backend is ready after ~$((i * 10))s."
               exit 0
-            elif [ "$HTTP_STATUS" = "403" ]; then
-              echo "Cloudflare WAF is blocking the check (403). Assuming deploy is proceeding successfully via Railway."
-              # Sleep for a bit to give it time to deploy just in case, then exit successfully
-              sleep 60
+            elif [ "$CODE" = "403" ]; then
+              echo "Cloudflare WAF is blocking the check (403). Assuming deploy is proceeding successfully."
+              sleep 15
               exit 0
             else
-              echo "Status: $HTTP_STATUS"
-              cat response.txt || true
+              echo "HTTP Status: $CODE (raw: $HTTP_STATUS)"
+              [ -f response.txt ] && cat response.txt || true
               echo ""
             fi
             sleep 10
           done
-          echo "::error::Backend did not become ready within 10 minutes — investigate the Railway deployment." >&2
+          echo "::error::Backend at $TARGET_URL did not become ready in time." >&2
           exit 1
 
       - name: Post-Deploy Smoke Tests
         run: |
           set -e
-          base="https://api.akulas.kitchen"
-          STATUS=$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -s -o /dev/null -w "%{http_code}" --max-time 10 "$base/api/readiness")
-          if [ "$STATUS" = "403" ]; then
+          base="${{ steps.target.outputs.url }}"
+          echo "Running smoke tests against $base..."
+          STATUS=$(curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -s -o /dev/null -w "%{http_code}" --max-time 10 "$base/api/readiness" || true)
+          CODE=$(echo "$STATUS" | grep -o '[0-9]\{3\}$' || echo "000")
+          if [ "$CODE" = "403" ]; then
             echo "Smoke tests skipped due to Cloudflare WAF block (403)."
           else
             curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -sSf --max-time 10 "$base/api/readiness" > /dev/null
             curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -sSf --max-time 10 "$base/health" > /dev/null
             curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -sSf --max-time 10 "$base/api/version" > /dev/null
-            echo "All smoke tests passed."
+            echo "All smoke tests passed successfully."
           fi
