@@ -16,8 +16,8 @@ import { ProfileSection } from './ProfileSection';
 import { AddressesSection } from './AddressesSection';
 import { NotificationsSection } from './NotificationsSection';
 
-const InvoiceTemplate = React.lazy(() =>
-  import('../../components/ui').then((m) => ({ default: m.InvoiceTemplate })),
+const InvoiceModal = React.lazy(() =>
+  import('../../components/ui').then((m) => ({ default: m.InvoiceModal })),
 );
 
 export function DashboardLayout() {
@@ -140,45 +140,16 @@ export function DashboardLayout() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {selectedInvoiceOrder && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm no-print"
-              onClick={() => setSelectedInvoiceOrder(null)}
-            />
-            {/* Modal Container */}
-            <div className="fixed inset-0 z-[101] flex items-center justify-center p-2 sm:p-4 pointer-events-none no-print">
-              <motion.div
-                initial={{ scale: 0.94, opacity: 0, y: 15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.94, opacity: 0, y: 15 }}
-                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                onClick={(e) => e.stopPropagation()}
-                className="invoice-modal-container pointer-events-auto w-full max-w-[500px] h-fit max-h-[96vh] bg-surface rounded-[16px] shadow-[0_25px_65px_-15px_rgba(0,0,0,0.35)] border border-outline-variant/30 overflow-y-auto no-scrollbar p-2 sm:p-2.5 print:static print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
-              >
-                <React.Suspense
-                  fallback={
-                    <div className="p-6">
-                      <Skeleton className="h-72 w-full rounded-lg" />
-                    </div>
-                  }
-                >
-                  <InvoiceTemplate
-                    order={selectedInvoiceOrder}
-                    user={user}
-                    onClose={() => setSelectedInvoiceOrder(null)}
-                  />
-                </React.Suspense>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
+      {selectedInvoiceOrder && (
+        <React.Suspense fallback={null}>
+          <InvoiceModal
+            isOpen={Boolean(selectedInvoiceOrder)}
+            order={selectedInvoiceOrder}
+            user={user}
+            onClose={() => setSelectedInvoiceOrder(null)}
+          />
+        </React.Suspense>
+      )}
     </motion.div>
   );
 }

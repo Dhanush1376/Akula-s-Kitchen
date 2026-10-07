@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
-import { InvoiceTemplate } from '../../../components/ui';
+import { InvoiceModal } from '../../../components/ui';
 import { AdminOrderDetailSkeleton, stagger } from '../../components/AdminUIKit';
 import { OrderHeader } from './OrderHeader';
 import { OrderStatusTimeline } from './OrderStatusTimeline';
@@ -224,79 +224,15 @@ export function AdminOrderDetail() {
         </div>
       </motion.div>
 
-      <AnimatePresence>
-        {showStickerModal && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowStickerModal(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] no-print"
-            />
-            {/* Modal Container */}
-            <div className="fixed inset-0 z-[101] flex items-center justify-center p-2 sm:p-4 pointer-events-none no-print">
-              <motion.div
-                initial={{ scale: 0.94, opacity: 0, y: 15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.94, opacity: 0, y: 15 }}
-                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                onClick={(e) => e.stopPropagation()}
-                className="invoice-modal-container pointer-events-auto w-full max-w-[500px] h-fit max-h-[96vh] bg-[var(--admin-surface)] rounded-[12px] shadow-[0_25px_65px_-15px_rgba(0,0,0,0.35)] border border-outline-variant/30 overflow-y-auto custom-scrollbar p-2 sm:p-2.5 print:static print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
-              >
-                <style type="text/css" media="print">
-                  {`
-                    @page { size: A4 portrait; margin: 10mm; }
-                    html, body { 
-                      height: 100vh !important; 
-                      overflow: hidden !important; 
-                      margin: 0 !important; 
-                      padding: 0 !important;
-                    }
-                    body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: white !important; }
-                    body * { visibility: hidden !important; }
-                    .invoice-modal-container {
-                      position: fixed !important;
-                      left: 0 !important;
-                      top: 0 !important;
-                      width: 100vw !important;
-                      height: 100vh !important;
-                      transform: none !important;
-                      overflow: hidden !important;
-                      background: transparent !important;
-                      box-shadow: none !important;
-                    }
-                    .print-invoice-area, .print-invoice-area * {
-                      visibility: visible !important;
-                      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
-                    }
-                    .print-invoice-area .font-mono {
-                      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-                    }
-                    .print-invoice-area {
-                      position: static !important;
-                      width: 480px !important;
-                      max-width: 480px !important;
-                      margin: 0 auto !important;
-                      padding: 12px !important;
-                      box-shadow: none !important;
-                      border: 1px solid #d1d5db !important;
-                      background: white !important;
-                      overflow: visible !important;
-                    }
-                    .no-print, .no-print * { display: none !important; }
-                  `}
-                </style>
-                <InvoiceTemplate
-                  order={order}
-                  onClose={() => setShowStickerModal(false)}
-                  isAdmin={true}
-                />
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Invoice Modal */}
+      {showStickerModal && order && (
+        <InvoiceModal
+          isOpen={showStickerModal}
+          order={order}
+          isAdmin={true}
+          onClose={() => setShowStickerModal(false)}
+        />
+      )}
     </>
   );
 }

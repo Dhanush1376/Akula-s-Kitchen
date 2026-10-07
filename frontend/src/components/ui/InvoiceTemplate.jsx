@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useState, useRef, Suspense, lazy } from 'react';
+import { useState, useRef, Suspense, lazy, forwardRef, useImperativeHandle } from 'react';
 import toast from 'react-hot-toast';
 import { CANONICAL_INVOICE } from './invoiceTokens';
 import { useConfig } from '../../context/ConfigContext';
@@ -21,7 +21,10 @@ const Barcode = lazy(() => import('react-barcode'));
  * - Order Tracking verification barcode & QR code
  * - High-DPI Lossless PDF generation via html2canvas & jsPDF
  */
-export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) {
+export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
+  { order, user = {}, onClose, isAdmin = false, isEmbedded = false },
+  ref,
+) {
   const { storeName, storeSettings } = useConfig();
 
   const [isDownloading, setIsDownloading] = useState(false);
@@ -357,6 +360,12 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    handleDownload,
+    handlePrint: () => window.print(),
+    isDownloading,
+  }));
+
   const INVOICE_FONT = CANONICAL_INVOICE.FONT_FAMILY;
 
   return (
@@ -389,36 +398,38 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
         }
       `}</style>
 
-      {/* Action Header Strip (Hidden in print) */}
-      <div className="no-print w-full max-w-[480px] flex justify-between items-center pb-1.5 mb-1 px-0.5">
-        <h3
-          className="text-[11.5px] font-bold uppercase tracking-wider text-[#111827]"
-          style={{ fontFamily: INVOICE_FONT }}
-        >
-          {invoiceHeading}
-        </h3>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-full p-0 shrink-0 overflow-hidden flex items-center justify-center bg-[#111827] hover:bg-black text-white transition-all shadow-sm active:scale-95 disabled:opacity-70 cursor-pointer"
-            title="Download PDF"
+      {/* Action Header Strip (Hidden in print and hidden when embedded inside InvoiceModal) */}
+      {!isEmbedded && (
+        <div className="no-print w-full max-w-[480px] flex justify-between items-center pb-1.5 mb-1 px-0.5">
+          <h3
+            className="text-[11.5px] font-bold uppercase tracking-wider text-[#111827]"
+            style={{ fontFamily: INVOICE_FONT }}
           >
-            <span className="material-symbols-outlined text-[14px] leading-none select-none pointer-events-none flex items-center justify-center">
-              {isDownloading ? 'hourglass_top' : 'download'}
-            </span>
-          </button>
-          {onClose && (
+            {invoiceHeading}
+          </h3>
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={onClose}
-              className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-full p-0 shrink-0 overflow-hidden flex items-center justify-center bg-white border border-neutral-200 hover:bg-neutral-100 text-[#111827] transition-colors shadow-sm active:scale-95 cursor-pointer"
-              title="Close"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-full p-0 shrink-0 overflow-hidden flex items-center justify-center bg-[#111827] hover:bg-black text-white transition-all shadow-sm active:scale-95 disabled:opacity-70 cursor-pointer"
+              title="Download PDF"
             >
-              <X className="w-3.5 h-3.5 shrink-0 text-[#111827]" strokeWidth={2.2} />
+              <span className="material-symbols-outlined text-[14px] leading-none select-none pointer-events-none flex items-center justify-center">
+                {isDownloading ? 'hourglass_top' : 'download'}
+              </span>
             </button>
-          )}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-full p-0 shrink-0 overflow-hidden flex items-center justify-center bg-white border border-neutral-200 hover:bg-neutral-100 text-[#111827] transition-colors shadow-sm active:scale-95 cursor-pointer"
+                title="Close"
+              >
+                <X className="w-3.5 h-3.5 shrink-0 text-[#111827]" strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Sharp Commercial Invoice Canvas (Strictly ZERO soft/rounded borders, Very Thin 1px Hairline Borders, A4 Sheet Proportions) */}
       <div className="w-full flex justify-center items-start">
@@ -752,4 +763,4 @@ export function InvoiceTemplate({ order, user = {}, onClose, isAdmin = false }) 
       </div>
     </div>
   );
-}
+});

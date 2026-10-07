@@ -1,38 +1,52 @@
-import { Star, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, ArrowRight, X } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from './CloudinaryImage';
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { createPortal } from 'react-dom';
-import { useMobileDrawerEngine, DrawerDragHandle } from './drawer';
+import { useMobileDrawerEngine } from '../../hooks/useMobileDrawerEngine';
+import { AuthCornerLeaves } from '../auth/AuthCornerLeaves';
 import toast from 'react-hot-toast';
 
+/**
+ * QuickViewModal
+ * Redesigned according to the AuthModal and FilterPanel drawer design system:
+ * - Floating bottom sheet on mobile (<640px) with safe margin & gestures
+ * - Floating centered modal card on desktop
+ * - Signature Akula's Kitchen organic corner leaves decoration
+ * - Frosted glassmorphism background (bg-white/95 backdrop-blur-2xl)
+ * - Rounded-3xl corners with subtle black/[0.08] border and elevation shadow
+ * - Mobile grab handle pill and top-right circular close button
+ * - Balanced responsive image aspect ratio (no vertical cutoff on mobile)
+ * - Bottom action bar with primary "Add to Bag", Wishlist heart & View Details
+ */
 export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNext, hasPrev }) => {
-  const [mounted, setMounted] = React.useState(false);
-  const [isConverting, setIsConverting] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsConverting(false);
+    setActiveIndex(0);
   }, [isOpen, product?._id, product?.id]);
 
   const productId = product?._id || product?.id;
 
-  const handleConvertToDetails = React.useCallback(
+  const handleConvertToDetails = useCallback(
     (e) => {
       e?.stopPropagation?.();
       if (isConverting || !product) return;
       setIsConverting(true);
       const targetRoute = `/product/${productId}`;
 
-      // Smooth transition: give the morph animation 220ms to expand into full screen
       setTimeout(() => {
         onClose();
         navigate(targetRoute, { state: { product, fromQuickView: true } });
@@ -47,18 +61,19 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
     onExpand: handleConvertToDetails,
     expandThreshold: -40,
   });
-  const modalRef = React.useRef(null);
-  const triggerElementRef = React.useRef(null);
-  const scrollContainerRef = React.useRef(null);
-  const detailsScrollRef = React.useRef(null);
-  const [activeIndex, setActiveIndex] = React.useState(0);
-  const touchStartPos = React.useRef({ x: null, y: null });
-  const touchEndPos = React.useRef({ x: null, y: null });
-  const touchStartTarget = React.useRef(null);
+
+  const modalRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const detailsScrollRef = useRef(null);
+  const touchStartPos = useRef({ x: null, y: null });
+  const touchEndPos = useRef({ x: null, y: null });
+  const touchStartTarget = useRef(null);
 
   const { toggleItem, isWishlisted } = useWishlist();
   const { addItem } = useCart();
   const { runProtectedAction } = useAuth();
+
+  const wishlisted = isWishlisted(productId);
 
   const handleWishlist = (e) => {
     e?.stopPropagation();
@@ -66,6 +81,29 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
     runProtectedAction(() => {
       toggleItem(product);
     });
+  };
+
+  const handleAddToCart = (e) => {
+    e?.stopPropagation();
+    if (!product) return;
+    if (product.optionGroups && product.optionGroups.length > 0) {
+      handleConvertToDetails(e);
+      return;
+    }
+    addItem({
+      id: product._id || product.id,
+      title: product.title,
+      price: product.price,
+      imageSrc: product.imageSrc,
+      quantity: 1,
+      variant: 'Default',
+    });
+    onClose();
+    toast.success('Added to Bag!');
+  };
+
+  const handleViewDetails = (e) => {
+    handleConvertToDetails(e);
   };
 
   const onTouchStart = (e) => {
@@ -83,7 +121,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
   const onTouchEndHandler = () => {
     const start = touchStartPos.current;
     const end = touchEndPos.current;
-    if (start.x === null || end.x === null || start.y === null || end.y === null) return;
+    if (start.x === null || end.y === null) return;
 
     const deltaX = start.x - end.x;
     const deltaY = start.y - end.y;
@@ -116,33 +154,11 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
     const el = detailsScrollRef.current;
     if (el && el.contains(e.target)) {
       const canScrollDown = el.scrollTop + el.clientHeight < el.scrollHeight - 15;
-      if (canScrollDown) {
-        return;
-      }
+      if (canScrollDown) return;
     }
-    // Scrolling wheel downwards (reaching past quickview content to full details)
     if (e.deltaY > 35) {
       handleConvertToDetails(e);
     }
-  };
-
-  const handleAddToCart = (e) => {
-    e?.stopPropagation();
-    if (!product) return;
-    if (product.optionGroups && product.optionGroups.length > 0) {
-      handleConvertToDetails(e);
-      return;
-    }
-    addItem({
-      id: product._id || product.id,
-      title: product.title,
-      price: product.price,
-      imageSrc: product.imageSrc,
-      quantity: 1,
-      variant: 'Default',
-    });
-    onClose();
-    toast.success('Added to Bag!');
   };
 
   const handleScroll = (e) => {
@@ -157,230 +173,267 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
     }
   };
 
-  React.useEffect(() => {
-    if (isOpen) {
-      triggerElementRef.current = document.activeElement;
-      document.body.classList.add('quickview-active');
-
-      const focusableElements = modalRef.current?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusableElements && focusableElements.length > 0) {
-        focusableElements[0].focus();
+  // Keyboard accessibility
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowRight' && onNext && hasNext !== false) {
+        onNext();
+      } else if (e.key === 'ArrowLeft' && onPrev && hasPrev !== false) {
+        onPrev();
       }
-
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-          onClose();
-          return;
-        }
-
-        if (e.key === 'Tab') {
-          const focusableElements = modalRef.current?.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-          );
-          if (focusableElements && focusableElements.length > 0) {
-            const firstElement = focusableElements[0];
-            const lastElement = focusableElements[focusableElements.length - 1];
-
-            if (e.shiftKey) {
-              if (document.activeElement === firstElement) {
-                lastElement.focus();
-                e.preventDefault();
-              }
-            } else {
-              if (document.activeElement === lastElement) {
-                firstElement.focus();
-                e.preventDefault();
-              }
-            }
-          }
-        }
-      };
+    };
+    if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-        document.body.classList.remove('quickview-active');
-        if (triggerElementRef.current) {
-          triggerElementRef.current.focus();
-        }
-      };
+      return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onNext, onPrev, hasNext, hasPrev]);
 
-  if (!product) return null;
+  if (!mounted || !product) return null;
 
-  const wishlisted = isWishlisted(productId);
+  const images =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.imageSrc].filter(Boolean);
 
-  const handleViewDetails = (e) => {
-    handleConvertToDetails(e);
+  const discountPercent =
+    product.oldPrice && product.oldPrice > product.price
+      ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+      : 0;
+
+  const modalVariants = {
+    hidden: isMobile ? { y: '100%', opacity: 0.5 } : { opacity: 0, scale: 0.95, y: 15 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: isMobile ? sheetTransition : { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+    },
+    exit: isMobile
+      ? {
+          y: '100%',
+          opacity: 0,
+          transition: sheetTransition,
+        }
+      : { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.25 } },
   };
-
-  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[200] flex items-end lg:items-center justify-center p-0 sm:p-4 lg:p-8 pointer-events-none"
+          className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 sm:p-5 md:p-6 lg:p-8"
           role="dialog"
           aria-modal="true"
           aria-labelledby="quickview-title"
         >
+          {/* Backdrop matching AuthModal & FilterPanel */}
           <motion.div
+            key="quickview-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={isConverting ? undefined : onClose}
             className={`fixed inset-0 pointer-events-auto transition-colors duration-200 ${
-              isConverting
-                ? 'bg-surface'
-                : 'bg-on-surface-variant/40 backdrop-blur-xl cursor-pointer'
+              isConverting ? 'bg-surface' : 'bg-black/40 backdrop-blur-xs cursor-pointer'
             }`}
           />
 
+          {/* Floating Card Modal / Bottom Sheet */}
           <motion.div
             ref={modalRef}
-            initial={{ opacity: 0, scale: isMobile ? 1 : 0.96, y: isMobile ? '100%' : 20 }}
-            animate={
-              isConverting
-                ? {
-                    opacity: 1,
-                    scale: 1,
-                    y: 0,
-                    borderRadius: 0,
-                    borderTopLeftRadius: 0,
-                    borderTopRightRadius: 0,
-                    transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
-                  }
-                : { opacity: 1, scale: 1, y: 0 }
-            }
-            exit={{ opacity: 0, scale: isMobile ? 1 : 0.96, y: isMobile ? '100%' : 20 }}
-            transition={sheetTransition}
-            {...(!isConverting ? dragProps : {})}
+            key="quickview-card"
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            {...(!isConverting && isMobile ? dragProps : {})}
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
-            className={`pointer-events-auto relative w-full bg-surface shadow-2xl flex flex-col lg:flex-row border border-outline-variant/10 overflow-hidden transition-all duration-200 ${
+            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-[460px] sm:max-w-[500px] lg:max-w-4xl mx-auto transition-all duration-200 ${
               isConverting
-                ? '!fixed !inset-0 !z-[300] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none'
-                : 'max-w-[440px] sm:max-w-[480px] lg:max-w-5xl rounded-t-[18px] sm:rounded-[18px] lg:rounded-[20px] h-auto max-h-[90dvh] sm:max-h-[85vh]'
+                ? '!fixed !inset-0 !z-[10000] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none'
+                : ''
             }`}
+            style={{
+              marginBottom:
+                isMobile && !isConverting ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+            }}
           >
-            {/* Top conversion progress bar */}
-            {isConverting && (
-              <div className="absolute inset-x-0 top-0 z-[100] h-1 bg-primary/20 overflow-hidden">
-                <motion.div
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '0%' }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="h-full w-full bg-primary"
-                />
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-3.5 sm:p-5 lg:p-7 shadow-[0_16px_50px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden">
+              {/* Atmospheric Corner Leaves matching AuthModal */}
+              <AuthCornerLeaves />
+
+              {/* Top conversion progress bar */}
+              {isConverting && (
+                <div className="absolute inset-x-0 top-0 z-[100] h-1 bg-[#283618]/20 overflow-hidden">
+                  <motion.div
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '0%' }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    className="h-full w-full bg-[#283618]"
+                  />
+                </div>
+              )}
+
+              {/* Grab handle for mobile bottom sheet */}
+              <div
+                className="sm:hidden w-full flex justify-center pt-0 pb-2 cursor-grab select-none z-20"
+                onClick={onClose}
+              >
+                <div className="w-10 h-1 rounded-full bg-neutral-300" />
               </div>
-            )}
 
-            {isMobile && <DrawerDragHandle onClick={onClose} />}
+              {/* Close Button matching AuthModal & FilterPanel */}
+              <button
+                onClick={onClose}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-5 lg:right-5 w-8.5 h-8.5 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-40 cursor-pointer shadow-2xs"
+                aria-label="Close product quick view"
+              >
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black" strokeWidth={2.2} />
+              </button>
 
-            {/* Close Button - Fixed in Modal Container */}
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-8 lg:right-8 w-10 h-10 lg:w-12 lg:h-12 min-h-0 rounded-full border border-outline-variant/30 bg-surface/80 backdrop-blur-md flex items-center justify-center hover:bg-surface-container-low transition-colors cursor-pointer z-[60] shadow-sm icon-button-touch-target"
-              aria-label="Close product quick view"
-            >
-              <span className="material-symbols-outlined text-[20px] lg:text-[24px] text-on-surface">
-                close
-              </span>
-            </button>
+              {/* Scrollable Core Content Area */}
+              <div
+                ref={detailsScrollRef}
+                className="relative z-10 flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar flex flex-col lg:flex-row gap-4 lg:gap-7"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEndHandler}
+              >
+                {/* ── Left Column: Media Presentation ────────────────── */}
+                <div className="w-full lg:w-1/2 shrink-0 flex flex-col gap-2.5">
+                  <div className="relative bg-neutral-100 rounded-2xl overflow-hidden aspect-[16/11] sm:aspect-[4/3] lg:aspect-square w-full border border-black/[0.06] shadow-2xs shrink-0 group">
+                    {/* Carousel Container */}
+                    <div
+                      ref={scrollContainerRef}
+                      onScroll={handleScroll}
+                      className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+                    >
+                      {images.map((img, idx) => (
+                        <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                          <CloudinaryImage
+                            src={img}
+                            alt={`${product.title} - view ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                            loading={idx === 0 ? 'eager' : 'lazy'}
+                            width={600}
+                            height={600}
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                          />
+                        </div>
+                      ))}
+                    </div>
 
-            {/* Ratings Badge - Fixed in Modal Container, matching Close button height/alignment */}
-            {(product.reviews > 0 || product.rating > 0) && (
-              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 lg:top-8 lg:left-8 h-10 lg:h-12 min-h-0 z-[60] flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-3 lg:px-4 rounded-full shadow-sm border border-black/5 pointer-events-auto">
-                <Star className="text-[12px] lg:text-[14px] text-primary" strokeWidth={1.5} />
-                <span className="font-label text-[10px] lg:text-[11px] text-black/60 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <span className="text-black font-bold">
-                    {Number(product.rating || 0).toFixed(1)}
-                  </span>
-                  <span className="text-black/30 font-normal">·</span>
-                  <span>{product.reviews || 0} Reviews</span>
-                </span>
-              </div>
-            )}
-
-            <motion.div
-              key={productId}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="flex flex-col lg:flex-row w-full h-full"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEndHandler}
-            >
-              <div className="w-full lg:w-1/2 p-2 sm:p-3 lg:p-8 lg:pr-4 shrink-0 flex flex-col gap-3 lg:gap-4">
-                <div className="relative bg-surface-container-low overflow-hidden rounded-[16px] lg:rounded-[24px] aspect-[4/5] sm:aspect-[4/5] lg:aspect-auto lg:h-[540px] w-full group shadow-sm border border-black/5 shrink-0">
-                  <div
-                    ref={scrollContainerRef}
-                    onScroll={handleScroll}
-                    className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
-                  >
-                    {(product.images && product.images.length > 0
-                      ? product.images
-                      : [product.imageSrc]
-                    ).map((img, idx) => (
-                      <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                        <CloudinaryImage
-                          src={img}
-                          alt={`${product.title} - view ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          containerClassName="w-full h-full"
-                          loading={idx === 0 ? 'eager' : 'lazy'}
-                          width={600}
-                          height={600}
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
+                    {/* Rating Badge top-left of image */}
+                    {(product.reviews > 0 || product.rating > 0) && (
+                      <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full shadow-xs border border-black/5">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-400" />
+                        <span className="font-sans text-[11px] font-bold text-neutral-900">
+                          {Number(product.rating || 0).toFixed(1)}
+                        </span>
+                        <span className="text-neutral-400 text-[10px]">·</span>
+                        <span className="text-neutral-500 text-[10px] font-medium">
+                          {product.reviews || 0}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                    )}
 
-                  {/* Navigation Buttons */}
-                  {onPrev && hasPrev !== false && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPrev();
-                      }}
-                      className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center text-black/80 hover:scale-110 active:scale-95 transition-all z-[50]"
-                      aria-label="Previous product"
-                    >
-                      <ChevronLeft
-                        className="text-[16px] lg:text-[20px] drop-shadow-md"
-                        strokeWidth={1.5}
-                      />
-                    </button>
-                  )}
-
-                  {onNext && hasNext !== false && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onNext();
-                      }}
-                      className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center text-black/80 hover:scale-110 active:scale-95 transition-all z-[50]"
-                      aria-label="Next product"
-                    >
-                      <ChevronRight
-                        className="text-[16px] lg:text-[20px] drop-shadow-md"
-                        strokeWidth={1.5}
-                      />
-                    </button>
-                  )}
-
-                  {product.images && product.images.length > 1 && (
-                    <div className="absolute bottom-4 w-full flex justify-center gap-2 pointer-events-auto z-10">
-                      {product.images.map((_, idx) => (
-                        <div
-                          key={idx}
+                    {/* Navigation Buttons for Carousel */}
+                    {images.length > 1 && (
+                      <>
+                        <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (scrollContainerRef.current) {
+                              const newIdx = Math.max(0, activeIndex - 1);
+                              scrollContainerRef.current.scrollTo({
+                                left: newIdx * scrollContainerRef.current.clientWidth,
+                                behavior: 'smooth',
+                              });
+                            }
+                          }}
+                          className={`absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/85 backdrop-blur-md flex items-center justify-center text-neutral-800 shadow-sm border border-black/5 hover:bg-white transition-all z-20 cursor-pointer ${
+                            activeIndex === 0
+                              ? 'opacity-40 pointer-events-none'
+                              : 'opacity-90 hover:opacity-100'
+                          }`}
+                          aria-label="Previous image"
+                        >
+                          <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (scrollContainerRef.current) {
+                              const newIdx = Math.min(images.length - 1, activeIndex + 1);
+                              scrollContainerRef.current.scrollTo({
+                                left: newIdx * scrollContainerRef.current.clientWidth,
+                                behavior: 'smooth',
+                              });
+                            }
+                          }}
+                          className={`absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/85 backdrop-blur-md flex items-center justify-center text-neutral-800 shadow-sm border border-black/5 hover:bg-white transition-all z-20 cursor-pointer ${
+                            activeIndex === images.length - 1
+                              ? 'opacity-40 pointer-events-none'
+                              : 'opacity-90 hover:opacity-100'
+                          }`}
+                          aria-label="Next image"
+                        >
+                          <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                        </button>
+                      </>
+                    )}
+
+                    {/* Pagination Dots */}
+                    {images.length > 1 && (
+                      <div className="absolute bottom-2.5 inset-x-0 flex justify-center gap-1.5 z-20 pointer-events-none">
+                        {images.map((_, idx) => (
+                          <div
+                            key={idx}
+                            className={`rounded-full transition-all duration-300 shadow-xs ${
+                              idx === activeIndex ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/60'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Wishlist toggle heart button on image bottom-right */}
+                    <button
+                      type="button"
+                      onClick={handleWishlist}
+                      className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-sm border border-black/5 hover:scale-110 active:scale-95 transition-all z-20 cursor-pointer"
+                      aria-label={wishlisted ? 'Saved' : 'Save to Wishlist'}
+                      title={wishlisted ? 'Saved' : 'Save'}
+                    >
+                      <motion.span
+                        animate={{
+                          scale: wishlisted ? [1, 1.3, 1] : 1,
+                          color: wishlisted ? '#dc2626' : '#262626',
+                        }}
+                        className="material-symbols-outlined text-[17px]"
+                        style={{ fontVariationSettings: wishlisted ? "'FILL' 1" : "'FILL' 0" }}
+                      >
+                        favorite
+                      </motion.span>
+                    </button>
+                  </div>
+
+                  {/* Thumbnail Strip (Desktop) */}
+                  {images.length > 1 && (
+                    <div className="hidden lg:flex gap-2 overflow-x-auto no-scrollbar py-0.5">
+                      {images.map((img, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
                             if (scrollContainerRef.current) {
                               scrollContainerRef.current.scrollTo({
                                 left: idx * scrollContainerRef.current.clientWidth,
@@ -388,214 +441,159 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                               });
                             }
                           }}
-                          className={`cursor-pointer pointer-events-auto transition-all duration-300 rounded-full shadow-md border border-black/10 ${
+                          className={`w-12 h-12 rounded-xl overflow-hidden border transition-all cursor-pointer shrink-0 ${
                             idx === activeIndex
-                              ? 'w-2 h-2 lg:w-2.5 lg:h-2.5 bg-white'
-                              : 'w-1.5 h-1.5 lg:w-2 lg:h-2 bg-white/60 hover:bg-white/80'
+                              ? 'border-[#283618] ring-2 ring-[#283618]/20 shadow-xs'
+                              : 'border-black/10 opacity-70 hover:opacity-100'
                           }`}
-                        />
+                        >
+                          <CloudinaryImage
+                            src={img}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            containerClassName="w-full h-full"
+                            width={100}
+                            height={100}
+                          />
+                        </button>
                       ))}
                     </div>
                   )}
-
-                  {/* Floating Icon Actions */}
-                  <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-20 flex flex-col gap-2 pointer-events-auto">
-                    <button
-                      onClick={handleWishlist}
-                      className="w-8 h-8 lg:w-9 lg:h-9 min-h-0 bg-white/90 backdrop-blur-xl rounded-full flex items-center justify-center shadow-lg border border-black/5 hover:scale-110 active:scale-95 transition-all cursor-pointer group shrink-0 aspect-square"
-                      aria-label={wishlisted ? 'Saved' : 'Save'}
-                      title={wishlisted ? 'Saved' : 'Save'}
-                    >
-                      <motion.span
-                        animate={{
-                          scale: wishlisted ? [1, 1.3, 1] : 1,
-                          color: wishlisted ? '#ff2d55' : 'inherit',
-                        }}
-                        whileTap={{ scale: 0.8 }}
-                        transition={{
-                          duration: 0.3,
-                          type: 'spring',
-                          stiffness: 300,
-                        }}
-                        className="material-symbols-outlined text-[16px] transition-transform group-hover:scale-110 text-black/80"
-                        style={{
-                          fontVariationSettings: wishlisted ? "'FILL' 1" : "'FILL' 0",
-                        }}
-                      >
-                        favorite
-                      </motion.span>
-                    </button>
-
-                    <button
-                      onClick={handleViewDetails}
-                      className="w-8 h-8 lg:w-9 lg:h-9 min-h-0 bg-white/90 backdrop-blur-xl rounded-full flex items-center justify-center shadow-lg border border-black/5 hover:scale-110 active:scale-95 transition-all cursor-pointer group shrink-0 aspect-square"
-                      aria-label="View Details"
-                      title="View Details"
-                    >
-                      <ArrowRight
-                        className="text-[16px] group-hover:-rotate-45 transition-transform text-black/80"
-                        strokeWidth={1.5}
-                      />
-                    </button>
-
-                    <button
-                      onClick={handleAddToCart}
-                      className="w-8 h-8 lg:w-9 lg:h-9 min-h-0 bg-black text-white rounded-full flex items-center justify-center shadow-lg border border-black/5 hover:scale-110 active:scale-95 transition-all cursor-pointer shrink-0 aspect-square"
-                      aria-label="Add to Bag"
-                      title="Add to Bag"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">shopping_bag</span>
-                    </button>
-                  </div>
                 </div>
 
-                {/* Thumbnails Row */}
-                {product.images && product.images.length > 1 && (
-                  <div className="flex w-full gap-2 lg:gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1 px-1">
-                    {product.images.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (scrollContainerRef.current) {
-                            scrollContainerRef.current.scrollTo({
-                              left: idx * scrollContainerRef.current.clientWidth,
-                              behavior: 'smooth',
-                            });
-                          }
-                        }}
-                        className={`relative flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 rounded-md lg:rounded-lg overflow-hidden snap-center transition-all ${
-                          idx === activeIndex
-                            ? 'border border-black/40 shadow-sm scale-100 opacity-100'
-                            : 'border border-outline-variant/30 scale-95 opacity-60 hover:opacity-100 hover:scale-100'
-                        }`}
-                        aria-label={`View image ${idx + 1}`}
-                      >
-                        <CloudinaryImage
-                          src={img}
-                          alt={`${product.title} - view ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          containerClassName="w-full h-full"
-                          loading="lazy"
-                          width={200}
-                          height={200}
-                        />
-                      </button>
-                    ))}
+                {/* ── Right Column: Information & Details ────────────── */}
+                <div className="w-full lg:w-1/2 flex flex-col justify-between min-w-0">
+                  <div className="space-y-2.5">
+                    {/* Telugu Title Subtitle */}
+                    {(product.teluguTitle || product.nameTE || product.teluguName) && (
+                      <span className="block font-label text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-neutral-400 leading-tight">
+                        {product.teluguTitle || product.nameTE || product.teluguName}
+                      </span>
+                    )}
+
+                    {/* Main Title */}
+                    <h2
+                      id="quickview-title"
+                      onClick={handleViewDetails}
+                      className="font-serif-heading text-[18px] sm:text-[21px] lg:text-[24px] font-bold text-neutral-950 leading-snug tracking-tight hover:text-[#283618] transition-colors cursor-pointer"
+                      style={{ fontFamily: 'var(--font-display)' }}
+                      title="Click to view full product details"
+                    >
+                      {product.title}
+                    </h2>
+
+                    {/* Price Block */}
+                    <div className="flex items-baseline gap-2.5 flex-wrap">
+                      <span className="text-[22px] sm:text-[25px] font-bold text-neutral-950 lining-nums">
+                        ₹{product.price?.toLocaleString('en-IN') || '0'}
+                      </span>
+                      {product.oldPrice && product.oldPrice > product.price && (
+                        <>
+                          <span className="text-[14px] sm:text-[15px] text-neutral-400 line-through lining-nums">
+                            ₹{product.oldPrice.toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[10.5px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                            {discountPercent}% OFF
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Trust Badges */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                      <span className="inline-flex items-center gap-1 bg-neutral-100/90 border border-neutral-200/60 text-neutral-700 px-2.5 py-1 rounded-full text-[10.5px] font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Fresh Daily
+                      </span>
+                      <span className="inline-flex items-center gap-1 bg-neutral-100/90 border border-neutral-200/60 text-neutral-700 px-2.5 py-1 rounded-full text-[10.5px] font-semibold">
+                        100% Homemade
+                      </span>
+                      <span className="inline-flex items-center gap-1 bg-neutral-100/90 border border-neutral-200/60 text-neutral-700 px-2.5 py-1 rounded-full text-[10.5px] font-semibold">
+                        Pure Ingredients
+                      </span>
+                    </div>
+
+                    {/* Affordance bar for full details */}
+                    <div
+                      onClick={handleConvertToDetails}
+                      className="w-full my-2 p-2.5 sm:p-3 rounded-2xl bg-neutral-50/80 hover:bg-neutral-100/80 border border-black/[0.06] flex items-center justify-between transition-all cursor-pointer group shadow-2xs select-none"
+                      title="Tap for full product details and reviews"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+                          <motion.span
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                            className="material-symbols-outlined text-[16px]"
+                          >
+                            keyboard_double_arrow_up
+                          </motion.span>
+                        </div>
+                        <div className="flex flex-col text-left min-w-0">
+                          <span className="font-sans text-[11px] sm:text-[11.5px] font-bold text-neutral-900 tracking-wide uppercase truncate">
+                            View Complete Details
+                          </span>
+                          <span className="text-[10px] text-neutral-500 font-normal truncate">
+                            Nutritional specs, reviews & options
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight
+                        className="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-1 group-hover:text-[#283618] transition-all shrink-0 ml-2"
+                        strokeWidth={2}
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
-              <div
-                ref={detailsScrollRef}
-                className="w-full lg:w-1/2 p-4 sm:p-5 lg:p-8 pb-8 sm:pb-10 lg:pb-12 flex flex-col flex-1 min-h-0 overflow-y-auto no-scrollbar relative"
-              >
-                {(product.teluguTitle || product.nameTE || product.teluguName) && (
-                  <span className="block font-label text-[9px] lg:text-[11px] text-on-surface/40 mb-0.5 tracking-wider uppercase font-bold leading-tight line-clamp-1">
-                    {product.teluguTitle || product.nameTE || product.teluguName}
-                  </span>
-                )}
-                <h2
-                  id="quickview-title"
-                  onClick={handleViewDetails}
-                  className="font-headline text-[18px] sm:text-[20px] lg:text-[28px] text-on-surface mb-1.5 lg:mb-3 font-medium leading-tight line-clamp-2 hover:text-primary transition-colors cursor-pointer"
-                  title="Click to view full product details"
+              {/* ── Bottom Action Bar matching FilterPanel & AuthModal ── */}
+              <div className="relative z-20 mt-3 pt-3 border-t border-black/[0.06] flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="flex-1 bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.98] text-white py-3.5 px-4 rounded-full font-sans text-[12px] sm:text-[12.5px] uppercase tracking-wider font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  {product.title}
-                </h2>
-
-                <div className="flex items-baseline gap-2.5 mb-2 sm:mb-3">
-                  <span className="font-display lining-nums font-bold text-[22px] sm:text-[24px] lg:text-[32px] text-on-surface">
-                    ₹{product.price?.toLocaleString('en-IN') || '0'}
+                  <span className="material-symbols-outlined text-[18px]">
+                    {product?.optionGroups?.length > 0 ? 'tune' : 'shopping_bag'}
                   </span>
-                  {product.oldPrice && (
-                    <span className="font-display lining-nums text-on-surface-variant/40 line-through text-[15px] lg:text-[18px]">
-                      ₹{product.oldPrice.toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
+                  <span>
+                    {product?.optionGroups?.length > 0
+                      ? 'Choose Options'
+                      : `Add to Bag • ₹${product.price?.toLocaleString('en-IN') || 0}`}
+                  </span>
+                </button>
 
-                {/* Pull / Scroll Up Affordance Bar */}
-                <div
-                  onClick={handleConvertToDetails}
-                  className="w-full my-2 sm:my-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-surface-container-low/70 hover:bg-surface-container-low border border-outline-variant/20 flex items-center justify-between transition-all cursor-pointer group shadow-2xs hover:shadow-xs select-none"
-                  title="Scroll or pull up for full product details"
+                <button
+                  type="button"
+                  onClick={handleWishlist}
+                  className="w-11 h-11 shrink-0 rounded-full border border-black/[0.1] bg-white hover:bg-neutral-50 active:scale-95 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                  aria-label={wishlisted ? 'Saved to Wishlist' : 'Save to Wishlist'}
+                  title={wishlisted ? 'Saved' : 'Save'}
                 >
-                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                      <motion.span
-                        animate={{ y: [0, -3, 0] }}
-                        transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                        className="material-symbols-outlined text-[15px] sm:text-[17px]"
-                      >
-                        keyboard_double_arrow_up
-                      </motion.span>
-                    </div>
-                    <div className="flex flex-col text-left min-w-0">
-                      <span className="font-label text-[10.5px] sm:text-[11.5px] font-bold text-on-surface tracking-wide uppercase truncate">
-                        Scroll Up for Full Details
-                      </span>
-                      <span className="text-[9.5px] sm:text-[10px] text-on-surface-variant/70 font-normal truncate">
-                        Specs, reviews & customization
-                      </span>
-                    </div>
-                  </div>
-                  <ArrowRight
-                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-on-surface-variant/60 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-2"
-                    strokeWidth={2}
-                  />
-                </div>
-
-                <div className="mt-auto hidden lg:block space-y-4 pb-[max(16px,var(--safe-area-bottom,_env(safe-area-inset-bottom)))] lg:pb-0">
-                  <button
-                    onClick={handleAddToCart}
-                    className="w-full btn-primary !py-4 md:!py-5 flex items-center justify-center gap-3 font-bold cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
+                  <motion.span
+                    animate={{
+                      scale: wishlisted ? [1, 1.25, 1] : 1,
+                      color: wishlisted ? '#dc2626' : '#262626',
+                    }}
+                    className="material-symbols-outlined text-[20px]"
+                    style={{ fontVariationSettings: wishlisted ? "'FILL' 1" : "'FILL' 0" }}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {product?.optionGroups?.length > 0 ? 'tune' : 'shopping_bag'}
-                    </span>
-                    {product?.optionGroups?.length > 0 ? 'Choose Options' : 'Add to Bag'}
-                  </button>
+                    favorite
+                  </motion.span>
+                </button>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={handleWishlist}
-                      className="flex items-center justify-center gap-2 py-3 lg:py-4 rounded-full border border-outline-variant/30 font-label text-[10px] lg:text-[11px] uppercase tracking-widest font-bold hover:bg-surface-container-low transition-colors cursor-pointer group"
-                    >
-                      <motion.span
-                        animate={{
-                          scale: wishlisted ? [1, 1.3, 1] : 1,
-                          color: wishlisted ? '#ff2d55' : 'inherit',
-                        }}
-                        whileTap={{ scale: 0.8 }}
-                        transition={{
-                          duration: 0.3,
-                          type: 'spring',
-                          stiffness: 300,
-                        }}
-                        className="material-symbols-outlined text-[18px] lg:text-[20px] transition-transform group-hover:scale-110"
-                        style={{
-                          fontVariationSettings: wishlisted ? "'FILL' 1" : "'FILL' 0",
-                        }}
-                      >
-                        favorite
-                      </motion.span>
-                      {wishlisted ? 'Saved' : 'Save'}
-                    </button>
-                    <button
-                      onClick={handleViewDetails}
-                      className="flex items-center justify-center gap-2 py-3 lg:py-4 rounded-full border border-outline-variant/30 font-label text-[10px] lg:text-[11px] uppercase tracking-widest font-bold hover:bg-surface-container-low transition-colors cursor-pointer group"
-                    >
-                      <ArrowRight
-                        className="text-[18px] lg:text-[20px] group-hover:translate-x-1 transition-transform"
-                        strokeWidth={1.5}
-                      />
-                      Details
-                    </button>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleViewDetails}
+                  className="w-11 h-11 shrink-0 rounded-full border border-black/[0.1] bg-white hover:bg-neutral-50 active:scale-95 flex items-center justify-center transition-all cursor-pointer shadow-2xs text-neutral-800 hover:text-black"
+                  aria-label="View Full Details"
+                  title="Full Details"
+                >
+                  <ArrowRight className="w-4 h-4" strokeWidth={2.2} />
+                </button>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       )}

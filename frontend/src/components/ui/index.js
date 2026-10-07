@@ -15,6 +15,7 @@ export * from './CustomDropdown';
 export * from './LazySection';
 export * from './ShareButton';
 export * from './InvoiceTemplate';
+export * from './InvoiceModal';
 export * from './PageLoader';
 export * from './RetryBlock';
 export * from './FormField';
