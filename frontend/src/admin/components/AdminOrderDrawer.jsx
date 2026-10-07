@@ -6,19 +6,40 @@ import { EXTERNAL_URLS } from '../../config/constants';
 import { WhatsAppIcon } from '../../components/ui/WhatsAppIcon';
 import { DeleteConfirmModal } from './ui/DeleteConfirmModal';
 import { OrderSettlement } from '../pages/AdminOrderDetail/OrderSettlement';
+import toast from 'react-hot-toast';
 
-const formatDateDMY = (dateStr) => {
+const formatOrderDate = (dateStr) => {
   if (!dateStr) return 'N/A';
-  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [y, m, d] = dateStr.split('-');
-    return `${d}-${m}-${y}`;
+  if (typeof dateStr === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+    const [d, m, y] = dateStr.split('-');
+    const parsed = new Date(`${y}-${m}-${d}`);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
   }
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
+  if (isNaN(d.getTime())) return String(dateStr);
+  return d.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const formatPhoneNumber = (phoneStr) => {
+  if (!phoneStr) return 'N/A';
+  const clean = String(phoneStr).trim();
+  if (clean.startsWith('+91') && clean.length === 13) {
+    return `+91 ${clean.slice(3, 8)} ${clean.slice(8)}`;
+  }
+  if (clean.length === 10) {
+    return `+91 ${clean.slice(0, 5)} ${clean.slice(5)}`;
+  }
+  return clean;
 };
 
 import { useMobileDrawerEngine, DrawerDragHandle } from '../../components/ui/drawer';
@@ -87,6 +108,13 @@ export function AdminOrderDrawer({
       setIsDrawerOpen(false);
     }
   };
+
+  const handleCopy = (text, label = 'Text') => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied`);
+  };
+
   if (typeof document === 'undefined') return null;
 
   const isDark =
@@ -138,9 +166,19 @@ export function AdminOrderDrawer({
               </h3>
               <AdminStatusPill status={selectedOrder.status} />
             </div>
-            <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 font-mono font-bold">
-              #{selectedOrder.id.toUpperCase()}
-            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[11px] text-[var(--admin-text-secondary)] font-mono font-medium">
+                #{selectedOrder.id.toUpperCase()}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(selectedOrder.id, 'Order ID')}
+                className="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] transition-colors p-0.5 rounded cursor-pointer"
+                title="Copy Order ID"
+              >
+                <span className="material-symbols-outlined text-[13px]">content_copy</span>
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {['Cancelled', 'Returned', 'Refunded', 'Exchanged', 'Delivered'].includes(
@@ -166,148 +204,203 @@ export function AdminOrderDrawer({
         {/* Drawer Scroll Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar text-left bg-[var(--admin-bg)] touch-pan-y overscroll-contain">
           {/* 1. Client Card */}
-          <div className="admin-card !rounded-[4px] p-5 space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[10px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
-                  Customer Profile
-                </p>
-                <h4 className="text-[14px] font-bold text-[var(--admin-text-primary)] mt-1">
-                  {selectedOrder.customer}
-                </h4>
+          <div className="bg-[var(--admin-surface)] rounded-xl border border-[var(--admin-border-subtle)] shadow-xs p-4 sm:p-5 space-y-3.5">
+            {/* Customer Profile Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--admin-border-subtle)]">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-[13px] flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+                  {selectedOrder.customer
+                    ? selectedOrder.customer
+                        .split(' ')
+                        .map((n) => n[0])
+                        .slice(0, 2)
+                        .join('')
+                        .toUpperCase()
+                    : 'CU'}
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block">
+                    Customer Profile
+                  </span>
+                  <h4 className="text-[14px] font-semibold text-[var(--admin-text-primary)] truncate mt-0.5">
+                    {selectedOrder.customer || 'Unknown Customer'}
+                  </h4>
+                </div>
               </div>
-              <a
-                href={`${EXTERNAL_URLS.WHATSAPP_BASE}/${selectedOrder.phone.replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="admin-badge admin-badge-success !rounded-[4px] flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
-              >
-                <WhatsAppIcon className="w-[14px] h-[14px]" />
-                WhatsApp
-              </a>
+
+              {/* WhatsApp Action Button */}
+              {selectedOrder.phone && (
+                <a
+                  href={`${EXTERNAL_URLS.WHATSAPP_BASE}/${selectedOrder.phone.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 border border-emerald-200/80 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                  title="Message Customer on WhatsApp"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5" />
+                  <span>WhatsApp</span>
+                </a>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-[12px] pt-4 border-t border-[var(--admin-border-subtle)]">
-              <div>
-                <p className="text-[var(--admin-text-tertiary)] font-medium mb-0.5 text-[10px] uppercase">
+            {/* Meta Information 2x2 Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[12px]">
+              {/* Tile 1: Customer Phone */}
+              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
                   Customer Phone
-                </p>
-                <p className="font-bold text-[var(--admin-text-primary)] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
-                    call
+                </span>
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-mono text-[12px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                      call
+                    </span>
+                    {formatPhoneNumber(selectedOrder.customerPhone || selectedOrder.phone)}
                   </span>
-                  {selectedOrder.customerPhone || selectedOrder.phone || 'N/A'}
-                </p>
+                  {(selectedOrder.customerPhone || selectedOrder.phone) && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCopy(
+                          selectedOrder.customerPhone || selectedOrder.phone,
+                          'Phone number',
+                        )
+                      }
+                      className="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] transition-colors p-0.5 rounded cursor-pointer"
+                      title="Copy phone number"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                    </button>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="text-[var(--admin-text-tertiary)] font-medium mb-1 text-[10px] uppercase">
+
+              {/* Tile 2: Payment Mode */}
+              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
                   Payment Mode
-                </p>
-                <div className="flex flex-col gap-1 items-start">
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[11px] font-bold border ${
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
                       selectedOrder.payment?.toLowerCase().includes('pending') ||
                       selectedOrder.payment?.toLowerCase().includes('cod')
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        ? 'bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60'
                     }`}
                   >
                     {selectedOrder.payment?.toLowerCase().includes('pending') && (
-                      <span className="material-symbols-outlined text-[14px] mr-1">schedule</span>
+                      <span className="material-symbols-outlined text-[13px]">schedule</span>
                     )}
                     {selectedOrder.payment}
                   </span>
                   {selectedOrder.codPhoneVerified && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      ✓ COD Phone Verified
+                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <span className="material-symbols-outlined text-[12px]">verified</span>
+                      Verified
                     </span>
                   )}
                   {selectedOrder.paymentMethod?.toLowerCase() === 'cod' &&
                     !selectedOrder.codPhoneVerified && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                        ⚠ COD Unverified
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300">
+                        Unverified
                       </span>
                     )}
                 </div>
               </div>
 
-              {(selectedOrder.razorpayPaymentId || selectedOrder.paymentDetails?.paymentId) && (
-                <div>
-                  <p className="text-[var(--admin-text-tertiary)] font-medium mb-0.5 text-[10px] uppercase">
-                    Payment ID
-                  </p>
-                  <p
-                    className="font-mono text-[11px] font-bold text-[var(--admin-text-primary)] truncate"
-                    title={
-                      selectedOrder.paymentDetails?.paymentId || selectedOrder.razorpayPaymentId
-                    }
-                  >
-                    {selectedOrder.paymentDetails?.paymentId || selectedOrder.razorpayPaymentId}
-                  </p>
-                </div>
-              )}
-              {selectedOrder.upiVpa && (
-                <div>
-                  <p className="text-[var(--admin-text-tertiary)] font-medium mb-0.5 text-[10px] uppercase">
-                    UPI VPA
-                  </p>
-                  <p
-                    className="font-mono text-[11px] font-bold text-indigo-600 truncate"
-                    title={selectedOrder.upiVpa}
-                  >
-                    {selectedOrder.upiVpa}
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <p className="text-[var(--admin-text-tertiary)] font-medium mb-0.5 text-[10px] uppercase">
+              {/* Tile 3: Invoice Date */}
+              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
                   Invoice Date
-                </p>
-                <p className="font-bold text-[var(--admin-text-primary)] flex items-center gap-1">
+                </span>
+                <span className="text-[12px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
                     event
                   </span>
-                  {formatDateDMY(selectedOrder.date)}
-                </p>
+                  {formatOrderDate(selectedOrder.date)}
+                </span>
               </div>
-              {selectedOrder.needByDate && (
-                <div>
-                  <p className="text-[var(--admin-info)] font-bold mb-0.5 text-[10px] uppercase">
-                    Need-By Date
-                  </p>
-                  <p className="font-bold text-[var(--admin-info)] flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                    {new Date(selectedOrder.needByDate).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </p>
-                </div>
-              )}
+
+              {/* Tile 4: Need-By Date */}
+              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
+                  Need-By Date
+                </span>
+                <span className="text-[12px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                    calendar_today
+                  </span>
+                  {selectedOrder.needByDate
+                    ? formatOrderDate(selectedOrder.needByDate)
+                    : 'Standard Delivery'}
+                </span>
+              </div>
             </div>
 
-            {/* Delivery Address Row */}
-            <div className="pt-2 border-t border-[var(--admin-border-subtle)] mt-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <p className="text-[var(--admin-text-tertiary)] font-medium text-[10px] uppercase">
-                  Delivery Address & Shipping Contact
-                </p>
+            {/* Optional Transaction Details (Payment ID / UPI) */}
+            {(selectedOrder.razorpayPaymentId ||
+              selectedOrder.paymentDetails?.paymentId ||
+              selectedOrder.upiVpa) && (
+              <div className="bg-[var(--admin-bg-subtle)] p-2.5 px-3 rounded-lg border border-[var(--admin-border-subtle)] flex items-center justify-between text-[11px] flex-wrap gap-2">
+                {(selectedOrder.razorpayPaymentId || selectedOrder.paymentDetails?.paymentId) && (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
+                      Payment ID:
+                    </span>
+                    <span className="font-mono text-[11px] font-medium text-[var(--admin-text-primary)] truncate">
+                      {selectedOrder.paymentDetails?.paymentId || selectedOrder.razorpayPaymentId}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleCopy(
+                          selectedOrder.paymentDetails?.paymentId ||
+                            selectedOrder.razorpayPaymentId,
+                          'Payment ID',
+                        )
+                      }
+                      className="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] p-0.5 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">content_copy</span>
+                    </button>
+                  </div>
+                )}
+                {selectedOrder.upiVpa && (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
+                      UPI VPA:
+                    </span>
+                    <span className="font-mono text-[11px] font-medium text-indigo-600 dark:text-indigo-400 truncate">
+                      {selectedOrder.upiVpa}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Delivery Address & Shipping Contact Block */}
+            <div className="bg-[var(--admin-bg-subtle)] p-3 sm:p-3.5 rounded-lg border border-[var(--admin-border-subtle)] space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                    location_on
+                  </span>
+                  Delivery Address
+                </span>
                 {selectedOrder.shippingPhone && (
-                  <span className="text-[11px] font-bold text-[var(--admin-text-secondary)] flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">local_shipping</span>
-                    {selectedOrder.shippingPhone}
+                  <span className="text-[11px] font-medium text-[var(--admin-text-secondary)] flex items-center gap-1 bg-[var(--admin-surface)] px-2 py-0.5 rounded-full border border-[var(--admin-border-subtle)]">
+                    <span className="material-symbols-outlined text-[12px] text-[var(--admin-text-tertiary)]">
+                      local_shipping
+                    </span>
+                    <span className="font-mono text-[10.5px]">
+                      {formatPhoneNumber(selectedOrder.shippingPhone)}
+                    </span>
                   </span>
                 )}
               </div>
-              <p className="font-bold text-[var(--admin-text-primary)] flex items-start gap-1.5 mt-1">
-                <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)] mt-0.5">
-                  location_on
-                </span>
-                <span className="leading-tight text-[12px]">
-                  {selectedOrder.address || 'Address not available'}
-                </span>
+              <p className="text-[12.5px] font-normal text-[var(--admin-text-primary)] leading-relaxed pl-5">
+                {selectedOrder.address || 'Address not available'}
               </p>
             </div>
           </div>
