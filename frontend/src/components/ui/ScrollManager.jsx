@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { resetScrollDirection } from '../../hooks/useScrollDirection';
 
 /**
  * Global ScrollManager:
@@ -45,6 +46,7 @@ export function ScrollManager() {
         window.scrollTo(0, 0);
       }
 
+      resetScrollDirection();
       if (docEl && docEl.scrollTop !== 0) docEl.scrollTop = 0;
       if (body && body.scrollTop !== 0) body.scrollTop = 0;
 

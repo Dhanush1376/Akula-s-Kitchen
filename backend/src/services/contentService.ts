@@ -140,7 +140,7 @@ class ContentService {
         },
         recommendedProducts: {
           sectionTitle: 'Recommended For You',
-          sectionSubtitle: 'Specially Handpicked',
+          sectionSubtitle: '',
           useAutoFeed: true,
           maxDisplay: 12,
           isVisible: true,

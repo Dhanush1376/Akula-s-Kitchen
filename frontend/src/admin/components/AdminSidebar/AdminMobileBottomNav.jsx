@@ -175,7 +175,6 @@ export function AdminMobileBottomNav({ isFabOpen, setIsFabOpen, fabActions }) {
           backdropFilter: 'blur(16px) saturate(180%)',
           WebkitBackdropFilter: 'blur(16px) saturate(180%)',
           borderTop: '1px solid var(--admin-border)',
-          boxShadow: '0 -2px 12px rgba(0,0,0,0.04)',
         }}
       >
         {navItems.map((item, index) => {

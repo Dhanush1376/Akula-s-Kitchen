@@ -1,3 +1,5 @@
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { ProductCard } from '../../../components/shared/ProductCard';
 import { useProducts } from '../../../hooks/useProductQueries';
@@ -32,7 +34,6 @@ export function RecommendedGrid({ previewContent }) {
         <div className="h1-container relative z-10 animate-pulse">
           <div className="flex justify-between items-end mb-8 lg:mb-10">
             <div>
-              <div className="h-3 w-20 lg:w-24 bg-surface-container-high rounded-full mb-2"></div>
               <div className="h-8 lg:h-10 w-48 lg:w-64 bg-surface-container-high rounded-full"></div>
             </div>
             <div className="h-4 w-20 bg-surface-container-high rounded-full hidden lg:block"></div>
@@ -63,8 +64,7 @@ export function RecommendedGrid({ previewContent }) {
     <section className="h1-section relative isolate" id="h1-recommended">
       <div className="h1-container relative z-10">
         <SectionHeader
-          kicker={config.sectionSubtitle !== undefined ? config.sectionSubtitle : config.kicker}
-          title={config.sectionTitle || 'Picked for you'}
+          title={config.sectionTitle || 'Recommended For You'}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>
@@ -81,6 +81,21 @@ export function RecommendedGrid({ previewContent }) {
               badges={config.badgeText ? [config.badgeText] : []}
             />
           ))}
+        </div>
+
+        {/* View more CTA redirecting to Shop page (/collections) */}
+        <div className="flex justify-center mt-7 sm:mt-10">
+          <Link
+            to={config.seeAllLink || '/collections'}
+            className="group inline-flex items-center gap-2 px-6 py-2.5 sm:px-8 sm:py-3 rounded-full border border-[#283618]/25 hover:border-[#283618] bg-white hover:bg-[#283618] text-[#283618] hover:text-[#f7bb0e] font-display font-bold text-[13px] sm:text-[14px] tracking-wide transition-all duration-200 active:scale-95 cursor-pointer shadow-xs hover:shadow-sm"
+          >
+            <span>View More</span>
+            <ArrowRight
+              className="w-4 h-4 text-[#283618]/60 group-hover:text-[#f7bb0e] transition-transform duration-200 group-hover:translate-x-1"
+              strokeWidth={2.2}
+              aria-hidden="true"
+            />
+          </Link>
         </div>
       </div>
     </section>

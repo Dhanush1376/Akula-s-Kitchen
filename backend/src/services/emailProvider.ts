@@ -93,6 +93,7 @@ export const sendViaBrevo = async (payload: EmailPayload): Promise<{ messageId: 
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'api-key': apiKey },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
   });
 
   if (!response.ok) {

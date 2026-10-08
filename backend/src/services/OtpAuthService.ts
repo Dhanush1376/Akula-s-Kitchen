@@ -101,7 +101,7 @@ class OtpAuthService {
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10);
     const otpHash = await bcrypt.hash(otp, salt);
 
     const expiryMinutes = this.getOtpExpiryMinutes();

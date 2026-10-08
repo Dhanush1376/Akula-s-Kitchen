@@ -48,7 +48,7 @@ const featuredProductsData = {
 
 const recommendedProductsData = {
   sectionTitle: 'Recommended For You',
-  sectionSubtitle: 'Specially Handpicked',
+  sectionSubtitle: '',
   useAutoFeed: true,
   maxDisplay: 12,
   isVisible: true,

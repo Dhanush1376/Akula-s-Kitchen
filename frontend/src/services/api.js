@@ -14,7 +14,7 @@ import { clearCachedProfile } from '../utils/auth/authSessionCache';
 import { createRequestInterceptor } from './interceptors/requestInterceptor';
 import { createResponseInterceptor } from './interceptors/responseInterceptor';
 const api = axios.create({
-  timeout: 15000, // 15s timeout to prevent hanging connections and give early feedback
+  timeout: 30000, // 30s timeout for mobile network tolerance and cold-start resilience
   withCredentials: true,
 });
 

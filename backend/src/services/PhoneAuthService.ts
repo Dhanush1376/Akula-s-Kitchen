@@ -75,7 +75,7 @@ export class PhoneAuthService {
 
     // Generate OTP
     const otp = crypto.randomInt(100000, 999999).toString();
-    const otpHash = await bcrypt.hash(otp, 12);
+    const otpHash = await bcrypt.hash(otp, 10);
     const challengeId = crypto.randomUUID();
 
     // Invalidate previous challenges for this identifier/purpose

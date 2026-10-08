@@ -106,7 +106,7 @@ export function BottomNav() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       aria-label="Primary"
-      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto z-[var(--z-overlay)] bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.12),inset_0_1px_1.5px_rgba(255,255,255,0.95),0_1px_3px_rgba(0,0,0,0.05)] px-2 py-1 select-none"
+      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto z-[var(--z-overlay)] bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-full px-2 py-1 select-none"
       style={{
         marginBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
@@ -185,7 +185,7 @@ function NavIcon({ active, icon, label, badgeCount, showBadge }) {
       <div
         className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
           active
-            ? 'bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/90'
+            ? 'bg-white text-black border border-white/90'
             : 'bg-transparent text-[#1c2511] group-hover:bg-white/60 group-hover:text-black'
         }`}
       >
@@ -198,11 +198,11 @@ function NavIcon({ active, icon, label, badgeCount, showBadge }) {
 
         {/* Wishlist / Cart badge or notification dot */}
         {badgeCount > 0 ? (
-          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-[#283618] text-[#f7bb0e] text-[9.5px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
+          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-[#283618] text-[#f7bb0e] text-[9.5px] font-black rounded-full flex items-center justify-center ring-2 ring-white">
             {badgeCount}
           </span>
         ) : showBadge ? (
-          <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white shadow-xs" />
+          <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white" />
         ) : null}
       </div>
 
@@ -215,7 +215,7 @@ function NavIcon({ active, icon, label, badgeCount, showBadge }) {
       </span>
 
       {/* Active Dot Indicator */}
-      {active && <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e] mt-0.5 shadow-xs" />}
+      {active && <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e] mt-0.5" />}
     </div>
   );
 }

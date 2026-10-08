@@ -22,8 +22,8 @@ export default defineConfig({
   ],
 
   build: {
-    target: 'es2022',
-    cssTarget: 'chrome105',
+    target: ['es2022', 'safari15', 'ios15', 'chrome105', 'firefox105'],
+    cssTarget: ['es2020', 'safari15', 'ios15', 'chrome105', 'firefox105'],
     minify: true,
     cssMinify: 'lightningcss',
     sourcemap: process.env.NODE_ENV === 'production' ? false : 'inline',

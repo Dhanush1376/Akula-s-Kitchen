@@ -63,6 +63,16 @@ if (typeof window !== 'undefined') {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 
+export function resetScrollDirection() {
+  globalScrollDirection = 'up';
+  globalIsAtTop = typeof window !== 'undefined' ? window.scrollY < 50 : true;
+  lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+  isProgrammaticScroll = false;
+  listeners.forEach((listener) =>
+    listener({ scrollDirection: globalScrollDirection, isAtTop: globalIsAtTop }),
+  );
+}
+
 export function useScrollDirection() {
   const [state, setState] = useState({
     scrollDirection: globalScrollDirection,

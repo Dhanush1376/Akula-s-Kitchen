@@ -179,18 +179,22 @@ export function AddressModal() {
         await userService.updateAddress(editingAddressId, payload);
         savedId = editingAddressId;
         toast.success('Address updated successfully!');
+        if (newAddress.isDefault && savedId) {
+          try {
+            await userService.setDefaultAddress(savedId);
+          } catch {
+            // Handled silently
+          }
+        }
       } else {
         const res = await userService.addAddress(payload);
-        savedId = res?.data?._id || res?.data?.id || res?._id || res?.id;
-        toast.success('New address added successfully!');
-      }
-
-      if (newAddress.isDefault && savedId) {
-        try {
-          await userService.setDefaultAddress(savedId);
-        } catch {
-          // Handled silently
+        if (Array.isArray(res?.data)) {
+          const match = res.data.find((a) => a.isDefault) || res.data[res.data.length - 1];
+          savedId = match?._id || match?.id;
+        } else {
+          savedId = res?.data?._id || res?.data?.id || res?._id || res?.id;
         }
+        toast.success('New address added successfully!');
       }
 
       if (refetchDashboardData) await refetchDashboardData();

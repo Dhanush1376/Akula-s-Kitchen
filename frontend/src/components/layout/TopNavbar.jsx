@@ -25,7 +25,7 @@ import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { useSearchOverlay } from '../../hooks/useSearchOverlay';
 import { SearchTrigger } from '../search/SearchTrigger';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { useScrollDirection } from '../../hooks/useScrollDirection';
+import { useScrollDirection, resetScrollDirection } from '../../hooks/useScrollDirection';
 import { productService } from '../../services/api/productService';
 import api from '../../services/api';
 import { lazyWithRetry as lazy } from '../../utils/performance/lazyWithRetry';
@@ -111,7 +111,8 @@ export function TopNavbar() {
   const [hasPendingInvite, setHasPendingInvite] = useState(false);
 
   const { scrollDirection, isAtTop } = useScrollDirection();
-  const hideNavbar = !isAtTop && scrollDirection === 'down';
+  // On mobile/tablet, the header must remain permanently accessible and visible at all times
+  const hideNavbar = !isMobileOrTablet && !isAtTop && scrollDirection === 'down';
 
   const searchParams = new URLSearchParams(location.search);
   const searchParam = searchParams.get('search');
@@ -217,6 +218,7 @@ export function TopNavbar() {
     setIsOpen(false);
     setIsProfileDropdownOpen(false);
     searchCloseRef.current();
+    resetScrollDirection();
   }, [location.pathname]);
 
   useScrollLock(isOpen && isMobile);
