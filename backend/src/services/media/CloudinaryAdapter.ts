@@ -2,6 +2,7 @@ import { UploadApiOptions } from 'cloudinary';
 import getCloudinary from '../../config/cloudinary';
 import { cloudinaryCircuitBreaker } from '../../utils/CircuitBreaker';
 import logger from '../../config/logger';
+import ApiError from '../../utils/ApiError';
 import crypto from 'crypto';
 
 export interface CloudinaryUploadResult {
@@ -93,6 +94,25 @@ export class CloudinaryAdapter {
         uploadErr?.message?.includes('credentials') ||
         uploadErr?.message?.includes('Invalid Signature');
 
+      // In production a local copy is never reachable: the storefront host has no route to
+      // the API server's disk, and that disk is wiped on every redeploy. Saving one would
+      // give the product a broken image on every other device, so refuse loudly instead.
+      if (process.env.NODE_ENV === 'production') {
+        logger.error(
+          `[CloudinaryAdapter] Cloudinary upload failed in production (${uploadErr?.http_code || ''} ${uploadErr?.message || 'unknown'}). ` +
+            (isAuthOrConfigError
+              ? 'Check CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET on the server.'
+              : 'Not falling back to local disk.'),
+        );
+        throw new ApiError(
+          503,
+          isAuthOrConfigError
+            ? 'Image storage is not configured correctly, so the image was not saved. Please update the Cloudinary credentials on the server and try again.'
+            : 'Image storage is temporarily unavailable, so the image was not saved. Please try again.',
+        );
+      }
+
+      // Development only: keep working offline or without credentials
       if (isAuthOrConfigError || process.env.NODE_ENV !== 'production') {
         logger.warn(
           `[CloudinaryAdapter] Cloudinary upload rejected (${uploadErr?.message || 'unknown'}). Saving locally as fallback.`,

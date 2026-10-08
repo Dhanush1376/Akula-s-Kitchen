@@ -32,6 +32,10 @@ export class DuplicateDetector {
 
       if (meta.width) query.width = meta.width;
       if (meta.height) query.height = meta.height;
+      // In production, a copy saved on the server's own disk (/uploads/...) is not reachable
+      // by the storefront, so it doesn't count: re-uploading the same photo must go to
+      // Cloudinary instead of handing back the broken record.
+      if (process.env.NODE_ENV === 'production') query.secureUrl = { $not: /^\/uploads\// };
 
       const existing = await Media.findOne(query).exec();
       if (existing) {

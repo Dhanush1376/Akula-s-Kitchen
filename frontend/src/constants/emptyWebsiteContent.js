@@ -13,6 +13,13 @@ export const emptyWebsiteContent = {
     isVisible: true,
     status: 'published',
   },
+  homepageSections: [
+    { id: 'hero_1', isVisible: true },
+    { id: 'categoryGrid_1', isVisible: true },
+    { id: 'trendingProducts_1', isVisible: true },
+    { id: 'featuredProducts_1', isVisible: true },
+    { id: 'recommendedProducts_1', isVisible: true },
+  ],
   heroNavigationCards: { items: [], isVisible: true, status: 'published' },
   featuredCollections: {
     sectionTitle: '',

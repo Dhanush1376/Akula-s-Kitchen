@@ -80,6 +80,18 @@ class ContentService {
             stripSensitiveFromSectionData(section.sectionKey, section.data),
           );
         });
+
+        // Ensure homepage sections are always defined so storefront home never enters empty state
+        if (!flatContent.homepageSections) {
+          flatContent.homepageSections = [
+            { id: 'hero_1', label: 'Hero Banner', isVisible: true },
+            { id: 'categoryGrid_1', label: 'Category Grid', isVisible: true },
+            { id: 'trendingProducts_1', label: 'Trending Products', isVisible: true },
+            { id: 'featuredProducts_1', label: 'Featured Collection', isVisible: true },
+            { id: 'recommendedProducts_1', label: 'Smart Recommendations', isVisible: true },
+          ];
+        }
+
         return flatContent;
       },
       10 * 60 * 1000,
@@ -94,6 +106,45 @@ class ContentService {
         admin_idle_timeout: { idleTimeout: 15 },
         admin_theme_mode: { themeMode: 'dark' },
         admin_auto_publish: { autoPublish: false },
+        homepageSections: [
+          { id: 'hero_1', label: 'Hero Banner', isVisible: true },
+          { id: 'categoryGrid_1', label: 'Category Grid', isVisible: true },
+          { id: 'trendingProducts_1', label: 'Trending Products', isVisible: true },
+          { id: 'featuredProducts_1', label: 'Featured Collection', isVisible: true },
+          { id: 'recommendedProducts_1', label: 'Smart Recommendations', isVisible: true },
+        ],
+        categoryGrid: {
+          sectionTitle: 'Shop by category',
+          sectionSubtitle: 'Authentic Andhra & South Indian Delicacies',
+          categories: [
+            { name: 'Batters', link: '/collections?category=Batters' },
+            { name: 'Pickles', link: '/collections?category=Pickles' },
+            { name: 'Chutneys', link: '/collections?category=Chutneys' },
+            { name: 'Podis', link: '/collections?category=Podis' },
+          ],
+          isVisible: true,
+        },
+        trendingProducts: {
+          sectionTitle: "Today's picks",
+          sectionSubtitle: 'Trending Now',
+          useAutoFeed: true,
+          maxDisplay: 10,
+          isVisible: true,
+        },
+        featuredProducts: {
+          sectionTitle: 'Best Sellers',
+          sectionSubtitle: 'Customer Favorites',
+          productIds: [],
+          maxDisplay: 10,
+          isVisible: true,
+        },
+        recommendedProducts: {
+          sectionTitle: 'Recommended For You',
+          sectionSubtitle: 'Specially Handpicked',
+          useAutoFeed: true,
+          maxDisplay: 12,
+          isVisible: true,
+        },
         [BUSINESS_SETTINGS_SECTION]: {
           businessName: "Akula's Kitchen",
           tagline: '',
@@ -193,8 +244,23 @@ class ContentService {
   }
 
   static async publishAll() {
+    const existing = await ContentSection.findOne({ sectionKey: 'homepageSections' });
+    if (!existing) {
+      await ContentSection.create({
+        sectionKey: 'homepageSections',
+        data: [
+          { id: 'hero_1', label: 'Hero Banner', isVisible: true },
+          { id: 'categoryGrid_1', label: 'Category Grid', isVisible: true },
+          { id: 'trendingProducts_1', label: 'Trending Products', isVisible: true },
+          { id: 'featuredProducts_1', label: 'Featured Collection', isVisible: true },
+          { id: 'recommendedProducts_1', label: 'Smart Recommendations', isVisible: true },
+        ],
+        status: 'published',
+      });
+    }
+
     const result = await ContentSection.updateMany(
-      { status: 'draft' },
+      { status: { $ne: 'published' } },
       { $set: { status: 'published' } },
     );
 

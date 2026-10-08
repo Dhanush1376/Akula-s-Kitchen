@@ -25,9 +25,17 @@ import './home.css';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { useConfig } from '../../context/ConfigContext';
 
+const DEFAULT_HOMEPAGE_SECTIONS = [
+  { id: 'hero_1', label: 'Hero Banner', isVisible: true },
+  { id: 'categoryGrid_1', label: 'Category Grid', isVisible: true },
+  { id: 'trendingProducts_1', label: 'Trending Products', isVisible: true },
+  { id: 'featuredProducts_1', label: 'Featured Collection', isVisible: true },
+  { id: 'recommendedProducts_1', label: 'Smart Recommendations', isVisible: true },
+];
+
 export function Home({ previewContent }) {
   const { storeName } = useConfig();
-  const cms = useWebsiteContent({ includeDefaults: false });
+  const cms = useWebsiteContent();
   const activeCms = previewContent || cms;
   const loading = !previewContent && cms.loading;
 
@@ -37,19 +45,28 @@ export function Home({ previewContent }) {
       if (orderSection && orderSection.isVisible !== undefined) {
         return orderSection.isVisible;
       }
-      if (cms?.[id] && cms[id].isVisible !== undefined) {
-        return cms[id].isVisible;
+      const baseId = id.split('_')[0];
+      if (activeCms?.[baseId] && activeCms[baseId].isVisible !== undefined) {
+        return activeCms[baseId].isVisible;
+      }
+      if (activeCms?.[id] && activeCms[id].isVisible !== undefined) {
+        return activeCms[id].isVisible;
       }
       return true;
     },
-    [cms, activeCms],
+    [activeCms],
   );
 
   if (loading) {
     return <HomeSkeleton />;
   }
 
-  const sections = activeCms?.homepageSections || [];
+  const sections =
+    Array.isArray(activeCms?.homepageSections) && activeCms.homepageSections.length > 0
+      ? activeCms.homepageSections
+      : DEFAULT_HOMEPAGE_SECTIONS;
+
+  const visibleSections = sections.filter((s) => isSectionVisible(s.id));
 
   return (
     <>
@@ -60,9 +77,8 @@ export function Home({ previewContent }) {
 
       <div className="h1-page relative bg-surface-bright overflow-hidden">
         <div className="relative z-10">
-          {sections.length === 0 && <HomepageEmptyState />}
-          {sections.map((section) => {
-            if (!isSectionVisible(section.id)) return null;
+          {visibleSections.length === 0 && <HomepageEmptyState />}
+          {visibleSections.map((section) => {
             const baseId = section.id.split('_')[0];
 
             switch (baseId) {

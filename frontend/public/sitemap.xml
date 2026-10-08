@@ -99,4 +99,14 @@
       <image:title>Vada Batter</image:title>
     </image:image>
   </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ac7f784e6ae88643013e4ed</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/9e3295c8-4bb8-4ef8-9eff-7306c19c250c-jpeg-a4c7_qot4k.webp</image:loc>
+      <image:title>Green Chilli Amla Pickle</image:title>
+    </image:image>
+  </url>
 </urlset>

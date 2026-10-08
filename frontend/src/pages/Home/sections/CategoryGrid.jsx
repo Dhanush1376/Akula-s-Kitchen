@@ -4,10 +4,11 @@ import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { CloudinaryImage } from '../../../components/ui/CloudinaryImage';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
 
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useCategories } from '../../../hooks/useProductQueries';
 
 /**
- * Category tiles strictly driven by CMS config. No fallbacks.
+ * Category tiles driven by CMS config with database category fallback.
  *
  * Tiles wrap in rows and the last row stretches to the full width, so any
  * number of categories lands on a clean edge.
@@ -39,9 +40,26 @@ const normalizeCategory = (category, index) => {
 };
 
 export const CategoryGrid = React.memo(function CategoryGrid({ previewContent }) {
-  const cms = useWebsiteContent({ includeDefaults: false });
+  const cms = useWebsiteContent();
   const activeCms = previewContent || cms;
   const config = activeCms?.categoryGrid || {};
+
+  const { data: dbCategories = [] } = useCategories({
+    enabled: !Array.isArray(config.categories) || config.categories.length === 0,
+  });
+
+  const categories = useMemo(() => {
+    if (Array.isArray(config.categories) && config.categories.length > 0) {
+      return config.categories.map(normalizeCategory);
+    }
+    const catList = Array.isArray(dbCategories) ? dbCategories : dbCategories?.data || [];
+    return catList.map((cat, idx) => ({
+      key: cat._id || cat.slug || idx,
+      name: cat.name || cat.title || 'Category',
+      link: `/collections?category=${encodeURIComponent(cat.name || cat.slug || '')}`,
+      image: cat.image || null,
+    }));
+  }, [config.categories, dbCategories]);
 
   if (cms.loading) {
     return (
@@ -61,11 +79,6 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
   }
 
   if (config.isVisible === false) return null;
-
-  const categories = Array.isArray(config.categories)
-    ? config.categories.map(normalizeCategory)
-    : [];
-
   if (categories.length === 0) return null;
 
   return (

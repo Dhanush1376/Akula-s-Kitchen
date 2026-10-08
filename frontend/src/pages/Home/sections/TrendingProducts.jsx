@@ -41,18 +41,36 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
     { enabled: config.isVisible !== false && !isManualMode },
   );
 
+  const rawTrending = trendingData?.items || (Array.isArray(trendingData) ? trendingData : []);
+  const needsFallback = !isManualMode && rawTrending.length === 0;
+
+  const { data: fallbackData } = useProducts(
+    { limit: config.maxDisplay || 8 },
+    { enabled: config.isVisible !== false && needsFallback },
+  );
+
   if (config.isVisible === false) return null;
 
   const isPending = isManualMode ? manualPending : trendingPending;
   const isError = isManualMode ? manualError : trendingError;
   const refetch = isManualMode ? manualRefetch : trendingRefetch;
 
+  const fallbackList =
+    fallbackData?.data?.products ||
+    fallbackData?.products ||
+    fallbackData?.data ||
+    fallbackData?.items ||
+    (Array.isArray(fallbackData) ? fallbackData : []);
+
   const products = isManualMode
-    ? manualData?.data ||
+    ? manualData?.data?.products ||
       manualData?.products ||
+      manualData?.data ||
       manualData?.items ||
       (Array.isArray(manualData) ? manualData : [])
-    : trendingData?.items || trendingData || [];
+    : rawTrending.length > 0
+      ? rawTrending
+      : fallbackList;
 
   if (isPending || loading) {
     return (

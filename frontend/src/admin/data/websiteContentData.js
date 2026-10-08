@@ -9,6 +9,49 @@ export const initialWebsiteContent = {
   homePageController: {
     status: 'published',
   },
+  homepageSections: [
+    { id: 'hero_1', label: 'Hero Banner', isVisible: true },
+    { id: 'categoryGrid_1', label: 'Category Grid', isVisible: true },
+    { id: 'trendingProducts_1', label: 'Trending Products', isVisible: true },
+    { id: 'featuredProducts_1', label: 'Featured Collection', isVisible: true },
+    { id: 'recommendedProducts_1', label: 'Smart Recommendations', isVisible: true },
+  ],
+  categoryGrid: {
+    sectionTitle: 'Shop by category',
+    sectionSubtitle: 'Authentic Andhra & South Indian Delicacies',
+    categories: [
+      { name: 'Batters', link: '/collections?category=Batters' },
+      { name: 'Pickles', link: '/collections?category=Pickles' },
+      { name: 'Chutneys', link: '/collections?category=Chutneys' },
+      { name: 'Podis', link: '/collections?category=Podis' },
+    ],
+    isVisible: true,
+    status: 'published',
+  },
+  trendingProducts: {
+    sectionTitle: "Today's picks",
+    sectionSubtitle: 'Trending Now',
+    useAutoFeed: true,
+    maxDisplay: 10,
+    isVisible: true,
+    status: 'published',
+  },
+  featuredProducts: {
+    sectionTitle: 'Best Sellers',
+    sectionSubtitle: 'Customer Favorites',
+    productIds: [],
+    maxDisplay: 10,
+    isVisible: true,
+    status: 'published',
+  },
+  recommendedProducts: {
+    sectionTitle: 'Recommended For You',
+    sectionSubtitle: 'Specially Handpicked',
+    useAutoFeed: true,
+    maxDisplay: 12,
+    isVisible: true,
+    status: 'published',
+  },
 
   // ═══════════════════════════════════════════════════════
   // PROMOTIONAL BANNERS
