@@ -215,7 +215,7 @@ export function Sidebar() {
           </div>
         </motion.button>
 
-        <div className="border-t border-neutral-200/40" />
+        <div className="border-t border-neutral-200/60" />
 
         {/* Profile */}
         <motion.button
@@ -235,7 +235,7 @@ export function Sidebar() {
           <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
         </motion.button>
 
-        <div className="border-t border-neutral-200/40" />
+        <div className="border-t border-neutral-200/60" />
 
         {/* Notifications */}
         <motion.button
@@ -260,7 +260,7 @@ export function Sidebar() {
           </div>
         </motion.button>
 
-        <div className="border-t border-white/70" />
+        <div className="border-t border-neutral-200/60" />
 
         {/* Addresses */}
         <motion.button
@@ -291,7 +291,7 @@ export function Sidebar() {
           </div>
         </motion.button>
 
-        <div className="border-t border-white/70" />
+        <div className="border-t border-neutral-200/60" />
 
         {/* Wishlist */}
         <motion.button
@@ -322,7 +322,7 @@ export function Sidebar() {
           </div>
         </motion.button>
 
-        <div className="border-t border-white/70" />
+        <div className="border-t border-neutral-200/60" />
 
         {/* Shopping Bag */}
         <motion.button
@@ -353,7 +353,7 @@ export function Sidebar() {
           </div>
         </motion.button>
 
-        <div className="border-t border-white/70" />
+        <div className="border-t border-neutral-200/60" />
 
         {/* Logout */}
         <button

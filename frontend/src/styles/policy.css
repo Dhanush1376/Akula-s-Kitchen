@@ -1,0 +1,256 @@
+/* ════════════════════════════════════════════════════════════════
+   Akula's Kitchen — Policy Pages Redesign Stylesheet
+   Theme: Warm Ivory, Deep Olive Green (#283618), Accent Gold (#F7BB0E)
+   ════════════════════════════════════════════════════════════════ */
+
+.policy-page {
+  background-color: #ffffff;
+  color: #1f2937;
+  font-family: var(--font-body, system-ui, sans-serif);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Subtle background accentuation */
+.policy-hero-glow {
+  position: absolute;
+  top: 0;
+  right: 15%;
+  width: 500px;
+  height: 380px;
+  background: radial-gradient(
+    circle,
+    rgba(247, 187, 14, 0.08) 0%,
+    rgba(40, 54, 24, 0.03) 50%,
+    transparent 70%
+  );
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: 0;
+}
+
+/* Banana leaf peeking in from the right screen edge, below the floating header */
+.policy-hero-leaf {
+  position: absolute;
+  top: 128px;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+/* Clips the leaf at the screen edge so its stem and cut base never show; the bottom and
+   inner edges fade so it melts into the page instead of ending in straight lines.
+   On phones and tablets it stays beside the title and fades out before the policy chips. */
+.policy-hero-leaf__frame {
+  position: relative;
+  width: 104px;
+  height: 172px;
+  overflow: hidden;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 50%, transparent 100%),
+    linear-gradient(to right, transparent 0, #000 35%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, #000 50%, transparent 100%),
+    linear-gradient(to right, transparent 0, #000 35%);
+  mask-composite: intersect;
+  animation: policy-leaf-in 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+.policy-hero-leaf__sway {
+  position: absolute;
+  right: -16px;
+  bottom: -40px;
+  width: 210px;
+  transform-origin: 90% 100%;
+}
+.policy-hero-leaf__img,
+.policy-hero-leaf__shadow {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+.policy-hero-leaf__img {
+  position: relative;
+  filter: drop-shadow(0 1px 1.5px rgba(28, 40, 14, 0.22));
+}
+/* Thin, soft shade like the other leaves (light from the top left) */
+.policy-hero-leaf__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  translate: 6px 10px;
+  filter: brightness(0.25) saturate(0.6) blur(6px);
+  opacity: 0.22;
+}
+@media (min-width: 768px) {
+  .policy-hero-leaf__frame {
+    width: 120px;
+    height: 160px;
+  }
+  .policy-hero-leaf__sway {
+    width: 240px;
+    bottom: -40px;
+  }
+}
+/* Desktop has a sidebar instead of the chips row, so the leaf can grow */
+@media (min-width: 1024px) {
+  .policy-hero-leaf {
+    top: 150px;
+  }
+  .policy-hero-leaf__frame {
+    width: 190px;
+    height: 360px;
+  }
+  .policy-hero-leaf__sway {
+    width: 400px;
+    bottom: -110px;
+  }
+}
+
+/* Slides in from the screen edge, overshoots a touch and settles */
+@keyframes policy-leaf-in {
+  0% {
+    opacity: 0;
+    translate: 75% 6%;
+  }
+  60% {
+    opacity: 1;
+    translate: -4% -1%;
+  }
+  80% {
+    translate: 1.5% 0;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .policy-hero-leaf__frame {
+    animation: none;
+  }
+}
+
+/* Section Card Styles */
+.policy-card {
+  background: #ffffff;
+  border: 1px solid rgba(40, 54, 24, 0.1);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(40, 54, 24, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@media (min-width: 640px) {
+  .policy-card {
+    padding: 2rem;
+  }
+}
+
+.policy-card:hover {
+  border-color: rgba(40, 54, 24, 0.22);
+  box-shadow: 0 8px 24px -4px rgba(40, 54, 24, 0.08);
+}
+
+.policy-card--highlighted {
+  border-color: #283618;
+  box-shadow:
+    0 0 0 2px rgba(40, 54, 24, 0.2),
+    0 8px 24px -4px rgba(40, 54, 24, 0.1);
+}
+
+/* Number badge */
+.policy-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background-color: #f4f6f0;
+  border: 1px solid rgba(40, 54, 24, 0.15);
+  color: #283618;
+  font-family: var(--font-display, sans-serif);
+  font-weight: 800;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+/* Highlight banner inside card */
+.policy-note-box {
+  background-color: #fdfbf7;
+  border: 1px solid rgba(247, 187, 14, 0.35);
+  border-left: 3.5px solid #f7bb0e;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  margin-top: 1rem;
+  font-size: 0.84rem;
+  color: #3b2d03;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+/* Bullet list item with theme dot */
+.policy-bullet {
+  position: relative;
+  padding-left: 1.35rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.policy-bullet::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #283618;
+}
+
+/* Print Styles */
+@media print {
+  /* Hide non-printable navigation and widgets */
+  header,
+  nav,
+  footer,
+  aside,
+  .policy-hero-leaf,
+  .policy-hero-glow,
+  .policy-tools-bar,
+  .policy-mobile-nav,
+  button,
+  .bottom-nav,
+  #whatsapp-widget {
+    display: none !important;
+  }
+
+  body,
+  .policy-page {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .policy-card {
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #283618;
+  }
+}

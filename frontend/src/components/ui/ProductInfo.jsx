@@ -59,11 +59,14 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
   const handleAddToCart = () => {
     attemptAddToCart({
       id: product._id || product.id,
+      _id: product._id || product.id,
+      productId: product._id || product.id,
       title: product.title,
       price: product.price,
       imageSrc: product.imageSrc || product.image,
       formattedPrice: `Rs. ${product.price?.toLocaleString()}`,
       quantity: quantity,
+      variant: product.variant || 'Default',
       isNonRefundable: product.isNonRefundable,
     });
     setAdded(true);
@@ -343,12 +346,15 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
         </div>
       </div>
 
-      {/* Food Trust Signifiers Grid */}
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5 pt-4 sm:pt-5 border-t border-black/10">
-        <FeatureItem IconComponent={ChefHat} label="Fresh" />
-        <FeatureItem IconComponent={Leaf} label="Pure" />
-        <FeatureItem IconComponent={PackageCheck} label="Hygienic" />
-        <FeatureItem IconComponent={Heart} label="Homestyle" />
+      {/* Food Trust Signifiers Grid, with a second leaf peeking in from the left below it */}
+      <div className="relative">
+        <ProductLeaf side="left" className="pd-leaf--low" />
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5 pt-4 sm:pt-5 border-t border-black/10">
+          <FeatureItem IconComponent={ChefHat} label="Fresh" />
+          <FeatureItem IconComponent={Leaf} label="Pure" />
+          <FeatureItem IconComponent={PackageCheck} label="Hygienic" />
+          <FeatureItem IconComponent={Heart} label="Homestyle" />
+        </div>
       </div>
     </div>
   );

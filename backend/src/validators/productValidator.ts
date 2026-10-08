@@ -55,8 +55,21 @@ export const createProductSchema = z.object({
   oldPrice: z.number().min(0).optional(),
   rating: z.number().min(0).max(5).optional(),
   reviews: z.number().min(0).optional(),
-  imageSrc: z.string().min(1, 'Image source is required'),
-  images: z.array(z.string()).max(4).optional(),
+  imageSrc: z
+    .string()
+    .min(1, 'Image source is required')
+    .refine((val) => !val.startsWith('blob:'), 'Image source cannot be a temporary local blob URL'),
+  images: z
+    .array(
+      z
+        .string()
+        .refine(
+          (val) => !val.startsWith('blob:'),
+          'Image URL cannot be a temporary local blob URL',
+        ),
+    )
+    .max(4)
+    .optional(),
   description: z.string().min(5, 'Description is required'),
   badges: z.array(z.string()).optional(),
   dimensions: z.string().optional(),

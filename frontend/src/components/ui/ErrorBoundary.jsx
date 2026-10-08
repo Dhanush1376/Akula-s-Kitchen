@@ -57,43 +57,45 @@ export class ErrorBoundary extends Component {
 
       return (
         <div
-          className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-surface relative overflow-hidden"
+          className="min-h-screen flex flex-col items-center justify-center pt-32 sm:pt-40 pb-[calc(var(--bottom-nav-height,65px)+4rem)] sm:pb-20 px-4 sm:px-6 text-center bg-[#faf8f5] relative overflow-x-hidden"
           role="alert"
           aria-live="assertive"
         >
-          {/* Subtle gold glow backdrop */}
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+          {/* Subtle warm glow backdrop */}
+          <div className="absolute top-1/4 -right-20 w-80 h-80 bg-[#f7bb0e]/10 rounded-full blur-[90px] pointer-events-none" />
+          <div className="absolute bottom-1/4 -left-20 w-80 h-80 bg-[#283618]/5 rounded-full blur-[90px] pointer-events-none" />
 
-          <div className="max-w-lg w-full mx-auto relative z-10">
-            {/* Elegant warning icon */}
-            <div className="w-24 h-24 mx-auto mb-8 rounded-full bg-rose-50/50 border border-rose-100/50 flex items-center justify-center shadow-2xs">
-              <AlertCircle className="text-[36px] text-rose-500 font-light" strokeWidth={1.5} />
+          <div className="max-w-md w-full mx-auto bg-white border border-[#283618]/10 rounded-3xl p-6 sm:p-8 shadow-xs relative z-10">
+            {/* Warning icon */}
+            <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shadow-2xs">
+              <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-rose-500" strokeWidth={1.75} />
             </div>
 
-            <h2 className="font-display text-2xl lg:text-3xl font-semibold text-on-surface mb-3 tracking-tight">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-[#283618] mb-2 tracking-tight">
               {isChunkError ? 'Update Available' : 'Something went wrong'}
             </h2>
 
-            <p className="font-body-md text-on-surface-variant/70 mb-8 text-sm lg:text-base leading-relaxed max-w-sm mx-auto">
+            <p className="font-sans text-xs sm:text-sm text-[#4b5563] mb-6 leading-relaxed max-w-xs mx-auto">
               {isChunkError
                 ? 'A new version of the app is available. Please refresh to get the latest experience.'
                 : "Something went wrong on our side. We've been notified and are working on it."}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 w-full">
               {this.state.retryCount < 3 && (
                 <button
+                  type="button"
                   onClick={this.handleRetry}
-                  className="px-8 py-3 bg-on-surface hover:bg-primary hover:text-surface text-surface rounded-full font-label text-[11px] uppercase tracking-widest font-bold transition-all hover:shadow-xl active:scale-95 cursor-pointer flex-1 sm:flex-none"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-[#283618] hover:bg-[#1f2b13] text-white rounded-full font-sans text-xs uppercase tracking-wider font-bold transition-all shadow-xs cursor-pointer active:scale-95"
                   aria-label="Try again"
                 >
                   {isChunkError ? 'Refresh App' : 'Try Again'}
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => window.location.reload()}
-                className="px-8 py-3 bg-surface border border-outline-variant/30 text-on-surface hover:bg-surface-container rounded-full font-label text-[11px] uppercase tracking-widest font-bold transition-all active:scale-95 cursor-pointer flex-1 sm:flex-none"
+                className="w-full sm:w-auto px-6 py-2.5 bg-white border border-[#283618]/20 hover:bg-stone-50 text-[#283618] rounded-full font-sans text-xs uppercase tracking-wider font-bold transition-all cursor-pointer active:scale-95"
                 aria-label="Reload page"
               >
                 Reload Page
@@ -101,20 +103,26 @@ export class ErrorBoundary extends Component {
             </div>
 
             {/* Navigation fallback */}
-            <div className="mt-10 pt-6 border-t border-outline-variant/20">
-              <p className="font-label-sm text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/40 mb-4 font-bold">
+            <div className="mt-6 pt-5 border-t border-[#283618]/10">
+              <p className="text-[10px] uppercase tracking-widest text-[#71717a] mb-2.5 font-semibold">
                 Or navigate to:
               </p>
-              <div className="flex items-center justify-center gap-4 text-xs font-label uppercase tracking-widest font-bold">
-                <a href="/" className="text-primary hover:underline">
+              <div className="flex items-center justify-center gap-3 text-xs font-semibold text-[#283618]">
+                <a href="/" className="hover:underline hover:text-[#7a5a00] transition-colors">
                   Home
                 </a>
-                <span className="text-outline-variant/50">·</span>
-                <a href="/collections" className="text-primary hover:underline">
+                <span className="text-stone-300">·</span>
+                <a
+                  href="/collections"
+                  className="hover:underline hover:text-[#7a5a00] transition-colors"
+                >
                   Collections
                 </a>
-                <span className="text-outline-variant/50">·</span>
-                <a href="/contact" className="text-primary hover:underline">
+                <span className="text-stone-300">·</span>
+                <a
+                  href="/contact"
+                  className="hover:underline hover:text-[#7a5a00] transition-colors"
+                >
                   Contact
                 </a>
               </div>
@@ -122,11 +130,11 @@ export class ErrorBoundary extends Component {
 
             {/* Dev-only error details */}
             {import.meta.env.DEV && this.state.error && (
-              <details className="mt-8 text-left bg-surface-container border border-outline-variant/30 rounded-2xl p-4 text-xs">
-                <summary className="cursor-pointer font-bold text-on-surface-variant uppercase tracking-wider text-[10px] select-none">
+              <details className="mt-5 text-left bg-[#faf8f5] border border-[#283618]/10 rounded-xl p-3 text-[10px]">
+                <summary className="cursor-pointer font-bold text-stone-600 uppercase tracking-wider text-[9px] select-none">
                   Error Details (dev only)
                 </summary>
-                <pre className="whitespace-pre-wrap text-rose-600 mt-2 overflow-auto max-h-40 font-mono text-[10px] leading-normal">
+                <pre className="whitespace-pre-wrap text-rose-600 mt-2 overflow-auto max-h-28 font-mono text-[9px] leading-relaxed break-all">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>

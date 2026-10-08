@@ -168,6 +168,16 @@ export function useProductSubmission({
         toast.dismiss('upload-toast');
       }
 
+      // Guard against submitting unpersisted local blob URLs that cannot be resolved after deployment
+      const isLocalBlob = (url) => typeof url === 'string' && url.startsWith('blob:');
+      if (isLocalBlob(finalImageSrc) || finalImages.some(isLocalBlob)) {
+        toast.error(
+          'Image upload did not complete. Please re-select product photos before publishing.',
+        );
+        setIsLoading(false);
+        return null;
+      }
+
       const payload = {
         title: formData.title,
         customerNote: formData.customerNote || undefined,

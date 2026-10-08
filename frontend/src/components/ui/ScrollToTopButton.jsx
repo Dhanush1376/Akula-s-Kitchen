@@ -54,12 +54,12 @@ export function ScrollToTopButton() {
             y: { duration: 0.3, ease: 'easeOut' },
           }}
           onClick={scrollToTop}
-          className="relative pointer-events-auto shrink-0 z-50 w-11 h-11 lg:w-12 lg:h-12 bg-white/90 backdrop-blur-md border border-outline-variant/30 text-on-surface shadow-lg hover:shadow-xl rounded-full flex items-center justify-center cursor-pointer transition-all hover:bg-white active:scale-95 group"
+          className="relative pointer-events-auto shrink-0 z-50 w-10 h-10 sm:w-11 sm:h-11 bg-white/95 backdrop-blur-md border border-black/10 text-neutral-800 shadow-md hover:shadow-lg rounded-full flex items-center justify-center cursor-pointer transition-all hover:bg-white active:scale-95 group"
           aria-label="Scroll to top"
         >
           <ArrowUp
-            className="text-[20px] lg:text-[24px] text-on-surface group-hover:-translate-y-0.5 transition-transform"
-            strokeWidth={1.5}
+            className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-neutral-700 group-hover:-translate-y-0.5 transition-transform"
+            strokeWidth={2}
           />
         </motion.button>
       )}

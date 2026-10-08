@@ -1,6 +1,6 @@
 import { CheckCircle2, Heart, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useRecommendationTracker } from '../../hooks/useRecommendationTracker';
@@ -21,6 +21,15 @@ export function WishlistView({ isEmbedded = false }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [notification, setNotification] = useState('');
+
+  // Retain initial top scroll position when loading transitions to loaded view
+  useEffect(() => {
+    if (!wishlistLoading && !isEmbedded) {
+      if (typeof window !== 'undefined' && window.scrollY > 0 && window.scrollY < 250) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      }
+    }
+  }, [wishlistLoading, isEmbedded]);
 
   // Track wishlist view
   useRecommendationTracker({
@@ -131,9 +140,6 @@ export function WishlistView({ isEmbedded = false }) {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-extrabold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] leading-none">
                   Wishlist
                 </h1>
-                <span className="px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-[12px] md:text-[13px] font-extrabold bg-white/20 backdrop-blur-md text-white border border-white/40 shadow-xs drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-                  {enhancedItems.length} {enhancedItems.length === 1 ? 'item' : 'items'}
-                </span>
               </div>
             </div>
           )}
@@ -145,13 +151,22 @@ export function WishlistView({ isEmbedded = false }) {
                 <button
                   type="button"
                   onClick={() => setSelectedCategory(null)}
-                  className={`h-9 px-4 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer border ${
+                  className={`h-9 px-3.5 sm:px-4 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer border flex items-center gap-2 ${
                     !selectedCategory
                       ? 'bg-[#283618] text-white border-[#283618] shadow-xs'
                       : 'bg-white text-neutral-700 border-[#ede8e1] hover:border-neutral-400 hover:bg-neutral-50'
                   }`}
                 >
-                  All ({enhancedItems.length})
+                  <span>All</span>
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none transition-colors ${
+                      !selectedCategory
+                        ? 'bg-white/20 text-white'
+                        : 'bg-neutral-100 text-neutral-700 border border-neutral-200/60'
+                    }`}
+                  >
+                    {enhancedItems.length}
+                  </span>
                 </button>
                 {categoriesList.map((cat) => {
                   const isActive = selectedCategory === cat.name;
@@ -161,7 +176,7 @@ export function WishlistView({ isEmbedded = false }) {
                       key={cat.name}
                       type="button"
                       onClick={() => setSelectedCategory(isActive ? null : cat.name)}
-                      className={`h-9 px-4 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer border flex items-center gap-1.5 ${
+                      className={`h-9 px-3.5 sm:px-4 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer border flex items-center gap-2 ${
                         isActive
                           ? 'bg-[#283618] text-white border-[#283618] shadow-xs'
                           : 'bg-white text-neutral-700 border-[#ede8e1] hover:border-neutral-400 hover:bg-neutral-50'
@@ -169,8 +184,10 @@ export function WishlistView({ isEmbedded = false }) {
                     >
                       <span>{cat.name}</span>
                       <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                          isActive ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600'
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none transition-colors ${
+                          isActive
+                            ? 'bg-white/20 text-white'
+                            : 'bg-neutral-100 text-neutral-700 border border-neutral-200/60'
                         }`}
                       >
                         {catCount}

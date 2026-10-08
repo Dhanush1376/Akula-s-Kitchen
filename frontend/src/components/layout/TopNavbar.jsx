@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { BrandLogo } from '../ui/BrandLogo';
-import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { adminInviteService } from '../../services/domainServices';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
@@ -52,6 +53,15 @@ export function TopNavbar() {
   const location = useLocation();
   const { cartCount, setIsCartOpen } = useCart();
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
+
+  let wishlistCount = 0;
+  try {
+    const wishlist = useWishlist();
+    wishlistCount = wishlist?.items?.length || 0;
+  } catch (_e) {
+    // Outside WishlistProvider fallback
+  }
+
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = React.useRef(null);
   const [categories, setCategories] = useState([]);
@@ -199,10 +209,14 @@ export function TopNavbar() {
     };
   }, [isProfileDropdownOpen]);
 
-  // Close mobile menu on route change
+  // Close mobile menu and search overlay on route change
+  const searchCloseRef = React.useRef(search.handleClose);
+  searchCloseRef.current = search.handleClose;
+
   useEffect(() => {
     setIsOpen(false);
     setIsProfileDropdownOpen(false);
+    searchCloseRef.current();
   }, [location.pathname]);
 
   useScrollLock(isOpen && isMobile);
@@ -275,12 +289,13 @@ export function TopNavbar() {
   const isActive = (href) => location.pathname === href;
 
   // Real, dynamic categories only — no hardcoded fallbacks
-  const displayCategories =
-    categories && categories.length > 0
+  const displayCategories = useMemo(() => {
+    return categories && categories.length > 0
       ? categories
       : configCategories && configCategories.length > 0
         ? configCategories
         : [];
+  }, [categories, configCategories]);
 
   const categoriesScrollRef = React.useRef(null);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -343,7 +358,7 @@ export function TopNavbar() {
             {/* Big Circular Logo spanning full height on left */}
             <Link to="/" className="shrink-0 flex items-center self-center group pl-0.5 sm:pl-1">
               <BrandLogo
-                size="64px"
+                size={isMobile ? '78px' : '86px'}
                 className="drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
                 variant="default"
               />
@@ -370,10 +385,10 @@ export function TopNavbar() {
                           setIsProfileDropdownOpen((prev) => !prev);
                         }
                       }}
-                      className={`w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full border flex items-center justify-center shadow-2xs transition-all relative cursor-pointer shrink-0 ${
+                      className={`w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full border flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] transition-all relative cursor-pointer shrink-0 ${
                         isProfileDropdownOpen
                           ? 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] ring-2 ring-[#f7bb0e]/30'
-                          : 'bg-white/60 hover:bg-white/85 backdrop-blur-md border-neutral-200 hover:border-neutral-300 text-neutral-800'
+                          : 'bg-white hover:bg-neutral-50 border-neutral-300 hover:border-neutral-400 text-neutral-900'
                       }`}
                       aria-label="Account Profile"
                       title={
@@ -434,10 +449,17 @@ export function TopNavbar() {
                             <Link
                               to="/wishlist"
                               onClick={() => setIsProfileDropdownOpen(false)}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                              className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
                             >
-                              <Heart size={16} strokeWidth={2} className="text-neutral-500" />
-                              <span>Wishlist</span>
+                              <span className="flex items-center gap-2.5">
+                                <Heart size={16} strokeWidth={2} className="text-neutral-500" />
+                                <span>Wishlist</span>
+                              </span>
+                              {wishlistCount > 0 && (
+                                <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#f7bb0e] text-[#283618] text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                                  {wishlistCount}
+                                </span>
+                              )}
                             </Link>
 
                             {adminRoles.includes(user?.role) && (
@@ -487,10 +509,10 @@ export function TopNavbar() {
                         : {}
                     }
                     transition={{ duration: 0.5 }}
-                    className="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full bg-white/60 hover:bg-white/85 backdrop-blur-md border border-neutral-200 hover:border-neutral-300 flex items-center justify-center text-neutral-800 shadow-2xs transition-all relative cursor-pointer shrink-0"
+                    className="w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400 flex items-center justify-center text-neutral-900 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all relative cursor-pointer shrink-0"
                     aria-label="View Cart"
                   >
-                    <ShoppingCart size={19} strokeWidth={1.8} />
+                    <ShoppingCart size={20} strokeWidth={2} />
                     {cartCount > 0 && (
                       <motion.span
                         initial={{ scale: 0 }}
@@ -506,11 +528,11 @@ export function TopNavbar() {
                   <button
                     type="button"
                     onClick={() => setIsOpen(true)}
-                    className="md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/60 hover:bg-white/85 backdrop-blur-md border border-neutral-200 hover:border-neutral-300 flex items-center justify-center text-neutral-800 shadow-2xs transition-all cursor-pointer shrink-0"
+                    className="md:hidden w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400 flex items-center justify-center text-neutral-900 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer shrink-0"
                     aria-label="Open Navigation Menu"
                     aria-expanded={isOpen}
                   >
-                    <Menu size={20} strokeWidth={2.2} />
+                    <Menu size={21} strokeWidth={2.2} />
                   </button>
                 </div>
               </div>
@@ -631,7 +653,7 @@ export function TopNavbar() {
             >
               {/* Drawer Header */}
               <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">
-                <BrandLogo size="44px" />
+                <BrandLogo size="50px" />
                 <button
                   onClick={() => setIsOpen(false)}
                   className="w-10 h-10 rounded-full bg-neutral-100/80 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer"
@@ -665,23 +687,23 @@ export function TopNavbar() {
                         }}
                         className="w-full flex flex-col items-start"
                       >
-                        <div className="flex items-center justify-between w-full group py-1">
+                        <div className="flex items-center justify-between w-full group py-0.5">
                           {hasSubMenu ? (
                             <button
                               onClick={() =>
                                 setOpenAccordion(openAccordion === accordionId ? null : accordionId)
                               }
-                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2.5 px-2 rounded-xl hover:bg-neutral-100/70 ${
+                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
                                 active || openAccordion === accordionId
                                   ? 'text-primary bg-neutral-100/50'
                                   : 'text-neutral-800'
                               }`}
                             >
                               <span>{link.label}</span>
-                              <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
                                 <ChevronDown
-                                  size={15}
-                                  strokeWidth={2}
+                                  size={13}
+                                  strokeWidth={2.2}
                                   className={`transition-transform duration-200 ${
                                     openAccordion === accordionId
                                       ? 'rotate-180 text-black'
@@ -693,7 +715,7 @@ export function TopNavbar() {
                           ) : (
                             <Link
                               onClick={() => setIsOpen(false)}
-                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2.5 px-2 rounded-xl hover:bg-neutral-100/70 ${
+                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
                                 active
                                   ? 'text-primary bg-[#f7bb0e]/15 font-extrabold'
                                   : 'text-neutral-800'
@@ -756,16 +778,25 @@ export function TopNavbar() {
                         delay: 0.04 + navLinks.length * 0.04,
                         duration: 0.3,
                       }}
-                      className="w-full py-1"
+                      className="w-full pt-2 pb-1"
                     >
                       <Link
                         onClick={() => setIsOpen(false)}
-                        className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2.5 px-3 rounded-xl bg-neutral-100/80 hover:bg-neutral-200/80 text-neutral-900"
+                        className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-3 px-3.5 rounded-xl bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.98] text-white shadow-sm shadow-[#283618]/25"
                         to="/admin"
                       >
-                        <span>Admin Portal</span>
-                        {hasPendingInvite && (
-                          <span className="relative w-2 h-2 rounded-full bg-[#ff4d4f] shadow-xs" />
+                        <span className="flex items-center gap-2">
+                          <LayoutGrid size={15} strokeWidth={2.2} className="text-[#f7bb0e]" />
+                          <span>Admin Portal</span>
+                        </span>
+                        {hasPendingInvite ? (
+                          <span className="relative w-2 h-2 rounded-full bg-[#f7bb0e] shadow-xs" />
+                        ) : (
+                          <ChevronRight
+                            size={16}
+                            strokeWidth={2.2}
+                            className="text-white/80 group-hover:translate-x-0.5 transition-transform"
+                          />
                         )}
                       </Link>
                     </motion.li>
@@ -788,8 +819,11 @@ export function TopNavbar() {
                       onClick={() => setIsOpen(false)}
                       className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
                     >
-                      <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                      <div className="relative w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
                         <Heart size={18} strokeWidth={1.8} />
+                        {wishlistCount > 0 && (
+                          <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white shadow-xs" />
+                        )}
                       </div>
                       <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
                         Wishlist
@@ -880,6 +914,8 @@ export function TopNavbar() {
             initialMode={search.initialMode}
             query={search.query}
             setQuery={search.setQuery}
+            isShowingResults={search.isShowingResults}
+            setIsShowingResults={search.setIsShowingResults}
             suggestions={search.suggestions}
             predictedCategories={search.predictedCategories}
             trendingSearches={search.trendingSearches}

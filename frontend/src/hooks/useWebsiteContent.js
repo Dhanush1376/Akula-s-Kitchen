@@ -18,9 +18,11 @@ const listeners = new Set();
 
 // Try to initialize globalCache synchronously from localStorage or fallback to initialWebsiteContent
 try {
-  const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (cached) {
-    globalCache = JSON.parse(cached);
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+    const cached = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (cached) {
+      globalCache = JSON.parse(cached);
+    }
   }
 } catch (e) {
   logger.warn('Failed to load cached website content from localStorage', e);
@@ -48,7 +50,9 @@ export const refreshWebsiteContent = async () => {
         mergedContent.hero = { ...initialWebsiteContent.hero, ...response.data.hero };
       }
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedContent));
+        if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+          window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedContent));
+        }
       } catch (_e) {}
       updateGlobalCache(mergedContent);
       return mergedContent;

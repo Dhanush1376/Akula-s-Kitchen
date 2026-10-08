@@ -69,7 +69,7 @@ export function BottomNav() {
       label: 'Wishlist',
       icon: 'heart',
       path: '/wishlist',
-      badgeCount: wishlistCount,
+      showBadge: wishlistCount > 0,
     },
     isAuthenticated
       ? {
@@ -185,20 +185,22 @@ function NavIcon({ active, icon, label, badgeCount, showBadge }) {
       <div
         className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
           active
-            ? 'bg-white/90 text-black shadow-[0_2px_8px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/80'
-            : 'bg-transparent text-neutral-600 group-hover:bg-white/50 group-hover:text-black'
+            ? 'bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/90'
+            : 'bg-transparent text-[#1c2511] group-hover:bg-white/60 group-hover:text-black'
         }`}
       >
         <Icon
           size={19}
-          strokeWidth={active ? 2.2 : 1.8}
-          className={`transition-colors ${active ? 'text-black' : 'text-neutral-700 group-hover:text-black'}`}
+          strokeWidth={active ? 2.5 : 2.2}
+          className={`transition-colors ${active ? 'text-black' : 'text-[#1c2511] group-hover:text-black'}`}
           aria-hidden="true"
         />
 
         {/* Wishlist / Cart badge or notification dot */}
         {badgeCount > 0 ? (
-          <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white shadow-xs" />
+          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-[#283618] text-[#f7bb0e] text-[9.5px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
+            {badgeCount}
+          </span>
         ) : showBadge ? (
           <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white shadow-xs" />
         ) : null}
@@ -206,7 +208,7 @@ function NavIcon({ active, icon, label, badgeCount, showBadge }) {
 
       <span
         className={`text-[9.5px] leading-tight mt-0.5 transition-colors ${
-          active ? 'font-bold text-black' : 'font-medium text-neutral-500 group-hover:text-black'
+          active ? 'font-black text-black' : 'font-bold text-[#1c2511]/90 group-hover:text-black'
         }`}
       >
         {label}

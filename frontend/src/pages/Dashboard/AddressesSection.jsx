@@ -1,4 +1,4 @@
-import { Plus, ArrowRight, MapPin } from 'lucide-react';
+import { Plus, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDashboard } from '../../context/DashboardContext';
 import { AddressCard } from '../../components/dashboard/AddressCard';
@@ -31,7 +31,7 @@ export function AddressesSection({ isDrawer = false }) {
             <MapPin className="w-3.5 h-3.5" strokeWidth={2} />
           </div>
           <span className="text-[12px] font-semibold text-neutral-900 tracking-normal font-sans">
-            Saved Delivery Addresses
+            Delivery Addresses
           </span>
           <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100/90 px-1.5 py-0.5 rounded-full border border-neutral-200/50">
             {addresses?.length || 0}
@@ -61,7 +61,7 @@ export function AddressesSection({ isDrawer = false }) {
             setIsAddressModalOpen(true);
           }}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white bg-[#283618] hover:bg-[#1f2b13] transition-all tracking-normal cursor-pointer shadow-2xs active:scale-95 group shrink-0"
-          title="Add New Delivery Destination"
+          title="Add New Address"
         >
           <Plus size={12} strokeWidth={2.4} />
           <span>Add New</span>
@@ -90,60 +90,65 @@ export function AddressesSection({ isDrawer = false }) {
       )}
 
       {addresses.length === 0 && !isAddressesLoading && (
-        <div className="bg-surface-bright rounded-xl p-8 text-center shadow-sm flex flex-col items-center justify-center min-h-[35vh] relative overflow-hidden border border-black/5">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#000000]/5 rounded-full blur-3xl pointer-events-none" />
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="w-16 h-16 rounded-full bg-[#000000]/5 text-[#000000] flex items-center justify-center mb-5 relative"
-          >
-            <div
-              className="absolute inset-0 rounded-full border border-[#000000]/20 animate-ping"
-              style={{ animationDuration: '3s' }}
-            />
-            <span className="material-symbols-outlined text-[24px] relative z-10">pin_drop</span>
-          </motion.div>
-          <h3 className="font-display font-medium text-[18px] lg:text-[20px] text-black mb-2">
-            No Delivery Sites
-          </h3>
-          <p className="text-[11px] text-black/40 max-w-[280px] mb-6 leading-normal">
-            Configure your delivery locations or event site parameters here.
-          </p>
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => {
-                setEditingAddressId('new');
-                setAddressFormData({
-                  id: 'new',
-                  name: user?.name || '',
-                  phone: user?.phone || '',
-                  alternatePhone: '',
-                  email: user?.email || '',
-                  pincode: '',
-                  locality: '',
-                  addressString: '',
-                  landmark: '',
-                  city: '',
-                  state: '',
-                  country: 'India',
-                  tag: 'Home',
-                  deliveryInstructions: '',
-                  latitude: null,
-                  longitude: null,
-                });
-                setIsAddressModalOpen(true);
-              }}
-              className="group flex items-center gap-2 text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.2em] text-[#000000] pb-2 border-b-[1.5px] border-[#000000] transition-all hover:opacity-70 bg-transparent outline-none cursor-pointer"
-            >
-              Add New Site
-              <ArrowRight
-                className="text-[16px] transition-transform group-hover:translate-x-1"
-                strokeWidth={1.5}
-              />
-            </button>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className={`bg-white border border-neutral-200/80 rounded-2xl ${
+            isDrawer ? 'p-6 py-8 min-h-[250px]' : 'p-8 sm:p-10 min-h-[290px]'
+          } text-center shadow-2xs flex flex-col items-center justify-center relative overflow-hidden`}
+        >
+          {/* Subtle warm ambient glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#fae182]/15 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Refined Brand Icon Badge */}
+          <div className="w-16 h-16 rounded-full bg-[#fef9e7] border border-[#fae182] flex items-center justify-center mb-4 relative shadow-xs">
+            <MapPin className="w-7 h-7 text-[#283618] relative z-10" strokeWidth={1.8} />
           </div>
-        </div>
+
+          <h3 className="font-bold text-[17px] sm:text-[19px] text-neutral-900 tracking-tight mb-2">
+            No Saved Addresses
+          </h3>
+          <p className="font-body text-[12.5px] sm:text-[13px] text-neutral-500 font-medium max-w-[320px] mx-auto leading-relaxed mb-6">
+            Add your address for 1-click checkout delivery.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEditingAddressId('new');
+              setAddressFormData({
+                id: 'new',
+                name: user?.name || '',
+                phone: user?.phone || '',
+                alternatePhone: '',
+                email: user?.email || '',
+                pincode: '',
+                locality: '',
+                addressString: '',
+                landmark: '',
+                city: '',
+                state: '',
+                country: 'India',
+                tag: 'Home',
+                deliveryInstructions: '',
+                latitude: null,
+                longitude: null,
+              });
+              setIsAddressModalOpen(true);
+            }}
+            className="inline-flex items-center justify-between gap-3.5 pl-5 pr-1.5 py-1 min-h-[44px] rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm hover:shadow-md active:scale-[0.98] border border-[#283618] group select-none cursor-pointer"
+          >
+            <span>Add Delivery Address</span>
+            <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+              <Plus
+                className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90"
+                strokeWidth={2.5}
+                aria-hidden="true"
+              />
+            </span>
+          </button>
+        </motion.div>
       )}
     </motion.div>
   );

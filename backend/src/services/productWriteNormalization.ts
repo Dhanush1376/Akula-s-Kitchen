@@ -17,7 +17,7 @@ export function normalizeProductImages(data: Partial<IProduct>, existingProduct?
 
   const orderedImages = [...(imageSrc ? [imageSrc] : []), ...(rawImages || [])]
     .map((img) => (typeof img === 'string' ? img.trim() : ''))
-    .filter(Boolean);
+    .filter((img) => Boolean(img) && !img.startsWith('blob:'));
   const uniqueImages = Array.from(new Set(orderedImages));
 
   if (uniqueImages.length > 4) {

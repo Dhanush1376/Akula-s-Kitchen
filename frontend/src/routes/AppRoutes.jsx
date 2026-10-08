@@ -41,9 +41,6 @@ const ProductListing = lazy(() =>
 const ProductDetails = lazy(() =>
   import('../pages/ProductDetails').then((m) => ({ default: m.ProductDetails })),
 );
-const ProductAllReviews = lazy(() =>
-  import('../pages/ProductAllReviews').then((m) => ({ default: m.ProductAllReviews })),
-);
 const ProductReviewImages = lazy(() =>
   import('../pages/ProductReviewImages').then((m) => ({ default: m.ProductReviewImages })),
 );
@@ -203,7 +200,7 @@ export function AppRoutes() {
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/collections" element={<ProductListing />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
-                <Route path="/product/:id/reviews" element={<ProductAllReviews />} />
+                <Route path="/product/:id/reviews" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews/images" element={<ProductReviewImages />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/about" element={<Navigate to="/" replace />} />
@@ -236,6 +233,12 @@ export function AppRoutes() {
                 <Route
                   path="/terms"
                   element={<Navigate to="/policy/terms-and-conditions" replace />}
+                />
+                <Route path="/return" element={<Navigate to="/policy/return-policy" replace />} />
+                <Route path="/returns" element={<Navigate to="/policy/return-policy" replace />} />
+                <Route
+                  path="/exchange"
+                  element={<Navigate to="/policy/exchange-policy" replace />}
                 />
                 <Route path="/accept-invite" element={<AcceptInvite />} />
                 <Route path="*" element={<NotFound />} />

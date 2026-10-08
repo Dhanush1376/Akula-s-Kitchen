@@ -83,10 +83,10 @@ export default function TargetDeliveryDatePicker({ needByDate, setNeedByDate }) 
 
       <div
         onClick={handleOpenDatePicker}
-        className={`group relative flex items-center justify-between w-full h-11 sm:h-12 rounded-[8px] border px-3.5 sm:px-4 shadow-xs hover:shadow-sm cursor-pointer transition-all ${
+        className={`group relative flex items-center justify-between w-full h-12 rounded-2xl border px-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.06)] cursor-pointer transition-all ${
           needByDate
             ? 'border-[#283618] bg-[#f9faf7] ring-1 ring-[#283618]/20'
-            : 'border-neutral-200 bg-white hover:border-neutral-300 focus-within:border-[#283618] focus-within:ring-1 focus-within:ring-[#283618]/20'
+            : 'border-neutral-300 bg-white hover:border-neutral-400 focus-within:border-[#283618] focus-within:ring-1 focus-within:ring-[#283618]/20'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">

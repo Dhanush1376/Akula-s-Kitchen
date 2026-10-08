@@ -16,7 +16,6 @@ export function Footer() {
     storeName,
     storeNameUpper,
     storeTagline,
-    cin: configCin,
     supportEmail: configEmail,
     supportPhone: configPhone,
     alternatePhone: configAltPhone,
@@ -109,6 +108,8 @@ export function Footer() {
     { label: 'Refund Policy', href: '/policy/refund-policy' },
     { label: 'Exchange Policy', href: '/policy/exchange-policy' },
     { label: 'Return Policy', href: '/policy/return-policy' },
+    { label: 'Cancellation Policy', href: '/policy/cancellation-policy' },
+    { label: 'Privacy Policy', href: '/policy/privacy-policy' },
   ];
 
   const policyLinks =
@@ -300,11 +301,6 @@ export function Footer() {
               {footer?.copyright?.replace('{year}', currentYear.toString()) ||
                 `© ${currentYear} ${businessName}. All rights reserved.`}
             </span>
-            {(settings?.legal?.cin || configCin) && (
-              <span className="text-neutral-500 font-mono text-[9.5px] sm:text-[11px]">
-                • CIN: {settings?.legal?.cin || configCin}
-              </span>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 sm:gap-x-5 gap-y-1">

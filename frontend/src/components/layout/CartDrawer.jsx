@@ -189,7 +189,7 @@ export function CartDrawer({ isOpen, onClose }) {
                         <span>In Your Bag</span>
                       </div>
                       <div className="space-y-3">
-                        <AnimatePresence mode="popLayout">
+                        <AnimatePresence mode="popLayout" initial={false}>
                           {items.map((item) => {
                             const itemImage = getItemImage(item);
                             return (
@@ -203,7 +203,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                   x: -30,
                                   transition: { duration: 0.2 },
                                 }}
-                                key={`${item.id || item._id}-${item.variant || ''}`}
+                                key={`${item.id || item._id || item.productId}_${item.variant || 'Default'}`}
                                 className="relative flex gap-3 p-3 rounded-2xl bg-gradient-to-br from-white to-[#fafafa] border border-black/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 group"
                               >
                                 <div className="w-[74px] h-[92px] rounded-[12px] overflow-hidden flex-shrink-0 bg-[#f5f5f5] relative shadow-inner border border-black/[0.03]">

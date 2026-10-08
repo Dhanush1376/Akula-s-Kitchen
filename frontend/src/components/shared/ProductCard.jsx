@@ -14,10 +14,19 @@ import { DynamicRatingBadge } from '../ui/DynamicRatingBadge';
 import { useQuickView } from '../../context/QuickViewContext';
 import { ProductConfiguratorModal } from '../products/ProductConfiguratorModal';
 
+const extractMediaUrl = (url) => {
+  if (!url) return '';
+  if (typeof url === 'string') return url.trim();
+  if (typeof url === 'object') {
+    return (url.secureUrl || url.secure_url || url.url || url.path || '').trim();
+  }
+  return '';
+};
+
 const isValidMediaUrl = (url) => {
-  if (!url || typeof url !== 'string') return false;
-  const trimmed = url.trim();
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return false;
+  const resolved = extractMediaUrl(url);
+  if (!resolved) return false;
+  if (resolved === 'undefined' || resolved === 'null') return false;
   return true;
 };
 
@@ -103,14 +112,19 @@ export const ProductCard = React.memo(function ProductCard({
 
   const availableImages = React.useMemo(() => {
     const imgs = [];
-    if (isValidMediaUrl(imageSrc)) imgs.push(imageSrc);
+    const mainUrl = extractMediaUrl(imageSrc);
+    if (isValidMediaUrl(mainUrl)) imgs.push(mainUrl);
     const imageList = images || gallery || [];
     if (imageList.length > 0) {
       imageList.forEach((img) => {
-        if (isValidMediaUrl(img) && !imgs.includes(img)) imgs.push(img);
+        const u = extractMediaUrl(img);
+        if (isValidMediaUrl(u) && !imgs.includes(u)) imgs.push(u);
       });
-    } else if (isValidMediaUrl(hoverImage) && hoverImage !== imageSrc) {
-      imgs.push(hoverImage);
+    } else {
+      const hUrl = extractMediaUrl(hoverImage);
+      if (isValidMediaUrl(hUrl) && hUrl !== mainUrl) {
+        imgs.push(hUrl);
+      }
     }
     return imgs;
   }, [imageSrc, hoverImage, gallery, images]);
@@ -213,8 +227,10 @@ export const ProductCard = React.memo(function ProductCard({
 
     attemptAddToCart({
       id: productId,
+      _id: productId,
+      productId,
       title,
-      price,
+      price: numericPrice,
       imageSrc,
       quantity: 1,
       variant: 'Default',
@@ -296,7 +312,7 @@ export const ProductCard = React.memo(function ProductCard({
             {availableImages.length > 1 && (
               <>
                 {/* Dots Indicator */}
-                <div className="absolute bottom-3 left-3 lg:bottom-4 lg:left-4 flex items-center gap-1.5 z-20 bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-sm pointer-events-auto">
+                <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3 flex items-center gap-1.5 z-20 bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-sm pointer-events-auto">
                   {availableImages.map((_, i) => (
                     <div
                       key={i}
@@ -336,7 +352,8 @@ export const ProductCard = React.memo(function ProductCard({
                 </div>
               </>
             )}
-            {/* Top Header Row: Badges on left, Wishlist on right */}
+
+            {/* Top Header Row: Wishlist on right */}
             <div className="absolute top-2 left-2 right-2 sm:top-2.5 sm:left-2.5 sm:right-2.5 z-20 flex items-start justify-end gap-1.5 pointer-events-none">
               {/* Wishlist Button */}
 
@@ -454,7 +471,7 @@ export const ProductCard = React.memo(function ProductCard({
           className={`${compact ? 'pt-2 pb-1 px-1.5' : 'pt-3 pb-2 px-3.5 lg:px-4'} flex flex-col flex-1 transition-opacity duration-500 ${hideDetails ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         >
           <div
-            className={`flex items-center gap-2 h-4 lg:h-5 ${compact ? 'mb-0.5' : 'mb-1 sm:mb-1.5'} max-w-[62%]`}
+            className={`flex items-center gap-1.5 h-4 lg:h-5 ${compact ? 'mb-0.5' : 'mb-1 sm:mb-1.5'} max-w-[65%]`}
           >
             <span
               className={`text-[#525252] ${compact ? 'text-[10px]' : 'text-[11px] lg:text-[12px]'} font-semibold truncate leading-none`}
@@ -462,14 +479,20 @@ export const ProductCard = React.memo(function ProductCard({
               {resolveCategoryName(primaryCategory, category)}
             </span>
 
-            <div className="flex items-center gap-0.5 shrink-0">
-              <DynamicRatingBadge
-                itemId={productId}
-                initialRating={rating}
-                initialReviews={reviews}
-                compact={compact}
-              />
-            </div>
+            {reviews > 0 && (
+              <>
+                <span className="text-neutral-300 text-[9px] sm:text-[10px] select-none leading-none">
+                  |
+                </span>
+                <DynamicRatingBadge
+                  itemId={productId}
+                  initialRating={rating}
+                  initialReviews={reviews}
+                  compact={compact}
+                  showReviewsCount={false}
+                />
+              </>
+            )}
           </div>
 
           <Link to={productRoute} className={`group/link block ${compact ? 'mb-0' : 'mb-0.5'}`}>
@@ -484,7 +507,7 @@ export const ProductCard = React.memo(function ProductCard({
             </h3>
           </Link>
 
-          <div className={`${compact ? 'mt-1' : 'mt-1.5'} flex flex-col justify-end`}>
+          <div className={`${compact ? 'mt-0.5' : 'mt-1'} flex flex-col justify-end`}>
             <div className="flex items-baseline gap-2 flex-wrap">
               <span
                 className={`font-serif-heading lining-nums font-extrabold text-neutral-950 leading-none inline-flex items-baseline ${compact ? 'text-[13px] lg:text-[14px]' : 'text-[15px] sm:text-[16px] lg:text-[17px]'}`}

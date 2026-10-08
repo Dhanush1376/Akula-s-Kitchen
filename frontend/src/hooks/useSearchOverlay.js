@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAutocomplete, useTrendingSearches, useDiscoveryData } from './useSearchQueries';
 import { useSearchAnalytics } from './useSearchAnalytics';
 import { useScrollLock } from './useScrollLock';
@@ -15,13 +14,11 @@ export function useSearchOverlay() {
   const [initialMode, setInitialMode] = useState('text');
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [isShowingResults, setIsShowingResults] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const abortControllerRef = useRef(null);
-  const navigate = useNavigate();
   const { trackEvent } = useSearchAnalytics();
-
-  // Load recent searches from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
@@ -134,6 +131,7 @@ export function useSearchOverlay() {
     setQuery('');
     setDebouncedQuery('');
     setActiveIndex(-1);
+    setIsShowingResults(false);
   }, []);
 
   // Global keyboard shortcuts: Cmd+K / Ctrl+K, or "/" when not already typing somewhere
@@ -204,30 +202,26 @@ export function useSearchOverlay() {
     }
   }, []);
 
-  // Navigate to a suggestion
+  // Show results in overlay when a suggestion is clicked (do not navigate to shop page)
   const selectSuggestion = useCallback(
     (suggestion) => {
-      saveRecentSearch(suggestion.title || query);
+      const term = suggestion.title || query;
+      saveRecentSearch(term);
       trackEvent('suggestion_clicked', debouncedQuery, {
         itemId: suggestion.id,
         itemType: suggestion.type,
         itemTitle: suggestion.title,
       });
 
-      if (suggestion.type === 'category') {
-        navigate(`/collections?category=${encodeURIComponent(suggestion.title)}`);
-      } else if (suggestion.type === 'product') {
-        navigate(`/product/${suggestion.slug || suggestion.id}`);
-      } else {
-        navigate(`/collections?search=${encodeURIComponent(suggestion.title)}`);
-      }
-
-      handleClose();
+      // Keep user in search overlay and show matching results right inside it
+      setQuery(term);
+      setDebouncedQuery(term);
+      setIsShowingResults(true);
     },
-    [navigate, query, debouncedQuery, saveRecentSearch, handleClose, trackEvent],
+    [query, debouncedQuery, saveRecentSearch, trackEvent],
   );
 
-  // Execute a full search
+  // Execute search within overlay
   const executeSearch = useCallback(
     (searchQuery) => {
       const q = (searchQuery || query).trim();
@@ -236,11 +230,12 @@ export function useSearchOverlay() {
       saveRecentSearch(q);
       trackEvent('search_executed', q);
 
-      navigate(`/collections?search=${encodeURIComponent(q)}`);
-
-      handleClose();
+      // Keep user in search overlay and show matching results right inside it
+      setQuery(q);
+      setDebouncedQuery(q);
+      setIsShowingResults(true);
     },
-    [navigate, query, saveRecentSearch, handleClose, trackEvent],
+    [query, saveRecentSearch, trackEvent],
   );
 
   // Handle keyboard navigation
@@ -286,6 +281,8 @@ export function useSearchOverlay() {
     initialMode,
     query,
     setQuery,
+    isShowingResults,
+    setIsShowingResults,
     suggestions,
     predictedCategories,
     correctedQuery,

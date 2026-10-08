@@ -1,4 +1,4 @@
-import { Mic, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SEARCH_HINTS } from './categoryIcons';
 import './searchOverlay.css';
@@ -6,7 +6,7 @@ import './searchOverlay.css';
 /**
  * The search pill in the header. Its placeholder rolls through real things people look
  * for, so it reads as an invitation rather than a blank box. Tapping anywhere opens the
- * search panel; the mic opens it straight into voice search.
+ * search panel.
  */
 export function SearchTrigger({ onOpen }) {
   const [hint, setHint] = useState(0);
@@ -45,18 +45,6 @@ export function SearchTrigger({ onOpen }) {
       <kbd className="st-pill__kbd" aria-hidden="true">
         /
       </kbd>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpen('voice');
-        }}
-        className="st-pill__mic"
-        aria-label="Search by voice"
-        title="Search by voice"
-      >
-        <Mic size={16} strokeWidth={2.2} />
-      </button>
     </div>
   );
 }

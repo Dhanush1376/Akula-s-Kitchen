@@ -135,7 +135,7 @@ export default function CodOtpVerificationSection({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="mb-4 rounded-lg border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm space-y-3.5"
+          className="mb-4 rounded-2xl border border-neutral-300 bg-white p-4 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)] space-y-3.5"
         >
           {/* Header */}
           <div className="flex items-center justify-between gap-2 border-b border-neutral-200 pb-3">
@@ -154,7 +154,7 @@ export default function CodOtpVerificationSection({
             <div className="space-y-3.5">
               {/* Channel Selector if configured as 'both' and OTP not yet sent */}
               {configuredCodChannel === 'both' && !codOtpSent && (
-                <div className="flex items-center gap-2.5 bg-neutral-50 p-1.5 rounded-lg border border-neutral-200">
+                <div className="flex items-center gap-2.5 bg-neutral-50/80 p-1.5 rounded-xl border border-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                   <span className="text-[10px] uppercase tracking-wider font-extrabold text-neutral-500 px-2 shrink-0">
                     Verify via:
                   </span>
@@ -197,7 +197,7 @@ export default function CodOtpVerificationSection({
                   </span>
                 </div>
               ) : !codOtpSent ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-50 border border-neutral-200 p-3.5 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-50/80 border border-neutral-300 p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[12px] text-neutral-600 font-medium">
                       {isEmailActive ? 'Send OTP to email:' : 'Send OTP to phone:'}
@@ -215,7 +215,7 @@ export default function CodOtpVerificationSection({
                     type="button"
                     onClick={handleSendCodOtp}
                     disabled={isSendingOtp || isProcessing}
-                    className="bg-[#283618] text-white hover:bg-[#1f2b13] border border-[#283618] h-10 pl-4 pr-1.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider shadow-sm transition-all cursor-pointer flex items-center justify-between gap-2.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 group"
+                    className="bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border border-[#f7bb0e] h-10 pl-4 pr-1.5 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider shadow-[0_2px_0_0_#d99b00,0_4px_12px_rgba(247,187,14,0.3)] transition-all cursor-pointer flex items-center justify-between gap-2.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 group"
                   >
                     {isSendingOtp ? (
                       <div className="flex items-center gap-1.5 pr-2">
@@ -225,7 +225,7 @@ export default function CodOtpVerificationSection({
                     ) : (
                       <>
                         <span>Send OTP</span>
-                        <span className="w-7 h-7 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                        <span className="w-7 h-7 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
                           <ArrowRight
                             className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
                             strokeWidth={2.5}
@@ -236,7 +236,7 @@ export default function CodOtpVerificationSection({
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3.5 bg-neutral-50 border border-neutral-200 p-4 rounded-lg">
+                <div className="space-y-3.5 bg-neutral-50/80 border border-neutral-200/80 p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                   <div className="text-center sm:text-left">
                     <p className="text-[12px] text-neutral-800 font-medium">
                       Enter the 6-digit OTP sent to {isEmailActive ? 'email' : 'phone'}:{' '}
@@ -291,7 +291,7 @@ export default function CodOtpVerificationSection({
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-lg text-emerald-900"
+              className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-xl text-emerald-900 shadow-[0_2px_8px_rgba(16,185,129,0.08)]"
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
               <div className="flex-1 min-w-0 text-xs">

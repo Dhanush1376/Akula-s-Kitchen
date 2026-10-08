@@ -17,7 +17,20 @@ export function getRouteSkeletonVariant(path) {
   if (path.startsWith('/blog/')) return 'blog-post';
   if (path.startsWith('/track/')) return 'order-tracking';
   if (path === '/order-success') return 'order-success';
-  if (['/shipping', '/returns', '/privacy', '/terms'].includes(path)) return 'policy';
+  if (
+    [
+      '/shipping',
+      '/refund',
+      '/cancellation',
+      '/return',
+      '/returns',
+      '/exchange',
+      '/privacy',
+      '/terms',
+    ].includes(path) ||
+    path.startsWith('/policy')
+  )
+    return 'policy';
   if (path.startsWith('/admin')) return 'admin';
 
   return 'page';

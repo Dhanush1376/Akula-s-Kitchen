@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { m as motion } from 'framer-motion';
 import {
   ArrowRight,
   CheckCircle2,
@@ -7,26 +10,22 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  Send,
 } from 'lucide-react';
-import { m as motion, AnimatePresence } from 'framer-motion';
 import { SEO } from '../components/seo/SEO';
 import { ContactSkeleton } from '../components/ui/Skeleton';
-import { useState, useEffect, useRef } from 'react';
 import { useWebsiteContent } from '../hooks/useWebsiteContent';
 import { inquiryService } from '../services/domainServices';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 import storeSettingsService from '../services/api/storeSettingsService';
-import { windBreeze } from '../components/effects/FallingLeaves';
-import './contact.css';
 import { useCategories } from '../hooks/useProductQueries';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
 import { BRAND, formatPhoneWithCountryCode, cleanPhoneDigits } from '../config/brand';
-
 import logger from '../utils/core/logger';
-
 import GPSMap from './GPSMapLazy';
+import { AppDrawer } from '../components/ui/AppDrawer';
 
 export function Contact() {
   const { storeName, supportEmail, supportPhone, alternatePhone, whatsappNumber } = useConfig();
@@ -38,8 +37,30 @@ export function Contact() {
   });
 
   const { data: categories = [] } = useCategories();
-
   const { user } = useAuth();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const drawerParam = searchParams.get('drawer');
+    if (drawerParam === 'message' || drawerParam === 'contact' || drawerParam === 'inquiry') {
+      setIsDrawerOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    if (searchParams.get('drawer')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('drawer');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
+
+  const handleOpenDrawer = () => {
+    setIsDrawerOpen(true);
+  };
 
   const [formState, setFormState] = useState('idle'); // idle, sending, success
   const [formData, setFormData] = useState({
@@ -50,13 +71,6 @@ export function Contact() {
     message: '',
   });
   const [otherSubject, setOtherSubject] = useState('');
-  const leafRef = useRef(null);
-
-  // The corner leaf drifts in a slow breeze, like the leaves elsewhere on the site
-  useEffect(() => {
-    const breeze = windBreeze(leafRef.current, { strength: 0.45 });
-    return () => breeze?.cancel();
-  }, [loading, settingsLoading]);
 
   useEffect(() => {
     if (user) {
@@ -144,305 +158,418 @@ export function Contact() {
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressDisplay)}`
       : 'https://maps.google.com');
 
-  // The three fastest ways to reach the kitchen, as large tappable cards
-  const quickContacts = [
-    {
-      key: 'whatsapp',
-      label: 'WhatsApp',
-      hint: 'Quickest reply',
-      value: whatsappDisplay,
-      href: BRAND.getWhatsAppUrl(null, whatsappDisplay),
-      external: true,
-      Icon: MessageCircle,
-    },
-    {
-      key: 'call',
-      label: 'Call us',
-      hint: hoursDisplay,
-      value: primaryPhoneDisplay,
-      href: `tel:${cleanPhoneDigits(primaryPhoneDisplay)}`,
-      Icon: Phone,
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      hint: 'We reply within a day',
-      value: emailDisplay,
-      href: `mailto:${emailDisplay}`,
-      Icon: Mail,
-    },
-  ].filter((c) => c.value);
-
-  const showAlternate = alternatePhoneDisplay && alternatePhoneDisplay !== primaryPhoneDisplay;
-
   if (loading || settingsLoading) return <ContactSkeleton />;
 
   return (
-    <div className="ct-page">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+      className="min-h-screen pt-44 sm:pt-48 lg:pt-52 pb-[calc(var(--bottom-nav-height,65px)+3.5rem)] lg:pb-24 bg-white text-on-surface selection:bg-[#f7bb0e]/30 selection:text-[#283618] relative"
+    >
       <SEO
-        title="Contact Us"
-        description={`Get in touch with ${storeName || "Akula's Kitchen"} about orders, bulk requests or anything else. We're happy to help.`}
+        title={`Contact Us | ${storeName || "Akula's Kitchen"}`}
+        description={`Get in touch with ${storeName || "Akula's Kitchen"} about orders, catering, or culinary queries. We're happy to help.`}
       />
 
-      {/* Hero: cream panel with a banana leaf rising from the corner */}
-      <section className="ct-hero" aria-labelledby="ct-title">
-        <div className="ct-hero__panel">
-          <div className="ct-hero__leaf" aria-hidden="true">
-            <div ref={leafRef} className="ct-hero__leaf-sway">
-              <img
-                src="/account/corner-leaf-right.webp"
-                alt=""
-                className="ct-hero__leaf-shadow"
-                draggable="false"
-                decoding="async"
-              />
-              <img
-                src="/account/corner-leaf-right.webp"
-                alt=""
-                className="ct-hero__leaf-img"
-                draggable="false"
-                decoding="async"
-              />
-            </div>
-          </div>
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
+        {/* Breadcrumb Navigation */}
+        <nav
+          aria-label="Breadcrumb"
+          className="text-[7.5px] sm:text-[8px] uppercase font-medium tracking-[0.14em] text-[#283618]/50 mb-2 flex items-center gap-1.5 select-none"
+        >
+          <Link to="/" className="hover:text-[#283618] transition-colors">
+            Home
+          </Link>
+          <span className="w-0.5 h-0.5 rounded-full bg-[#283618]/30" />
+          <span>Help Center</span>
+          <span className="w-0.5 h-0.5 rounded-full bg-[#283618]/30" />
+          <span className="text-[#283618]/70 font-semibold">Contact</span>
+        </nav>
 
-          <div className="ct-hero__copy">
-            <p className="ct-eyebrow ct-rise" style={{ '--d': 0 }}>
-              <span className="ct-dot" aria-hidden="true" />
-              We&apos;re here to help
-            </p>
-            <h1 id="ct-title" className="ct-hero__title ct-rise" style={{ '--d': 1 }}>
-              Let&apos;s talk <span>food.</span>
+        {/* Minimal Hero Header with Redesigned Action Button */}
+        <header className="mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-[#283618] tracking-tight mb-2">
+              Contact Us
             </h1>
-            <p className="ct-hero__lede ct-rise" style={{ '--d': 2 }}>
-              A question about an order, a bulk request for a function, or just want to say hello?
-              Reach the kitchen the way that suits you.
+            <p className="text-[9.5px] sm:text-[10px] font-sans font-medium uppercase tracking-[0.16em] text-[#283618]/55 select-none">
+              We&apos;d love to hear from you • Mon – Sat, 10:00 AM to 6:00 PM
             </p>
           </div>
 
-          <ul className="ct-quick">
-            {quickContacts.map(({ key, label, hint, value, href, external, Icon }, i) => (
-              <li key={key} className="ct-rise" style={{ '--d': 3 + i }}>
-                <a
-                  href={href}
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'noopener noreferrer' : undefined}
-                  className={`ct-quick__card ct-quick__card--${key}`}
-                >
-                  <span className="ct-quick__icon" aria-hidden="true">
-                    <Icon strokeWidth={1.8} />
-                  </span>
-                  <span className="ct-quick__text">
-                    <span className="ct-quick__label">{label}</span>
-                    <span className="ct-quick__value">{value}</span>
-                    <span className="ct-quick__hint">{hint}</span>
-                  </span>
-                  <ArrowRight className="ct-quick__go" strokeWidth={2.2} aria-hidden="true" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+          {/* Redesigned Button */}
+          <button
+            type="button"
+            onClick={handleOpenDrawer}
+            className="group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#283618] hover:bg-[#1a2310] active:scale-95 text-white text-[11px] font-sans font-bold uppercase tracking-[0.14em] shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer shrink-0 w-fit"
+          >
+            <Send className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <span>Send a Message</span>
+          </button>
+        </header>
 
-      <main className="ct-main">
-        {/* Form card */}
-        <section className="ct-form-card" aria-labelledby="ct-form-title">
-          <AnimatePresence>
-            {formState === 'success' && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="ct-success"
-              >
-                <span className="ct-success__icon">
-                  <CheckCircle2 strokeWidth={1.6} />
-                </span>
-                <h2 className="ct-success__title">Message received</h2>
-                <p className="ct-success__text">
-                  Thank you! The kitchen will get back to you within one business day.
-                </p>
+        <hr className="border-t border-[#283618]/10 mb-8 sm:mb-10" />
+
+        {/* 2-Column Minimal Layout: Touchpoints & Kitchen Location */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          {/* Left Column: Direct Touchpoints (5 cols) */}
+          <aside className="lg:col-span-5 space-y-6">
+            <div>
+              <h2 className="text-xs uppercase font-bold tracking-wider text-[#283618]/70 mb-3.5">
+                Direct Touchpoints
+              </h2>
+              <div className="space-y-3">
+                {/* Send a Message (Quick Drawer Trigger) */}
                 <button
                   type="button"
-                  onClick={() => setFormState('idle')}
-                  className="ct-btn ct-btn--outline"
+                  onClick={handleOpenDrawer}
+                  className="w-full group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-[#283618]/10 hover:border-[#283618]/30 bg-[#fdfbf7] hover:bg-white transition-all shadow-2xs cursor-pointer text-left"
                 >
-                  Send another message
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+                      <Send className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                        Inquiry
+                      </p>
+                      <p className="text-xs sm:text-[13px] font-bold text-[#1f2937]">
+                        Send an Online Message
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-[#283618] group-hover:translate-x-0.5 transition-all" />
                 </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
-          <p className="ct-eyebrow">
-            <span className="ct-dot" aria-hidden="true" />
-            Send a message
-          </p>
-          <h2 id="ct-form-title" className="ct-form-card__title">
-            Write to the kitchen
-          </h2>
+                {/* WhatsApp */}
+                {whatsappDisplay && (
+                  <a
+                    href={BRAND.getWhatsAppUrl(
+                      'Hi Akula’s Kitchen, I have a query regarding my order.',
+                      whatsappDisplay,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-[#283618]/10 hover:border-[#283618]/30 bg-[#fdfbf7] hover:bg-white transition-all shadow-2xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-600/10 text-emerald-700 flex items-center justify-center shrink-0">
+                        <MessageCircle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                          WhatsApp
+                        </p>
+                        <p className="text-xs sm:text-[13px] font-bold text-[#1f2937]">
+                          {whatsappDisplay}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-[#283618] group-hover:translate-x-0.5 transition-all" />
+                  </a>
+                )}
 
-          <form onSubmit={handleSubmit} className="ct-form">
-            <div className="ct-form__row">
-              <div className="ct-field">
-                <label htmlFor="contact-name">
-                  Your name <span aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="contact-name"
-                  type="text"
-                  required
-                  autoComplete="name"
-                  placeholder="Full name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+                {/* Primary Phone */}
+                {primaryPhoneDisplay && (
+                  <a
+                    href={`tel:${cleanPhoneDigits(primaryPhoneDisplay)}`}
+                    className="group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-[#283618]/10 hover:border-[#283618]/30 bg-[#fdfbf7] hover:bg-white transition-all shadow-2xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                          Helpline
+                        </p>
+                        <p className="text-xs sm:text-[13px] font-bold text-[#1f2937]">
+                          {primaryPhoneDisplay}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-[#283618] group-hover:translate-x-0.5 transition-all" />
+                  </a>
+                )}
+
+                {/* Alternate Phone */}
+                {alternatePhoneDisplay && alternatePhoneDisplay !== primaryPhoneDisplay && (
+                  <a
+                    href={`tel:${cleanPhoneDigits(alternatePhoneDisplay)}`}
+                    className="group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-[#283618]/10 hover:border-[#283618]/30 bg-[#fdfbf7] hover:bg-white transition-all shadow-2xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                          Alternate Helpline
+                        </p>
+                        <p className="text-xs sm:text-[13px] font-bold text-[#1f2937]">
+                          {alternatePhoneDisplay}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-[#283618] group-hover:translate-x-0.5 transition-all" />
+                  </a>
+                )}
+
+                {/* Email */}
+                {emailDisplay && (
+                  <a
+                    href={`mailto:${emailDisplay}`}
+                    className="group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-[#283618]/10 hover:border-[#283618]/30 bg-[#fdfbf7] hover:bg-white transition-all shadow-2xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                          Email
+                        </p>
+                        <p className="text-xs sm:text-[13px] font-bold text-[#1f2937] truncate max-w-[210px] sm:max-w-none">
+                          {emailDisplay}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-[#283618] group-hover:translate-x-0.5 transition-all" />
+                  </a>
+                )}
+
+                {/* Hours Note */}
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-stone-50 border border-stone-200/50 text-[11px] text-stone-600">
+                  <Clock className="w-3.5 h-3.5 text-[#7a5a00] shrink-0" />
+                  <span>Support Hours: {hoursDisplay}</span>
+                </div>
               </div>
-              <div className="ct-field">
-                <label htmlFor="contact-email">
-                  Email <span aria-hidden="true">*</span>
+            </div>
+          </aside>
+
+          {/* Right Column: Kitchen Address & Map (7 cols) */}
+          <main className="lg:col-span-7 space-y-6">
+            <div>
+              <h2 className="text-xs uppercase font-bold tracking-wider text-[#283618]/70 mb-3.5">
+                Kitchen Location & Pickup
+              </h2>
+              <div className="rounded-2xl border border-[#283618]/10 overflow-hidden bg-[#fdfbf7] p-3.5 sm:p-5 space-y-3.5">
+                {addressDisplay && (
+                  <div className="flex items-start gap-2.5 text-xs text-[#374151] leading-relaxed">
+                    <MapPin className="w-4 h-4 text-[#283618] shrink-0 mt-0.5" />
+                    <span>{addressDisplay}</span>
+                  </div>
+                )}
+
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative block rounded-xl overflow-hidden group shadow-2xs border border-[#283618]/10"
+                >
+                  <div className="h-56 sm:h-64 w-full">
+                    <GPSMap
+                      address={{
+                        city: settings?.contact?.city,
+                        state: settings?.contact?.state,
+                        pincode: settings?.contact?.postalCode,
+                      }}
+                    />
+                  </div>
+                  <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[11px] font-semibold text-[#1f2937] shadow-sm group-hover:bg-stone-50 transition-all border border-stone-200/70">
+                    <span>Open in Google Maps</span>
+                    <ExternalLink className="w-3 h-3 text-stone-500" />
+                  </span>
+                </a>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* App Drawer for Sending Inquiry */}
+      <AppDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        title="Send an Inquiry"
+        subtitle="Akula's Kitchen Support"
+        headerIcon={Send}
+        maxWidth="max-w-[480px]"
+      >
+        {formState === 'success' ? (
+          <div className="py-8 px-3 text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-xl text-[#283618] mb-1">Message Sent!</h3>
+              <p className="text-xs text-[#4b5563] max-w-xs mx-auto leading-relaxed">
+                Thank you for reaching out. Our kitchen team has received your note and will get
+                back to you shortly.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setFormState('idle')}
+                className="px-4 py-2 text-xs font-semibold text-[#283618] hover:bg-[#283618]/5 rounded-lg transition-colors cursor-pointer"
+              >
+                Send another
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseDrawer}
+                className="px-6 py-2.5 text-xs font-bold bg-[#283618] text-white rounded-lg hover:bg-[#1f2b13] transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3.5 p-1 pb-4">
+            {/* Name */}
+            <div>
+              <label
+                htmlFor="drawer-contact-name"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-[#374151] mb-1"
+              >
+                Your Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="drawer-contact-name"
+                type="text"
+                required
+                autoComplete="name"
+                placeholder="Full name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#283618]/15 bg-[#faf8f5]/80 focus:bg-white text-xs sm:text-sm text-[#1f2937] placeholder:text-stone-400 focus:outline-none focus:border-[#283618] focus:ring-1 focus:ring-[#283618]/20 transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="drawer-contact-email"
+                  className="block text-[11px] font-semibold uppercase tracking-wider text-[#374151] mb-1"
+                >
+                  Email Address <span className="text-rose-500">*</span>
                 </label>
                 <input
-                  id="contact-email"
+                  id="drawer-contact-email"
                   type="email"
                   required
                   autoComplete="email"
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#283618]/15 bg-[#faf8f5]/80 focus:bg-white text-xs sm:text-sm text-[#1f2937] placeholder:text-stone-400 focus:outline-none focus:border-[#283618] focus:ring-1 focus:ring-[#283618]/20 transition-all"
                 />
               </div>
-            </div>
 
-            <div className="ct-form__row">
-              <div className="ct-field">
-                <label htmlFor="contact-phone">Phone</label>
+              {/* Phone */}
+              <div>
+                <label
+                  htmlFor="drawer-contact-phone"
+                  className="block text-[11px] font-semibold uppercase tracking-wider text-[#374151] mb-1"
+                >
+                  Phone Number
+                </label>
                 <input
-                  id="contact-phone"
+                  id="drawer-contact-phone"
                   type="tel"
                   autoComplete="tel"
                   placeholder="+91"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#283618]/15 bg-[#faf8f5]/80 focus:bg-white text-xs sm:text-sm text-[#1f2937] placeholder:text-stone-400 focus:outline-none focus:border-[#283618] focus:ring-1 focus:ring-[#283618]/20 transition-all"
                 />
               </div>
-              <div className="ct-field">
-                <label htmlFor="contact-subject">
-                  What&apos;s it about? <span aria-hidden="true">*</span>
-                </label>
-                <select
-                  id="contact-subject"
-                  required
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                >
-                  <option value="General Inquiry">General inquiry</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  <option value="Collaboration">Collaboration</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
             </div>
 
-            <AnimatePresence>
-              {formData.subject === 'Other' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="ct-field overflow-hidden"
-                >
-                  <label htmlFor="contact-other">
-                    Please specify <span aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    id="contact-other"
-                    type="text"
-                    required
-                    placeholder="Briefly describe your inquiry"
-                    value={otherSubject}
-                    onChange={(e) => setOtherSubject(e.target.value)}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Topic / Subject */}
+            <div>
+              <label
+                htmlFor="drawer-contact-subject"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-[#374151] mb-1"
+              >
+                Topic <span className="text-rose-500">*</span>
+              </label>
+              <select
+                id="drawer-contact-subject"
+                required
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#283618]/15 bg-[#faf8f5]/80 focus:bg-white text-xs sm:text-sm text-[#1f2937] focus:outline-none focus:border-[#283618] focus:ring-1 focus:ring-[#283618]/20 transition-all"
+              >
+                <option value="General Inquiry">General inquiry</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+                <option value="Event Catering">Bulk & Event Catering</option>
+                <option value="Collaboration">Collaboration / Business</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
 
-            <div className="ct-field">
-              <label htmlFor="contact-message">
-                Message <span aria-hidden="true">*</span>
+            {/* Conditional "Other" input */}
+            {formData.subject === 'Other' && (
+              <div>
+                <label
+                  htmlFor="drawer-contact-other"
+                  className="block text-[11px] font-semibold uppercase tracking-wider text-[#374151] mb-1"
+                >
+                  Specify Topic <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  id="drawer-contact-other"
+                  type="text"
+                  required
+                  placeholder="Brief description of inquiry"
+                  value={otherSubject}
+                  onChange={(e) => setOtherSubject(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#283618]/15 bg-[#faf8f5]/80 focus:bg-white text-xs sm:text-sm text-[#1f2937] placeholder:text-stone-400 focus:outline-none focus:border-[#283618] focus:ring-1 focus:ring-[#283618]/20 transition-all"
+                />
+              </div>
+            )}
+
+            {/* Message */}
+            <div>
+              <label
+                htmlFor="drawer-contact-message"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-[#374151] mb-1"
+              >
+                Message <span className="text-rose-500">*</span>
               </label>
               <textarea
-                id="contact-message"
+                id="drawer-contact-message"
                 required
-                rows={5}
-                placeholder="Tell us what you need: an order question, quantities for a function, a product you're looking for..."
+                rows={4}
+                placeholder="Tell us what you need: order questions, special requests..."
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#283618]/15 bg-[#faf8f5]/80 focus:bg-white text-xs sm:text-sm text-[#1f2937] placeholder:text-stone-400 focus:outline-none focus:border-[#283618] focus:ring-1 focus:ring-[#283618]/20 transition-all resize-y"
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={formState === 'sending'}
-              className="ct-btn ct-btn--primary"
-            >
-              <span>{formState === 'sending' ? 'Sending…' : 'Send message'}</span>
-              <span className="ct-btn__icon" aria-hidden="true">
-                <ArrowRight strokeWidth={2.5} />
-              </span>
-            </button>
-          </form>
-        </section>
-
-        {/* Visit card: address, hours, map */}
-        <aside className="ct-visit" aria-label="Visit the kitchen">
-          <div className="ct-visit__card">
-            <p className="ct-eyebrow">
-              <span className="ct-dot" aria-hidden="true" />
-              Visit the kitchen
-            </p>
-            {addressDisplay && (
-              <div className="ct-visit__row">
-                <MapPin strokeWidth={1.8} aria-hidden="true" />
-                <span>{addressDisplay}</span>
-              </div>
-            )}
-            <div className="ct-visit__row">
-              <Clock strokeWidth={1.8} aria-hidden="true" />
-              <span>{hoursDisplay}</span>
-            </div>
-            {showAlternate && (
-              <a
-                href={`tel:${cleanPhoneDigits(alternatePhoneDisplay)}`}
-                className="ct-visit__row ct-visit__row--link"
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={formState === 'sending'}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 bg-[#283618] hover:bg-[#1f2b13] active:scale-98 disabled:opacity-60 text-white rounded-xl font-sans text-xs uppercase tracking-wider font-bold transition-all shadow-xs cursor-pointer"
               >
-                <Phone strokeWidth={1.8} aria-hidden="true" />
-                <span>{alternatePhoneDisplay}</span>
-              </a>
-            )}
-
-            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="ct-map">
-              {/* Overlay blocks map dragging and turns the whole map into a link */}
-              <span className="ct-map__shield" />
-              <GPSMap
-                address={{
-                  city: settings?.contact?.city,
-                  state: settings?.contact?.state,
-                  pincode: settings?.contact?.postalCode,
-                }}
-              />
-              <span className="ct-map__pill">
-                Open in Google Maps
-                <ExternalLink strokeWidth={2} aria-hidden="true" />
-              </span>
-            </a>
-          </div>
-        </aside>
-      </main>
-    </div>
+                <span>{formState === 'sending' ? 'Sending Inquiry...' : 'Submit Inquiry'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </form>
+        )}
+      </AppDrawer>
+    </motion.div>
   );
 }
+export default Contact;

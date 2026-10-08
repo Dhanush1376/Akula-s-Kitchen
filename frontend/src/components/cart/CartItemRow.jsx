@@ -19,13 +19,24 @@ export const CartItemRow = React.memo(function CartItemRow({
   const savingsPct =
     itemOldPrice > item.price ? Math.round(((itemOldPrice - item.price) / itemOldPrice) * 100) : 0;
 
-  const actualProductId = item.product?._id || item.product?.id || item.id || item._id;
+  const actualProductId =
+    item.productId ||
+    (typeof item.id === 'string' && item.id.includes('___') ? item.id.split('___')[0] : null) ||
+    item.product?._id ||
+    item.product?.id ||
+    (typeof item.id === 'string' && !item.id.includes('___') ? item.id : null) ||
+    (typeof item._id === 'string' && !item._id.includes('___') ? item._id : null);
+
+  const isCleanProductId = Boolean(
+    actualProductId && typeof actualProductId === 'string' && !actualProductId.includes('___'),
+  );
+
   const { data: realProduct, isLoading: isRealProductLoading } = useProduct(actualProductId, {
-    enabled: Boolean(actualProductId),
+    enabled: isCleanProductId,
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
-  const isProductDataLoading = Boolean(actualProductId && isRealProductLoading && !realProduct);
+  const isProductDataLoading = Boolean(isCleanProductId && isRealProductLoading && !realProduct);
 
   const isItemNonRefundable = Boolean(
     item.isNonRefundable ||
@@ -33,17 +44,26 @@ export const CartItemRow = React.memo(function CartItemRow({
     realProduct?.returnSettings?.isReturnable === false,
   );
 
-  const displayTitle = item.title;
-  const displayImage = item.imageSrc || realProduct?.images?.[0] || realProduct?.imageSrc;
+  const displayTitle = item.title || item.product?.title || realProduct?.title || 'Product';
+  const displayImage =
+    item.imageSrc ||
+    item.product?.imageSrc ||
+    (Array.isArray(item.product?.images) && item.product.images[0]) ||
+    realProduct?.images?.[0] ||
+    realProduct?.imageSrc;
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, x: -50, scale: 0.9 }}
-      transition={{ duration: 0.25 }}
-      className={`bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md p-3 sm:p-3.5 relative group border transition-all duration-200 ${item.stock === 0 ? 'border-red-200' : 'border-neutral-200 hover:border-neutral-300'}`}
+      // Only the position animates when rows above/below change; a full `layout` also
+      // scales the row's contents while it resizes, which reads as a glitch
+      layout="position"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -40 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      // CSS transitions only for colour and shadow: a `transition-all` here would also
+      // tween the transform framer-motion sets, and the two fight (the "jitter" on add)
+      className={`bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md p-3 sm:p-3.5 relative group border transition-[box-shadow,border-color] duration-200 ${item.stock === 0 ? 'border-red-200' : 'border-neutral-200 hover:border-neutral-300'}`}
     >
       {/* Top Right Close Icon */}
       <button
@@ -71,15 +91,14 @@ export const CartItemRow = React.memo(function CartItemRow({
             to={`/product/${item.productId || (typeof item.id === 'string' && item.id.includes('___') ? item.id.split('___')[0] : item.id || item._id)}`}
             className="w-full h-full block"
           >
-            <motion.img
+            <img
               onError={handleImageError}
-              whileHover={{ scale: 1.05 }}
               src={
                 (displayImage ? getOptimizedUrl(displayImage, 110, 110) : '') ||
                 getBlurDataUri(110, 110)
               }
               alt={displayTitle}
-              className={`w-full h-full object-cover transition-transform ${item.stock === 0 ? 'grayscale' : ''} text-[10px] text-neutral-400 text-center flex items-center justify-center break-words`}
+              className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${item.stock === 0 ? 'grayscale' : ''} text-[10px] text-neutral-400 text-center flex items-center justify-center break-words`}
             />
           </Link>
         </div>
@@ -203,11 +222,11 @@ export const CartItemRow = React.memo(function CartItemRow({
             {/* Pricing Row */}
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="text-[15px] sm:text-[16px] font-bold text-neutral-950">
-                ₹{item.price.toLocaleString()}
+                ₹{(Number(item.price) || 0).toLocaleString()}
               </span>
               {itemOldPrice > item.price && (
                 <span className="text-[12px] sm:text-[13px] text-neutral-400 line-through font-normal">
-                  ₹{itemOldPrice.toLocaleString()}
+                  ₹{(Number(itemOldPrice) || 0).toLocaleString()}
                 </span>
               )}
               {savingsPct > 0 && (

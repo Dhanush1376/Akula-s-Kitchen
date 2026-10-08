@@ -87,3 +87,56 @@
     animation: none;
   }
 }
+
+/* ─── Mirrored leaf peeking in from the left edge ─── */
+.pd-leaf--left {
+  right: auto;
+  /* set from ProductLeaf.jsx to reach the screen edge; this is the fallback */
+  left: -10px;
+}
+/* Sits below the trust tiles, filling the quiet gap before the reviews */
+.pd-leaf--low {
+  top: 62px;
+}
+.pd-leaf--low .pd-leaf__frame {
+  height: 190px;
+}
+.pd-leaf--left .pd-leaf__frame {
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 92%),
+    linear-gradient(to left, transparent 0, #000 38%);
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 92%),
+    linear-gradient(to left, transparent 0, #000 38%);
+  animation-name: pd-leaf-in-left;
+  animation-delay: 0.8s;
+}
+.pd-leaf--left .pd-leaf__sway {
+  right: auto;
+  left: -16px;
+  transform-origin: 10% 100%;
+}
+.pd-leaf--left .pd-leaf__img,
+.pd-leaf--left .pd-leaf__shadow {
+  scale: -1 1;
+}
+.pd-leaf--left .pd-leaf__shadow {
+  translate: -6px 10px;
+}
+@keyframes pd-leaf-in-left {
+  0% {
+    opacity: 0;
+    translate: -75% 6%;
+  }
+  60% {
+    opacity: 1;
+    translate: 4% -1%;
+  }
+  80% {
+    translate: -1.5% 0;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

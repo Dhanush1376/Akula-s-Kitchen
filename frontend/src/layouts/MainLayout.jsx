@@ -33,25 +33,6 @@ export function MainLayout() {
   const { isStoreClosed } = useConfig();
   const { isCartOpen, setIsCartOpen } = useCart();
 
-  // Scroll to top on route change with a slight delay to allow exit animations if any
-  useEffect(() => {
-    const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = 'auto';
-
-    const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      // Restore after a short delay
-      setTimeout(() => {
-        document.documentElement.style.scrollBehavior = originalScrollBehavior;
-      }, 50);
-    }, 10);
-
-    return () => {
-      clearTimeout(timer);
-      document.documentElement.style.scrollBehavior = originalScrollBehavior;
-    };
-  }, [pathname]);
-
   const isHighDensityPage = pathname === '/auth' || pathname === '/checkout';
 
   const fallbackVariant = getRouteSkeletonVariant(pathname);
@@ -94,9 +75,9 @@ export function MainLayout() {
         <div
           className={`fixed ${
             isStoreClosed
-              ? 'bottom-[calc(118px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
-              : 'bottom-[calc(80px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
-          } lg:bottom-8 right-4 lg:right-10 z-[40] flex flex-col gap-4 items-center pointer-events-none transition-all duration-300`}
+              ? 'bottom-[calc(138px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
+              : 'bottom-[calc(100px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
+          } lg:bottom-8 right-3 sm:right-4 lg:right-8 z-[40] flex flex-col gap-2.5 sm:gap-3 items-center pointer-events-none transition-all duration-300`}
         >
           <ScrollToTopButton />
           <Suspense fallback={null}>

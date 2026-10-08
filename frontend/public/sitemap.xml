@@ -89,4 +89,14 @@
       <image:title>Appam Batter</image:title>
     </image:image>
   </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ac77b69b2481d43e58af550</loc>
+    <lastmod>2026-10-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/dbe37bb0-e08d-4fc6-9b01-206b89881f62-jpg-d356_grkc4.webp</image:loc>
+      <image:title>Vada Batter</image:title>
+    </image:image>
+  </url>
 </urlset>

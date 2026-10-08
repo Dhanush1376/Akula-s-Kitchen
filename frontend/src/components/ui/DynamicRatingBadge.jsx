@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { reviewService } from '../../services/domainServices';
-import { getProductRoute } from '../../utils/ecommerce/productRouteUtils';
 
 // Helper Star Component for the popover
 function StarRating({ value = 0, size = 12 }) {
@@ -36,6 +35,7 @@ export function DynamicRatingBadge({
   initialReviews = 0,
   compact = false,
   className = '',
+  showReviewsCount = true,
 }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -176,8 +176,12 @@ export function DynamicRatingBadge({
     e.preventDefault();
     e.stopPropagation();
     setIsOpen(false);
-    const route = getProductRoute(itemId);
-    navigate(`${route}#reviews-section`);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('open-reviews-drawer', { detail: { productId: itemId } }),
+      );
+    }
+    navigate(`/product/${itemId}/reviews`);
   };
 
   const handleBadgeClick = (e) => {
@@ -233,27 +237,29 @@ export function DynamicRatingBadge({
         <button
           type="button"
           onClick={handleBadgeClick}
-          className="min-h-0 h-auto p-0 m-0 border-0 bg-transparent flex items-center gap-0.5 shrink-0 cursor-pointer group text-left focus:outline-none leading-none"
+          className="min-h-0 h-auto p-0 m-0 border-0 bg-transparent flex items-center gap-1 shrink-0 cursor-pointer group text-left focus:outline-none leading-none transition-colors"
           style={{ minHeight: 'unset', height: 'auto' }}
           aria-label={`Rating: ${Number(initialRating).toFixed(1)} out of 5 stars from ${initialReviews} reviews. Click to see details.`}
           aria-expanded={isOpen}
         >
-          <span
-            className={`material-symbols-outlined ${compact ? 'text-[9px]' : 'text-[10px] lg:text-[11px]'} text-primary group-hover:scale-110 transition-transform`}
-            style={{ fontVariationSettings: "'FILL' 1" }}
+          <svg
+            className="w-[11px] h-[11px] sm:w-3 sm:h-3 text-[#d99b00] group-hover:scale-110 transition-transform shrink-0"
+            viewBox="0 0 24 24"
+            fill="#d99b00"
+            aria-hidden="true"
           >
-            star
-          </span>
+            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+          </svg>
           <span
-            className={`font-label ${compact ? 'text-[9px]' : 'text-[10px] lg:text-[11px]'} text-black/60 font-bold group-hover:text-primary transition-colors inline-flex items-center gap-0.5`}
+            className={`font-label ${compact ? 'text-[10px]' : 'text-[10.5px] sm:text-[11.5px]'} text-neutral-800 font-bold group-hover:text-primary transition-colors inline-flex items-center gap-1 leading-none`}
           >
-            {initialReviews === 0 ? (
-              'New'
-            ) : (
+            <span>{Number(initialRating).toFixed(1)}</span>
+            {showReviewsCount && initialReviews > 0 && (
               <>
-                <span>{Number(initialRating).toFixed(1)}</span>
-                <span className="text-black/30 font-normal mx-0.5">·</span>
-                <span className="text-black/40 font-medium">{initialReviews}</span>
+                <span className="text-neutral-300 font-normal text-[9px] mx-0.5">·</span>
+                <span className="text-neutral-500 font-medium text-[9.5px] sm:text-[10.5px]">
+                  {initialReviews} {compact ? '' : initialReviews === 1 ? 'review' : 'reviews'}
+                </span>
               </>
             )}
           </span>
@@ -479,10 +485,21 @@ export function DynamicRatingBadge({
                       <button
                         type="button"
                         onClick={handleNavigateToReviews}
-                        className="w-full py-2 bg-black hover:bg-neutral-800 text-white font-label text-[9px] uppercase tracking-widest font-bold rounded-lg transition-colors mt-1 flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="group w-full py-2.5 px-3.5 bg-gradient-to-r from-[#283618] via-[#2f3f1d] to-[#283618] hover:from-[#1f2b13] hover:to-[#17200d] text-white rounded-xl shadow-[0_2px_8px_rgba(40,54,24,0.18)] hover:shadow-[0_4px_14px_rgba(40,54,24,0.28)] active:scale-[0.98] transition-all duration-200 mt-1 flex items-center justify-between cursor-pointer border border-[#283618]/30"
                       >
-                        Read All Reviews
-                        <ArrowRight className="text-[12px]" strokeWidth={1.5} />
+                        <div className="flex items-center gap-2">
+                          <span className="font-display font-bold text-[12px] sm:text-[12.5px] text-white tracking-wide">
+                            Read All Reviews
+                          </span>
+                          {(reviewsData.length > 0 || initialReviews > 0) && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-white/15 text-[10px] font-bold text-white/90 leading-none">
+                              {Math.max(initialReviews, reviewsData.length)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="w-6 h-6 rounded-full bg-[#f7bb0e] text-[#283618] flex items-center justify-center shadow-xs group-hover:translate-x-0.5 group-hover:scale-105 transition-all duration-200 shrink-0">
+                          <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        </span>
                       </button>
                     </div>
                   )}

@@ -99,11 +99,20 @@ export function ProductDetails() {
   }, [product, user, id]);
 
   useEffect(() => {
-    // Immediate scroll to top on mount and ID change
+    // Immediate scroll to top on mount and ID change, or smooth scroll to hash if provided
     if (typeof window !== 'undefined') {
+      if (location.hash) {
+        const timer = setTimeout(() => {
+          const el = document.querySelector(location.hash);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 120);
+        return () => clearTimeout(timer);
+      }
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
-  }, [id]);
+  }, [id, location.hash]);
 
   const galleryImages = useMemo(() => {
     if (!product) return [];

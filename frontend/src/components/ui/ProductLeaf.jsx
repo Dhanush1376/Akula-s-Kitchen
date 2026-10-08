@@ -9,8 +9,10 @@ import './productLeaf.css';
  * the way of shopping. Shown on phones, where the details run to the screen edge.
  *
  * Render it inside a positioned container that isolates its stacking context.
+ * `side="left"` mirrors it to peek in from the left screen edge instead.
  */
-export function ProductLeaf() {
+export function ProductLeaf({ side = 'right', className = '' }) {
+  const isLeft = side === 'left';
   const rootRef = useRef(null);
   const swayRef = useRef(null);
   const shadowRef = useRef(null);
@@ -27,6 +29,10 @@ export function ProductLeaf() {
     const place = () => {
       let left = 0;
       for (let node = parent; node; node = node.offsetParent) left += node.offsetLeft;
+      if (isLeft) {
+        el.style.left = `${-Math.max(0, left)}px`;
+        return;
+      }
       const gap = document.documentElement.clientWidth - (left + parent.offsetWidth);
       el.style.right = `${-Math.max(0, gap)}px`;
     };
@@ -39,7 +45,7 @@ export function ProductLeaf() {
       observer.disconnect();
       window.removeEventListener('resize', place);
     };
-  }, []);
+  }, [isLeft]);
 
   useEffect(() => {
     const breeze = windBreeze(swayRef.current, { strength: 0.5 });
@@ -62,34 +68,36 @@ export function ProductLeaf() {
       if (now < quietUntil) return;
       quietUntil = now + 6000;
       windGust(swayRef.current, {
-        direction: down ? 1 : -1,
+        // The left leaf is mirrored, so the same wind bends it the other way
+        direction: (down ? 1 : -1) * (isLeft ? -1 : 1),
         strength: 0.5,
         shadow: shadowRef.current,
       });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [isLeft]);
+
+  // Both sides use the same upright leaf; the left one is flipped in CSS
+  const src = '/account/corner-leaf-right.webp';
 
   return (
-    <div ref={rootRef} className="pd-leaf" aria-hidden="true">
+    <div
+      ref={rootRef}
+      className={`pd-leaf${isLeft ? ' pd-leaf--left' : ''} ${className}`.trim()}
+      aria-hidden="true"
+    >
       <div className="pd-leaf__frame">
         <div ref={swayRef} className="pd-leaf__sway">
           <img
             ref={shadowRef}
-            src="/account/corner-leaf-right.webp"
+            src={src}
             alt=""
             className="pd-leaf__shadow"
             draggable="false"
             decoding="async"
           />
-          <img
-            src="/account/corner-leaf-right.webp"
-            alt=""
-            className="pd-leaf__img"
-            draggable="false"
-            decoding="async"
-          />
+          <img src={src} alt="" className="pd-leaf__img" draggable="false" decoding="async" />
         </div>
       </div>
     </div>

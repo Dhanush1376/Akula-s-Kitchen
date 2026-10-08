@@ -8,6 +8,7 @@ import { calculateCartSummary } from '../utils/ecommerce/cartCalculations';
 import { GuestCartService } from '../services/GuestCartService';
 import { logCartTrace, forensicHashId } from '../utils/forensic/cartTrace';
 import { useEffect, useRef } from 'react';
+import { BRAND } from '../config/brand';
 const checkAuthLocal = () => hasSessionMarker();
 
 const emptyCart = {
@@ -91,17 +92,49 @@ export function useCartMutations() {
       await queryClient.cancelQueries({ queryKey: ['cart', cartKey] });
       const previousCart = queryClient.getQueryData(['cart', cartKey]);
 
-      if (previousCart && product) {
+      if (product) {
         const targetCartKey = 'purchaseCart';
+        const baseCart = previousCart || {
+          [targetCartKey]: {
+            items: [],
+            summary: { ...emptyCart.summary },
+          },
+        };
 
-        const prevItems = previousCart[targetCartKey]?.items || [];
-        const itemKey = product._id || product.id;
+        const prevItems = baseCart[targetCartKey]?.items || [];
+        const rawProductId = product._id || product.id || product.productId;
+        const targetSig = product.configurationSignature || '';
+        const optItemKey =
+          targetSig && targetSig !== 'default' ? `${rawProductId}___${targetSig}` : rawProductId;
+        const unitPrice = Number(product.configuredUnitPrice ?? product.price ?? 0);
+        const resolvedImage =
+          product.imageSrc ||
+          (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : '') ||
+          product.image ||
+          '';
 
-        const targetSig = product.configurationSignature || 'default';
+        const optProduct = {
+          _id: rawProductId,
+          id: rawProductId,
+          title: product.title || product.name || '',
+          price: unitPrice,
+          oldPrice: product.oldPrice || product.strikingPrice || product.price || unitPrice,
+          imageSrc: resolvedImage,
+          images: product.images || (resolvedImage ? [resolvedImage] : []),
+          category: product.category,
+          stock: product.stock ?? 10,
+          isNonRefundable: product.isNonRefundable ?? true,
+          seller: product.seller || BRAND.name,
+          rating: product.rating || 0,
+        };
+
         const existingIndex = prevItems.findIndex((item) => {
-          const itemId = item.product?._id || item.product?.id || item._id || item.id;
-          const itemSig = item.configurationSignature || 'default';
-          return itemId === itemKey && itemSig === targetSig;
+          const itemId =
+            item.product?._id || item.product?.id || item.productId || item._id || item.id;
+          const itemSig = item.configurationSignature || '';
+          const normItemSig = itemSig === 'default' ? '' : itemSig;
+          const normTargetSig = targetSig === 'default' ? '' : targetSig;
+          return itemId === rawProductId && normItemSig === normTargetSig;
         });
 
         let updatedItems;
@@ -109,38 +142,47 @@ export function useCartMutations() {
           updatedItems = [...prevItems];
           updatedItems[existingIndex] = {
             ...updatedItems[existingIndex],
-            quantity: updatedItems[existingIndex].quantity + (quantity || 1),
+            quantity: (Number(updatedItems[existingIndex].quantity) || 1) + (quantity || 1),
           };
         } else {
-          const optItemKey =
-            targetSig && targetSig !== 'default' ? `${itemKey}___${targetSig}` : itemKey;
           updatedItems = [
             ...prevItems,
             {
               id: optItemKey,
               _id: optItemKey,
+              productId: rawProductId,
+              title: optProduct.title,
+              price: unitPrice,
+              configuredUnitPrice: unitPrice,
+              oldPrice: optProduct.oldPrice,
+              stock: optProduct.stock,
+              seller: optProduct.seller,
+              rating: optProduct.rating,
+              imageSrc: resolvedImage,
+              category: optProduct.category,
               quantity: quantity || 1,
-              product: product,
+              variant: product.variant || 'Default',
               selectedOptions: selectedOptions || product?.selectedOptions || [],
               customizationNote: customizationNote || product?.customizationNote || '',
               configurationSignature: targetSig,
-              configuredUnitPrice: product.configuredUnitPrice || product.price,
+              isNonRefundable: optProduct.isNonRefundable,
+              product: optProduct,
             },
           ];
         }
 
         const { subtotal, total } = calculateCartSummary(
           updatedItems,
-          previousCart[targetCartKey]?.summary?.shippingFee || 0,
+          baseCart[targetCartKey]?.summary?.shippingFee || 0,
         );
 
         const optimisticData = {
-          ...previousCart,
+          ...baseCart,
           [targetCartKey]: {
-            ...previousCart[targetCartKey],
+            ...baseCart[targetCartKey],
             items: updatedItems,
             summary: {
-              ...(previousCart[targetCartKey]?.summary || emptyCart.summary),
+              ...(baseCart[targetCartKey]?.summary || emptyCart.summary),
               subtotal,
               total,
             },
@@ -191,9 +233,11 @@ export function useCartMutations() {
       }
       toast.error(getErrorMessage(err, 'Unable to add item to bag'));
     },
-    onSettled: async () => {
+    onSettled: async (data, error) => {
       logCartTrace('ON_SETTLED_INVALIDATE', { cartKey, source: 'addToCartMutation.onSettled' });
-      await queryClient.invalidateQueries({ queryKey: ['cart', cartKey] });
+      if (error || !data?.purchaseCart) {
+        await queryClient.invalidateQueries({ queryKey: ['cart', cartKey] });
+      }
       logCartTrace('ON_SETTLED_INVALIDATE_COMPLETE', {
         cartKey,
         source: 'addToCartMutation.onSettled',
@@ -244,14 +288,21 @@ export function useCartMutations() {
 
       return { previousCart };
     },
+    onSuccess: (data) => {
+      if (data && data.purchaseCart) {
+        queryClient.setQueryData(['cart', cartKey], data);
+      }
+    },
     onError: (err, variables, context) => {
       if (context?.previousCart) {
         queryClient.setQueryData(['cart', cartKey], context.previousCart);
       }
       toast.error(getErrorMessage(err, 'Unable to remove item from bag'));
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', cartKey] });
+    onSettled: async (data, error) => {
+      if (error || !data?.purchaseCart) {
+        await queryClient.invalidateQueries({ queryKey: ['cart', cartKey] });
+      }
     },
   });
 
@@ -260,11 +311,18 @@ export function useCartMutations() {
       const res = await userService.syncCart(cartItems);
       return res.success ? res.data : res;
     },
+    onSuccess: (data) => {
+      if (data && data.purchaseCart) {
+        queryClient.setQueryData(['cart', cartKey], data);
+      }
+    },
     onError: (err) => {
       toast.error(getErrorMessage(err, 'Unable to sync bag'));
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', cartKey] });
+    onSettled: async (data, error) => {
+      if (error || !data?.purchaseCart) {
+        await queryClient.invalidateQueries({ queryKey: ['cart', cartKey] });
+      }
     },
   });
 

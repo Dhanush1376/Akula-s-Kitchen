@@ -81,13 +81,18 @@ export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', fo
     return urlCache.get(cacheKey);
   }
 
-  const isCloudinary = url.includes('cloudinary.com');
-  let resultUrl = url;
+  let sanitizedUrl = url;
+  const isCloudinary = sanitizedUrl.includes('cloudinary.com');
+  if (isCloudinary && /\.(heic|heif)$/i.test(sanitizedUrl)) {
+    sanitizedUrl = sanitizedUrl.replace(/\.(heic|heif)$/i, '.jpg');
+  }
+
+  let resultUrl = sanitizedUrl;
 
   if (isCloudinary) {
     // HIGH-PRIORITY FIX: Support for 'original' quality to serve the uncompressed, unscaled raw image
     if (q === 'original') {
-      const urlParts = url.split('/upload/');
+      const urlParts = sanitizedUrl.split('/upload/');
       if (urlParts.length === 2) {
         let pathPart = urlParts[1];
         const pathSegments = pathPart.split('/');
@@ -102,6 +107,9 @@ export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', fo
           }
         }
         pathPart = cleanPathSegments.join('/');
+        if (/\.(heic|heif)$/i.test(pathPart)) {
+          pathPart = pathPart.replace(/\.(heic|heif)$/i, '.jpg');
+        }
         const rawUrl = `${urlParts[0]}/upload/${pathPart}`;
         urlCache.set(cacheKey, rawUrl);
         return rawUrl;
@@ -110,7 +118,7 @@ export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', fo
 
     // HIGH-PRIORITY FIX: If auto:best is requested, we strip old constraints but forcefully apply an ultra-HD transform
     if (q === 'auto:best') {
-      const urlParts = url.split('/upload/');
+      const urlParts = sanitizedUrl.split('/upload/');
       if (urlParts.length === 2) {
         let pathPart = urlParts[1];
         const pathSegments = pathPart.split('/');
@@ -125,6 +133,9 @@ export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', fo
           }
         }
         pathPart = cleanPathSegments.join('/');
+        if (/\.(heic|heif)$/i.test(pathPart)) {
+          pathPart = pathPart.replace(/\.(heic|heif)$/i, '.jpg');
+        }
 
         // Force 1600px width, auto upscale, best quality, and auto format
         const hdTransform = 'w_1600,c_scale,q_auto:best,f_auto,e_upscale,e_improve';

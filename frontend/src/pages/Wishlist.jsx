@@ -7,6 +7,35 @@ import { useConfig } from '../context/ConfigContext';
 
 export function Wishlist() {
   const { storeName } = useConfig();
+
+  // Guarantee that navigating to Wishlist always opens at initial top point
+  useEffect(() => {
+    const scrollToInitialPoint = () => {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      } catch {
+        window.scrollTo(0, 0);
+      }
+      if (document.documentElement && document.documentElement.scrollTop !== 0) {
+        document.documentElement.scrollTop = 0;
+      }
+      if (document.body && document.body.scrollTop !== 0) {
+        document.body.scrollTop = 0;
+      }
+    };
+
+    scrollToInitialPoint();
+    const frameId = requestAnimationFrame(scrollToInitialPoint);
+    const t1 = setTimeout(scrollToInitialPoint, 50);
+    const t2 = setTimeout(scrollToInitialPoint, 150);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}

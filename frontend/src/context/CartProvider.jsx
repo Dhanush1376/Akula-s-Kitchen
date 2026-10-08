@@ -157,8 +157,13 @@ export function CartProvider({ children }) {
         }
       }
 
+      const shouldOpenDrawer =
+        typeof window !== 'undefined' &&
+        !window.location.pathname.startsWith('/cart') &&
+        !window.location.pathname.startsWith('/checkout');
+
       if (isAuthenticated) {
-        setIsCartOpen(true);
+        if (shouldOpenDrawer) setIsCartOpen(true);
         optAddItem(enrichedProduct);
       } else {
         const currentGuestCart = GuestCartService.getCart();
@@ -183,7 +188,7 @@ export function CartProvider({ children }) {
           return;
         }
 
-        setIsCartOpen(true);
+        if (shouldOpenDrawer) setIsCartOpen(true);
         GuestCartService.addToCart(enrichedProduct, enrichedProduct.quantity || 1);
         setGuestCart(GuestCartService.getCart());
       }

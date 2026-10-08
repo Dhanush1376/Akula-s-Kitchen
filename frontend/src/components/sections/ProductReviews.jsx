@@ -6,9 +6,9 @@ import {
   Plus,
   Pencil,
   Lock,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
+  ChefHat,
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { OptimizedImage } from '../ui/OptimizedImage';
@@ -17,10 +17,12 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { reviewService } from '../../services/domainServices';
 import { useAuth } from '../../context/AuthContext';
+import { SectionHeader } from '../shared/SectionHeader';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import { uploadService } from '../../services/api/uploadService';
 import { useMobileDrawerEngine } from '../ui/drawer';
+import { ReviewsDrawer } from './ReviewsDrawer';
 
 // ─── Star Component ─────────────────────────────────────────────────────────
 function StarRating({ value = 0, max = 5, interactive = false, size = 20, onChange }) {
@@ -89,47 +91,73 @@ function ReviewCard({ review, productId }) {
     : '';
 
   return (
-    <div className="bg-white rounded-[24px] border border-black/5 shadow-sm p-5 flex flex-col justify-between h-full">
+    <div className="bg-white rounded-xl border border-black/10 shadow-2xs p-3.5 sm:p-4 flex flex-col justify-between h-full">
       <div>
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-start justify-between gap-2 border-b border-black/10 pb-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <span className="font-display text-primary text-xs font-bold">{initials}</span>
+            <div className="w-8 h-8 rounded-full bg-[#283618]/10 border border-[#283618]/15 flex items-center justify-center shrink-0">
+              <span className="font-display text-[#283618] text-xs font-bold">{initials}</span>
             </div>
-            <div>
-              <p className="font-body text-xs font-semibold text-black leading-tight">
-                {customerName}
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 min-w-0">
+                <p className="font-body text-[12.5px] font-bold text-neutral-900 leading-tight truncate">
+                  {customerName}
+                </p>
                 {review.verified && (
-                  <span className="inline-flex items-center gap-1 text-[8px] font-semibold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/50">
-                    <BadgeCheck className="w-2.5 h-2.5 text-emerald-600 shrink-0" strokeWidth={2} />
-                    Verified Purchase
+                  <span
+                    title="Verified Purchase"
+                    className="shrink-0 inline-flex items-center text-emerald-600"
+                  >
+                    <BadgeCheck className="w-3.5 h-3.5" strokeWidth={2.2} />
                   </span>
                 )}
               </div>
+              {date && (
+                <span className="font-sans text-[10px] text-neutral-400 font-normal leading-tight mt-0.5 block">
+                  {date}
+                </span>
+              )}
             </div>
           </div>
-          <span className="font-label text-[9px] text-black/30 font-medium shrink-0">{date}</span>
+
+          {/* 1-Star Rating at Top Right */}
+          {review.rating > 0 && (
+            <div className="flex items-center gap-1 shrink-0 pt-0.5">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="#F7BB0E"
+                stroke="#F7BB0E"
+                strokeWidth="1.5"
+                className="shrink-0"
+                aria-hidden="true"
+              >
+                <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+              </svg>
+              <span className="font-sans text-[11px] font-bold text-neutral-800 leading-none">
+                {Number(review.rating).toFixed(1)}
+              </span>
+            </div>
+          )}
         </div>
 
-        <StarRating value={review.rating} size={12} />
-
+        {/* Comment */}
         {review.comment && (
-          <p className="font-body text-xs text-black/70 leading-relaxed mt-2.5 line-clamp-3">
-            {review.comment}
+          <p className="font-body text-[12px] text-neutral-700 leading-relaxed pt-2.5 line-clamp-3">
+            "{review.comment}"
           </p>
         )}
       </div>
 
       {review.images && review.images.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-black/5">
+        <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-black/[0.06]">
           {review.images.slice(0, 3).map((imgUrl, idx) => (
             <Link
               key={idx}
               to={`/product/${productId}/reviews/images`}
-              className="w-10 h-10 rounded-lg overflow-hidden border border-black/5 bg-neutral-50 shadow-3xs cursor-pointer relative group flex-shrink-0"
+              className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-neutral-50 shadow-3xs cursor-pointer relative group shrink-0"
             >
               <OptimizedImage
                 src={imgUrl}
@@ -142,7 +170,7 @@ function ReviewCard({ review, productId }) {
           {review.reviewImages && review.reviewImages.length > 3 ? (
             <Link
               to={`/product/${productId}/reviews/images`}
-              className="w-10 h-10 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest flex-shrink-0 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer"
             >
               +{review.reviewImages.length - 3}
             </Link>
@@ -151,7 +179,7 @@ function ReviewCard({ review, productId }) {
             review.images.length > 3 && (
               <Link
                 to={`/product/${productId}/reviews/images`}
-                className="w-10 h-10 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest flex-shrink-0 transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer"
               >
                 +{review.images.length - 3}
               </Link>
@@ -556,6 +584,50 @@ export function ProductReviews({ productId, productTitle }) {
     }, []);
   }, [reviews]);
 
+  // ── Drawer State & Handlers ───────────────────────────────────────────────
+  const [isReviewsDrawerOpen, setIsReviewsDrawerOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname.endsWith('/reviews');
+  });
+
+  const handleOpenReviewsDrawer = useCallback(() => {
+    setIsReviewsDrawerOpen(true);
+    if (!window.location.pathname.endsWith('/reviews')) {
+      window.history.pushState({ reviewsDrawer: true }, '', `/product/${productId}/reviews`);
+    }
+  }, [productId]);
+
+  const handleCloseReviewsDrawer = useCallback(() => {
+    setIsReviewsDrawerOpen(false);
+    if (window.location.pathname.endsWith('/reviews')) {
+      window.history.replaceState(null, '', `/product/${productId}#reviews-section`);
+    }
+  }, [productId]);
+
+  // Sync with browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname.endsWith('/reviews')) {
+        setIsReviewsDrawerOpen(true);
+      } else {
+        setIsReviewsDrawerOpen(false);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Listen for open-reviews-drawer custom event (from DynamicRatingBadge or other triggers)
+  useEffect(() => {
+    const handleCustomOpen = (e) => {
+      if (!e.detail?.productId || String(e.detail.productId) === String(productId)) {
+        handleOpenReviewsDrawer();
+      }
+    };
+    window.addEventListener('open-reviews-drawer', handleCustomOpen);
+    return () => window.removeEventListener('open-reviews-drawer', handleCustomOpen);
+  }, [productId, handleOpenReviewsDrawer]);
+
   const handleScroll = (direction) => {
     if (scrollContainerRef.current) {
       const { scrollLeft, clientWidth } = scrollContainerRef.current;
@@ -570,9 +642,9 @@ export function ProductReviews({ productId, productTitle }) {
   // ── CTA button logic ──────────────────────────────────────────────────────
   const renderCTA = () => {
     const buttonClass =
-      'w-10 h-10 rounded-full flex items-center justify-center bg-[#000000]/10 text-[#000000] hover:bg-[#000000] hover:text-white transition-all cursor-pointer shrink-0';
+      'w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-[#283618] hover:text-white text-neutral-800 transition-all cursor-pointer shrink-0 active:scale-95';
     const disabledClass =
-      'w-10 h-10 flex items-center justify-center bg-neutral-100 text-black/40 rounded-full border border-black/5 shrink-0';
+      'w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-neutral-100 text-black/40 rounded-full border border-black/5 shrink-0';
 
     if (!isAuthenticated) {
       return (
@@ -583,7 +655,7 @@ export function ProductReviews({ productId, productTitle }) {
           title="Write a Review"
           className={buttonClass}
         >
-          <Pencil className="text-[20px]" strokeWidth={1.5} />
+          <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
         </motion.button>
       );
     }
@@ -591,7 +663,7 @@ export function ProductReviews({ productId, productTitle }) {
     if (!eligibility) {
       return (
         <div className={disabledClass + ' opacity-75'}>
-          <div className="skeleton-box inline-block w-4 h-4 rounded-md" />
+          <div className="skeleton-box inline-block w-3 h-3 rounded-md" />
         </div>
       );
     }
@@ -605,7 +677,7 @@ export function ProductReviews({ productId, productTitle }) {
           title="Edit Your Review"
           className={buttonClass}
         >
-          <Pencil className="text-[20px]" strokeWidth={1.5} />
+          <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
         </motion.button>
       );
     }
@@ -619,19 +691,37 @@ export function ProductReviews({ productId, productTitle }) {
           title="Write a Review"
           className={buttonClass}
         >
-          <Pencil className="text-[20px]" strokeWidth={1.5} />
+          <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
         </motion.button>
       );
     }
 
     return (
       <div title="Purchase to review" className={disabledClass}>
-        <Lock className="text-[18px]" strokeWidth={1.5} />
+        <Lock className="w-3.5 h-3.5" strokeWidth={1.8} />
       </div>
     );
   };
 
   if (reviews.length === 0) {
+    if (isReviewsDrawerOpen) {
+      return (
+        <ReviewsDrawer
+          isOpen={isReviewsDrawerOpen}
+          onClose={handleCloseReviewsDrawer}
+          productId={productId}
+          productTitle={productTitle}
+          initialReviews={[]}
+          initialAvgRating={0}
+          initialRatingCounts={[5, 4, 3, 2, 1].map((s) => ({ star: s, count: 0 }))}
+          eligibility={eligibility}
+          onReviewSubmitted={() => {
+            fetchReviews(1);
+            fetchEligibility();
+          }}
+        />
+      );
+    }
     return null;
   }
 
@@ -640,92 +730,95 @@ export function ProductReviews({ productId, productTitle }) {
       id="reviews-section"
       className="relative z-10 max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop py-8 lg:py-12"
     >
-      {/* Section Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4 lg:mb-6">
-        <h2 className="font-display text-xl lg:text-2xl text-black text-left">What Buyers Say</h2>
-
-        <div className="flex flex-wrap items-center gap-4">
-          {reviews.length > 0 && (
-            <div className="flex items-center gap-3 sm:border-r border-black/10 sm:pr-4">
-              <Link
-                to={`/product/${productId}/reviews`}
-                title={`View all ${reviews.length} reviews`}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-50 hover:bg-neutral-100 border border-black/5 text-[#000000] transition-all cursor-pointer shrink-0"
-              >
-                <ArrowRight className="text-[20px]" strokeWidth={1.5} />
-              </Link>
-              {reviews.length > 1 && (
-                <div className="hidden sm:flex items-center gap-1.5 ml-2">
-                  <button
-                    onClick={() => handleScroll('left')}
-                    className="w-8 h-8 rounded-full border border-black/15 flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all text-black/60 cursor-pointer"
-                    aria-label="Scroll left"
-                  >
-                    <ChevronLeft className="text-[16px]" strokeWidth={1.5} />
-                  </button>
-                  <button
-                    onClick={() => handleScroll('right')}
-                    className="w-8 h-8 rounded-full border border-black/15 flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all text-black/60 cursor-pointer"
-                    aria-label="Scroll right"
-                  >
-                    <ChevronRight className="text-[16px]" strokeWidth={1.5} />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          {renderCTA()}
+      {/* Chef Divider matching RecommendationSystem */}
+      <div className="w-full flex justify-center mb-6 lg:mb-8">
+        <div className="w-full max-w-[180px] flex items-center justify-center gap-3 opacity-70">
+          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-black to-black" />
+          <ChefHat className="w-4 h-4 text-black shrink-0" strokeWidth={2} />
+          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-black to-black" />
         </div>
       </div>
 
-      {/* Stats Row */}
+      {/* Section Header with emblem dot and View All link */}
+      <SectionHeader
+        title="What Buyers Say"
+        seeAllLink={reviews.length > 0 ? `/product/${productId}/reviews` : undefined}
+        onSeeAllClick={reviews.length > 0 ? handleOpenReviewsDrawer : undefined}
+        linkText="View All"
+        size="sm"
+        className="mb-4"
+        actions={
+          <div className="flex items-center gap-2">
+            {reviews.length > 1 && (
+              <div className="hidden sm:flex items-center gap-1 mr-1">
+                <button
+                  onClick={() => handleScroll('left')}
+                  className="w-7 h-7 rounded-full border border-black/10 flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all text-black/60 cursor-pointer"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} />
+                </button>
+                <button
+                  onClick={() => handleScroll('right')}
+                  className="w-7 h-7 rounded-full border border-black/10 flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all text-black/60 cursor-pointer"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />
+                </button>
+              </div>
+            )}
+            {renderCTA()}
+          </div>
+        }
+      />
+
+      {/* Stats Row — Compact side-by-side design */}
       {reviews.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10 mb-8 py-8 px-6 sm:px-10 bg-white rounded-[24px] border border-black/5 shadow-sm">
-          {/* Big Average */}
-          <div className="flex flex-col items-center justify-center sm:border-r border-black/5 sm:pr-10 w-[140px] shrink-0 gap-3">
-            <div className="flex flex-col items-center gap-2">
-              <span className="font-display text-5xl sm:text-6xl font-normal text-black leading-none tracking-tighter">
-                {avgRating.toFixed(1)}
-              </span>
-              <div className="w-12 h-[1px] bg-primary"></div>
+        <div className="flex items-center gap-4 sm:gap-8 mb-5 sm:mb-6 py-3.5 px-4 sm:py-4.5 sm:px-6 bg-white rounded-xl border border-black/10 shadow-2xs">
+          {/* Average Rating Block */}
+          <div className="flex flex-col items-center justify-center border-r border-black/10 pr-4 sm:pr-8 shrink-0 min-w-[85px] sm:min-w-[110px]">
+            <span className="font-display text-3xl sm:text-4xl font-bold text-neutral-900 leading-none tracking-tight">
+              {avgRating.toFixed(1)}
+            </span>
+            <div className="mt-1 sm:mt-1.5">
+              <StarRating value={avgRating} size={12} />
             </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <StarRating value={avgRating} size={15} />
-              <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-black/40 font-bold">
-                {reviews.length} review{reviews.length !== 1 ? 's' : ''}
-              </span>
-            </div>
+            <span className="font-sans text-[10px] sm:text-[11px] text-neutral-500 font-semibold mt-1 whitespace-nowrap">
+              {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+            </span>
           </div>
 
-          {/* Bar Breakdown */}
-          <div className="flex-1 space-y-2 w-full max-w-md">
+          {/* Compact Bar Breakdown */}
+          <div className="flex-1 space-y-1 sm:space-y-1.5 w-full min-w-0 max-w-md">
             {ratingCounts.map(({ star, count }) => {
               const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
               return (
-                <div key={star} className="flex items-center gap-2.5">
-                  <span className="font-label text-[11px] font-bold text-black/70 w-3 shrink-0">
-                    {star}
-                  </span>
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="#F7BB0E"
-                    stroke="#F7BB0E"
-                    strokeWidth="1.5"
-                    className="shrink-0"
-                  >
-                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-                  </svg>
-                  <div className="flex-1 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                <div key={star} className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="flex items-center gap-0.5 w-4 sm:w-4.5 shrink-0">
+                    <span className="font-sans text-[10px] sm:text-[11px] font-bold text-neutral-700 leading-none">
+                      {star}
+                    </span>
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 24 24"
+                      fill="#F7BB0E"
+                      stroke="#F7BB0E"
+                      strokeWidth="1.5"
+                      className="shrink-0"
+                    >
+                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 h-1 sm:h-1.5 bg-neutral-100 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
                       className="h-full bg-[#F7BB0E] rounded-full"
                     />
                   </div>
-                  <span className="font-label text-[11px] text-black/40 w-8 text-right font-semibold">
+                  <span className="font-sans text-[9.5px] sm:text-[11px] text-neutral-400 w-6 sm:w-8 text-right font-medium shrink-0">
                     {pct}%
                   </span>
                 </div>
@@ -741,18 +834,17 @@ export function ProductReviews({ productId, productTitle }) {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="skeleton-box bg-white rounded-[24px] border border-black/5 p-5 space-y-3 shrink-0 w-[240px] xs:w-[280px] sm:w-[300px] lg:w-[320px] h-[160px]"
+              className="skeleton-box bg-white rounded-xl border border-black/10 p-4 space-y-2.5 shrink-0 w-[240px] xs:w-[280px] sm:w-[300px] lg:w-[320px] h-[120px]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-neutral-100/50 animate-pulse" />
-                <div className="space-y-1.5">
-                  <div className="h-3 w-24 bg-neutral-100/50 rounded animate-pulse" />
-                  <div className="h-2 w-16 bg-neutral-100/50 rounded animate-pulse" />
+                <div className="w-8 h-8 rounded-full bg-neutral-100/50 animate-pulse" />
+                <div className="space-y-1">
+                  <div className="h-3 w-20 bg-neutral-100/50 rounded animate-pulse" />
+                  <div className="h-2 w-14 bg-neutral-100/50 rounded animate-pulse" />
                 </div>
               </div>
-              <div className="h-2.5 w-20 bg-neutral-100/50 rounded animate-pulse" />
+              <div className="h-2.5 w-16 bg-neutral-100/50 rounded animate-pulse" />
               <div className="h-3 w-full bg-neutral-100/50 rounded animate-pulse" />
-              <div className="h-3 w-4/5 bg-neutral-100/50 rounded animate-pulse" />
             </div>
           ))}
         </div>
@@ -830,6 +922,22 @@ export function ProductReviews({ productId, productTitle }) {
           />
         )}
       </AnimatePresence>
+
+      {/* Reviews App Drawer (In-Page instant open) */}
+      <ReviewsDrawer
+        isOpen={isReviewsDrawerOpen}
+        onClose={handleCloseReviewsDrawer}
+        productId={productId}
+        productTitle={productTitle}
+        initialReviews={reviews}
+        initialAvgRating={avgRating}
+        initialRatingCounts={ratingCounts}
+        eligibility={eligibility}
+        onReviewSubmitted={() => {
+          fetchReviews(1);
+          fetchEligibility();
+        }}
+      />
     </section>
   );
 }

@@ -39,7 +39,16 @@ const RecommendationSystem = React.lazy(() =>
 );
 
 export function CartView({ isEmbedded = false }) {
-  const { items, removeItem, updateQuantity, cartCount, summary, totalMRP, loading } = useCart();
+  const {
+    items,
+    removeItem,
+    updateQuantity,
+    cartCount,
+    summary,
+    totalMRP,
+    loading,
+    setIsCartOpen,
+  } = useCart();
   const { addItem: addToWishlist } = useWishlist();
   const { runProtectedAction, isAuthenticated, user } = useAuth();
   const { isStoreClosed, orderLimits, shippingSettings, storeSettings, estimatedDeliveryDays } =
@@ -73,7 +82,22 @@ export function CartView({ isEmbedded = false }) {
     try {
       sessionStorage.removeItem('akula_checkout_step');
     } catch (_e) {}
-  }, []);
+    setIsCartOpen?.(false);
+  }, [setIsCartOpen]);
+
+  const recoAnchorRef = React.useRef(null);
+  if (!recoAnchorRef.current && items.length > 0) {
+    recoAnchorRef.current = {
+      category: items[0].product?.category || items[0].category,
+      productId:
+        items[0].product?._id ||
+        items[0].product?.id ||
+        String(items[0].id || items[0]._id).split('___')[0],
+    };
+  }
+  if (items.length === 0 && recoAnchorRef.current) {
+    recoAnchorRef.current = null;
+  }
 
   const triggerNotification = (msg) => {
     setNotification(msg);
@@ -383,10 +407,10 @@ export function CartView({ isEmbedded = false }) {
                   </motion.div>
                 )}
 
-                <motion.div layout className="space-y-3">
-                  <AnimatePresence>
+                <div className="space-y-3">
+                  <AnimatePresence initial={false}>
                     {items.map((item) => {
-                      const uniqueKey = `${item.id || item._id}-${item.variant}`;
+                      const uniqueKey = `${item.id || item._id || item.productId}_${item.variant || 'Default'}`;
                       return (
                         <CartItemRow
                           key={uniqueKey}
@@ -400,29 +424,37 @@ export function CartView({ isEmbedded = false }) {
                       );
                     })}
                   </AnimatePresence>
-                </motion.div>
+                </div>
 
-                <div className="mt-2 lg:mt-6">
+                {/* Glides down when a recommended product is added to the list above, instead
+                    of jumping a whole row's height out from under the visitor's finger */}
+                <motion.div
+                  layout="position"
+                  transition={{ layout: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } }}
+                  className="mt-2 lg:mt-6"
+                >
                   <React.Suspense fallback={<Skeleton className="h-52 w-full rounded-2xl" />}>
                     <RecommendationSystem
                       category={
-                        items.length > 0
+                        recoAnchorRef.current?.category ||
+                        (items.length > 0
                           ? items[0].product?.category || items[0].category
-                          : undefined
+                          : undefined)
                       }
                       currentProductId={
-                        items.length > 0
+                        recoAnchorRef.current?.productId ||
+                        (items.length > 0
                           ? items[0].product?._id ||
                             items[0].product?.id ||
                             String(items[0].id || items[0]._id).split('___')[0]
-                          : undefined
+                          : undefined)
                       }
                       hideHeader={false}
                       horizontalScroll={true}
                       compact={true}
                     />
                   </React.Suspense>
-                </div>
+                </motion.div>
               </div>
 
               {/* Right Column Pane */}

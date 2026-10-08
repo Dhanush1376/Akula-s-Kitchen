@@ -52,7 +52,13 @@ export function useOptimisticCartMutation({
           return;
         }
 
-        setIsCartOpen(true);
+        const shouldOpenDrawer =
+          typeof window !== 'undefined' &&
+          !window.location.pathname.startsWith('/cart') &&
+          !window.location.pathname.startsWith('/checkout');
+        if (shouldOpenDrawer) {
+          setIsCartOpen(true);
+        }
         const qty = requestedQty;
 
         // React Query useCartMutations handles optimistic UI

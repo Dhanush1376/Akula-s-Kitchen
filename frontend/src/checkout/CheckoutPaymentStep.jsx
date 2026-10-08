@@ -235,10 +235,10 @@ export default function CheckoutPaymentStep() {
             {isRazorpayEnabled && (
               <div
                 onClick={() => setPaymentOption('razorpay')}
-                className={`relative px-4 py-3.5 rounded-[8px] border transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.99] ${
+                className={`relative px-4 py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.99] ${
                   paymentOption === 'razorpay'
-                    ? 'border-[#283618] bg-[#283618] text-white shadow-sm ring-1 ring-[#283618]'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-xs hover:shadow-sm'
+                    ? 'border-[#283618] bg-[#283618] text-white shadow-[0_4px_16px_rgba(40,54,24,0.22)] ring-1 ring-[#283618]'
+                    : 'border-neutral-300 bg-white hover:border-neutral-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
                 }`}
               >
                 <div className="flex items-center gap-3 select-none">
@@ -287,13 +287,13 @@ export default function CheckoutPaymentStep() {
                     setPaymentOption('cod');
                   }
                 }}
-                className={`relative px-4 py-3.5 rounded-[8px] border transition-all duration-200 overflow-hidden ${
+                className={`relative px-4 py-3.5 rounded-2xl border transition-all duration-200 overflow-hidden ${
                   backendTotals.total > codMaxOrder || backendTotals.total < codMinOrder
                     ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-xs'
                     : 'cursor-pointer active:scale-[0.99] ' +
                       (paymentOption === 'cod'
-                        ? 'border-[#283618] bg-[#283618] text-white shadow-sm ring-1 ring-[#283618]'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-xs hover:shadow-sm')
+                        ? 'border-[#283618] bg-[#283618] text-white shadow-[0_4px_16px_rgba(40,54,24,0.22)] ring-1 ring-[#283618]'
+                        : 'border-neutral-300 bg-white hover:border-neutral-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]')
                 }`}
               >
                 <div className="flex items-center gap-3 select-none">

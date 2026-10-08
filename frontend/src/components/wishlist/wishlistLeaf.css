@@ -6,7 +6,8 @@
   top: -70px;
   left: -26%;
   width: min(86%, 560px);
-  transform: rotate(-5deg);
+  /* a slight clockwise tilt */
+  transform: rotate(3deg);
   pointer-events: none;
   /* Sweeps in from the top-left corner on page load, like the shop page leaf */
   animation: wl-leaf-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;

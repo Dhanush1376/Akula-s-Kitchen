@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { m as motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { policyService } from '../../services/domainServices';
-import { Skeleton } from '../ui';
+import { DEFAULT_POLICIES, getPolicyMeta } from '../../constants/defaultPolicies';
+import { Shield, ChevronRight } from 'lucide-react';
 
 export function PolicySidebar() {
   const { pathname } = useLocation();
@@ -10,104 +10,155 @@ export function PolicySidebar() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['public-policies'],
     queryFn: () => policyService.getPublicPolicies(),
+    staleTime: 5 * 60 * 1000,
   });
 
+  // Merge live policies with default policies fallback
+  const livePolicies = response?.data || [];
   const policies =
-    response?.data?.map((p) => ({
-      title: p.title,
-      path: `/policy/${p.slug}`,
-    })) || [];
+    livePolicies.length > 0
+      ? livePolicies.map((p) => {
+          const meta = getPolicyMeta(p.slug, p.title);
+          return {
+            title: p.title,
+            slug: p.slug,
+            path: `/policy/${p.slug}`,
+            icon: meta.icon,
+            badge: meta.badge,
+          };
+        })
+      : DEFAULT_POLICIES.map((p) => {
+          const meta = getPolicyMeta(p.slug, p.title);
+          return {
+            title: p.title,
+            slug: p.slug,
+            path: `/policy/${p.slug}`,
+            icon: meta.icon,
+            badge: meta.badge,
+          };
+        });
 
   return (
-    <aside className="lg:col-span-3 space-y-6 sticky top-32 h-fit hidden lg:block border-r border-outline-variant/20 pr-8">
-      <h2 className="font-label-sm text-on-surface-variant uppercase tracking-[0.2em] mb-8 font-semibold text-[11px]">
-        Help Center
-      </h2>
-      <nav className="flex flex-col space-y-4">
-        {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-3/4 mb-4" />
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-4/5" />
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-4 w-full" />
+    <aside className="lg:col-span-4 xl:col-span-3.5 space-y-6 sticky top-44 lg:top-48 h-fit hidden lg:block">
+      {/* Navigation Card */}
+      <div className="bg-[#fdfbf7] border border-[#283618]/12 rounded-2xl p-5 shadow-xs">
+        <div className="flex items-center justify-between pb-4 mb-3 border-b border-[#283618]/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#283618]" />
+            <h2 className="font-display font-bold text-xs uppercase tracking-wider text-[#283618]">
+              Legal & Help Center
+            </h2>
           </div>
-        ) : (
-          policies.map((policy) => {
+        </div>
+
+        <nav className="flex flex-col space-y-1.5" aria-label="Policy Navigation">
+          {policies.map((policy) => {
             const isActive = pathname === policy.path;
+            const IconComponent = policy.icon || Shield;
+
             return (
               <Link
                 key={policy.path}
                 to={policy.path}
-                className={`relative py-1 font-body text-[14px] transition-all duration-300 ${
+                className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-[13px] transition-all duration-200 select-none ${
                   isActive
-                    ? 'text-on-surface font-semibold'
-                    : 'text-on-surface-variant hover:text-on-surface'
+                    ? 'bg-[#283618] text-white shadow-sm font-semibold'
+                    : 'text-[#4b5563] hover:text-[#283618] hover:bg-white/80'
                 }`}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute -left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-on-surface"
-                  />
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+                      isActive
+                        ? 'bg-white/15 text-[#f7bb0e]'
+                        : 'bg-white text-[#283618]/70 border border-[#283618]/10 group-hover:text-[#283618] group-hover:border-[#283618]/25'
+                    }`}
+                  >
+                    <IconComponent className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="truncate">{policy.title}</span>
+                </div>
+
+                {isActive ? (
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e]" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 text-stone-300 opacity-0 group-hover:opacity-100 group-hover:text-[#283618]/60 transition-all -translate-x-1 group-hover:translate-x-0" />
                 )}
-                {policy.title}
               </Link>
             );
-          })
-        )}
-      </nav>
+          })}
+        </nav>
+      </div>
     </aside>
   );
 }
 
 export function MobilePolicyNav() {
   const { pathname } = useLocation();
-  const { data: response, isLoading } = useQuery({
+  const { data: response } = useQuery({
     queryKey: ['public-policies'],
     queryFn: () => policyService.getPublicPolicies(),
+    staleTime: 5 * 60 * 1000,
   });
 
+  const livePolicies = response?.data || [];
   const policies =
-    response?.data?.map((p) => ({
-      title: p.title,
-      path: `/policy/${p.slug}`,
-    })) || [];
+    livePolicies.length > 0
+      ? livePolicies.map((p) => {
+          const meta = getPolicyMeta(p.slug, p.title);
+          return {
+            title: meta.shortTitle || p.title,
+            fullTitle: p.title,
+            slug: p.slug,
+            path: `/policy/${p.slug}`,
+            icon: meta.icon,
+          };
+        })
+      : DEFAULT_POLICIES.map((p) => {
+          const meta = getPolicyMeta(p.slug, p.title);
+          return {
+            title: meta.shortTitle || p.title,
+            fullTitle: p.title,
+            slug: p.slug,
+            path: `/policy/${p.slug}`,
+            icon: meta.icon,
+          };
+        });
 
   return (
-    <div className="lg:hidden mb-12 overflow-x-auto no-scrollbar border-b border-outline-variant/30">
-      <div className="flex px-4 lg:px-0 min-w-max">
-        {isLoading ? (
-          <div className="flex gap-4 px-4">
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-8 w-24" />
-          </div>
-        ) : (
-          policies.map((policy) => {
+    <div className="lg:hidden mb-8 policy-mobile-nav">
+      <div className="flex items-center gap-1.5 mb-2.5 px-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#283618]" />
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#283618]">
+          Select Policy
+        </span>
+      </div>
+
+      <div className="relative">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 -mx-1 scroll-smooth">
+          {policies.map((policy) => {
             const isActive = pathname === policy.path;
+            const IconComponent = policy.icon || Shield;
+
             return (
               <Link
                 key={policy.path}
                 to={policy.path}
-                className={`relative px-6 py-4 text-[12px] uppercase tracking-widest transition-all duration-300 font-label-sm ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
                   isActive
-                    ? 'text-on-surface font-bold'
-                    : 'text-on-surface-variant hover:text-on-surface'
+                    ? 'bg-[#283618] text-white shadow-sm ring-2 ring-[#283618]/20'
+                    : 'bg-[#fdfbf7] text-[#4b5563] border border-[#283618]/10 hover:border-[#283618]/30 hover:bg-white'
                 }`}
               >
-                {policy.title}
-                {isActive && (
-                  <motion.div
-                    layoutId="mobile-policy-active"
-                    className="absolute bottom-0 left-0 w-full h-[2px] bg-on-surface"
-                  />
-                )}
+                <IconComponent
+                  className={`w-3.5 h-3.5 ${isActive ? 'text-[#f7bb0e]' : 'text-[#283618]/70'}`}
+                />
+                <span>{policy.title}</span>
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e]" />}
               </Link>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
     </div>
   );
