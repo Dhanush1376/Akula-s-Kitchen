@@ -4,17 +4,15 @@ import {
   BadgeCheck,
   MapPin,
   Calendar,
-  GitCommit,
   Receipt,
   ShoppingBag,
   ShieldCheck,
-  History,
   Clock,
   ArrowRight,
   Ban,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { m as motion, AnimatePresence } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { SEO } from '../components/seo/SEO';
 import { InvoiceModal, OrderSuccessSkeleton, OptimizedImage } from '../components/ui';
 import { useState, useEffect } from 'react';

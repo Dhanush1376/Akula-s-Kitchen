@@ -90,7 +90,15 @@ export function BottomNav() {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
-  if (isCartOpen) return null;
+  if (
+    isCartOpen ||
+    location.pathname === '/cart' ||
+    location.pathname.startsWith('/cart') ||
+    location.pathname === '/checkout' ||
+    location.pathname.startsWith('/checkout')
+  ) {
+    return null;
+  }
 
   return (
     <motion.nav

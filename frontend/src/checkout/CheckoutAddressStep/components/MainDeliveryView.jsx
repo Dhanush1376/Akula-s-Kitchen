@@ -43,7 +43,7 @@ export function MainDeliveryView({
               </div>
               <button
                 onClick={() => setIsSelectingList(true)}
-                className="text-[11px] font-bold text-neutral-700 hover:text-black hover:bg-neutral-100 px-3 py-1.5 rounded-md border border-neutral-200 hover:border-neutral-300 transition-colors flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-bold text-neutral-700 hover:text-black hover:bg-neutral-100 px-3 py-1.5 rounded-full border border-neutral-200 hover:border-neutral-300 transition-colors flex items-center gap-1 cursor-pointer"
                 title="Change Address"
                 aria-label="Change Address"
               >
@@ -58,11 +58,11 @@ export function MainDeliveryView({
                 <span className="text-[14px] font-extrabold text-neutral-950 capitalize">
                   {activeSelectedAddress.name}
                 </span>
-                <span className="text-[9.5px] text-neutral-600 font-bold bg-neutral-100 px-2 py-0.5 rounded-md border border-black/5">
+                <span className="text-[9.5px] text-[#283618] font-bold bg-[#283618]/8 px-2.5 py-0.5 rounded-full border border-[#283618]/20">
                   Default
                 </span>
                 {activeSelectedAddress.tag && (
-                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 bg-[#283618]/10 text-[#283618] border border-[#283618]/20 rounded-md">
+                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 bg-[#283618]/10 text-[#283618] border border-[#283618]/20 rounded-full">
                     {activeSelectedAddress.tag}
                   </span>
                 )}

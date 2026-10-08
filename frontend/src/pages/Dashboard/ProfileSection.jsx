@@ -10,8 +10,10 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
 export function ProfileSection({ isDrawer = false }) {
-  const { user: dashboardUser, checkAuth, addresses } = useDashboard();
-  const { user, refreshUser } = useAuth();
+  const { user: dashboardUser, checkAuth, addresses, updateUser: dashUpdateUser } = useDashboard();
+  const { user: authUser, updateUser: authUpdateUser } = useAuth();
+  const updateUser = dashUpdateUser || authUpdateUser;
+  const activeUser = dashboardUser || authUser;
 
   // Profile Form state
   const [profileForm, setProfileForm] = useState({
@@ -26,15 +28,9 @@ export function ProfileSection({ isDrawer = false }) {
   const [isLoading, setIsLoading] = useState(true);
   const [linkingProvider, setLinkingProvider] = useState(null);
 
-  // Phone linking state
-  const [phoneToLink, setPhoneToLink] = useState('');
-  const [phoneChallenge, setPhoneChallenge] = useState('');
-  const [phoneOtp, setPhoneOtp] = useState('');
-  const [isLinkingPhone, setIsLinkingPhone] = useState(false);
-
   useEffect(() => {
-    if (dashboardUser) {
-      let initialName = dashboardUser.name || '';
+    if (activeUser) {
+      let initialName = activeUser.name || '';
       if (!initialName || initialName === 'Customer') {
         const addrWithName = addresses?.find(
           (a) => a.name && a.name.trim() && a.name.trim().toLowerCase() !== 'customer',
@@ -44,16 +40,21 @@ export function ProfileSection({ isDrawer = false }) {
         }
       }
 
+      let initialPhone = activeUser.phone || '';
+      if (!initialPhone) {
+        const addrWithPhone = addresses?.find((a) => a.phone && a.phone.trim());
+        if (addrWithPhone) {
+          initialPhone = addrWithPhone.phone.trim();
+        }
+      }
+
       setProfileForm({
         name: initialName,
-        phone: dashboardUser.phone || '',
-        gender: dashboardUser.gender || '',
+        phone: initialPhone,
+        gender: activeUser.gender || '',
       });
-      if (dashboardUser.phone && !phoneToLink) {
-        setPhoneToLink(dashboardUser.phone);
-      }
     }
-  }, [dashboardUser, phoneToLink, addresses]);
+  }, [activeUser, addresses]);
 
   const fetchProviders = async () => {
     try {
@@ -103,9 +104,20 @@ export function ProfileSection({ isDrawer = false }) {
     setIsUpdatingProfile(true);
     try {
       const res = await userService.updateProfile(profileForm);
-      if (res.success) {
+      if (res.success && res.data) {
+        if (updateUser) {
+          updateUser(res.data);
+        }
+        setProfileForm((prev) => ({
+          ...prev,
+          name: res.data.name || prev.name,
+          phone: res.data.phone || prev.phone,
+          gender: res.data.gender || prev.gender,
+        }));
         toast.success('Profile updated successfully');
-        await checkAuth();
+        if (checkAuth) {
+          await checkAuth();
+        }
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update profile');
@@ -124,7 +136,9 @@ export function ProfileSection({ isDrawer = false }) {
       await api.delete(`/auth/link/${providerName}`);
       toast.success(`${providerName} disconnected successfully`);
       fetchProviders();
-      refreshUser();
+      if (checkAuth) {
+        await checkAuth();
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to disconnect account');
     } finally {
@@ -132,59 +146,13 @@ export function ProfileSection({ isDrawer = false }) {
     }
   };
 
-  const handlePhoneRequest = async (e) => {
-    e.preventDefault();
-    const targetPhone = phoneToLink || profileForm.phone;
-    if (!targetPhone || targetPhone.length < 10) return;
-    try {
-      setLinkingProvider('phone-request');
-      const res = await api.post('/auth/link/phone/request', { phone: targetPhone });
-      setPhoneChallenge(res.data.data.challengeId);
-      setIsLinkingPhone(true);
-      toast.success('Verification code sent');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send code');
-    } finally {
-      setLinkingProvider(null);
-    }
-  };
-
-  const handlePhoneVerify = async (e) => {
-    e.preventDefault();
-    if (phoneOtp.length !== 6) return;
-    try {
-      setLinkingProvider('phone-verify');
-      await api.post('/auth/link/phone/verify', { challengeId: phoneChallenge, otp: phoneOtp });
-      toast.success('Phone number linked successfully');
-      setIsLinkingPhone(false);
-      setPhoneOtp('');
-      fetchProviders();
-      refreshUser();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid code');
-    } finally {
-      setLinkingProvider(null);
-    }
-  };
-
-  const handleLogoutAll = async () => {
-    try {
-      await api.post('/auth/logout-all');
-      toast.success('Logged out from all devices');
-      window.location.href = '/';
-    } catch (err) {
-      toast.error('Failed to logout from all devices');
-    }
-  };
-
   const googleLinked = providers.find((p) => p.provider === 'google');
-  const phoneLinked = providers.find((p) => p.provider === 'phone');
 
   const inputClass =
-    'w-full px-3.5 py-2.5 text-[13px] font-medium text-neutral-900 bg-white border border-neutral-300 rounded-lg outline-none transition-all focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 placeholder:text-neutral-400 font-sans shadow-2xs';
+    'w-full px-4 py-2.5 text-[13px] font-medium text-neutral-900 bg-white border border-neutral-300 rounded-full outline-none transition-all focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 placeholder:text-neutral-400 font-sans shadow-2xs';
 
   const inputClassDisabled =
-    'w-full px-3.5 py-2.5 text-[13px] font-semibold text-neutral-800 bg-neutral-100/80 border border-neutral-300 rounded-lg cursor-not-allowed font-sans select-all';
+    'w-full px-4 py-2.5 text-[13px] font-semibold text-neutral-800 bg-neutral-100/80 border border-neutral-300 rounded-full cursor-not-allowed font-sans select-all';
 
   return (
     <motion.div
@@ -251,7 +219,7 @@ export function ProfileSection({ isDrawer = false }) {
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[12px] font-semibold text-neutral-800">Email Address</label>
                 {googleLinked && (
-                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-semibold">
+                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">
                     <ShieldCheck size={11} /> Google Connected
                   </span>
                 )}
@@ -261,14 +229,14 @@ export function ProfileSection({ isDrawer = false }) {
                   <input
                     type="email"
                     disabled
-                    value={dashboardUser?.email || ''}
-                    className={`${inputClassDisabled} pl-9`}
+                    value={activeUser?.email || ''}
+                    className={`${inputClassDisabled} !pl-10 !pr-4`}
                   />
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
                 </div>
 
                 {!isLoading && !googleLinked && (
-                  <div className="shrink-0 h-[40px] overflow-hidden rounded-lg">
+                  <div className="shrink-0 h-[40px] overflow-hidden rounded-full">
                     <div className="scale-[0.88] origin-top-left">
                       <GoogleSignInButton
                         onClick={() => {
@@ -291,84 +259,24 @@ export function ProfileSection({ isDrawer = false }) {
 
             {/* Phone */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label
-                  htmlFor="dashboard-profile-phone"
-                  className="text-[12px] font-semibold text-neutral-800"
-                >
-                  Mobile Number
-                </label>
-                {phoneLinked && (
-                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-semibold">
-                    <ShieldCheck size={11} /> Verified
-                  </span>
-                )}
-              </div>
+              <label
+                htmlFor="dashboard-profile-phone"
+                className="block text-[12px] font-semibold text-neutral-800 mb-1.5"
+              >
+                Mobile Number
+              </label>
 
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      id="dashboard-profile-phone"
-                      type="tel"
-                      autoComplete="tel"
-                      value={profileForm.phone}
-                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      className={`${phoneLinked ? inputClassDisabled : inputClass} pl-9`}
-                      placeholder="e.g. 9876543210"
-                      disabled={!!phoneLinked}
-                    />
-                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
-                  </div>
-
-                  {!isLoading &&
-                    (phoneLinked ? (
-                      <button
-                        type="button"
-                        onClick={() => handleUnlink('phone')}
-                        disabled={linkingProvider !== null}
-                        className="px-3.5 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-[11px] font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-                      >
-                        {linkingProvider === 'phone' ? 'Removing…' : 'Disconnect'}
-                      </button>
-                    ) : (
-                      !isLinkingPhone && (
-                        <button
-                          type="button"
-                          onClick={handlePhoneRequest}
-                          disabled={linkingProvider === 'phone-request' || !profileForm.phone}
-                          className="px-3.5 py-2 border border-neutral-300 text-neutral-800 hover:bg-neutral-100 hover:border-neutral-400 text-[11px] font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50"
-                        >
-                          {linkingProvider === 'phone-request' ? 'Sending…' : 'Verify'}
-                        </button>
-                      )
-                    ))}
-                </div>
-
-                {isLinkingPhone && (
-                  <div className="flex gap-2 items-center bg-neutral-50 p-2.5 rounded-lg border border-neutral-200">
-                    <input
-                      type="text"
-                      placeholder="6-digit OTP"
-                      maxLength={6}
-                      value={phoneOtp}
-                      onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-3 py-2 text-[13px] font-mono font-semibold text-neutral-900 bg-white border border-neutral-300 rounded-lg outline-none focus:border-[#283618] tracking-widest"
-                    />
-                    <button
-                      type="button"
-                      onClick={handlePhoneVerify}
-                      disabled={linkingProvider === 'phone-verify' || phoneOtp.length !== 6}
-                      className="bg-[#283618] text-white px-4 py-2 text-[11px] font-bold rounded-lg cursor-pointer hover:bg-[#1f2b13] transition-colors shrink-0 disabled:opacity-50 shadow-xs"
-                    >
-                      {linkingProvider === 'phone-verify' ? (
-                        <Loader2 className="animate-spin inline-block" size={12} />
-                      ) : (
-                        'Verify'
-                      )}
-                    </button>
-                  </div>
-                )}
+              <div className="relative">
+                <input
+                  id="dashboard-profile-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                  className={`${inputClass} !pl-10 !pr-4`}
+                  placeholder="e.g. 9876543210"
+                />
+                <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
               </div>
             </div>
           </div>
@@ -378,7 +286,7 @@ export function ProfileSection({ isDrawer = false }) {
             <button
               disabled={isUpdatingProfile}
               type="submit"
-              className="inline-flex items-center gap-2 bg-[#283618] hover:bg-[#1f2b13] text-white px-6 py-2.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99]"
+              className="inline-flex items-center gap-2 bg-[#283618] hover:bg-[#1f2b13] text-white px-7 py-2.5 rounded-full text-[12px] font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-[0.99]"
             >
               {isUpdatingProfile ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

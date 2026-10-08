@@ -1,5 +1,4 @@
 import { IDesignBlock } from '../../models/EmailCampaign';
-import { getFrontendUrl } from '../../utils/getFrontendUrl';
 import { getBackendUrl } from '../../utils/getBackendUrl';
 import storeSettingsService from '../StoreSettingsService';
 import logger from '../../config/logger';

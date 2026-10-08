@@ -80,7 +80,7 @@ export function useProductListingState() {
   const queryParams = useMemo(() => {
     const params = {
       page: pageParam,
-      limit: 12,
+      limit: 50,
     };
 
     if (categoryParam !== 'All') {

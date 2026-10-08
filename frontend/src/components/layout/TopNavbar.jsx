@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Search,
   Heart,
   ShoppingCart,
   LogIn,
@@ -9,19 +8,21 @@ import {
   Menu,
   ShoppingBag,
   ChevronDown,
+  ChevronRight,
+  ChevronLeft,
   X,
   LayoutGrid,
-  Mic,
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { BrandLogo } from '../ui/BrandLogo';
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { adminInviteService } from '../../services/domainServices';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { useSearchOverlay } from '../../hooks/useSearchOverlay';
+import { SearchTrigger } from '../search/SearchTrigger';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useScrollDirection } from '../../hooks/useScrollDirection';
 import { productService } from '../../services/api/productService';
@@ -282,6 +283,51 @@ export function TopNavbar() {
         : [];
 
   const categoriesScrollRef = React.useRef(null);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+
+  const checkCategoriesScroll = useCallback(() => {
+    if (categoriesScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = categoriesScrollRef.current;
+      setCanScrollLeft(scrollLeft > 6);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkCategoriesScroll();
+    const frame = requestAnimationFrame(checkCategoriesScroll);
+    const timer = setTimeout(checkCategoriesScroll, 150);
+    const el = categoriesScrollRef.current;
+    if (!el) {
+      return () => {
+        cancelAnimationFrame(frame);
+        clearTimeout(timer);
+      };
+    }
+    el.addEventListener('scroll', checkCategoriesScroll, { passive: true });
+    window.addEventListener('resize', checkCategoriesScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+      el.removeEventListener('scroll', checkCategoriesScroll);
+      window.removeEventListener('resize', checkCategoriesScroll);
+    };
+  }, [checkCategoriesScroll, displayCategories]);
+
+  const handleScrollRight = () => {
+    if (categoriesScrollRef.current) {
+      categoriesScrollRef.current.scrollBy({ left: 180, behavior: 'smooth' });
+      setTimeout(checkCategoriesScroll, 250);
+    }
+  };
+
+  const handleScrollLeft = () => {
+    if (categoriesScrollRef.current) {
+      categoriesScrollRef.current.scrollBy({ left: -180, behavior: 'smooth' });
+      setTimeout(checkCategoriesScroll, 250);
+    }
+  };
 
   return (
     <>
@@ -303,46 +349,12 @@ export function TopNavbar() {
               />
             </Link>
 
-            {/* Right Content: Top Row (Search + Actions) & Bottom Row (TODAY + Categories) */}
+            {/* Right Content: Top Row (Search + Actions) & Bottom Row (SHOP + Categories) */}
             <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5">
               {/* Top Row: Pill Search Bar + Actions */}
               <div className="flex items-center gap-2 sm:gap-3 w-full">
-                {/* Pill Search Bar */}
-                <div
-                  onClick={() => search.handleOpen('text')}
-                  className="flex-1 min-w-0 h-10 sm:h-11 bg-white/50 hover:bg-white/75 backdrop-blur-md border border-neutral-200 hover:border-neutral-300 rounded-full pl-3.5 sm:pl-4 pr-1 sm:pr-1.5 flex items-center gap-2 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02),0_1px_3px_rgba(0,0,0,0.03)] transition-all cursor-pointer group"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') search.handleOpen('text');
-                  }}
-                  aria-label="Search batters, pickles, snacks"
-                >
-                  <Search
-                    size={17}
-                    strokeWidth={2}
-                    className="text-neutral-600 shrink-0 group-hover:text-black transition-colors"
-                  />
-                  <span className="flex-1 text-[12px] sm:text-[13px] text-neutral-500 font-normal truncate select-none">
-                    Search batters, pickles, snacks...
-                  </span>
-                  <span
-                    className="h-4 sm:h-5 w-px bg-neutral-200 shrink-0 mx-0.5"
-                    aria-hidden="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      search.handleOpen('voice');
-                    }}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#fbb03b] hover:bg-[#f7a626] active:scale-95 flex items-center justify-center text-neutral-950 shrink-0 transition-transform shadow-2xs cursor-pointer"
-                    aria-label="Voice Search"
-                    title="Voice Search"
-                  >
-                    <Mic size={16} strokeWidth={2.2} />
-                  </button>
-                </div>
+                {/* Search pill: opens the search panel (the mic opens it in voice mode) */}
+                <SearchTrigger onOpen={search.handleOpen} />
 
                 {/* Right Action Group: Profile (Laptop/Desktop), Cart & Menu Circular Buttons */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -503,24 +515,28 @@ export function TopNavbar() {
                 </div>
               </div>
 
-              {/* Bottom Row: Horizontal Scrolling Row (TODAY + Categories) */}
+              {/* Bottom Row: Horizontal Scrolling Row (SHOP + Categories) */}
               <div className="flex items-center w-full min-w-0 relative rounded-full overflow-hidden isolate">
-                {/* Horizontal Scrolling Categories including TODAY */}
+                {/* Horizontal Scrolling Categories including SHOP */}
                 <div
                   ref={categoriesScrollRef}
                   className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-1 min-w-0 py-1 px-0.5 sm:px-3 rounded-full"
                   role="tablist"
                   aria-label="Product Categories"
                 >
-                  {/* TODAY Pill Button (Dark Olive Green) */}
+                  {/* SHOP Pill Button (Dark Olive Green / Active Gold) */}
                   <button
                     type="button"
-                    onClick={() => navigate('/')}
-                    className="bg-[#283618]/95 hover:bg-[#1f2b13] text-white rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 text-[11px] sm:text-[11.5px] font-bold tracking-wider uppercase whitespace-nowrap transition-all shadow-2xs cursor-pointer border-0 outline-none backdrop-blur-xs"
-                    aria-label="Today specials"
+                    onClick={() => navigate('/collections')}
+                    className={`rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 text-[11px] sm:text-[11.5px] font-bold tracking-wider uppercase whitespace-nowrap transition-all shadow-2xs cursor-pointer border-0 outline-none backdrop-blur-xs ${
+                      isShopPage && (!activeCategory || activeCategory.toLowerCase() === 'all')
+                        ? 'bg-[#f7bb0e] text-neutral-950 shadow-xs'
+                        : 'bg-[#283618]/95 hover:bg-[#1f2b13] text-white'
+                    }`}
+                    aria-label="Shop all products"
                   >
                     <LayoutGrid size={14} strokeWidth={2.2} className="shrink-0" />
-                    <span>TODAY</span>
+                    <span>SHOP</span>
                   </button>
 
                   {displayCategories.map((cat, i) => {
@@ -546,6 +562,36 @@ export function TopNavbar() {
                     );
                   })}
                 </div>
+
+                {/* Right Scroll Arrow Button (>) */}
+                {canScrollRight && (
+                  <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-6 pr-0.5 sm:pr-1 bg-gradient-to-l from-white/95 via-white/80 to-transparent pointer-events-none">
+                    <button
+                      type="button"
+                      onClick={handleScrollRight}
+                      className="pointer-events-auto w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full bg-white hover:bg-neutral-50 active:scale-95 text-neutral-900 border border-neutral-200/90 shadow-xs flex items-center justify-center transition-all cursor-pointer"
+                      aria-label="Scroll categories right"
+                      title="Next categories"
+                    >
+                      <ChevronRight size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Left Scroll Arrow Button (<) */}
+                {canScrollLeft && (
+                  <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-6 pl-0.5 sm:pl-1 bg-gradient-to-r from-white/95 via-white/80 to-transparent pointer-events-none">
+                    <button
+                      type="button"
+                      onClick={handleScrollLeft}
+                      className="pointer-events-auto w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full bg-white hover:bg-neutral-50 active:scale-95 text-neutral-900 border border-neutral-200/90 shadow-xs flex items-center justify-center transition-all cursor-pointer"
+                      aria-label="Scroll categories left"
+                      title="Previous categories"
+                    >
+                      <ChevronLeft size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -849,6 +895,8 @@ export function TopNavbar() {
             onExecuteSearch={search.executeSearch}
             onClearRecent={search.clearRecentSearches}
             correctedQuery={search.correctedQuery}
+            searchMeta={search.searchMeta}
+            searchError={search.searchError}
           />
         </Suspense>
       )}

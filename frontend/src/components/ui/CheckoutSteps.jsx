@@ -27,7 +27,7 @@ export function CheckoutSteps({ currentStep, onStepClick, steps = ['BAG', 'ADDRE
           {currentStep > 0 && onStepClick && (
             <button
               onClick={() => onStepClick(currentStep - 1)}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-neutral-700 hover:text-black hover:bg-neutral-100 text-[11px] font-bold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-neutral-700 hover:text-black hover:bg-neutral-100 text-[11px] font-bold transition-all cursor-pointer active:scale-95 border border-neutral-200/60"
               aria-label="Go back to previous step"
             >
               <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2.2} />
@@ -53,15 +53,30 @@ export function CheckoutSteps({ currentStep, onStepClick, steps = ['BAG', 'ADDRE
                   >
                     <motion.div
                       layout
-                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-extrabold transition-all duration-500 shrink-0 ${isActive ? 'bg-black text-[#f7bb0e] shadow-sm ring-4 ring-[#f7bb0e]/25' : isCompleted ? 'bg-[#f7bb0e] text-neutral-950' : 'bg-neutral-100 border border-neutral-200 text-neutral-400'}`}
+                      transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-extrabold transition-all duration-300 shrink-0 ${isActive ? 'bg-black text-[#f7bb0e] shadow-sm ring-4 ring-[#f7bb0e]/25 scale-105' : isCompleted ? 'bg-[#f7bb0e] text-neutral-950' : 'bg-neutral-100 border border-neutral-200 text-neutral-400'}`}
                     >
                       {isCompleted ? (
-                        <Check
-                          className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-950"
-                          strokeWidth={2.5}
-                        />
+                        <motion.div
+                          key="check"
+                          initial={{ scale: 0.4, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        >
+                          <Check
+                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-950"
+                            strokeWidth={2.5}
+                          />
+                        </motion.div>
                       ) : (
-                        index + 1
+                        <motion.span
+                          key="number"
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          {index + 1}
+                        </motion.span>
                       )}
                     </motion.div>
                     <span

@@ -81,9 +81,9 @@ class PrefetchManager {
         }
       } else if (route === '/collections' || route.startsWith('/collections?')) {
         await this.queryClient.prefetchQuery({
-          queryKey: ['products', { page: 1, limit: 12, sort: 'newest' }],
+          queryKey: ['products', { page: 1, limit: 50, sort: 'newest' }],
           queryFn: async () => {
-            const res = await productService.getAll({ page: 1, limit: 12, sort: 'newest' });
+            const res = await productService.getAll({ page: 1, limit: 50, sort: 'newest' });
             return res.success ? res.data : res;
           },
           staleTime: 1000 * 60 * 5,

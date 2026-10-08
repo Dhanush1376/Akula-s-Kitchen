@@ -194,7 +194,7 @@ export class OrderCheckoutService {
         codFee: settings.payments.codFee,
         enableFreeShipping: settings.shipping.enableFreeShipping,
         freeShippingThreshold: settings.shipping.freeShippingThreshold,
-        deliveryCharge: settings.shipping.deliveryCharge,
+        deliveryCharge: 0, // Delivery fee is excluded from online order totals as per store billing policy
         platformFee: settings.orders.platformFee || 0,
         taxAmount: taxResult.taxAmount,
         isTaxInclusive: taxResult.taxInclusive,

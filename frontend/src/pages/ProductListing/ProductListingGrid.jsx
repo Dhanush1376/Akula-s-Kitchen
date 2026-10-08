@@ -52,6 +52,7 @@ export const ProductListingGrid = React.memo(
               onClose={() => setIsFilterOpen(false)}
               sortBy={sortBy}
               onSortChange={setSortBy}
+              products={products}
             />
           </aside>
 
@@ -177,8 +178,8 @@ export const ProductListingGrid = React.memo(
                     ))}
                   </div>
 
-                  {totalPages > 1 && (
-                    <div className="mt-16 text-center">
+                  {totalPages > 1 ? (
+                    <div className="mt-14 text-center">
                       <span className="font-label-sm text-[11px] text-on-surface uppercase tracking-[0.3em] font-bold block mb-4">
                         Showing Page {pageParam} of {totalPages}
                       </span>
@@ -200,6 +201,23 @@ export const ProductListingGrid = React.memo(
                           }, 50);
                         }}
                       />
+                      {pageParam === totalPages && (
+                        <div className="mt-6 flex items-center justify-center gap-3 select-none">
+                          <div className="w-8 h-px bg-neutral-200" />
+                          <span className="font-sans text-[11px] tracking-widest uppercase text-neutral-400 font-medium">
+                            End
+                          </span>
+                          <div className="w-8 h-px bg-neutral-200" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-10 mb-2 flex items-center justify-center gap-3 select-none">
+                      <div className="w-8 h-px bg-neutral-200" />
+                      <span className="font-sans text-[11px] tracking-widest uppercase text-neutral-400 font-medium">
+                        End
+                      </span>
+                      <div className="w-8 h-px bg-neutral-200" />
                     </div>
                   )}
                 </>

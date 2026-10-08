@@ -10,7 +10,7 @@ export default function OrderDeliveryAddressCard({ shippingAddress }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 font-sans text-left">
       {/* Address Card */}
-      <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm">
+      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 shadow-sm">
         <div className="pb-3 mb-3 border-b border-neutral-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-neutral-800" strokeWidth={2} />
@@ -19,7 +19,7 @@ export default function OrderDeliveryAddressCard({ shippingAddress }) {
             </span>
           </div>
           {shippingAddress?.tag && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 border border-neutral-200">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200">
               {shippingAddress.tag}
             </span>
           )}
@@ -50,7 +50,7 @@ export default function OrderDeliveryAddressCard({ shippingAddress }) {
       </div>
 
       {/* GPS Coordinate Map Panel */}
-      <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm flex flex-col">
+      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col">
         <div className="pb-3 mb-3 border-b border-neutral-200 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Navigation className="w-4 h-4 text-neutral-800" strokeWidth={2} />
@@ -58,7 +58,7 @@ export default function OrderDeliveryAddressCard({ shippingAddress }) {
               Destination Location
             </span>
           </div>
-          <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+          <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
             GPS Synced
           </span>
         </div>

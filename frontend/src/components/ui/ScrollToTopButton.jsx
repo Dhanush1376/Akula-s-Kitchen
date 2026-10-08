@@ -1,11 +1,21 @@
 import { ArrowUp } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { m as motion, AnimatePresence } from 'framer-motion';
 
 export function ScrollToTopButton() {
+  const { pathname } = useLocation();
   const [isVisible, setIsVisible] = useState(false);
 
+  const isHiddenRoute =
+    pathname === '/cart' ||
+    pathname.startsWith('/cart') ||
+    pathname === '/checkout' ||
+    pathname.startsWith('/checkout');
+
   useEffect(() => {
+    if (isHiddenRoute) return;
+
     const toggleVisibility = () => {
       if (window.scrollY > 500) {
         setIsVisible(true);
@@ -16,7 +26,11 @@ export function ScrollToTopButton() {
 
     window.addEventListener('scroll', toggleVisibility, { passive: true });
     return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
+  }, [isHiddenRoute]);
+
+  if (isHiddenRoute) {
+    return null;
+  }
 
   const scrollToTop = () => {
     window.scrollTo({

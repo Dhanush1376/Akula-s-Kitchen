@@ -205,7 +205,6 @@ export function AppRoutes() {
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews" element={<ProductAllReviews />} />
                 <Route path="/product/:id/reviews/images" element={<ProductReviewImages />} />
-                <Route path="/cart" element={<Cart />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/about" element={<Navigate to="/" replace />} />
                 <Route path="/contact" element={<Contact />} />
@@ -242,6 +241,7 @@ export function AppRoutes() {
                 <Route path="*" element={<NotFound />} />
               </Route>
               <Route element={<MinimalLayout />}>
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
               </Route>
             </Route>

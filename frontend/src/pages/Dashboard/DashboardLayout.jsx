@@ -11,7 +11,6 @@ import { AccountLeaves, AccountTopLeaf } from '../../components/dashboard/Accoun
 import { AddressModal } from '../../components/dashboard/AddressModal';
 import { WriteReviewModal } from '../../components/sections/ProductReviews';
 import { AppDrawer } from '../../components/ui/AppDrawer';
-import { Skeleton } from '../../components/ui';
 import { ProfileSection } from './ProfileSection';
 import { AddressesSection } from './AddressesSection';
 import { NotificationsSection } from './NotificationsSection';

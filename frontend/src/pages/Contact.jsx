@@ -1,14 +1,24 @@
-import { ExternalLink, CheckCircle2, Send } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+} from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { SEO } from '../components/seo/SEO';
 import { ContactSkeleton } from '../components/ui/Skeleton';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWebsiteContent } from '../hooks/useWebsiteContent';
 import { inquiryService } from '../services/domainServices';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 import storeSettingsService from '../services/api/storeSettingsService';
-import { MOTION_PRESETS, EASE, DURATION } from '../constants/design-tokens';
+import { windBreeze } from '../components/effects/FallingLeaves';
+import './contact.css';
 import { useCategories } from '../hooks/useProductQueries';
 import { useAuth } from '../context/AuthContext';
 import { useConfig } from '../context/ConfigContext';
@@ -40,6 +50,13 @@ export function Contact() {
     message: '',
   });
   const [otherSubject, setOtherSubject] = useState('');
+  const leafRef = useRef(null);
+
+  // The corner leaf drifts in a slow breeze, like the leaves elsewhere on the site
+  useEffect(() => {
+    const breeze = windBreeze(leafRef.current, { strength: 0.45 });
+    return () => breeze?.cancel();
+  }, [loading, settingsLoading]);
 
   useEffect(() => {
     if (user) {
@@ -114,146 +131,303 @@ export function Contact() {
 
   const addressDisplay = settings?.contact?.address || contact?.address || BRAND.address || '';
 
-  const contactMethods = [
-    ...(addressDisplay
-      ? [
-          {
-            title: 'Kitchen Address',
-            value: addressDisplay,
-            icon: 'location_on',
-            link:
-              settings?.contact?.googleMapsUrl || contact?.mapEmbed || 'https://maps.google.com',
-            target: '_blank',
-          },
-        ]
-      : []),
+  const hoursDisplay =
+    settings?.contact?.supportHours ||
+    contact?.businessHours ||
+    BRAND.supportHours ||
+    'Mon - Sat, 10 AM to 6 PM';
+
+  const mapsUrl =
+    settings?.contact?.googleMapsUrl ||
+    contact?.mapEmbed ||
+    (addressDisplay
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressDisplay)}`
+      : 'https://maps.google.com');
+
+  // The three fastest ways to reach the kitchen, as large tappable cards
+  const quickContacts = [
     {
-      title: 'WhatsApp Us',
+      key: 'whatsapp',
+      label: 'WhatsApp',
+      hint: 'Quickest reply',
       value: whatsappDisplay,
-      icon: 'forum',
-      link: BRAND.getWhatsAppUrl(null, whatsappDisplay),
-      target: '_blank',
+      href: BRAND.getWhatsAppUrl(null, whatsappDisplay),
+      external: true,
+      Icon: MessageCircle,
     },
     {
-      title: 'Email Us',
-      value: emailDisplay,
-      icon: 'mail',
-      link: `mailto:${emailDisplay}`,
-      target: '_self',
-    },
-    {
-      title: 'Call Us',
+      key: 'call',
+      label: 'Call us',
+      hint: hoursDisplay,
       value: primaryPhoneDisplay,
-      icon: 'phone',
-      link: `tel:${cleanPhoneDigits(primaryPhoneDisplay)}`,
-      target: '_self',
+      href: `tel:${cleanPhoneDigits(primaryPhoneDisplay)}`,
+      Icon: Phone,
     },
-    ...(alternatePhoneDisplay && alternatePhoneDisplay !== primaryPhoneDisplay
-      ? [
-          {
-            title: 'Alternate Support',
-            value: alternatePhoneDisplay,
-            icon: 'call',
-            link: `tel:${cleanPhoneDigits(alternatePhoneDisplay)}`,
-            target: '_self',
-          },
-        ]
-      : []),
     {
-      title: 'Support Hours',
-      value:
-        settings?.contact?.supportHours ||
-        contact?.businessHours ||
-        BRAND.supportHours ||
-        'Mon - Sat, 10 AM to 6 PM',
-      icon: 'schedule',
-      link: '#',
-      target: '_self',
+      key: 'email',
+      label: 'Email',
+      hint: 'We reply within a day',
+      value: emailDisplay,
+      href: `mailto:${emailDisplay}`,
+      Icon: Mail,
     },
-  ];
+  ].filter((c) => c.value);
+
+  const showAlternate = alternatePhoneDisplay && alternatePhoneDisplay !== primaryPhoneDisplay;
 
   if (loading || settingsLoading) return <ContactSkeleton />;
 
   return (
-    <div className="bg-[var(--color-surface-ivory)] min-h-screen pt-24 lg:pt-32 pb-20 relative overflow-hidden selection:bg-primary/20">
+    <div className="ct-page">
       <SEO
         title="Contact Us"
-        description={`Get in touch with ${storeName || "Akula's Kitchen"} for inquiries about our culinary offerings, catering services, or custom dining requests. We're here to help bring your vision to life.`}
+        description={`Get in touch with ${storeName || "Akula's Kitchen"} about orders, bulk requests or anything else. We're happy to help.`}
       />
 
-      <main className="max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24 items-start pt-4">
-          {/* Left Side: Modern Editorial Content & Leaflet Map */}
-          <div className="flex flex-col justify-center md:sticky md:top-24 lg:top-32 lg:pb-32">
-            <div className="space-y-4">
-              <motion.h1
-                {...MOTION_PRESETS.fadeInUp}
-                className="font-display text-4xl lg:text-5xl text-on-surface leading-tight"
-              >
-                Let's Connect.
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: DURATION.slow, ease: EASE.smooth }}
-                className="font-body text-on-surface-variant/70 text-sm leading-relaxed max-w-sm mb-6"
-              >
-                Have a question or planning an event? Our team is ready to assist you.
-              </motion.p>
+      {/* Hero: cream panel with a banana leaf rising from the corner */}
+      <section className="ct-hero" aria-labelledby="ct-title">
+        <div className="ct-hero__panel">
+          <div className="ct-hero__leaf" aria-hidden="true">
+            <div ref={leafRef} className="ct-hero__leaf-sway">
+              <img
+                src="/account/corner-leaf-right.webp"
+                alt=""
+                className="ct-hero__leaf-shadow"
+                draggable="false"
+                decoding="async"
+              />
+              <img
+                src="/account/corner-leaf-right.webp"
+                alt=""
+                className="ct-hero__leaf-img"
+                draggable="false"
+                decoding="async"
+              />
             </div>
+          </div>
 
-            {/* Contact Methods (Information Hub) */}
-            <div className="flex flex-col gap-2 mb-8 w-full max-w-md">
-              {contactMethods.map((method, idx) => (
-                <motion.a
-                  key={method.title}
-                  href={method.link}
-                  target={method.target}
-                  rel={method.target === '_blank' ? 'noopener noreferrer' : undefined}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    delay: 0.2 + idx * 0.1,
-                    duration: DURATION.slow,
-                    ease: EASE.smooth,
-                  }}
-                  className="flex items-center gap-3 p-3 rounded-[16px] border border-outline-variant/10 bg-white/40"
+          <div className="ct-hero__copy">
+            <p className="ct-eyebrow ct-rise" style={{ '--d': 0 }}>
+              <span className="ct-dot" aria-hidden="true" />
+              We&apos;re here to help
+            </p>
+            <h1 id="ct-title" className="ct-hero__title ct-rise" style={{ '--d': 1 }}>
+              Let&apos;s talk <span>food.</span>
+            </h1>
+            <p className="ct-hero__lede ct-rise" style={{ '--d': 2 }}>
+              A question about an order, a bulk request for a function, or just want to say hello?
+              Reach the kitchen the way that suits you.
+            </p>
+          </div>
+
+          <ul className="ct-quick">
+            {quickContacts.map(({ key, label, hint, value, href, external, Icon }, i) => (
+              <li key={key} className="ct-rise" style={{ '--d': 3 + i }}>
+                <a
+                  href={href}
+                  target={external ? '_blank' : undefined}
+                  rel={external ? 'noopener noreferrer' : undefined}
+                  className={`ct-quick__card ct-quick__card--${key}`}
                 >
-                  <div className="w-8 h-8 rounded-full bg-[var(--color-gold)]/10 flex items-center justify-center shrink-0 shadow-sm">
-                    <span className="material-symbols-outlined text-[16px] text-[var(--color-gold-dark)]">
-                      {method.icon}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-label text-[9px] uppercase tracking-[0.2em] text-secondary font-bold">
-                      {method.title}
-                    </span>
-                    <span className="font-body text-[12px] text-on-surface font-semibold leading-relaxed break-words">
-                      {method.value}
-                    </span>
-                  </div>
-                </motion.a>
-              ))}
+                  <span className="ct-quick__icon" aria-hidden="true">
+                    <Icon strokeWidth={1.8} />
+                  </span>
+                  <span className="ct-quick__text">
+                    <span className="ct-quick__label">{label}</span>
+                    <span className="ct-quick__value">{value}</span>
+                    <span className="ct-quick__hint">{hint}</span>
+                  </span>
+                  <ArrowRight className="ct-quick__go" strokeWidth={2.2} aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <main className="ct-main">
+        {/* Form card */}
+        <section className="ct-form-card" aria-labelledby="ct-form-title">
+          <AnimatePresence>
+            {formState === 'success' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="ct-success"
+              >
+                <span className="ct-success__icon">
+                  <CheckCircle2 strokeWidth={1.6} />
+                </span>
+                <h2 className="ct-success__title">Message received</h2>
+                <p className="ct-success__text">
+                  Thank you! The kitchen will get back to you within one business day.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setFormState('idle')}
+                  className="ct-btn ct-btn--outline"
+                >
+                  Send another message
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <p className="ct-eyebrow">
+            <span className="ct-dot" aria-hidden="true" />
+            Send a message
+          </p>
+          <h2 id="ct-form-title" className="ct-form-card__title">
+            Write to the kitchen
+          </h2>
+
+          <form onSubmit={handleSubmit} className="ct-form">
+            <div className="ct-form__row">
+              <div className="ct-field">
+                <label htmlFor="contact-name">
+                  Your name <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="contact-name"
+                  type="text"
+                  required
+                  autoComplete="name"
+                  placeholder="Full name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+              <div className="ct-field">
+                <label htmlFor="contact-email">
+                  Email <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="contact-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
             </div>
 
-            <motion.a
-              href={
-                settings?.contact?.googleMapsUrl ||
-                contact?.mapEmbed ||
-                (addressDisplay
-                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressDisplay)}`
-                  : 'https://maps.google.com')
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: DURATION.slow, ease: EASE.smooth }}
-              className="h-48 md:h-60 lg:h-72 w-full max-w-md rounded-[24px] overflow-hidden shadow-sm border border-outline-variant/20 bg-white block relative group cursor-pointer"
-            >
-              {/* Invisible overlay to block map interactions and capture clicks */}
-              <div className="absolute inset-0 z-[1000] bg-transparent" />
+            <div className="ct-form__row">
+              <div className="ct-field">
+                <label htmlFor="contact-phone">Phone</label>
+                <input
+                  id="contact-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="+91"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+              <div className="ct-field">
+                <label htmlFor="contact-subject">
+                  What&apos;s it about? <span aria-hidden="true">*</span>
+                </label>
+                <select
+                  id="contact-subject"
+                  required
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                >
+                  <option value="General Inquiry">General inquiry</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="Collaboration">Collaboration</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
 
+            <AnimatePresence>
+              {formData.subject === 'Other' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="ct-field overflow-hidden"
+                >
+                  <label htmlFor="contact-other">
+                    Please specify <span aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="contact-other"
+                    type="text"
+                    required
+                    placeholder="Briefly describe your inquiry"
+                    value={otherSubject}
+                    onChange={(e) => setOtherSubject(e.target.value)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="ct-field">
+              <label htmlFor="contact-message">
+                Message <span aria-hidden="true">*</span>
+              </label>
+              <textarea
+                id="contact-message"
+                required
+                rows={5}
+                placeholder="Tell us what you need: an order question, quantities for a function, a product you're looking for..."
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={formState === 'sending'}
+              className="ct-btn ct-btn--primary"
+            >
+              <span>{formState === 'sending' ? 'Sending…' : 'Send message'}</span>
+              <span className="ct-btn__icon" aria-hidden="true">
+                <ArrowRight strokeWidth={2.5} />
+              </span>
+            </button>
+          </form>
+        </section>
+
+        {/* Visit card: address, hours, map */}
+        <aside className="ct-visit" aria-label="Visit the kitchen">
+          <div className="ct-visit__card">
+            <p className="ct-eyebrow">
+              <span className="ct-dot" aria-hidden="true" />
+              Visit the kitchen
+            </p>
+            {addressDisplay && (
+              <div className="ct-visit__row">
+                <MapPin strokeWidth={1.8} aria-hidden="true" />
+                <span>{addressDisplay}</span>
+              </div>
+            )}
+            <div className="ct-visit__row">
+              <Clock strokeWidth={1.8} aria-hidden="true" />
+              <span>{hoursDisplay}</span>
+            </div>
+            {showAlternate && (
+              <a
+                href={`tel:${cleanPhoneDigits(alternatePhoneDisplay)}`}
+                className="ct-visit__row ct-visit__row--link"
+              >
+                <Phone strokeWidth={1.8} aria-hidden="true" />
+                <span>{alternatePhoneDisplay}</span>
+              </a>
+            )}
+
+            <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="ct-map">
+              {/* Overlay blocks map dragging and turns the whole map into a link */}
+              <span className="ct-map__shield" />
               <GPSMap
                 address={{
                   city: settings?.contact?.city,
@@ -261,220 +435,13 @@ export function Contact() {
                   pincode: settings?.contact?.postalCode,
                 }}
               />
-
-              {/* Hover indicator */}
-              <div className="absolute inset-0 z-[1010] bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/95 backdrop-blur text-black px-5 py-2.5 rounded-full font-bold text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                  <span>Open in Google Maps</span>
-                  <ExternalLink className="text-[14px]" strokeWidth={1.5} />
-                </div>
-              </div>
-            </motion.a>
-          </div>
-
-          {/* Right Side: Redesigned Luxury Minimalistic Form */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: DURATION.slow, ease: EASE.smooth }}
-            className="relative w-full h-full flex flex-col justify-center"
-          >
-            {/* Success Overlay */}
-            <AnimatePresence>
-              {formState === 'success' && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center text-center p-8 rounded-[32px]"
-                >
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                    <CheckCircle2 className="text-primary text-3xl" strokeWidth={1.5} />
-                  </div>
-                  <h2 className="font-display text-2xl text-on-surface mb-3 tracking-tight">
-                    Message Received
-                  </h2>
-                  <p className="font-body text-on-surface-variant/70 text-xs mb-8 max-w-[260px] leading-relaxed">
-                    Our team will review your message and respond within 24 business hours.
-                  </p>
-                  <button
-                    onClick={() => setFormState('idle')}
-                    className="btn-minimal text-[10px] tracking-widest uppercase font-bold"
-                  >
-                    Send Another Message
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="flex items-center gap-2 mb-8 select-none border-b border-outline-variant/20 pb-6">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="font-label text-xs uppercase tracking-[0.25em] text-secondary font-bold">
-                Send a Message
+              <span className="ct-map__pill">
+                Open in Google Maps
+                <ExternalLink strokeWidth={2} aria-hidden="true" />
               </span>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5 text-black">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="relative group">
-                  <label
-                    htmlFor="contact-name"
-                    className="form-label mb-1.5 text-[10px] font-semibold text-black"
-                  >
-                    Your Name <span className="text-error font-bold">*</span>
-                  </label>
-                  <input
-                    id="contact-name"
-                    type="text"
-                    required
-                    autoComplete="name"
-                    placeholder="Full Name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="form-field py-2.5 px-3 text-[12px] text-black bg-surface focus:ring-2 focus:ring-[var(--color-gold)] focus:border-transparent transition-all"
-                  />
-                </div>
-
-                <div className="relative group">
-                  <label
-                    htmlFor="contact-email"
-                    className="form-label mb-1.5 text-[10px] font-semibold text-black"
-                  >
-                    Email Address <span className="text-error font-bold">*</span>
-                  </label>
-                  <input
-                    id="contact-email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    placeholder="email@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="form-field py-2.5 px-3 text-[12px] text-black bg-surface focus:ring-2 focus:ring-[var(--color-gold)] focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="relative group">
-                  <label
-                    htmlFor="contact-phone"
-                    className="form-label mb-1.5 text-[10px] font-semibold text-black"
-                    required
-                  >
-                    Phone
-                  </label>
-                  <input
-                    id="contact-phone"
-                    type="tel"
-                    autoComplete="tel"
-                    placeholder="+91"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="form-field py-2.5 px-3 text-[12px] text-black bg-surface focus:ring-2 focus:ring-[var(--color-gold)] focus:border-transparent transition-all"
-                  />
-                </div>
-
-                <div className="relative group">
-                  <label
-                    htmlFor="contact-subject"
-                    className="form-label mb-1.5 text-[10px] font-semibold text-black"
-                  >
-                    How can we help you? <span className="text-error font-bold">*</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="contact-subject"
-                      required
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="form-field cursor-pointer appearance-none !pr-8 py-2.5 px-3 text-[12px] text-black bg-surface focus:ring-2 focus:ring-[var(--color-gold)] focus:border-transparent transition-all"
-                    >
-                      <option value="General Inquiry">General Inquiry</option>
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                      <option value="Collaboration">Collaboration</option>
-                      <option value="Other">Other</option>
-                    </select>
-                    <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-black text-[18px]">
-                      unfold_more
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <AnimatePresence>
-                {formData.subject === 'Other' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: 'auto', marginTop: 20 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    className="relative group overflow-hidden"
-                  >
-                    <label
-                      htmlFor="contact-other"
-                      className="form-label mb-1.5 text-[10px] font-semibold text-black"
-                    >
-                      Please specify <span className="text-error font-bold">*</span>
-                    </label>
-                    <input
-                      id="contact-other"
-                      type="text"
-                      required
-                      placeholder="Briefly describe your inquiry..."
-                      value={otherSubject}
-                      onChange={(e) => setOtherSubject(e.target.value)}
-                      className="form-field py-2.5 px-3 text-[12px] text-black bg-surface focus:ring-2 focus:ring-[var(--color-gold)] focus:border-transparent transition-all"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="relative group pt-1">
-                <label
-                  htmlFor="contact-message"
-                  className="form-label mb-1.5 text-[10px] font-semibold text-black"
-                >
-                  Tell us about your event... <span className="text-error font-bold">*</span>
-                </label>
-                <textarea
-                  id="contact-message"
-                  required
-                  rows={4}
-                  placeholder="Share the details, vision, or any specific requests..."
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="form-field resize-y py-3 px-3 text-[12px] text-black bg-surface focus:ring-2 focus:ring-[var(--color-gold)] focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div className="pt-4 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={formState === 'sending'}
-                  className="btn-primary w-full lg:w-auto px-8 py-3 rounded-full font-bold uppercase tracking-widest text-[9px] flex items-center justify-center gap-2 transition-all duration-300 shadow-sm hover:shadow-md disabled:opacity-50 group cursor-pointer"
-                >
-                  {formState === 'sending' ? (
-                    <>
-                      <div className="skeleton-box inline-block w-3.5 h-3.5 rounded-md" />
-                      Transmitting...
-                    </>
-                  ) : (
-                    <>
-                      Send Message
-                      <Send
-                        className="text-[16px] group-hover:translate-x-1 transition-transform"
-                        strokeWidth={1.5}
-                      />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
+            </a>
+          </div>
+        </aside>
       </main>
     </div>
   );

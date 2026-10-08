@@ -1,5 +1,4 @@
 import axios from 'axios';
-import toast from 'react-hot-toast';
 import logger from '../utils/core/logger';
 import { logCartTrace } from '../utils/forensic/cartTrace';
 import { getCachedGet, setCachedGet, clearApiCache } from '../utils/api/apiCache';

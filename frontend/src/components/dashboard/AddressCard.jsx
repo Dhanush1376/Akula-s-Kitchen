@@ -11,12 +11,12 @@ export function AddressCard({ addr }) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
-      className={`bg-white border rounded-2xl overflow-hidden shadow-xs hover:border-neutral-300 hover:shadow-sm transition-all text-left flex flex-col justify-between text-[11px] relative font-body ${
+      className={`bg-white border rounded-xl overflow-hidden shadow-xs hover:border-neutral-300 hover:shadow-sm transition-all text-left flex flex-col text-[11px] relative font-body ${
         addr.isDefault ? 'border-[#283618]/30 ring-1 ring-[#283618]/15' : 'border-neutral-200'
       }`}
     >
       {/* Card Header Strip */}
-      <div className="bg-neutral-50/50 backdrop-blur-xs px-4 py-3 flex items-center justify-between border-b border-neutral-200">
+      <div className="bg-neutral-50/60 backdrop-blur-xs px-3.5 sm:px-4 py-2.5 flex items-center justify-between border-b border-neutral-200 rounded-t-xl">
         <div className="flex items-center gap-2">
           <svg
             className="w-4 h-4 text-primary shrink-0"
@@ -42,14 +42,14 @@ export function AddressCard({ addr }) {
         </div>
 
         {addr.isDefault ? (
-          <span className="text-[9px] text-primary font-bold bg-primary/5 px-2 py-0.5 border border-primary/20 rounded-sm flex items-center gap-1 uppercase tracking-widest">
-            <CheckCircle2 className="text-[12px]" strokeWidth={1.5} />
+          <span className="text-[9.5px] text-[#283618] font-bold bg-[#283618]/8 px-2.5 py-0.5 border border-[#283618]/25 rounded-full flex items-center gap-1 uppercase tracking-wider">
+            <CheckCircle2 className="w-3 h-3 text-[#283618]" strokeWidth={2} />
             Default
           </span>
         ) : (
           <button
             onClick={() => handleSetDefaultAddress(addr._id || addr.id)}
-            className="text-[9px] text-primary uppercase font-bold hover:underline cursor-pointer active:scale-[0.98] bg-transparent border-0 p-0"
+            className="min-h-0 h-auto text-[9.5px] text-primary uppercase font-bold hover:underline cursor-pointer active:scale-[0.98] bg-transparent border-0 p-0"
           >
             Set Default
           </button>
@@ -57,11 +57,11 @@ export function AddressCard({ addr }) {
       </div>
 
       {/* Card Body */}
-      <div className="p-4 flex flex-col h-full">
+      <div className="p-3.5 sm:p-4 pb-2.5 flex flex-col">
         <h4 className="font-display font-medium text-on-surface text-[12px] block mb-1">
           {addr.name}
         </h4>
-        <p className="text-secondary text-[10px] font-light font-body leading-relaxed mb-3">
+        <p className="text-secondary text-[10px] font-light font-body leading-relaxed mb-2">
           {addr.addressString}, {addr.locality},<br />
           {addr.city}, {addr.state} -{' '}
           <span className="font-medium text-on-surface">{addr.pincode}</span>
@@ -73,7 +73,7 @@ export function AddressCard({ addr }) {
         </div>
 
         {addr.latitude && addr.longitude && (
-          <div className="mt-3 text-[9px] text-primary font-bold bg-primary/5 px-2 py-1 border border-primary/20 rounded inline-flex items-center gap-1 uppercase tracking-wider w-fit">
+          <div className="mt-2 text-[9px] text-[#283618] font-bold bg-[#283618]/8 px-2.5 py-0.5 border border-[#283618]/20 rounded-full inline-flex items-center gap-1 uppercase tracking-wider w-fit">
             <span className="material-symbols-outlined text-[12px]">share_location</span>
             Locked: {addr.latitude.toFixed(4)}, {addr.longitude.toFixed(4)}
           </div>
@@ -81,17 +81,17 @@ export function AddressCard({ addr }) {
       </div>
 
       {/* Card Footer Actions */}
-      <div className="px-4 py-2.5 bg-surface-container-low/40 border-t border-outline-variant/15 flex items-center justify-end gap-3 text-[10px] text-secondary font-body">
+      <div className="px-3.5 sm:px-4 py-2 bg-neutral-50/60 border-t border-neutral-200/80 rounded-b-xl flex items-center justify-end gap-2.5 text-[10px] font-body">
         <button
           onClick={() => handleAddressEdit(addr)}
-          className="text-primary hover:underline font-bold uppercase tracking-widest cursor-pointer bg-transparent border-0 p-0 transition-colors"
+          className="min-h-0 h-auto text-primary hover:underline font-bold uppercase tracking-widest cursor-pointer bg-transparent border-0 p-0 transition-colors"
         >
           Modify
         </button>
-        <span className="text-outline-variant/50">|</span>
+        <span className="text-neutral-300 select-none">|</span>
         <button
           onClick={() => handleDeleteAddress(addr._id || addr.id)}
-          className="text-secondary hover:text-red-600 transition-colors font-bold uppercase tracking-widest cursor-pointer bg-transparent border-0 p-0"
+          className="min-h-0 h-auto text-secondary hover:text-red-600 transition-colors font-bold uppercase tracking-widest cursor-pointer bg-transparent border-0 p-0"
         >
           Remove
         </button>

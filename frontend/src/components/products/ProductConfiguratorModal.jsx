@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import { ProductConfigurator } from './ProductConfigurator';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
-import { formatPrice } from '../../utils/ecommerce/priceUtils';
 
 /**
  * ProductConfiguratorModal

@@ -411,7 +411,7 @@ export function AddAddressModal({
                                   });
                               }
                             }}
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
@@ -427,7 +427,7 @@ export function AddAddressModal({
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, locality: e.target.value }))
                             }
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -443,7 +443,7 @@ export function AddAddressModal({
                           onChange={(e) =>
                             setNewAddress((prev) => ({ ...prev, address: e.target.value }))
                           }
-                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium p-3.5 shadow-2xs outline-none transition-all min-h-[70px] resize-none"
+                          className="w-full rounded-2xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium p-3.5 shadow-2xs outline-none transition-all min-h-[70px] resize-none"
                         />
                       </div>
 
@@ -458,7 +458,7 @@ export function AddAddressModal({
                           onChange={(e) =>
                             setNewAddress((prev) => ({ ...prev, landmark: e.target.value }))
                           }
-                          className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                          className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                         />
                       </div>
 
@@ -475,7 +475,7 @@ export function AddAddressModal({
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, city: e.target.value }))
                             }
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
@@ -491,7 +491,7 @@ export function AddAddressModal({
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, state: e.target.value }))
                             }
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
                           />
                         </div>
                       </div>
@@ -595,7 +595,7 @@ export function AddAddressModal({
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, name: e.target.value }))
                             }
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
@@ -611,7 +611,7 @@ export function AddAddressModal({
                             onChange={(e) =>
                               setNewAddress((prev) => ({ ...prev, email: e.target.value }))
                             }
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -647,7 +647,7 @@ export function AddAddressModal({
                                   setNewAddress((prev) => ({ ...prev, phone: cleaned }));
                                 }
                               }}
-                              className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium !pl-18 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
+                              className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium !pl-18 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
                             />
                           </div>
                         </div>
@@ -675,7 +675,7 @@ export function AddAddressModal({
                                 setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
                               }
                             }}
-                            className="w-full h-11 rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>

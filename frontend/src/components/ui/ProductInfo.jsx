@@ -178,19 +178,6 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
             </span>
           )}
         </div>
-
-        <div className="flex items-start gap-3 mt-4 p-3.5 bg-[#fffbeb] rounded-xl border border-[#fde68a]">
-          <Ban className="text-[18px] text-[#d97706] mt-0.5 shrink-0" strokeWidth={1.5} />
-          <div className="flex flex-col">
-            <span className="text-[12px] font-bold text-[#b45309] uppercase tracking-wider">
-              Non-Returnable Item
-            </span>
-            <span className="text-[12px] text-[#92400e] font-medium leading-relaxed">
-              Due to food safety and the perishable nature of fresh traditional food, returns and
-              exchanges are not accepted.
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Action CTA Stack: Weight & Configuration Selection */}

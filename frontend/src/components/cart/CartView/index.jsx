@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import React, { useState, useEffect, Profiler } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 
 import { useConfig } from '../../../context/ConfigContext';
 import toast from 'react-hot-toast';
@@ -87,15 +86,8 @@ export function CartView({ isEmbedded = false }) {
   const freeShippingThreshold = shippingSettings?.freeShippingThreshold ?? 2000;
   const enableFreeShipping = shippingSettings?.enableFreeShipping ?? true;
   const deliveryCharge = shippingSettings?.deliveryCharge ?? 99;
-  const isFreeShipping = enableFreeShipping && actualSubtotal >= freeShippingThreshold;
-  const shippingFee =
-    actualSubtotal === 0
-      ? 0
-      : isFreeShipping
-        ? 0
-        : summary?.shippingFee !== undefined
-          ? summary.shippingFee
-          : deliveryCharge;
+  // Delivery fee is excluded from online order totals as per store billing policy
+  const shippingFee = 0;
 
   // Live store-configured platform fee: always respects current store settings
   const configuredPlatformFee =
@@ -272,20 +264,31 @@ export function CartView({ isEmbedded = false }) {
         )}
       </AnimatePresence>
 
-      {/* Address Bar */}
+      {/* Checkout Steps - Sits directly beneath CheckoutNavbar */}
       {!isEmbedded && (
-        <CartAddressBar
-          isAddressDropdownOpen={isAddressDropdownOpen}
-          setIsAddressDropdownOpen={setIsAddressDropdownOpen}
-          activeAddress={activeAddress}
-          addresses={addresses}
-          setDefaultAddress={setDefaultAddress}
+        <CheckoutSteps
+          steps={['BAG', 'ADDRESS', 'PAYMENT']}
+          currentStep={0}
+          onStepClick={(stepIndex) => {
+            if (stepIndex > 0 && items.length > 0) {
+              navigate('/checkout');
+            }
+          }}
         />
       )}
 
-      <div className="mb-3 lg:mb-4">
-        <CheckoutSteps steps={['BAG', 'ADDRESS', 'PAYMENT']} currentStep={0} />
-      </div>
+      {/* Address Bar */}
+      {!isEmbedded && (
+        <div className="mb-3 lg:mb-4">
+          <CartAddressBar
+            isAddressDropdownOpen={isAddressDropdownOpen}
+            setIsAddressDropdownOpen={setIsAddressDropdownOpen}
+            activeAddress={activeAddress}
+            addresses={addresses}
+            setDefaultAddress={setDefaultAddress}
+          />
+        </div>
+      )}
 
       <div className="max-w-[1240px] mx-auto px-3 sm:px-6">
         {items.length === 0 ? (
@@ -461,7 +464,7 @@ export function CartView({ isEmbedded = false }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="bg-white min-h-screen pt-[var(--ak-header-h,56px)] pb-24 lg:pb-16 font-body text-neutral-950 modern-sans-headings"
+            className="bg-white min-h-screen pb-24 lg:pb-16 font-body text-neutral-950 modern-sans-headings"
           >
             {innerContent}
           </motion.div>

@@ -66,7 +66,7 @@ export function TrackingOperatorPanel({
                   placeholder="Enter courier notes (e.g. Dispatched from warehouse, Out for delivery at Jubilee Hills hub)"
                   value={operatorNote}
                   onChange={(e) => setOperatorNote(e.target.value)}
-                  className="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-primary transition-all font-semibold"
+                  className="w-full bg-surface-container-low border border-outline-variant/30 rounded-full px-4 py-2.5 text-xs outline-none focus:border-primary transition-all font-semibold"
                 />
 
                 <label className="block text-[10px] uppercase font-bold text-secondary tracking-widest pt-2">

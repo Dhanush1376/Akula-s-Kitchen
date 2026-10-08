@@ -72,15 +72,7 @@ export default function OrderPricingSummaryCard({
 
               <div className="flex justify-between items-center">
                 <span className="text-neutral-500">Delivery Fee</span>
-                <span
-                  className={
-                    order.shippingFee
-                      ? 'font-medium text-neutral-900'
-                      : 'text-emerald-700 font-bold'
-                  }
-                >
-                  {order.shippingFee ? `₹${order.shippingFee}` : 'FREE'}
-                </span>
+                <span className="font-medium text-neutral-600">Excluded</span>
               </div>
 
               {order.discount > 0 && (

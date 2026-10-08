@@ -195,9 +195,9 @@ function SectionFallback() {
 function HomepageEmptyState() {
   return (
     <section className="min-h-[60vh] flex items-center justify-center px-6 text-center">
-      <div className="max-w-xl rounded-2xl border border-outline-variant/30 bg-surface/80 p-8">
+      <div className="max-w-xl w-full rounded-2xl border border-outline-variant/30 bg-surface/80 p-8 flex flex-col items-center justify-center text-center">
         <LayoutDashboard
-          className="text-[40px] text-on-surface-variant/50 mb-4"
+          className="w-10 h-10 text-on-surface-variant/50 mb-4 mx-auto"
           strokeWidth={1.5}
         />
         <h1 className="font-display text-2xl text-on-surface mb-3">

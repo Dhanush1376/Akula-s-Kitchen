@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Check, AlertCircle, Plus, Minus, ShoppingBag, Sparkles } from 'lucide-react';
+import { AlertCircle, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, parseNumericPrice } from '../../utils/ecommerce/priceUtils';
 
@@ -374,10 +374,16 @@ export function ProductConfigurator({
             >
               {/* Group Header */}
               <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="font-extrabold text-[13.5px] sm:text-[14px] text-neutral-950 uppercase tracking-wide">
+                  {group.name}
+                </span>
+
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-[13.5px] sm:text-[14px] text-neutral-950 uppercase tracking-wide">
-                    {group.name}
-                  </span>
+                  {group.type === 'MULTI_SELECT' && (
+                    <span className="text-[11px] text-neutral-500 font-medium">
+                      {group.maxSelections ? `Select up to ${group.maxSelections}` : 'Choose any'}
+                    </span>
+                  )}
                   {group.required ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-neutral-900 text-white shadow-2xs">
                       Required
@@ -388,12 +394,6 @@ export function ProductConfigurator({
                     </span>
                   )}
                 </div>
-
-                {group.type === 'MULTI_SELECT' && (
-                  <span className="text-[11px] text-neutral-500 font-medium">
-                    {group.maxSelections ? `Select up to ${group.maxSelections}` : 'Choose any'}
-                  </span>
-                )}
               </div>
 
               {/* Validation Error Banner */}
@@ -568,9 +568,7 @@ export function ProductConfigurator({
             className="w-full h-[48px] sm:h-[52px] rounded-full flex items-center justify-center gap-2 sm:gap-2.5 font-extrabold text-[12px] sm:text-[13px] uppercase tracking-wider bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[1.5px] border-[#f7bb0e] shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)] active:scale-98 transition-all cursor-pointer px-3 sm:px-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" strokeWidth={2.2} />
-            <span className="truncate">
-              {ctaLabel} • ₹{formatPrice(lineTotal)}
-            </span>
+            <span className="truncate">{ctaLabel}</span>
           </button>
 
           {secondaryAction}

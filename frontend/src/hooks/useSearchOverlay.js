@@ -111,6 +111,22 @@ export function useSearchOverlay() {
     return autocompleteQuery.data?.correctedQuery || '';
   }, [autocompleteQuery.data]);
 
+  // What the server understood: sizes on offer, the size asked for, related searches,
+  // how sure it is about a spelling fix, and fallbacks when nothing matched
+  const searchMeta = useMemo(() => {
+    const data = autocompleteQuery.data || {};
+    return {
+      intent: data.intent || '',
+      weight: data.weight || null,
+      weights: data.weights || [],
+      related: data.related || [],
+      correctionLevel: data.correctionLevel || '',
+      total: data.total ?? 0,
+      fallbackProducts: data.fallbackProducts || [],
+    };
+  }, [autocompleteQuery.data]);
+  const searchError = autocompleteQuery.isError && !autocompleteQuery.data;
+
   const loading = autocompleteQuery.isFetching || query !== debouncedQuery;
 
   const handleClose = useCallback(() => {
@@ -120,11 +136,20 @@ export function useSearchOverlay() {
     setActiveIndex(-1);
   }, []);
 
-  // Global keyboard shortcut: Cmd+K / Ctrl+K
+  // Global keyboard shortcuts: Cmd+K / Ctrl+K, or "/" when not already typing somewhere
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
+        setInitialMode('text');
+        setIsOpen(true);
+      }
+      const target = e.target;
+      const isTyping =
+        target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName || '');
+      if (e.key === '/' && !isOpen && !isTyping && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setInitialMode('text');
         setIsOpen(true);
       }
       if (e.key === 'Escape' && isOpen) {
@@ -264,6 +289,8 @@ export function useSearchOverlay() {
     suggestions,
     predictedCategories,
     correctedQuery,
+    searchMeta,
+    searchError,
     discoveryData,
     trendingSearches,
     recentSearches,

@@ -73,16 +73,8 @@ export const CartSummary = ({
             </div>
           )}
           <div className="flex justify-between items-center">
-            <span className="text-neutral-500">Delivery Partner Fee</span>
-            <span
-              className={
-                shippingFee === 0
-                  ? 'text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md font-extrabold text-[10.5px] border border-emerald-200/60'
-                  : 'font-bold text-neutral-900'
-              }
-            >
-              {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
-            </span>
+            <span className="text-neutral-500">Delivery Fee</span>
+            <span className="font-bold text-neutral-600">Excluded</span>
           </div>
 
           <div className="h-[1px] bg-neutral-200 my-3.5" />

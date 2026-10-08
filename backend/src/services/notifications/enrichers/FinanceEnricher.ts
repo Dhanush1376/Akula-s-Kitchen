@@ -12,11 +12,11 @@ export class FinanceEnricher {
       // Basic order amounts
       const grossRevenue = order.total || 0;
       const shipping = order.shippingFee || 0;
-      const subtotal = order.subtotal || 0;
+      const _subtotal = order.subtotal || 0;
       const discount = order.discount || 0;
 
-      const gstRate = 0;
-      const gstAmount = 0;
+      const _gstRate = 0;
+      const _gstAmount = 0;
       const netRevenue = grossRevenue - shipping;
 
       // Approximating margin & vendor payouts (if applicable)

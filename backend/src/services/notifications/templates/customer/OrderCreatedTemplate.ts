@@ -1,9 +1,5 @@
 import { Header, Footer, OrderSummary, ProductCard, Timeline } from '../../components';
-import {
-  getPublicWebsiteUrl,
-  resolveEmailImageUrl,
-  getPublicOrderTrackingUrl,
-} from '../../../../utils/email/emailUrlUtils';
+import { getPublicWebsiteUrl, resolveEmailImageUrl } from '../../../../utils/email/emailUrlUtils';
 
 export const OrderCreatedCustomerTemplate = (data: any) => {
   const { customerInfo, orderDetails, products, deliveryInfo } = data;
@@ -16,7 +12,6 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
     orderDetails.invoiceNumber ||
     (orderDetails.id ? `INV-${String(orderDetails.id).slice(-8).toUpperCase()}` : '');
 
-  const trackUrl = getPublicOrderTrackingUrl({ _id: orderDetails.id || orderDetails._id });
   const grandTotal = orderDetails.total ?? orderDetails.totalAmount ?? 0;
 
   const productsHtml = (products || [])
@@ -49,16 +44,6 @@ export const OrderCreatedCustomerTemplate = (data: any) => {
         total: grandTotal,
       })}
     </div>
-
-    <!-- Track Order CTA Button -->
-    <div style="text-align: center; margin: 32px 0 16px;">
-      <a href="${trackUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 14px rgba(40, 54, 24, 0.22); letter-spacing: 0.02em;">
-        Track Your Order
-      </a>
-    </div>
-    <p style="text-align: center; margin: 0 0 24px 0; font-size: 12px; color: #64748b;">
-      Instant live tracking • No login required
-    </p>
 
     <h3 style="color: #111827; margin-top: 32px; margin-bottom: 16px; font-size: 18px;">What's next?</h3>
     ${Timeline([

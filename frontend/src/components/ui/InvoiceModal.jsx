@@ -34,7 +34,7 @@ export function InvoiceModal({
   }, []);
 
   const { isMobile, dragProps, sheetTransition } = useMobileDrawerEngine({
-    isOpen,
+    isOpen: isAdmin ? false : isOpen,
     onClose,
   });
 
@@ -86,6 +86,97 @@ export function InvoiceModal({
   };
 
   if (!mounted || !order) return null;
+
+  // ─── ADMIN PORTAL: Normal, Clean Centered Modal Dialog ─────────────
+  if (isAdmin) {
+    return createPortal(
+      <AnimatePresence>
+        {isOpen && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 no-print pointer-events-none"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Invoice"
+          >
+            {/* Backdrop */}
+            <motion.div
+              key="admin-invoice-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs pointer-events-auto cursor-pointer"
+            />
+
+            {/* Normal Modal Container */}
+            <motion.div
+              key="admin-invoice-card"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="admin-invoice-modal-container pointer-events-auto relative z-10 w-full max-w-[500px] h-fit max-h-[94vh] bg-[var(--admin-surface,#ffffff)] rounded-[8px] sm:rounded-[10px] shadow-[0_25px_65px_-15px_rgba(0,0,0,0.35)] border border-[var(--admin-border,#e5e7eb)] overflow-y-auto custom-scrollbar p-2.5 sm:p-3 print:static print:h-auto print:max-w-none print:shadow-none print:bg-white print:p-0 print:border-none"
+            >
+              <style type="text/css" media="print">
+                {`
+                  @page { size: A4 portrait; margin: 10mm; }
+                  html, body { 
+                    height: 100vh !important; 
+                    overflow: hidden !important; 
+                    margin: 0 !important; 
+                    padding: 0 !important; 
+                  }
+                  body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: white !important; }
+                  body * { visibility: hidden !important; }
+                  .admin-invoice-modal-container {
+                    position: fixed !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    transform: none !important;
+                    overflow: hidden !important;
+                    background: transparent !important;
+                    box-shadow: none !important;
+                  }
+                  .print-invoice-area, .print-invoice-area * {
+                    visibility: visible !important;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+                  }
+                  .print-invoice-area .font-mono {
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+                  }
+                  .print-invoice-area {
+                    position: static !important;
+                    width: 480px !important;
+                    max-width: 480px !important;
+                    margin: 0 auto !important;
+                    padding: 12px !important;
+                    box-shadow: none !important;
+                    border: 1px solid #d1d5db !important;
+                    background: white !important;
+                    overflow: visible !important;
+                  }
+                  .no-print, .no-print * { display: none !important; }
+                `}
+              </style>
+              <InvoiceTemplate
+                ref={invoiceRef}
+                order={order}
+                user={user}
+                isAdmin={true}
+                isEmbedded={false}
+                onClose={onClose}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>,
+      document.body,
+    );
+  }
 
   const invoiceNumber =
     order.invoice?.number ||

@@ -1,4 +1,4 @@
-import { Check, ImageOff, Heart, Plus, Ban, SlidersHorizontal } from 'lucide-react';
+import { Check, ImageOff, Heart, Plus, Ban } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from '../ui/CloudinaryImage';

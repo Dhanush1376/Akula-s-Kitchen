@@ -42,7 +42,7 @@ const rewriteLinks = (html: string, token: string): string => {
   // Match href="url", ensuring we do not rewrite mailto:, anchors, unsubscribe, or tracking URLs
   return html.replace(/href="([^"]+)"/gi, (match, rawUrl) => {
     // Sanitize any localhost that might have leaked into links
-    let url = rawUrl.replace(
+    const url = rawUrl.replace(
       /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,
       'https://akulas.kitchen',
     );

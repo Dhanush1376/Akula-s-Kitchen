@@ -6,6 +6,7 @@ export const trendingSearchCache = new MemoryCache({ defaultTtlMs: 15 * 60 * 100
 export const searchResultsCache = new MemoryCache({ defaultTtlMs: 3 * 60 * 1000, maxKeys: 200 });
 
 import { tieredCacheGet, tieredCacheSet } from '../../utils/cache/tieredCache';
+import { invalidateCatalogVocabulary } from './catalogVocabulary';
 
 export async function getSearchCache<T>(
   cacheType: 'ac' | 'trending' | 'full',
@@ -39,4 +40,6 @@ export async function clearAllCaches(): Promise<void> {
   autocompleteCache.clear();
   trendingSearchCache.clear();
   searchResultsCache.clear();
+  // Synonym and catalogue edits should change what search understands straight away
+  invalidateCatalogVocabulary();
 }

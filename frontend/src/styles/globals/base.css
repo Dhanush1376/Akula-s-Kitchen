@@ -136,14 +136,30 @@
   /* Only apply default 44px min-height to general buttons without explicit height or square/pill sizing */
   button:not(.min-h-0):not([class*='min-h-']):not(.aspect-square):not([class*='aspect-square']):not(
       [class*='h-']
-    ):not([class*='!h-']):not([class*='rounded-full']),
+    ):not([class*='!h-']):not([class*='rounded-full']):not([class*='bg-transparent']),
   [role='button']:not(.min-h-0):not([class*='min-h-']):not(.aspect-square):not(
       [class*='aspect-square']
-    ):not([class*='h-']):not([class*='!h-']):not([class*='rounded-full']),
+    ):not([class*='h-']):not([class*='!h-']):not([class*='rounded-full']):not(
+      [class*='bg-transparent']
+    ),
   input[type='button']:not(.min-h-0),
   input[type='submit']:not(.min-h-0) {
     min-height: 44px;
     /* A11y: Apple recommended touch target */
+  }
+
+  /* ─── Round Input Boxes Throughout Storefront ─── */
+  input[type='text']:not(.admin-section-root *):not([class*='aspect-square']):not(
+      [type='checkbox']
+    ):not([type='radio']),
+  input[type='email']:not(.admin-section-root *):not([class*='aspect-square']),
+  input[type='tel']:not(.admin-section-root *):not([class*='aspect-square']),
+  input[type='password']:not(.admin-section-root *):not([class*='aspect-square']),
+  input[type='number']:not(.admin-section-root *):not([class*='aspect-square']),
+  input[type='search']:not(.admin-section-root *):not([class*='aspect-square']),
+  input[type='url']:not(.admin-section-root *):not([class*='aspect-square']),
+  input:not([type]):not(.admin-section-root *):not([class*='aspect-square']) {
+    border-radius: 9999px !important;
   }
 
   /* Global Form Input Focus - Premium Minimalist Underline */

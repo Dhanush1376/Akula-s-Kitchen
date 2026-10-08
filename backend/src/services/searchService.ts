@@ -30,6 +30,7 @@ export {
 export { escapeRegex, getMatchingProductCategory } from './search/filteringEngine';
 import { escapeRegex, getMatchingProductCategory } from './search/filteringEngine';
 import { computeSearchScore, getMatchSource } from './search/rankingEngine';
+import { analyzeCatalogQuery, CatalogSearchAnalysis } from './search/catalogVocabulary';
 export { computeSearchScore };
 
 // ── Interface Definitions ──
@@ -45,6 +46,29 @@ export interface AutocompleteResult {
   discount?: number;
   score: number;
   slug?: string;
+  /** Category rows: how many products it holds. */
+  productCount?: number;
+  /** Product rows: the size the query asked for, when this product is sold in it. */
+  matchedWeight?: string;
+  /** Product rows: every size the product comes in. */
+  weights?: { label: string; grams: number; available: boolean }[];
+}
+
+export interface AutocompleteResponse {
+  suggestions: AutocompleteResult[];
+  predictedCategories: string[];
+  correctedQuery?: string;
+  normalizedQuery?: string;
+  /** 0..1 confidence in correctedQuery; 'high' is safe to apply automatically. */
+  correctionConfidence?: number;
+  correctionLevel?: CatalogSearchAnalysis['correctionLevel'];
+  intent?: CatalogSearchAnalysis['intent'];
+  weight?: CatalogSearchAnalysis['weight'];
+  weights?: CatalogSearchAnalysis['weights'];
+  related?: string[];
+  total?: number;
+  /** When nothing matched: popular in-stock products to suggest instead. */
+  fallbackProducts?: AutocompleteResult[];
 }
 
 export interface SearchResult {
@@ -89,11 +113,7 @@ export interface SearchResponse {
 export async function getAutocomplete(
   query: string,
   options: { limit?: number } = {},
-): Promise<{
-  suggestions: AutocompleteResult[];
-  predictedCategories: string[];
-  correctedQuery?: string;
-}> {
+): Promise<AutocompleteResponse> {
   const limit = options.limit || 8;
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -102,11 +122,8 @@ export async function getAutocomplete(
   }
 
   // Check cache
-  const cacheKey = `${normalizedQuery}_${limit}_v3`;
-  const cached = await getSearchCache<{
-    suggestions: AutocompleteResult[];
-    predictedCategories: string[];
-  }>('ac', cacheKey);
+  const cacheKey = `${normalizedQuery}_${limit}_v5`;
+  const cached = await getSearchCache<AutocompleteResponse>('ac', cacheKey);
   if (cached) return cached;
 
   try {
@@ -157,7 +174,18 @@ export async function getAutocomplete(
       return res;
     });
 
+    // Catalogue-driven understanding: typos, sound-alikes, weights, synonyms, categories
+    const analysis = await analyzeCatalogQuery(normalizedQuery, { limit });
+    const analysisScores = new Map<string, number>();
+    if (analysis && !analysis.fallback) {
+      for (const p of analysis.products) analysisScores.set(p.id, p.score);
+    }
+
     const predictedCategories = predictCategories(baseSearchQuery);
+    for (const c of analysis?.categories || []) {
+      if (!predictedCategories.includes(c.name)) predictedCategories.push(c.name);
+    }
+    const categoryInfo = new Map((analysis?.categories || []).map((c) => [c.name, c]));
 
     // Query SearchIndex instead of raw models
     // Fetch a larger pool to allow in-memory scoring to bubble up the best matches
@@ -184,6 +212,8 @@ export async function getAutocomplete(
         id: `cat:${cat}`,
         title: cat,
         type: 'category',
+        slug: categoryInfo.get(cat)?.slug,
+        productCount: categoryInfo.get(cat)?.productCount,
         score: 1000,
       });
     }
@@ -198,7 +228,7 @@ export async function getAutocomplete(
         image: (p as any).imageSrc,
         price: (p as any).price,
         slug: (p as any).slug,
-        score: 100, // Highest score for pins
+        score: 500, // Pins outrank every organic product match
         stockStatus: (p as any).stock > 0 ? 'in_stock' : 'out_of_stock',
       });
     }
@@ -219,8 +249,11 @@ export async function getAutocomplete(
           item.ngrams,
         ) * (item.adminBoost || 1);
 
-      // Only add items that have a reasonable match score (avoids showing unrelated items that matched a 1-char ngram)
-      if (itemScore > 0.3) {
+      // Only add items that have a reasonable match score (avoids showing unrelated items that matched a 1-char ngram).
+      // When the catalogue analysis ranked this product, its score decides the order; index-only
+      // matches stay but sit below anything the analysis was confident about.
+      const analysed = analysisScores.get(item.entityId.toString());
+      if (analysed !== undefined || itemScore > 0.3) {
         suggestions.push({
           id: item.entityId.toString(),
           title: item.title,
@@ -228,9 +261,36 @@ export async function getAutocomplete(
           image: item.image,
           price: item.price,
           slug: item.slug,
-          score: itemScore,
+          score: analysed !== undefined ? analysed * 100 : Math.min(itemScore, 1),
         });
+        analysisScores.delete(item.entityId.toString());
       }
+    }
+
+    // Matches only the analysis found (misspellings, tags, weights, synonyms)
+    for (const p of analysis && !analysis.fallback ? analysis.products : []) {
+      if (!analysisScores.has(p.id) || pinnedIds.has(p.id)) continue;
+      suggestions.push({
+        id: p.id,
+        title: p.title,
+        type: 'product',
+        category: p.category,
+        image: p.image,
+        price: p.price,
+        oldPrice: p.oldPrice,
+        slug: p.slug,
+        score: p.score * 100,
+      });
+    }
+
+    // A few related searches drawn from the matching products' tags
+    for (const term of (analysis?.related || []).slice(0, 3)) {
+      suggestions.push({
+        id: `q:${term.toLowerCase()}`,
+        title: term,
+        type: 'suggestion',
+        score: 0,
+      });
     }
 
     // Sort by score
@@ -248,6 +308,17 @@ export async function getAutocomplete(
 
     const finalSuggestions = uniqueSuggestions.slice(0, limit);
 
+    // Stock, sizes and the asked-for weight come from the analysis when it knows the product
+    const analysedProducts = new Map((analysis?.products || []).map((p) => [p.id, p]));
+    for (const s of finalSuggestions) {
+      const a = s.type === 'product' ? analysedProducts.get(s.id) : undefined;
+      if (!a) continue;
+      s.category = a.category || s.category;
+      s.stockStatus = a.inStock ? 'in_stock' : 'out_of_stock';
+      s.weights = a.weights;
+      if (a.matchedWeight) s.matchedWeight = a.matchedWeight;
+    }
+
     const productIds = finalSuggestions.filter((s) => s.type === 'product').map((s) => s.id);
     if (productIds.length > 0) {
       const products = await Product.find({ _id: { $in: productIds } })
@@ -264,10 +335,36 @@ export async function getAutocomplete(
       }
     }
 
-    const result = {
+    const dictionaryCorrection =
+      spellCheck.corrected !== baseSearchQuery ? spellCheck.corrected : undefined;
+    const result: AutocompleteResponse = {
       suggestions: finalSuggestions,
       predictedCategories,
-      correctedQuery: spellCheck.corrected !== baseSearchQuery ? spellCheck.corrected : undefined,
+      correctedQuery: dictionaryCorrection || analysis?.correctedQuery,
+      normalizedQuery: analysis?.normalizedQuery ?? normalizedQuery,
+      correctionConfidence: dictionaryCorrection ? undefined : analysis?.correctionConfidence,
+      correctionLevel: dictionaryCorrection ? undefined : analysis?.correctionLevel,
+      intent: analysis?.intent,
+      weight: analysis?.weight,
+      weights: analysis?.weights || [],
+      related: analysis?.related || [],
+      total: analysis ? (analysis.fallback ? 0 : analysis.total) : finalSuggestions.length,
+      fallbackProducts:
+        analysis?.fallback && !finalSuggestions.some((s) => s.type === 'product')
+          ? analysis.products.map((p) => ({
+              id: p.id,
+              title: p.title,
+              type: 'product' as const,
+              category: p.category,
+              image: p.image,
+              price: p.price,
+              oldPrice: p.oldPrice,
+              slug: p.slug,
+              stockStatus: p.inStock ? 'in_stock' : 'out_of_stock',
+              weights: p.weights,
+              score: 0,
+            }))
+          : [],
     };
     await setSearchCache('ac', cacheKey, result, 5 * 60 * 1000);
 

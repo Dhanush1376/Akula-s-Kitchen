@@ -8,6 +8,7 @@ import storeSettingsService from '../../services/api/storeSettingsService';
 import { policyService } from '../../services/domainServices';
 
 import { useConfig } from '../../context/ConfigContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { BRAND, formatPhoneWithCountryCode, cleanPhoneDigits } from '../../config/brand';
 
 export function Footer() {
@@ -117,34 +118,36 @@ export function Footer() {
         ? policies.map((p) => ({ label: p.title, href: `/policy/${p.slug}` }))
         : defaultPolicyLinks;
 
+  const isMobile = useMediaQuery('(max-width: 767px)');
+
   return (
     <footer className="w-full bg-[#1b2510] text-white border-t border-[#283618] relative overflow-hidden">
       {/* Subtle decorative background gradient */}
       <div className="absolute top-0 right-1/4 w-[600px] h-[350px] bg-[#f7bb0e]/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Main container */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 pt-12 pb-[calc(var(--bottom-nav-height,65px)+var(--safe-area-bottom,0px)+36px)] lg:pb-12 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 pt-5 sm:pt-9 lg:pt-12 pb-[calc(var(--bottom-nav-height,65px)+var(--safe-area-bottom,0px)+34px)] sm:pb-[calc(var(--bottom-nav-height,65px)+var(--safe-area-bottom,0px)+24px)] lg:pb-12 relative z-10">
         {/* Navigation & Brand Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 pb-12 border-b border-white/10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 pb-5 sm:pb-8 lg:pb-12 border-b border-white/10">
           {/* Brand Info Column */}
-          <div className="lg:col-span-4 flex flex-col items-start gap-4">
-            <Link to="/" className="inline-flex items-center gap-3.5 group">
+          <div className="lg:col-span-4 flex flex-col items-start gap-2 sm:gap-4">
+            <Link to="/" className="inline-flex items-center gap-2.5 sm:gap-3.5 group">
               <BrandLogo
-                size="52px"
+                size={isMobile ? '36px' : '50px'}
                 className="drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
                 variant="default"
               />
               <div className="flex flex-col">
-                <span className="font-extrabold text-[17px] tracking-tight text-white group-hover:text-[#f7bb0e] transition-colors">
+                <span className="font-extrabold text-[15px] sm:text-[17px] tracking-tight text-white group-hover:text-[#f7bb0e] transition-colors leading-tight">
                   {logoText}
                 </span>
-                <span className="text-[10px] text-white/60 tracking-wider uppercase font-semibold">
+                <span className="text-[9.5px] sm:text-[10px] text-white/60 tracking-wider uppercase font-semibold">
                   Fresh · Tasty · Healthy
                 </span>
               </div>
             </Link>
 
-            <p className="text-[13px] text-neutral-300 leading-relaxed max-w-sm font-normal">
+            <p className="text-[11.5px] sm:text-[13px] text-neutral-300 leading-snug sm:leading-relaxed max-w-sm font-normal line-clamp-2 sm:line-clamp-none">
               {footer?.description ||
                 storeTagline ||
                 settings?.general?.tagline ||
@@ -152,24 +155,25 @@ export function Footer() {
             </p>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-2.5 pt-1">
+            <div className="flex items-center gap-2 pt-0.5 sm:pt-1">
               {instagramLink && (
                 <a
                   aria-label="Follow on Instagram"
                   href={instagramLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
                 >
                   <svg
-                    width="17"
-                    height="17"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    className="sm:w-[17px] sm:h-[17px]"
                   >
                     <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
@@ -183,31 +187,31 @@ export function Footer() {
                   href={pinterestLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
                 >
-                  <span className="font-bold text-[14px]">P</span>
+                  <span className="font-bold text-[12px] sm:text-[14px]">P</span>
                 </a>
               )}
             </div>
           </div>
 
           {/* Links Columns */}
-          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-8">
+          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Explore Column */}
             <div>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-4">
+              <h3 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-1.5 sm:mb-4">
                 Explore
               </h3>
-              <ul className="space-y-2.5">
+              <ul className="space-y-1 sm:space-y-2.5">
                 {exploreLinks.map((link, idx) => (
                   <li key={idx}>
                     <Link
                       to={link.href || '#'}
-                      className="text-[13px] text-neutral-300 hover:text-white transition-colors flex items-center gap-1 group font-medium"
+                      className="text-[11.5px] sm:text-[13px] text-neutral-300 hover:text-white transition-colors flex items-center gap-1 group font-medium"
                     >
                       <span>{link.label}</span>
                       <ArrowUpRight
-                        size={12}
+                        size={11}
                         className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#f7bb0e]"
                       />
                     </Link>
@@ -218,19 +222,19 @@ export function Footer() {
 
             {/* Kitchen Column */}
             <div>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-4">
+              <h3 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-1.5 sm:mb-4">
                 Kitchen
               </h3>
-              <ul className="space-y-2.5">
+              <ul className="space-y-1 sm:space-y-2.5">
                 {quickLinks.map((link, idx) => (
                   <li key={idx}>
                     <Link
                       to={link.href || '#'}
-                      className="text-[13px] text-neutral-300 hover:text-white transition-colors flex items-center gap-1 group font-medium"
+                      className="text-[11.5px] sm:text-[13px] text-neutral-300 hover:text-white transition-colors flex items-center gap-1 group font-medium"
                     >
                       <span>{link.label}</span>
                       <ArrowUpRight
-                        size={12}
+                        size={11}
                         className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#f7bb0e]"
                       />
                     </Link>
@@ -240,18 +244,19 @@ export function Footer() {
             </div>
 
             {/* Direct Contact Column */}
-            <div className="col-span-2 sm:col-span-1">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-4">
+            <div className="col-span-2 sm:col-span-1 pt-0.5 sm:pt-0">
+              <h3 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-1.5 sm:mb-4">
                 Help & Contact
               </h3>
-              <div className="space-y-3">
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 sm:flex-col sm:space-y-2.5">
                 {primaryPhone && (
                   <a
                     href={`tel:${cleanPhoneDigits(primaryPhone)}`}
-                    className="flex items-center gap-2.5 text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
+                    className="flex items-center gap-1.5 sm:gap-2.5 text-[11.5px] sm:text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
-                      <Phone size={13} strokeWidth={2.2} />
+                    <div className="w-5.5 h-5.5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
+                      <Phone size={11} className="sm:hidden" strokeWidth={2.2} />
+                      <Phone size={13} className="hidden sm:block" strokeWidth={2.2} />
                     </div>
                     <span className="truncate">{formatPhoneWithCountryCode(primaryPhone)}</span>
                   </a>
@@ -261,11 +266,12 @@ export function Footer() {
                     formatPhoneWithCountryCode(primaryPhone) && (
                     <a
                       href={`tel:${cleanPhoneDigits(alternatePhone)}`}
-                      className="flex items-center gap-2.5 text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
+                      className="flex items-center gap-1.5 sm:gap-2.5 text-[11.5px] sm:text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
                       title="Alternate support number"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
-                        <Phone size={13} strokeWidth={2.2} />
+                      <div className="w-5.5 h-5.5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
+                        <Phone size={11} className="sm:hidden" strokeWidth={2.2} />
+                        <Phone size={13} className="hidden sm:block" strokeWidth={2.2} />
                       </div>
                       <span className="truncate">{formatPhoneWithCountryCode(alternatePhone)}</span>
                     </a>
@@ -273,10 +279,11 @@ export function Footer() {
                 {email && (
                   <a
                     href={`mailto:${email}`}
-                    className="flex items-center gap-2.5 text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
+                    className="flex items-center gap-1.5 sm:gap-2.5 text-[11.5px] sm:text-[13px] text-neutral-300 hover:text-white transition-colors group font-medium"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
-                      <Mail size={13} strokeWidth={2.2} />
+                    <div className="w-5.5 h-5.5 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0 text-[#f7bb0e]">
+                      <Mail size={11} className="sm:hidden" strokeWidth={2.2} />
+                      <Mail size={13} className="hidden sm:block" strokeWidth={2.2} />
                     </div>
                     <span className="truncate">{email}</span>
                   </a>
@@ -287,20 +294,20 @@ export function Footer() {
         </div>
 
         {/* Bottom Legal & Policies Row */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px] text-neutral-400">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="pt-3.5 sm:pt-6 lg:pt-8 flex flex-col md:flex-row items-center justify-between gap-2.5 sm:gap-4 text-[10.5px] sm:text-[12px] text-neutral-400">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2 text-center md:text-left">
             <span>
               {footer?.copyright?.replace('{year}', currentYear.toString()) ||
                 `© ${currentYear} ${businessName}. All rights reserved.`}
             </span>
             {(settings?.legal?.cin || configCin) && (
-              <span className="text-neutral-500 font-mono text-[11px]">
+              <span className="text-neutral-500 font-mono text-[9.5px] sm:text-[11px]">
                 • CIN: {settings?.legal?.cin || configCin}
               </span>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 sm:gap-x-5 gap-y-1">
             {policyLinks.map((link, idx) => (
               <Link
                 key={idx}

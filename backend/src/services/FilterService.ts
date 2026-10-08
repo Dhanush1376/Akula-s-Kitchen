@@ -16,8 +16,17 @@ export class FilterService {
     const cached = filterCache.get(cacheKey);
     if (cached) return cached;
 
-    // 1. Build the exact match filter for the current search/category context
+    // 1. Build queries: one with all filters for options, and one without price for stable price range bounds
+    const queryParamsWithoutPrice = { ...queryParams };
+    delete queryParamsWithoutPrice.priceRange;
+    delete queryParamsWithoutPrice.minPrice;
+    delete queryParamsWithoutPrice.maxPrice;
+
     const { filter } = await ProductService.buildProductFilterQuery(queryParams, false);
+    const { filter: filterWithoutPrice } = await ProductService.buildProductFilterQuery(
+      queryParamsWithoutPrice,
+      false,
+    );
 
     // Fetch active filterable attributes to determine order
     const attributes = await CatalogAttribute.find({ isFilterable: true, isActive: true })
@@ -25,20 +34,23 @@ export class FilterService {
       .lean();
     const attributeOrder = attributes.map((a) => a.name);
 
-    // 2. Construct MongoDB $facet pipeline to compute all dynamic attributes simultaneously
+    // 2. Construct MongoDB $facet pipeline
+    const priceConditionStage = filter.price ? [{ $match: { price: filter.price } }] : [];
+
     const facetPipeline: any = {
-      categories: [{ $sortByCount: '$category' }],
-      tags: [{ $unwind: '$tags' }, { $sortByCount: '$tags' }],
-      priceRanges: [
+      categories: [...priceConditionStage, { $sortByCount: '$category' }],
+      tags: [...priceConditionStage, { $unwind: '$tags' }, { $sortByCount: '$tags' }],
+      priceStats: [
         {
-          $bucket: {
-            groupBy: '$price',
-            boundaries: [0, 2000, 5000, 10000, 25000, 50000, 100000],
-            default: 'Over 100000',
+          $group: {
+            _id: null,
+            min: { $min: '$price' },
+            max: { $max: '$price' },
           },
         },
       ],
       variants: [
+        ...priceConditionStage,
         { $unwind: '$variants' },
         {
           $group: {
@@ -49,7 +61,10 @@ export class FilterService {
       ],
     };
 
-    const aggregation = await Product.aggregate([{ $match: filter }, { $facet: facetPipeline }]);
+    const aggregation = await Product.aggregate([
+      { $match: filterWithoutPrice },
+      { $facet: facetPipeline },
+    ]);
     const result = aggregation[0];
     const filterGroups: any[] = [];
 
@@ -67,35 +82,29 @@ export class FilterService {
       });
     }
 
-    // Process Price Ranges
-    if (result.priceRanges?.length > 0) {
-      const priceMapping: Record<string, { label: string; val: string }> = {
-        '0': { label: 'Under ₹2,000', val: '0-2000' },
-        '2000': { label: '₹2,000 - ₹5,000', val: '2000-5000' },
-        '5000': { label: '₹5,000 - ₹10,000', val: '5000-10000' },
-        '10000': { label: '₹10,000 - ₹25,000', val: '10000-25000' },
-        '25000': { label: '₹25,000 - ₹50,000', val: '25000-50000' },
-        '50000': { label: '₹50,000 - ₹100,000', val: '50000-100000' },
-        'Over 100000': { label: 'Over ₹100,000', val: '100000-' },
-      };
-
-      const priceOptions = result.priceRanges.map((b: any) => {
-        const mapped = priceMapping[b._id.toString()];
-        return {
-          value: mapped ? mapped.val : b._id.toString(),
-          label: mapped ? mapped.label : b._id.toString(),
-          count: b.count,
-        };
-      });
-
-      if (priceOptions.length > 1) {
-        filterGroups.push({
-          id: 'priceRange',
-          label: 'Price Range',
-          type: 'checkbox',
-          options: priceOptions,
-        });
+    // Process Dynamic Price Range Bar
+    const rawMin = result.priceStats?.[0]?.min;
+    const rawMax = result.priceStats?.[0]?.max;
+    if (typeof rawMin === 'number' && typeof rawMax === 'number') {
+      let minBound = Math.floor(rawMin / 25) * 25;
+      let maxBound = Math.ceil(rawMax / 25) * 25;
+      if (minBound === maxBound) {
+        minBound = Math.max(0, minBound - 50);
+        maxBound = maxBound + 50;
       }
+      filterGroups.push({
+        id: 'priceRange',
+        label: 'Price Range',
+        type: 'range',
+        min: minBound,
+        max: maxBound,
+        options: [
+          {
+            value: `${minBound}-${maxBound}`,
+            label: `₹${minBound} - ₹${maxBound}`,
+          },
+        ],
+      });
     }
 
     // Process Dynamic Variants (e.g., Color, Size, Material) with Canonical Registry

@@ -10,8 +10,15 @@ export function WhatsAppWidget() {
   const { whatsappUrl } = useConfig();
   const targetUrl = whatsappUrl || BRAND.whatsappUrl;
 
-  // Hide on checkout & return flows for a distraction-free experience or if dismissed
-  if (pathname === '/checkout' || pathname.startsWith('/dashboard/returns') || !isVisible)
+  // Hide on cart, checkout & return flows for a distraction-free experience or if dismissed
+  if (
+    pathname === '/cart' ||
+    pathname.startsWith('/cart') ||
+    pathname === '/checkout' ||
+    pathname.startsWith('/checkout') ||
+    pathname.startsWith('/dashboard/returns') ||
+    !isVisible
+  )
     return null;
 
   return (

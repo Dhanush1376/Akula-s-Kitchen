@@ -74,7 +74,7 @@ export function PhoneCollectionModal({ isOpen, onClose, onSuccess }) {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ''))}
                   placeholder="98765 43210"
-                  className="w-full pl-12 pr-4 py-3 bg-[var(--background)] border border-[var(--border-strong)] rounded-xl text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+                  className="w-full pl-12 pr-4 py-3 bg-[var(--background)] border border-[var(--border-strong)] rounded-full text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
                   disabled={isLoading}
                 />
               </div>

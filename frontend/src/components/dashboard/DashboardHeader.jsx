@@ -1,9 +1,7 @@
 import { ChevronLeft } from 'lucide-react';
-import React, { useRef, useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDashboard } from '../../context/DashboardContext';
-import { useScrollDirection } from '../../hooks/useScrollDirection';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 export function DashboardHeader() {
   const {
@@ -36,78 +34,8 @@ export function DashboardHeader() {
     setSelectedOrderId(null);
   };
 
-  const isMobile = useMediaQuery('(max-width: 1023px)');
-  const { scrollDirection, isAtTop } = useScrollDirection();
-  // Sync the logic perfectly with TopNavbar.jsx to prevent gaps
-  const isNavbarHidden = !isAtTop && scrollDirection === 'down';
-
-  const [navbarHeight, setNavbarHeight] = useState(0);
-  const [isStuck, setIsStuck] = useState(false);
-  const headerRef = useRef(null);
-
-  useEffect(() => {
-    let ticking = false;
-    const measure = () => {
-      const topNav = document.querySelector('.top-navbar');
-      if (topNav) {
-        setNavbarHeight((prev) => {
-          const current = topNav.getBoundingClientRect().height;
-          return prev === current ? prev : current;
-        });
-      }
-
-      if (headerRef.current) {
-        const rect = headerRef.current.getBoundingClientRect();
-        const topThreshold = parseFloat(headerRef.current.style.top) || 0;
-        setIsStuck((prev) => {
-          // Only once the page has scrolled: at the top it can already sit at its sticky
-          // offset, and the frosted strip would then show over the decorative leaf.
-          const current = window.scrollY > 0 && rect.top <= topThreshold + 1;
-          return prev === current ? prev : current;
-        });
-      }
-    };
-
-    const onScrollOrResize = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          measure();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize, { passive: true });
-    measure();
-    return () => {
-      window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
-    };
-  }, []);
-
   return (
-    <div
-      ref={headerRef}
-      className={`sticky z-40 transition-all duration-300 flex justify-between items-center gap-4 h-[52px] mb-4 border-b ${
-        isStuck
-          ? 'bg-white/85 backdrop-blur-xl border-transparent -mx-margin-mobile lg:-mx-margin-desktop px-margin-mobile lg:px-margin-desktop'
-          : // Clear at rest so the decorative leaf behind it isn't boxed in by a frosted strip
-            'border-neutral-200/40 bg-transparent'
-      }`}
-      style={{
-        top: isNavbarHidden ? '0px' : `${navbarHeight}px`,
-        // While stuck, fade the frosted strip out along its top and bottom so it blends
-        // into the page instead of showing hard edges (the text sits in the solid middle)
-        ...(isStuck && {
-          maskImage:
-            'linear-gradient(to bottom, transparent 0, #000 28%, #000 70%, transparent 100%)',
-          WebkitMaskImage:
-            'linear-gradient(to bottom, transparent 0, #000 28%, #000 70%, transparent 100%)',
-        }),
-      }}
-    >
+    <div className="flex justify-between items-center gap-4 h-[52px] mb-4 border-b border-neutral-200/60 bg-transparent">
       {/* Mobile Back Button Navigation */}
       <div className="lg:hidden flex-1 min-w-0">
         {mobileShowContent ? (

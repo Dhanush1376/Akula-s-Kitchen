@@ -1,4 +1,5 @@
-import { ChefHat } from 'lucide-react';
+import { ChefHat, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { ProductCard } from '../shared/ProductCard';
 import { SectionHeader } from '../shared/SectionHeader';
@@ -23,6 +24,9 @@ export function RecommendationSystem({
   containerClassName = '',
   compact = false,
   horizontalScroll = false,
+  showViewMore = !compact && !horizontalScroll,
+  viewMoreLink = '/collections',
+  viewMoreText = 'View More',
 }) {
   const { isAuthenticated } = useAuth();
   const [shouldFetch, setShouldFetch] = useState(false);
@@ -233,6 +237,23 @@ export function RecommendationSystem({
             </motion.div>
           ) : null}
         </AnimatePresence>
+
+        {/* Minimal View More CTA redirecting to Shop page (/collections) */}
+        {showViewMore && activeList.length > 0 && (
+          <div className="flex justify-center mt-6 sm:mt-8 pb-3">
+            <Link
+              to={viewMoreLink}
+              className="group inline-flex items-center gap-2 px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-neutral-300 hover:border-neutral-900 bg-white hover:bg-neutral-900 text-neutral-700 hover:text-white font-sans text-[12.5px] sm:text-[13px] font-medium tracking-wide transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs hover:shadow-xs"
+            >
+              <span>{viewMoreText}</span>
+              <ArrowRight
+                className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-transform duration-200 group-hover:translate-x-0.5"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

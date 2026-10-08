@@ -9,6 +9,7 @@ import redisClient from '../utils/cache/redis';
 import { MediaService } from './media/MediaService';
 import { analyzeQueryWithAI, escapeRegex, getMatchingProductCategory } from './searchService';
 import { computeSearchScore } from './search/rankingEngine';
+import { analyzeCatalogQuery, CatalogSearchAnalysis } from './search/catalogVocabulary';
 import Category from '../models/Category';
 import { CategoryService } from './CategoryService';
 import ApiError from '../utils/ApiError';
@@ -43,11 +44,13 @@ class ProductService {
       featured,
       minPrice,
       maxPrice,
+      priceRange,
       material,
       collection,
       spellcheck,
       bypassCorrection,
       ids,
+      availability,
       ...dynamicFilters
     } = queryParams;
 
@@ -71,11 +74,28 @@ class ProductService {
       }
     }
     if (featured === 'true') filter.featured = true;
+    if (availability === 'in_stock') filter.stock = { $gt: 0 };
 
-    if (minPrice || maxPrice) {
+    let parsedMin = minPrice !== undefined && minPrice !== '' ? Number(minPrice) : undefined;
+    let parsedMax = maxPrice !== undefined && maxPrice !== '' ? Number(maxPrice) : undefined;
+
+    if (priceRange && parsedMin === undefined && parsedMax === undefined) {
+      const parts = String(priceRange).split('-');
+      if (parts[0] !== undefined && parts[0] !== '' && !isNaN(Number(parts[0]))) {
+        parsedMin = Number(parts[0]);
+      }
+      if (parts[1] !== undefined && parts[1] !== '' && !isNaN(Number(parts[1]))) {
+        parsedMax = Number(parts[1]);
+      }
+    }
+
+    if (
+      (parsedMin !== undefined && !isNaN(parsedMin)) ||
+      (parsedMax !== undefined && !isNaN(parsedMax))
+    ) {
       filter.price = {};
-      if (minPrice) filter.price.$gte = Number(minPrice);
-      if (maxPrice) filter.price.$lte = Number(maxPrice);
+      if (parsedMin !== undefined && !isNaN(parsedMin)) filter.price.$gte = parsedMin;
+      if (parsedMax !== undefined && !isNaN(parsedMax)) filter.price.$lte = parsedMax;
     }
     if (material) {
       const materials = String(material)
@@ -123,7 +143,9 @@ class ProductService {
     const dynamicFilterOrs: any[] = [];
     Object.keys(dynamicFilters).forEach((key) => {
       // Ignore pagination and known sorts and special params
-      if (['page', 'limit', 'skip', 'sort'].includes(key)) return;
+      if (['page', 'limit', 'skip', 'sort', 'priceRange', 'minPrice', 'maxPrice'].includes(key)) {
+        return;
+      }
 
       const values = String(dynamicFilters[key])
         .split(',')
@@ -147,6 +169,17 @@ class ProductService {
                 },
               },
             },
+            // Option 3: It's a purchasable option, e.g. ?Weight=500g against a "Weight" group
+            {
+              optionGroups: {
+                $elemMatch: {
+                  name: new RegExp(`^${escapeRegex(key)}$`, 'i'),
+                  options: {
+                    $elemMatch: { label: { $in: valRegexes }, available: { $ne: false } },
+                  },
+                },
+              },
+            },
           ],
         });
       }
@@ -158,10 +191,13 @@ class ProductService {
     }
 
     let correctedQuery: string | undefined;
+    let searchAnalysis: CatalogSearchAnalysis | null = null;
     const shouldSpellcheck = spellcheck !== 'false' && bypassCorrection !== 'true';
 
     if (search) {
       const aiAnalysis = await analyzeQueryWithAI(search);
+      // Catalogue-driven pass: misspellings, sound-alikes, tag synonyms and pack sizes
+      searchAnalysis = await analyzeCatalogQuery(String(search), { limit: 200 });
 
       if (
         shouldSpellcheck &&
@@ -169,6 +205,14 @@ class ProductService {
         aiAnalysis.correctedQuery.toLowerCase() !== search.toLowerCase()
       ) {
         correctedQuery = aiAnalysis.correctedQuery;
+      }
+      if (
+        shouldSpellcheck &&
+        !correctedQuery &&
+        searchAnalysis?.correctedQuery &&
+        searchAnalysis.correctionLevel !== 'low'
+      ) {
+        correctedQuery = searchAnalysis.correctedQuery;
       }
 
       // Apply price filter from AI budget analysis if not manually set
@@ -250,6 +294,28 @@ class ProductService {
         searchOr.push({ secondaryCategories: { $in: catIds } });
       }
 
+      // Products the catalogue analysis matched (typos, tags, sizes) are results too.
+      // With correction turned off, only products that matched the words as typed count.
+      if (searchAnalysis && !searchAnalysis.fallback) {
+        const allowCorrected = shouldSpellcheck || searchAnalysis.correctionLevel === 'none';
+        const matchedIds = allowCorrected
+          ? searchAnalysis.products
+              .map((p) => p.id)
+              .filter((id) => mongoose.Types.ObjectId.isValid(id))
+          : [];
+        if (matchedIds.length > 0) searchOr.push({ _id: { $in: matchedIds } });
+
+        // "dosa 500g": keep to products actually sold in 500g, when any of the matches are
+        const weightIds = searchAnalysis.products
+          .filter((p) => p.matchedWeight)
+          .map((p) => p.id)
+          .filter((id) => mongoose.Types.ObjectId.isValid(id));
+        if (searchAnalysis.weight && weightIds.length > 0) {
+          filter.$and = filter.$and || [];
+          filter.$and.push({ _id: { $in: weightIds } });
+        }
+      }
+
       // Match colors if detected
       if (aiAnalysis.colors.length > 0) {
         searchOr.push({
@@ -270,14 +336,23 @@ class ProductService {
       }
     }
 
-    return { filter, correctedQuery };
+    return { filter, correctedQuery, searchAnalysis };
   }
 
   static async getAllProducts(queryParams: any, isAdmin: boolean = false) {
     const { sort, search } = queryParams;
     const { page, limit, skip } = getPaginationOptions(queryParams);
 
-    const { filter, correctedQuery } = await this.buildProductFilterQuery(queryParams, isAdmin);
+    const { filter, correctedQuery, searchAnalysis } = await this.buildProductFilterQuery(
+      queryParams,
+      isAdmin,
+    );
+    const analysisScores = new Map(
+      (searchAnalysis && !searchAnalysis.fallback ? searchAnalysis.products : []).map((p) => [
+        p.id,
+        p.score,
+      ]),
+    );
 
     const isSearchQuery = Boolean(search && String(search).trim().length > 0);
     const searchQuery = isSearchQuery ? String(search).trim() : '';
@@ -329,7 +404,10 @@ class ProductService {
           p.description,
           p.material ? [p.material] : [],
         );
-        return { p, score };
+        // The catalogue score already weighs typos, sizes and stock; it leads, text score breaks ties
+        const catalogScore = analysisScores.get(String(p._id)) || 0;
+        const stockFactor = (p.stock ?? 1) > 0 ? 1 : 0.6;
+        return { p, score: catalogScore * 10 + score * stockFactor };
       });
 
       scored.sort((a, b) => {
@@ -342,6 +420,15 @@ class ProductService {
 
     const response: any = formatPaginationResponse(products, totalCount, page, limit);
     response.correctedQuery = correctedQuery;
+    if (searchAnalysis) {
+      response.searchMeta = {
+        intent: searchAnalysis.intent,
+        weight: searchAnalysis.weight,
+        correctionLevel: searchAnalysis.correctionLevel,
+        correctionConfidence: searchAnalysis.correctionConfidence,
+        related: searchAnalysis.related,
+      };
+    }
     return response;
   }
 

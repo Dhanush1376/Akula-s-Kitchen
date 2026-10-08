@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AdminToggle } from '../../components/AdminUIKit';
 import { AiProviderDropdown } from '../../components/AiProviderDropdown';
 
 export function ProductInfoStep({

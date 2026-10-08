@@ -228,11 +228,7 @@ export const moderateReview = asyncHandler(async (req: Request, res: Response) =
       await updateProductRating(review.product);
     }
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(true, 'Review has been rejected. No rewards were credited.', { review }),
-      );
+    res.status(200).json(new ApiResponse(true, 'Review has been rejected.', { review }));
   }
 });
 

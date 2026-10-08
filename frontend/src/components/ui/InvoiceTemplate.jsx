@@ -30,27 +30,25 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
   const [isDownloading, setIsDownloading] = useState(false);
   const printRef = useRef(null);
 
-  if (!order) return null;
-
   // ─── Order Items ───────────────────────────────────────────────────
-  const rawItems = Array.isArray(order.items) ? order.items : [];
+  const rawItems = Array.isArray(order?.items) ? order.items : [];
 
   // ─── Read from immutable snapshots ─────────────────────────────────
-  const invoiceSnap = order.invoice || {};
-  const storeSnap = order.store || {};
+  const invoiceSnap = order?.invoice || {};
+  const storeSnap = order?.store || {};
   const taxSnap =
-    typeof order.tax === 'object' && order.tax !== null ? order.tax : order.taxSnapshot || {};
+    typeof order?.tax === 'object' && order?.tax !== null ? order.tax : order?.taxSnapshot || {};
 
   const isGstEnabled = false;
   const invoiceFooter = taxSnap.invoiceFooter || storeSettings?.taxes?.invoiceFooter || '';
 
   // ─── Invoice metadata ─────────────────────────────────────────────
-  const orderId = order.orderId || order._id || order.id || 'N/A';
+  const orderId = order?.orderId || order?._id || order?.id || 'N/A';
 
   const displayInvoiceNumber =
     invoiceSnap.number ||
-    order.invoiceNumber ||
-    (order._id ? `INV-${order._id.slice(-8).toUpperCase()}` : 'Not Generated');
+    order?.invoiceNumber ||
+    (order?._id ? `INV-${order._id.slice(-8).toUpperCase()}` : 'Not Generated');
 
   const invoiceNumber = displayInvoiceNumber;
   const invoiceHeading = 'INVOICE';
@@ -157,7 +155,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
   const shippingFee = deliveryCharge;
   const platformFee = Number(order.platformFee ?? taxSnap.platformFee ?? 0);
 
-  const grandTotal =
+  const rawGrandTotal =
     taxSnap.grandTotal ??
     order.totalAmount ??
     order.total ??
@@ -169,9 +167,21 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
     String(paymentMode).toLowerCase().includes('cod') ||
     String(paymentMode).toLowerCase().includes('cash');
 
-  if (codFee === 0 && isCodOrder && grandTotal > subtotal + shippingFee + platformFee - discount) {
-    codFee = grandTotal - (subtotal + shippingFee + platformFee - discount);
+  if (
+    codFee === 0 &&
+    isCodOrder &&
+    rawGrandTotal > subtotal + shippingFee + platformFee - discount
+  ) {
+    codFee = rawGrandTotal - (subtotal + shippingFee + platformFee - discount);
   }
+
+  // Invoice explicitly excludes shipping charges from commercial total
+  const grandTotal = Math.max(
+    0,
+    rawGrandTotal != null && rawGrandTotal > 0
+      ? rawGrandTotal - deliveryCharge
+      : subtotal + codFee + platformFee - discount,
+  );
 
   const currency = taxSnap.currencySymbol || '₹';
 
@@ -360,11 +370,17 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   useImperativeHandle(ref, () => ({
     handleDownload,
-    handlePrint: () => window.print(),
+    handlePrint,
     isDownloading,
   }));
+
+  if (!order) return null;
 
   const INVOICE_FONT = CANONICAL_INVOICE.FONT_FAMILY;
 
@@ -398,30 +414,49 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
         }
       `}</style>
 
-      {/* Action Header Strip (Hidden in print and hidden when embedded inside InvoiceModal) */}
+      {/* Action Header Strip (Hidden in print and hidden when embedded inside customer InvoiceModal) */}
       {!isEmbedded && (
-        <div className="no-print w-full max-w-[480px] flex justify-between items-center pb-1.5 mb-1 px-0.5">
-          <h3
-            className="text-[11.5px] font-bold uppercase tracking-wider text-[#111827]"
-            style={{ fontFamily: INVOICE_FONT }}
-          >
-            {invoiceHeading}
-          </h3>
+        <div className="no-print w-full max-w-[480px] flex justify-between items-center pb-2 mb-1 px-0.5">
+          <div className="flex items-center gap-2">
+            <h3
+              className="text-[12px] font-bold uppercase tracking-wider text-[#111827]"
+              style={{ fontFamily: INVOICE_FONT }}
+            >
+              {invoiceHeading}
+            </h3>
+            {invoiceNumber && (
+              <span className="font-mono text-[10.5px] font-bold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded-[3px] border border-neutral-200">
+                {invoiceNumber}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={handlePrint}
+              type="button"
+              className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-[4px] p-0 shrink-0 overflow-hidden flex items-center justify-center bg-white border border-neutral-200 hover:bg-neutral-100 text-[#111827] transition-colors shadow-2xs active:scale-95 cursor-pointer"
+              title="Print Invoice"
+            >
+              <span className="material-symbols-outlined text-[15px] leading-none select-none pointer-events-none flex items-center justify-center">
+                print
+              </span>
+            </button>
             <button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-full p-0 shrink-0 overflow-hidden flex items-center justify-center bg-[#111827] hover:bg-black text-white transition-all shadow-sm active:scale-95 disabled:opacity-70 cursor-pointer"
+              type="button"
+              className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-[4px] p-0 shrink-0 overflow-hidden flex items-center justify-center bg-[#111827] hover:bg-black text-white transition-all shadow-2xs active:scale-95 disabled:opacity-70 cursor-pointer"
               title="Download PDF"
             >
-              <span className="material-symbols-outlined text-[14px] leading-none select-none pointer-events-none flex items-center justify-center">
+              <span className="material-symbols-outlined text-[15px] leading-none select-none pointer-events-none flex items-center justify-center">
                 {isDownloading ? 'hourglass_top' : 'download'}
               </span>
             </button>
             {onClose && (
               <button
                 onClick={onClose}
-                className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-full p-0 shrink-0 overflow-hidden flex items-center justify-center bg-white border border-neutral-200 hover:bg-neutral-100 text-[#111827] transition-colors shadow-sm active:scale-95 cursor-pointer"
+                type="button"
+                className="w-7 h-7 min-w-[28px] min-h-[28px] aspect-square rounded-[4px] p-0 shrink-0 overflow-hidden flex items-center justify-center bg-white border border-neutral-200 hover:bg-neutral-100 text-[#111827] transition-colors shadow-2xs active:scale-95 cursor-pointer"
                 title="Close"
               >
                 <X className="w-3.5 h-3.5 shrink-0 text-[#111827]" strokeWidth={2.2} />
@@ -639,13 +674,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
               {/* Exact user-requested label: Shipping Charges */}
               <div className="flex justify-end items-center gap-2">
                 <span className="font-semibold text-neutral-600">Shipping Charges:</span>
-                <span className="font-bold font-mono text-neutral-950 min-w-[62px]">
-                  {shippingFee > 0 ? (
-                    `${currency}${shippingFee.toLocaleString()}`
-                  ) : (
-                    <span className="text-emerald-700 font-bold">FREE</span>
-                  )}
-                </span>
+                <span className="font-bold text-neutral-600 min-w-[62px]">Excluded</span>
               </div>
 
               {platformFee > 0 && (

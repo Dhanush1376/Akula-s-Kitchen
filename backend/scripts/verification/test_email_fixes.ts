@@ -113,12 +113,8 @@ assert(
   'Customer Confirmation Email contains ZERO localhost URLs',
 );
 assert(
-  customerEmail.html.includes('Track Your Order'),
-  'Customer Confirmation Email has Track Your Order button',
-);
-assert(
-  customerEmail.html.includes('/track/672e8f12a4b3c2d1e0f9a8b7?token='),
-  'Customer Confirmation Email has signed public tracking link',
+  !customerEmail.html.includes('Track Your Order'),
+  'Customer Confirmation Email does NOT have Track Your Order button',
 );
 assert(
   customerEmail.html.includes(
@@ -178,12 +174,8 @@ assert(
   'Status Change Email contains ZERO localhost URLs',
 );
 assert(
-  statusEmail.html.includes('Track Your Order'),
-  'Status Change Email has Track Your Order button',
-);
-assert(
-  statusEmail.html.includes('/track/672e8f12a4b3c2d1e0f9a8b7?token='),
-  'Status Change Email links to public order tracking with token',
+  !statusEmail.html.includes('Track Your Order'),
+  'Status Change Email does NOT have Track Your Order button',
 );
 
 // Handlebars order-confirmation.hbs
@@ -215,8 +207,8 @@ assert(
 );
 assert(hbsHtml.includes('Grand Total:'), 'order-confirmation.hbs labels total as Grand Total:');
 assert(
-  hbsHtml.includes('Track Your Order'),
-  'order-confirmation.hbs contains Track Your Order button',
+  !hbsHtml.includes('Track Your Order'),
+  'order-confirmation.hbs does NOT contain Track Your Order button',
 );
 assert(
   hbsHtml.includes(

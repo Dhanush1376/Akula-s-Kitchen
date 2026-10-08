@@ -202,13 +202,13 @@ export function AdminOrderDrawer({
         </div>
 
         {/* Drawer Scroll Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar text-left bg-[var(--admin-bg)] touch-pan-y overscroll-contain">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 custom-scrollbar text-left bg-[var(--admin-bg)] touch-pan-y overscroll-contain">
           {/* 1. Client Card */}
-          <div className="bg-[var(--admin-surface)] rounded-xl border border-[var(--admin-border-subtle)] shadow-xs p-4 sm:p-5 space-y-3.5">
+          <div className="bg-[var(--admin-surface)] rounded-[4px] border border-[var(--admin-border-subtle)] shadow-xs p-3 sm:p-3.5 space-y-2.5">
             {/* Customer Profile Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--admin-border-subtle)]">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-[13px] flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+            <div className="flex items-center justify-between pb-2.5 border-b border-[var(--admin-border-subtle)]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-[4px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-[12px] flex items-center justify-center shrink-0 border border-emerald-500/20">
                   {selectedOrder.customer
                     ? selectedOrder.customer
                         .split(' ')
@@ -219,10 +219,10 @@ export function AdminOrderDrawer({
                     : 'CU'}
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block">
+                  <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block">
                     Customer Profile
                   </span>
-                  <h4 className="text-[14px] font-semibold text-[var(--admin-text-primary)] truncate mt-0.5">
+                  <h4 className="text-[13.5px] font-semibold text-[var(--admin-text-primary)] truncate">
                     {selectedOrder.customer || 'Unknown Customer'}
                   </h4>
                 </div>
@@ -234,7 +234,7 @@ export function AdminOrderDrawer({
                   href={`${EXTERNAL_URLS.WHATSAPP_BASE}/${selectedOrder.phone.replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 border border-emerald-200/80 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] text-[11px] font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 border border-emerald-200/80 transition-colors shrink-0 cursor-pointer"
                   title="Message Customer on WhatsApp"
                 >
                   <WhatsAppIcon className="w-3.5 h-3.5" />
@@ -244,18 +244,20 @@ export function AdminOrderDrawer({
             </div>
 
             {/* Meta Information 2x2 Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[12px]">
+            <div className="grid grid-cols-2 gap-2 text-[12px]">
               {/* Tile 1: Customer Phone */}
-              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
-                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
+              <div className="bg-[var(--admin-bg-subtle)] p-2 sm:p-2.5 rounded-[4px] border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-0.5">
                   Customer Phone
                 </span>
                 <div className="flex items-center justify-between gap-1">
-                  <span className="font-mono text-[12px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                  <span className="font-mono text-[11.5px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1 truncate">
+                    <span className="material-symbols-outlined text-[13px] text-[var(--admin-text-tertiary)] shrink-0">
                       call
                     </span>
-                    {formatPhoneNumber(selectedOrder.customerPhone || selectedOrder.phone)}
+                    <span className="truncate">
+                      {formatPhoneNumber(selectedOrder.customerPhone || selectedOrder.phone)}
+                    </span>
                   </span>
                   {(selectedOrder.customerPhone || selectedOrder.phone) && (
                     <button
@@ -266,23 +268,23 @@ export function AdminOrderDrawer({
                           'Phone number',
                         )
                       }
-                      className="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] transition-colors p-0.5 rounded cursor-pointer"
+                      className="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] transition-colors p-0.5 rounded-[2px] cursor-pointer shrink-0"
                       title="Copy phone number"
                     >
-                      <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                      <span className="material-symbols-outlined text-[12px]">content_copy</span>
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Tile 2: Payment Mode */}
-              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
-                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
+              <div className="bg-[var(--admin-bg-subtle)] p-2 sm:p-2.5 rounded-[4px] border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-0.5">
                   Payment Mode
                 </span>
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1 flex-wrap">
                   <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] text-[10.5px] font-medium border ${
                       selectedOrder.payment?.toLowerCase().includes('pending') ||
                       selectedOrder.payment?.toLowerCase().includes('cod')
                         ? 'bg-amber-50 text-amber-800 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60'
@@ -290,19 +292,19 @@ export function AdminOrderDrawer({
                     }`}
                   >
                     {selectedOrder.payment?.toLowerCase().includes('pending') && (
-                      <span className="material-symbols-outlined text-[13px]">schedule</span>
+                      <span className="material-symbols-outlined text-[12px]">schedule</span>
                     )}
                     {selectedOrder.payment}
                   </span>
                   {selectedOrder.codPhoneVerified && (
-                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300">
-                      <span className="material-symbols-outlined text-[12px]">verified</span>
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-[3px] text-[9.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <span className="material-symbols-outlined text-[11px]">verified</span>
                       Verified
                     </span>
                   )}
                   {selectedOrder.paymentMethod?.toLowerCase() === 'cod' &&
                     !selectedOrder.codPhoneVerified && (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300">
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-[3px] text-[9.5px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-300">
                         Unverified
                       </span>
                     )}
@@ -310,30 +312,32 @@ export function AdminOrderDrawer({
               </div>
 
               {/* Tile 3: Invoice Date */}
-              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
-                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
+              <div className="bg-[var(--admin-bg-subtle)] p-2 sm:p-2.5 rounded-[4px] border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-0.5">
                   Invoice Date
                 </span>
-                <span className="text-[12px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                <span className="text-[11.5px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1 truncate">
+                  <span className="material-symbols-outlined text-[13px] text-[var(--admin-text-tertiary)] shrink-0">
                     event
                   </span>
-                  {formatOrderDate(selectedOrder.date)}
+                  <span className="truncate">{formatOrderDate(selectedOrder.date)}</span>
                 </span>
               </div>
 
               {/* Tile 4: Need-By Date */}
-              <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-lg border border-[var(--admin-border-subtle)] flex flex-col justify-between">
-                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-1">
+              <div className="bg-[var(--admin-bg-subtle)] p-2 sm:p-2.5 rounded-[4px] border border-[var(--admin-border-subtle)] flex flex-col justify-between">
+                <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider block mb-0.5">
                   Need-By Date
                 </span>
-                <span className="text-[12px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                <span className="text-[11.5px] font-medium text-[var(--admin-text-primary)] flex items-center gap-1 truncate">
+                  <span className="material-symbols-outlined text-[13px] text-[var(--admin-text-tertiary)] shrink-0">
                     calendar_today
                   </span>
-                  {selectedOrder.needByDate
-                    ? formatOrderDate(selectedOrder.needByDate)
-                    : 'Standard Delivery'}
+                  <span className="truncate">
+                    {selectedOrder.needByDate
+                      ? formatOrderDate(selectedOrder.needByDate)
+                      : 'Standard Delivery'}
+                  </span>
                 </span>
               </div>
             </div>
@@ -342,10 +346,10 @@ export function AdminOrderDrawer({
             {(selectedOrder.razorpayPaymentId ||
               selectedOrder.paymentDetails?.paymentId ||
               selectedOrder.upiVpa) && (
-              <div className="bg-[var(--admin-bg-subtle)] p-2.5 px-3 rounded-lg border border-[var(--admin-border-subtle)] flex items-center justify-between text-[11px] flex-wrap gap-2">
+              <div className="bg-[var(--admin-bg-subtle)] p-2 px-2.5 rounded-[4px] border border-[var(--admin-border-subtle)] flex items-center justify-between text-[11px] flex-wrap gap-2">
                 {(selectedOrder.razorpayPaymentId || selectedOrder.paymentDetails?.paymentId) && (
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
+                    <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
                       Payment ID:
                     </span>
                     <span className="font-mono text-[11px] font-medium text-[var(--admin-text-primary)] truncate">
@@ -368,7 +372,7 @@ export function AdminOrderDrawer({
                 )}
                 {selectedOrder.upiVpa && (
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
+                    <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider">
                       UPI VPA:
                     </span>
                     <span className="font-mono text-[11px] font-medium text-indigo-600 dark:text-indigo-400 truncate">
@@ -380,26 +384,26 @@ export function AdminOrderDrawer({
             )}
 
             {/* Delivery Address & Shipping Contact Block */}
-            <div className="bg-[var(--admin-bg-subtle)] p-3 sm:p-3.5 rounded-lg border border-[var(--admin-border-subtle)] space-y-2">
+            <div className="bg-[var(--admin-bg-subtle)] p-2.5 sm:p-3 rounded-[4px] border border-[var(--admin-border-subtle)] space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-[var(--admin-text-tertiary)]">
+                <span className="text-[9.5px] font-semibold text-[var(--admin-text-tertiary)] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[13px] text-[var(--admin-text-tertiary)]">
                     location_on
                   </span>
                   Delivery Address
                 </span>
                 {selectedOrder.shippingPhone && (
-                  <span className="text-[11px] font-medium text-[var(--admin-text-secondary)] flex items-center gap-1 bg-[var(--admin-surface)] px-2 py-0.5 rounded-full border border-[var(--admin-border-subtle)]">
-                    <span className="material-symbols-outlined text-[12px] text-[var(--admin-text-tertiary)]">
+                  <span className="text-[10.5px] font-medium text-[var(--admin-text-secondary)] flex items-center gap-1 bg-[var(--admin-surface)] px-1.5 py-0.5 rounded-[3px] border border-[var(--admin-border-subtle)]">
+                    <span className="material-symbols-outlined text-[11px] text-[var(--admin-text-tertiary)]">
                       local_shipping
                     </span>
-                    <span className="font-mono text-[10.5px]">
+                    <span className="font-mono text-[10px]">
                       {formatPhoneNumber(selectedOrder.shippingPhone)}
                     </span>
                   </span>
                 )}
               </div>
-              <p className="text-[12.5px] font-normal text-[var(--admin-text-primary)] leading-relaxed pl-5">
+              <p className="text-[12px] font-normal text-[var(--admin-text-primary)] leading-snug pl-4">
                 {selectedOrder.address || 'Address not available'}
               </p>
             </div>
@@ -411,50 +415,78 @@ export function AdminOrderDrawer({
               Items
             </h4>
             <div className="space-y-2">
-              {selectedOrder.items.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] shadow-[var(--admin-shadow-sm)]"
-                >
-                  <div className="flex items-center gap-3">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-12 h-12 rounded-[4px] object-cover border border-[var(--admin-border)] shadow-sm shrink-0"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-[4px] bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-gray-400">inventory_2</span>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-[13px] font-bold text-[var(--admin-text-primary)] line-clamp-1">
-                        {item.name || item.title}
-                      </p>
-                      {item.selectedOptions && item.selectedOptions.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1 mb-1">
-                          {item.selectedOptions.map((opt, optIdx) => (
-                            <span
-                              key={optIdx}
-                              className="text-[10px] font-medium bg-amber-50 text-amber-900 border border-amber-200/60 px-1.5 py-0.5 rounded"
-                            >
-                              {opt.groupName}: <strong>{opt.optionLabel}</strong>
-                              {opt.priceAdjustment > 0 && ` (+₹${opt.priceAdjustment})`}
-                            </span>
-                          ))}
+              {selectedOrder.items.map((item, idx) => {
+                const weightOpt = item.selectedOptions?.find(
+                  (opt) =>
+                    opt.groupName?.toLowerCase() === 'weight' ||
+                    opt.groupName?.toLowerCase().includes('weight') ||
+                    opt.groupName?.toLowerCase() === 'size',
+                );
+                const otherOptions = (item.selectedOptions || []).filter(
+                  (opt) => opt !== weightOpt,
+                );
+                const rawWeight = weightOpt?.optionLabel || item.weight;
+                const itemTitle = item.name || item.title || 'Item';
+                const titleHasWeight =
+                  rawWeight && itemTitle.toLowerCase().includes(String(rawWeight).toLowerCase());
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] shadow-[var(--admin-shadow-sm)]"
+                  >
+                    <div className="flex items-center gap-3">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={itemTitle}
+                          className="w-12 h-12 rounded-[4px] object-cover border border-[var(--admin-border)] shadow-sm shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-[4px] bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-gray-400">
+                            inventory_2
+                          </span>
                         </div>
                       )}
-                      <p className="text-[11px] font-medium text-[var(--admin-text-secondary)] mt-0.5 bg-[var(--admin-surface-muted)] inline-block px-1.5 py-0.5 rounded-[4px] border border-[var(--admin-border-subtle)]">
-                        Qty: {item.qty || item.quantity || 1}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[13px] font-bold text-[var(--admin-text-primary)]">
+                            {itemTitle}
+                          </p>
+                          {rawWeight && !titleHasWeight && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[10.5px] font-bold bg-amber-50 text-amber-900 border border-amber-200/80 leading-none shrink-0 shadow-2xs">
+                              {rawWeight}
+                            </span>
+                          )}
+                        </div>
+                        {otherOptions.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-0.5 mb-1">
+                            {otherOptions.map((opt, optIdx) => (
+                              <span
+                                key={optIdx}
+                                className="text-[10px] text-[var(--admin-text-secondary)] font-normal"
+                              >
+                                {opt.groupName}:{' '}
+                                <strong className="text-[var(--admin-text-primary)]">
+                                  {opt.optionLabel}
+                                </strong>
+                                {opt.priceAdjustment > 0 && ` (+₹${opt.priceAdjustment})`}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[11px] font-medium text-[var(--admin-text-secondary)] mt-0.5 bg-[var(--admin-surface-muted)] inline-block px-1.5 py-0.5 rounded-[4px] border border-[var(--admin-border-subtle)]">
+                          Qty: {item.qty || item.quantity || 1}
+                        </p>
+                      </div>
                     </div>
+                    <span className="text-[12px] font-bold text-[var(--admin-text-primary)] shrink-0 ml-3">
+                      {formatCurrency(Number(item.price * (item.qty || item.quantity || 1)))}
+                    </span>
                   </div>
-                  <span className="text-[12px] font-bold text-[var(--admin-text-primary)] shrink-0 ml-3">
-                    {formatCurrency(Number(item.price * (item.qty || item.quantity || 1)))}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex items-center justify-between p-4 bg-[var(--admin-surface-muted)] border border-[var(--admin-border-strong)] rounded-[4px]">

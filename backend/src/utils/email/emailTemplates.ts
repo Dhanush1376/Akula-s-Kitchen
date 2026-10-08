@@ -246,7 +246,7 @@ export const getTeamInviteEmailTemplate = (
   permissions: string,
 ): string => {
   const store = getStoreConfigSync();
-  const domain = store.websiteDomain || 'akulas.kitchen';
+  const _domain = store.websiteDomain || 'akulas.kitchen';
   const preheader = `You've been invited to join ${store.name}`;
   const body = `
     <h2>Team Invitation</h2>
@@ -285,12 +285,12 @@ export const getDiagnosticTestEmailTemplate = (
  */
 export const getOrderConfirmationTemplate = (orderDetails: any): string => {
   const store = getStoreConfigSync();
-  const domain = store.websiteDomain || 'akulas.kitchen';
+  const _domain = store.websiteDomain || 'akulas.kitchen';
   const grandTotal = orderDetails.totalAmount ?? orderDetails.total ?? 0;
   const preheader = `Your order #${orderDetails.orderId} is confirmed — Grand Total: ₹${grandTotal}`;
   const rawTrackLink =
     orderDetails.orderLink || `https://akulas.kitchen/track/${orderDetails.orderId || ''}`;
-  const trackLink =
+  const _trackLink =
     rawTrackLink.includes('localhost') || rawTrackLink.includes('127.0.0.1')
       ? `https://akulas.kitchen/track/${orderDetails.orderId || ''}`
       : rawTrackLink;
@@ -302,9 +302,6 @@ export const getOrderConfirmationTemplate = (orderDetails: any): string => {
       <strong>Order ID:</strong> #${escapeHtml(orderDetails.orderId)}<br/>
       <strong>Grand Total:</strong> <strong style="font-size: 16px; color: #283618;">₹${grandTotal}</strong><br/>
       <strong>Payment Status:</strong> ${escapeHtml(orderDetails.paymentStatus || 'Confirmed')}
-    </div>
-    <div class="button-wrapper">
-      <a href="${trackLink}" class="cta-button" target="_blank">Track Your Order</a>
     </div>
   `;
   return getLuxuryEmailWrapper('Order Confirmed', body, undefined, preheader);

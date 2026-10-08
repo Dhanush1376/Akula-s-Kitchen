@@ -19,7 +19,9 @@ export default function CheckoutSidebar() {
     checkoutSteps,
   } = useCheckout();
 
-  const activeTotal = backendTotals?.total || 0;
+  const shippingFee = backendTotals?.shippingFee || 0;
+  const payableTotal = Math.max(0, (backendTotals?.total || 0) - shippingFee);
+  const activeTotal = payableTotal;
   const totalItemUnits = activeItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
   return (
@@ -95,15 +97,7 @@ export default function CheckoutSidebar() {
 
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-500">Delivery Fee</span>
-                  {backendTotals?.shippingFee === 0 ? (
-                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-extrabold text-[10.5px] px-2 py-0.5 rounded-md">
-                      FREE
-                    </span>
-                  ) : (
-                    <span className="font-bold text-neutral-950">
-                      ₹{backendTotals?.shippingFee || 0}
-                    </span>
-                  )}
+                  <span className="font-bold text-neutral-600">Excluded</span>
                 </div>
 
                 {backendTotals?.platformFee > 0 && (
@@ -133,7 +127,7 @@ export default function CheckoutSidebar() {
                     Total Payable Amount
                   </span>
                   <span className="text-[18px] sm:text-[19px] text-neutral-950 font-bold leading-none">
-                    ₹{backendTotals?.total?.toLocaleString() || 0}
+                    ₹{payableTotal?.toLocaleString() || 0}
                   </span>
                 </div>
               </>

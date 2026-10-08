@@ -557,11 +557,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                   <span className="material-symbols-outlined text-[18px]">
                     {product?.optionGroups?.length > 0 ? 'tune' : 'shopping_bag'}
                   </span>
-                  <span>
-                    {product?.optionGroups?.length > 0
-                      ? 'Choose Options'
-                      : `Add to Bag • ₹${product.price?.toLocaleString('en-IN') || 0}`}
-                  </span>
+                  <span>{product?.optionGroups?.length > 0 ? 'Choose Options' : 'Add to Bag'}</span>
                 </button>
 
                 <button

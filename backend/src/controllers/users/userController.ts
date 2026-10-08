@@ -10,6 +10,7 @@ import Product from '../../models/Product';
 import { setPaginationHeaders } from '../../utils/paginationHeaders';
 import {
   cacheCart,
+  cacheProfile,
   invalidateUserSessionCaches,
   getCachedSessionJson,
   sessionKeys,
@@ -156,6 +157,7 @@ export const getProfile = asyncHandler(async (req: any, res: Response) => {
 export const updateProfile = asyncHandler(async (req: any, res: Response) => {
   const user = await UserService.updateProfile(req.user.id, req.body);
   await invalidateUserSessionCaches(String(req.user.id));
+  await cacheProfile(String(req.user.id), user);
   res.status(200).json(new ApiResponse(true, 'Profile updated successfully', user));
 });
 

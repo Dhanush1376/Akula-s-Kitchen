@@ -37,7 +37,7 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   const storeName = storeSnap?.name || legalDetails.legalName || storeConfig.name;
   const tagline = storeSnap?.tagline || settings?.general?.tagline || '';
   const gstin = '';
-  const cin = '';
+  const _cin = '';
   const storeAddress = storeSnap?.address || legalDetails.address;
 
   const isGstEnabled = false;
@@ -297,17 +297,25 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   const discountVal = Number((orderData as any).discount || 0);
   const shippingVal = Number(orderData.shipping || (orderData as any).shippingFee || 0);
   const platformFeeVal = Number((orderData as any).platformFee || 0);
-  const totalVal = Number(orderData.total || 0);
+  const rawTotalVal = Number(orderData.total || 0);
 
   const codFeeVal = Number((orderData as any).codFee || (orderData as any).tax?.codFee || 0);
   let resolvedCodFee = codFeeVal;
   if (
     resolvedCodFee === 0 &&
     paymentModeStr.includes('COD') &&
-    totalVal > subtotalVal + shippingVal + platformFeeVal - discountVal
+    rawTotalVal > subtotalVal + shippingVal + platformFeeVal - discountVal
   ) {
-    resolvedCodFee = totalVal - (subtotalVal + shippingVal + platformFeeVal - discountVal);
+    resolvedCodFee = rawTotalVal - (subtotalVal + shippingVal + platformFeeVal - discountVal);
   }
+
+  // Invoice grand total strictly excludes shipping charges
+  const totalVal = Math.max(
+    0,
+    rawTotalVal > 0
+      ? rawTotalVal - shippingVal
+      : subtotalVal + resolvedCodFee + platformFeeVal - discountVal,
+  );
 
   doc.fillColor(grayColor).font('Helvetica-Bold').fontSize(9);
   doc.text('Subtotal (Excl. Shipping Charges):', 230, y, { align: 'right', width: 220 });
@@ -326,12 +334,10 @@ const writeInvoiceContent = (doc: any, orderData: InvoicePdfData, settings: any)
   }
 
   doc.fillColor(grayColor).text('Shipping Charges:', 230, y, { align: 'right', width: 220 });
-  doc
-    .fillColor(textColor)
-    .text(shippingVal > 0 ? `Rs. ${shippingVal.toFixed(2)}` : 'FREE', 460, y, {
-      align: 'right',
-      width: 90,
-    });
+  doc.fillColor(textColor).text('Excluded', 460, y, {
+    align: 'right',
+    width: 90,
+  });
   y += 15;
 
   if (platformFeeVal > 0) {

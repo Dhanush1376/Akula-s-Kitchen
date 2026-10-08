@@ -6,7 +6,13 @@ export interface OrderSummaryProps {
   total: number | string;
 }
 
-export const OrderSummary = ({ subtotal, shipping, tax, discount, total }: OrderSummaryProps) => {
+export const OrderSummary = ({
+  subtotal,
+  shipping,
+  tax: _tax,
+  discount,
+  total,
+}: OrderSummaryProps) => {
   const taxHtml = '';
 
   const discountHtml = discount

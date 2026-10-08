@@ -6,12 +6,7 @@ import {
   getPrimaryEntityName,
 } from './emailTemplates';
 import { getStoreConfigSync } from '../../config/storeConfig';
-import {
-  resolveEmailImageUrl,
-  getPublicOrderTrackingUrl,
-  getPublicWebsiteUrl,
-  resolveOrderGrandTotal,
-} from './emailUrlUtils';
+import { resolveEmailImageUrl, getPublicWebsiteUrl, resolveOrderGrandTotal } from './emailUrlUtils';
 
 const itemsTable = (items: any[]) => {
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -175,7 +170,6 @@ export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
     ? `Your ${escapeHtml(primaryItem)} Order is Confirmed`
     : 'Order Confirmed';
   const preheader = `Your order #${displayId} on ${domain} is confirmed — Grand Total: ${formatCurrency(grandTotal)}`;
-  const trackUrl = getPublicOrderTrackingUrl(order);
 
   const subtotal =
     order.subtotal ||
@@ -219,15 +213,6 @@ export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
         </td>
       </tr>
     </table>
-
-    <div style="margin: 32px 0 20px; text-align: center;">
-      <a href="${trackUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 14px rgba(40, 54, 24, 0.22); letter-spacing: 0.02em;">
-        Track Your Order
-      </a>
-    </div>
-    <p style="text-align: center; margin: 0 0 10px 0; font-size: 12px; color: #606c38;">
-      Instant live tracking • No login required
-    </p>
   `;
 
   return {
@@ -238,7 +223,7 @@ export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
 
 export const buildOrderConfirmationAdminEmail = (order: any) => {
   const store = getStoreConfigSync();
-  const domain = store.websiteDomain || 'akulas.kitchen';
+  const _domain = store.websiteDomain || 'akulas.kitchen';
   const publicBaseUrl = getPublicWebsiteUrl();
   const grandTotal = resolveOrderGrandTotal(order);
 
@@ -340,11 +325,10 @@ export const buildOrderConfirmationAdminEmail = (order: any) => {
 
 export const buildOrderStatusChangeEmail = (order: any, oldStatus: string, newStatus: string) => {
   const store = getStoreConfigSync();
-  const domain = store.websiteDomain || 'akulas.kitchen';
+  const _domain = store.websiteDomain || 'akulas.kitchen';
   const primaryItem = getPrimaryEntityName(order.items) || 'Order';
   const invoiceNumber = order.invoiceNumber || order.invoice?.number;
   const grandTotal = resolveOrderGrandTotal(order);
-  const trackUrl = getPublicOrderTrackingUrl(order);
 
   const preheader = `Your order status is now ${newStatus}`;
 
@@ -375,15 +359,6 @@ export const buildOrderStatusChangeEmail = (order: any, oldStatus: string, newSt
     <h3 style="color: #283618; margin-top: 22px; margin-bottom: 10px;">Order Summary</h3>
     ${itemsTable(order.items)}
     ${totalsSummary(subtotal, shippingFee, tax, grandTotal, discount)}
-
-    <div style="margin: 30px 0 20px; text-align: center;">
-      <a href="${trackUrl}" target="_blank" style="background-color: #283618; color: #ffffff !important; border: 2px solid #283618; padding: 14px 34px; text-decoration: none; font-size: 14px; font-weight: 700; border-radius: 999px; display: inline-block; box-shadow: 0 4px 14px rgba(40, 54, 24, 0.22);">
-        Track Your Order
-      </a>
-    </div>
-    <p style="text-align: center; margin: 0; font-size: 12px; color: #606c38;">
-      Instant live tracking • No login required
-    </p>
   `;
 
   return {

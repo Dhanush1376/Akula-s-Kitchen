@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../../context/WishlistContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { DrawerDragHandle, useMobileDrawerEngine } from './drawer';
+import { useMobileDrawerEngine } from './drawer';
 
 const RecommendationSystem = React.lazy(() =>
   import('../sections/RecommendationSystem').then((m) => ({ default: m.RecommendationSystem })),
@@ -376,7 +376,7 @@ export function ProductGallery({ images = [], product }) {
                     marginBottom: 'env(safe-area-inset-bottom, 0px)',
                   }}
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-2 px-5 pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[82dvh] overflow-hidden border border-black/[0.08]">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-2 px-5 pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[82dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
                     {/* Handlebar for bottom sheet feel - moved right to the top rim */}
                     <div
                       className="w-full flex justify-center pt-1 pb-2 cursor-grab select-none"
@@ -396,7 +396,14 @@ export function ProductGallery({ images = [], product }) {
 
                     {/* Header */}
                     <div className="flex items-center justify-between pb-3 pr-10 border-b border-black/[0.06]">
-                      <h3 className="font-sans text-[13px] font-bold uppercase tracking-wider text-neutral-900">
+                      <h3
+                        className="font-sans text-[15px] sm:text-[16px] font-semibold text-neutral-900 leading-tight"
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          fontStretch: 'normal',
+                          letterSpacing: 'normal',
+                        }}
+                      >
                         Similar Delights
                       </h3>
                     </div>

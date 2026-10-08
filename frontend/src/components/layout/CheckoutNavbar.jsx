@@ -1,31 +1,47 @@
 import { Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { BrandLogo } from '../ui/BrandLogo';
 import { useConfig } from '../../context/ConfigContext';
 
 export function CheckoutNavbar() {
   const { storeName } = useConfig();
+  const location = useLocation();
+  const isCart = location.pathname === '/cart' || location.pathname.startsWith('/cart');
 
   return (
     <header className="bg-surface-bright border-b border-outline-variant/40 py-2 sm:py-2.5 px-4 sm:px-6 sticky top-0 z-50">
       <div className="max-w-[1240px] mx-auto flex items-center justify-between gap-4">
         {/* Left: Back Button */}
         <div className="flex-1">
-          <Link
-            to="/cart"
-            className="group inline-flex items-center gap-1.5 text-secondary hover:text-on-surface transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">
-              keyboard_backspace
-            </span>
-            <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-widest font-bold">
-              Back to Cart
-            </span>
-          </Link>
+          {isCart ? (
+            <Link
+              to="/collections"
+              className="group inline-flex items-center gap-1.5 text-secondary hover:text-on-surface transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">
+                keyboard_backspace
+              </span>
+              <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-widest font-bold">
+                Continue Shopping
+              </span>
+            </Link>
+          ) : (
+            <Link
+              to="/cart"
+              className="group inline-flex items-center gap-1.5 text-secondary hover:text-on-surface transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">
+                keyboard_backspace
+              </span>
+              <span className="font-label text-[10px] sm:text-[11px] uppercase tracking-widest font-bold">
+                Back to Cart
+              </span>
+            </Link>
+          )}
         </div>
 
-        {/* Center: Branding (Visible on sm+) */}
-        <div className="hidden lg:block flex-1 text-center">
+        {/* Center: Branding */}
+        <div className="hidden md:block flex-1 text-center">
           <Link to="/" className="inline-block group">
             <BrandLogo size="36px" showSubtitle={false} />
           </Link>

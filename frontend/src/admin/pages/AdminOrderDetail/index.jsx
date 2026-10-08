@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { m as motion, AnimatePresence } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
-import { InvoiceModal } from '../../../components/ui';
+import { InvoiceModal, InvoiceTemplate } from '../../../components/ui';
 import { AdminOrderDetailSkeleton, stagger } from '../../components/AdminUIKit';
 import { OrderHeader } from './OrderHeader';
 import { OrderStatusTimeline } from './OrderStatusTimeline';

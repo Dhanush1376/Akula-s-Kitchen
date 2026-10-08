@@ -25,9 +25,9 @@ export function AddressesSection({ isDrawer = false }) {
       className={`space-y-3.5 text-left ${isDrawer ? 'pb-2' : ''}`}
     >
       {/* Header Bar — Compact, clean font, reduced padding */}
-      <div className="bg-white/90 border border-neutral-200/80 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs font-sans mb-3 backdrop-blur-md">
+      <div className="bg-white/90 border border-neutral-200/80 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs font-sans backdrop-blur-md">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-md bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-full bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
             <MapPin className="w-3.5 h-3.5" strokeWidth={2} />
           </div>
           <span className="text-[12px] font-semibold text-neutral-900 tracking-normal font-sans">
@@ -72,8 +72,8 @@ export function AddressesSection({ isDrawer = false }) {
         <div
           className={isDrawer ? 'grid grid-cols-1 gap-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}
         >
-          <div className="h-40 bg-white border border-outline-variant/20 rounded-lg animate-pulse" />
-          <div className="h-40 bg-white border border-outline-variant/20 rounded-lg animate-pulse" />
+          <div className="h-40 bg-white border border-outline-variant/20 rounded-xl animate-pulse" />
+          <div className="h-40 bg-white border border-outline-variant/20 rounded-xl animate-pulse" />
         </div>
       ) : (
         <div
@@ -90,7 +90,7 @@ export function AddressesSection({ isDrawer = false }) {
       )}
 
       {addresses.length === 0 && !isAddressesLoading && (
-        <div className="bg-surface-bright rounded-lg p-8 text-center shadow-sm flex flex-col items-center justify-center min-h-[35vh] relative overflow-hidden border border-black/5">
+        <div className="bg-surface-bright rounded-xl p-8 text-center shadow-sm flex flex-col items-center justify-center min-h-[35vh] relative overflow-hidden border border-black/5">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#000000]/5 rounded-full blur-3xl pointer-events-none" />
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}

@@ -58,6 +58,12 @@ export function MainLayout() {
 
   const isOrderSuccess = pathname === '/order-success' || pathname.startsWith('/order-success');
 
+  const isCartOrCheckout =
+    pathname === '/cart' ||
+    pathname.startsWith('/cart') ||
+    pathname === '/checkout' ||
+    pathname.startsWith('/checkout');
+
   return (
     <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
       <SEO />
@@ -82,20 +88,22 @@ export function MainLayout() {
         </ErrorBoundary>
       </main>
       {pathname !== '/cart' && !pathname.startsWith('/dashboard') && <Footer />}
-      <BottomNav />
+      {!isCartOrCheckout && <BottomNav />}
 
-      <div
-        className={`fixed ${
-          isStoreClosed
-            ? 'bottom-[calc(118px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
-            : 'bottom-[calc(80px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
-        } lg:bottom-8 right-4 lg:right-10 z-[40] flex flex-col gap-4 items-center pointer-events-none transition-all duration-300`}
-      >
-        <ScrollToTopButton />
-        <Suspense fallback={null}>
-          <WhatsAppWidget />
-        </Suspense>
-      </div>
+      {!isCartOrCheckout && (
+        <div
+          className={`fixed ${
+            isStoreClosed
+              ? 'bottom-[calc(118px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
+              : 'bottom-[calc(80px+var(--safe-area-bottom,env(safe-area-inset-bottom,0px)))]'
+          } lg:bottom-8 right-4 lg:right-10 z-[40] flex flex-col gap-4 items-center pointer-events-none transition-all duration-300`}
+        >
+          <ScrollToTopButton />
+          <Suspense fallback={null}>
+            <WhatsAppWidget />
+          </Suspense>
+        </div>
+      )}
       <Suspense fallback={null}>
         <ConsentPopup />
       </Suspense>
@@ -107,7 +115,7 @@ export function MainLayout() {
 }
 
 /**
- * Minimal layout for checkout — no bottom nav, shared secure header
+ * Minimal layout for cart & checkout — no bottom nav, shared secure header
  */
 export function MinimalLayout() {
   const { pathname } = useLocation();
@@ -117,15 +125,26 @@ export function MinimalLayout() {
   }, [pathname]);
 
   return (
-    <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-hidden">
+    <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
+      <SEO />
       <CheckoutNavbar />
-      <main id="main-content" className="flex-1" tabIndex={-1}>
+      <main id="main-content" className="flex-1 relative" tabIndex={-1}>
         <ErrorBoundary>
-          <Suspense fallback={<RouteSkeleton variant={getRouteSkeletonVariant(pathname)} />}>
-            <Outlet />
-          </Suspense>
+          <AuthGate>
+            <Suspense fallback={<RouteSkeleton variant={getRouteSkeletonVariant(pathname)} />}>
+              <div className="animate-content-reveal">
+                <Outlet />
+              </div>
+            </Suspense>
+          </AuthGate>
         </ErrorBoundary>
       </main>
+      <Suspense fallback={null}>
+        <ConsentPopup />
+      </Suspense>
+      <Suspense fallback={null}>
+        <AdminInviteModal />
+      </Suspense>
     </div>
   );
 }

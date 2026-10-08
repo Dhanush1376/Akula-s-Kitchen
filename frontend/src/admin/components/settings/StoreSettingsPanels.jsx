@@ -924,43 +924,6 @@ export const LoyaltySettingsPanel = ({
           onChange={handleChange}
         />
       </FormGroup>
-
-      <div className="md:col-span-2 mt-4">
-        <h4 className="font-bold text-[var(--admin-text-primary)] mb-1">Review Rewards</h4>
-        <hr className="border-[var(--admin-border-subtle)] mb-4" />
-      </div>
-      <FormGroup label="Text Review Reward (₹)">
-        <Input
-          type="number"
-          name="reviewRewardText"
-          value={formData.reviewRewardText}
-          onChange={handleChange}
-        />
-      </FormGroup>
-      <FormGroup label="Photo Review Reward (₹)">
-        <Input
-          type="number"
-          name="reviewRewardPhoto"
-          value={formData.reviewRewardPhoto}
-          onChange={handleChange}
-        />
-      </FormGroup>
-      <FormGroup label="Video Review Reward (₹)">
-        <Input
-          type="number"
-          name="reviewRewardVideo"
-          value={formData.reviewRewardVideo}
-          onChange={handleChange}
-        />
-      </FormGroup>
-      <FormGroup label="Review Reward Coins Bonus">
-        <Input
-          type="number"
-          name="reviewCoinsBonus"
-          value={formData.reviewCoinsBonus}
-          onChange={handleChange}
-        />
-      </FormGroup>
     </div>
 
     {formData.tiers && (

@@ -1,4 +1,4 @@
-import { ShoppingBag, Trash2, ArrowLeft, Plus, Minus, Image, ArrowRight, X } from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, Image, ArrowRight, X } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../ui';
@@ -112,15 +112,15 @@ export function CartDrawer({ isOpen, onClose }) {
                 onClose();
               }
             }}
-            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[390px] sm:max-w-[430px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.18),inset_0_1px_1px_rgba(255,255,255,0.9)] touch-pan-y overscroll-contain rounded-3xl border border-black/[0.08] modern-sans-headings font-body overflow-hidden"
+            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[340px] sm:max-w-[360px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.18),inset_0_1px_1px_rgba(255,255,255,0.9)] touch-pan-y overscroll-contain rounded-3xl border border-black/[0.08] modern-sans-headings font-body overflow-hidden"
             style={{
               marginTop: 'env(safe-area-inset-top, 0px)',
               marginBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
           >
             {/* Header */}
-            <div className="flex justify-between items-center px-5 py-4 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">
-              <div className="flex items-center gap-2.5">
+            <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">
+              <div className="flex items-center gap-2">
                 <span
                   className="font-label text-[13px] font-extrabold uppercase tracking-[0.18em] text-neutral-900 leading-none"
                   style={{ fontFamily: 'var(--font-label)' }}
@@ -131,7 +131,7 @@ export function CartDrawer({ isOpen, onClose }) {
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="bg-[#f7bb0e] text-neutral-950 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full shadow-xs"
+                    className="bg-[#f7bb0e] text-neutral-950 text-[11px] font-extrabold px-2 py-0.5 rounded-full shadow-xs"
                   >
                     {cartCount}
                   </motion.span>
@@ -139,7 +139,7 @@ export function CartDrawer({ isOpen, onClose }) {
               </div>
               <button
                 onClick={onClose}
-                className="w-9 h-9 rounded-full bg-neutral-100/80 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full bg-neutral-100/80 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer"
                 aria-label="Close cart"
               >
                 <X className="w-4 h-4 text-neutral-800" strokeWidth={2} />
@@ -147,19 +147,19 @@ export function CartDrawer({ isOpen, onClose }) {
             </div>
 
             {/* Items List */}
-            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-5 pt-3.5 pb-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-black/10 hover:scrollbar-thumb-black/20">
+            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3.5 sm:px-4 pt-3 pb-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-black/10 hover:scrollbar-thumb-black/20">
               {loading && items.length === 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {Array.from({ length: Math.max(1, cartCount || 3) }).map((_, i) => (
                     <div
                       key={i}
-                      className="flex gap-4 p-3.5 rounded-2xl border border-black/[0.03] bg-white/50 animate-pulse shadow-sm"
+                      className="flex gap-3 p-3 rounded-2xl border border-black/[0.03] bg-white/50 animate-pulse shadow-sm"
                     >
-                      <div className="w-[82px] h-[100px] rounded-[14px] bg-black/5" />
-                      <div className="flex-1 py-1.5 space-y-3">
+                      <div className="w-[74px] h-[92px] rounded-[12px] bg-black/5" />
+                      <div className="flex-1 py-1 space-y-2.5">
                         <div className="h-4 bg-black/5 rounded w-3/4" />
                         <div className="h-3 bg-black/5 rounded w-1/2" />
-                        <div className="h-5 bg-black/5 rounded w-1/3 mt-4" />
+                        <div className="h-5 bg-black/5 rounded w-1/3 mt-3" />
                       </div>
                     </div>
                   ))}
@@ -182,10 +182,10 @@ export function CartDrawer({ isOpen, onClose }) {
                   {items.length > 0 && (
                     <div className="space-y-3">
                       <div
-                        className="font-label text-[11px] font-bold uppercase tracking-[0.18em] text-[#000000] flex items-center gap-2 ml-0.5"
+                        className="font-label text-[11px] font-extrabold uppercase tracking-[0.18em] text-neutral-950 flex items-center gap-2 ml-0.5"
                         style={{ fontFamily: 'var(--font-label)' }}
                       >
-                        <ShoppingBag className="text-[14px] text-primary" strokeWidth={1.8} />
+                        <ShoppingBag className="text-[14px] text-primary" strokeWidth={2.2} />
                         <span>In Your Bag</span>
                       </div>
                       <div className="space-y-3">
@@ -204,9 +204,9 @@ export function CartDrawer({ isOpen, onClose }) {
                                   transition: { duration: 0.2 },
                                 }}
                                 key={`${item.id || item._id}-${item.variant || ''}`}
-                                className="relative flex gap-4 p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#fafafa] border border-black/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 group"
+                                className="relative flex gap-3 p-3 rounded-2xl bg-gradient-to-br from-white to-[#fafafa] border border-black/[0.05] shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 group"
                               >
-                                <div className="w-[82px] h-[100px] rounded-[14px] overflow-hidden flex-shrink-0 bg-[#f5f5f5] relative shadow-inner border border-black/[0.03]">
+                                <div className="w-[74px] h-[92px] rounded-[12px] overflow-hidden flex-shrink-0 bg-[#f5f5f5] relative shadow-inner border border-black/[0.03]">
                                   {itemImage ? (
                                     <CloudinaryImage
                                       src={itemImage}
@@ -235,13 +235,13 @@ export function CartDrawer({ isOpen, onClose }) {
                                 <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                                   <div>
                                     <p
-                                      className="font-serif-heading text-[15px] font-medium leading-snug text-[#000000] truncate group-hover:text-primary transition-colors"
+                                      className="font-serif-heading text-[15px] font-bold leading-snug text-neutral-950 truncate group-hover:text-primary transition-colors"
                                       style={{ fontFamily: 'var(--font-display)' }}
                                     >
                                       {item.title}
                                     </p>
                                     {item.variant && item.variant !== 'Default' && (
-                                      <p className="font-body text-[10px] text-black/40 mt-1 uppercase tracking-wider font-bold">
+                                      <p className="font-body text-[10.5px] text-neutral-700 mt-1 uppercase tracking-wider font-extrabold">
                                         {item.variant}
                                       </p>
                                     )}
@@ -250,14 +250,16 @@ export function CartDrawer({ isOpen, onClose }) {
                                         {item.selectedOptions.map((opt, optIdx) => (
                                           <span
                                             key={optIdx}
-                                            className="inline-flex items-center text-[10.5px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/70"
+                                            className="inline-flex items-center text-[10.5px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-950 border border-amber-200/80"
                                           >
-                                            <span className="opacity-75 mr-1">
+                                            <span className="font-bold text-amber-900 mr-1">
                                               {opt.groupName}:
                                             </span>
-                                            <span className="font-bold">{opt.optionLabel}</span>
+                                            <span className="font-extrabold text-amber-950">
+                                              {opt.optionLabel}
+                                            </span>
                                             {opt.priceAdjustment > 0 && (
-                                              <span className="ml-1 text-[9.5px] font-semibold text-amber-700">
+                                              <span className="ml-1 text-[9.5px] font-bold text-amber-800">
                                                 (+₹{opt.priceAdjustment})
                                               </span>
                                             )}
@@ -266,7 +268,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                       </div>
                                     )}
                                     <p
-                                      className="font-serif-heading text-[15px] text-[#000000] mt-1.5 font-bold lining-nums"
+                                      className="font-serif-heading text-[15.5px] text-neutral-950 mt-1.5 font-extrabold lining-nums"
                                       style={{ fontFamily: 'var(--font-display)' }}
                                     >
                                       ₹{item.price?.toLocaleString()}
@@ -284,10 +286,10 @@ export function CartDrawer({ isOpen, onClose }) {
                                               item.configurationSignature,
                                             )
                                           }
-                                          className="w-7 h-7 min-h-0 rounded-full flex items-center justify-center text-black/50 hover:bg-black/5 hover:text-[#000000] transition-all cursor-pointer active:scale-95"
+                                          className="w-7 h-7 min-h-0 rounded-full flex items-center justify-center text-neutral-700 hover:bg-black/5 hover:text-neutral-950 transition-all cursor-pointer active:scale-95"
                                           aria-label="Decrease quantity"
                                         >
-                                          <Minus className="text-[16px]" strokeWidth={1.5} />
+                                          <Minus className="text-[16px]" strokeWidth={2} />
                                         </button>
                                       ) : (
                                         <div className="relative">
@@ -299,10 +301,10 @@ export function CartDrawer({ isOpen, onClose }) {
                                                 signature: item.configurationSignature,
                                               })
                                             }
-                                            className={`w-7 h-7 min-h-0 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 ${confirmingRemove?.id === (item.id || item._id) && confirmingRemove?.signature === item.configurationSignature ? 'bg-[#ff3b30] text-white shadow-md' : 'text-black/30 hover:bg-[#ff3b30]/10 hover:text-[#ff3b30]'}`}
+                                            className={`w-7 h-7 min-h-0 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-95 ${confirmingRemove?.id === (item.id || item._id) && confirmingRemove?.signature === item.configurationSignature ? 'bg-[#ff3b30] text-white shadow-md' : 'text-neutral-500 hover:bg-[#ff3b30]/10 hover:text-[#ff3b30]'}`}
                                             aria-label="Confirm remove"
                                           >
-                                            <span className="material-symbols-outlined text-[15px]">
+                                            <span className="material-symbols-outlined text-[15px] font-bold">
                                               {confirmingRemove?.id === (item.id || item._id) &&
                                               confirmingRemove?.signature ===
                                                 item.configurationSignature
@@ -312,7 +314,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                           </button>
                                         </div>
                                       )}
-                                      <span className="font-body text-[13px] w-6 text-center font-semibold text-[#000000]">
+                                      <span className="font-body text-[13px] w-6 text-center font-extrabold text-neutral-950">
                                         {item.quantity}
                                       </span>
                                       <button
@@ -332,15 +334,17 @@ export function CartDrawer({ isOpen, onClose }) {
                                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                                           item.quantity >= maxQuantityPerItem ||
                                           item.quantity >= (item.stock || 999)
+                                            ? 'opacity-40 cursor-not-allowed text-neutral-400'
+                                            : 'text-neutral-700 hover:bg-black/5 hover:text-neutral-950 active:scale-95'
                                         }`}
                                         aria-label="Increase quantity"
                                       >
-                                        <Plus className="text-[16px]" strokeWidth={1.5} />
+                                        <Plus className="text-[16px]" strokeWidth={2} />
                                       </button>
                                     </div>
                                   </div>
                                   {item.quantity > maxQuantityPerItem && (
-                                    <div className="flex items-center justify-between text-[10px] text-amber-900 bg-amber-50 border border-amber-300 rounded px-2 py-1 mt-2">
+                                    <div className="flex items-center justify-between text-[10px] text-amber-900 bg-amber-50 border border-amber-300 rounded px-2 py-1 mt-2 font-bold">
                                       <span>Max limit is {maxQuantityPerItem}</span>
                                       <button
                                         type="button"
@@ -352,7 +356,7 @@ export function CartDrawer({ isOpen, onClose }) {
                                             item.configurationSignature,
                                           )
                                         }
-                                        className="underline font-bold text-amber-950 ml-2 cursor-pointer"
+                                        className="underline font-extrabold text-amber-950 ml-2 cursor-pointer"
                                       >
                                         Set to {maxQuantityPerItem}
                                       </button>
@@ -371,9 +375,9 @@ export function CartDrawer({ isOpen, onClose }) {
                                         );
                                         setConfirmingRemove(null);
                                       }}
-                                      className="absolute inset-0 z-20 bg-[#ff3b30]/95 backdrop-blur-sm text-white flex flex-col items-center justify-center gap-1.5 rounded-3xl font-label text-[10px] uppercase tracking-widest font-bold shadow-inner transition-colors hover:bg-[#ff3b30]"
+                                      className="absolute inset-0 z-20 bg-[#ff3b30]/95 backdrop-blur-sm text-white flex flex-col items-center justify-center gap-1.5 rounded-3xl font-label text-[10px] uppercase tracking-widest font-extrabold shadow-inner transition-colors hover:bg-[#ff3b30]"
                                     >
-                                      <Trash2 className="text-[24px] mb-1" strokeWidth={1.5} />
+                                      <Trash2 className="text-[24px] mb-1" strokeWidth={2} />
                                       Tap to remove
                                     </motion.button>
                                   )}
@@ -391,49 +395,49 @@ export function CartDrawer({ isOpen, onClose }) {
             {/* Footer with Totals & Promotions */}
             {items.length > 0 && (
               <div
-                className="p-4 pt-3 border-t border-black/[0.04] space-y-2 bg-white/90 backdrop-blur-xl relative flex-shrink-0"
+                className="p-3.5 sm:p-4 pt-2.5 border-t border-black/[0.04] space-y-1.5 bg-white/90 backdrop-blur-xl relative flex-shrink-0"
                 style={{
                   paddingBottom: `calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))`,
                 }}
               >
                 {/* Subtotal */}
                 <div className="flex justify-between items-center text-[12px]">
-                  <span className="font-body text-black/50 font-medium">Subtotal</span>
+                  <span className="font-body text-neutral-700 font-bold">Subtotal</span>
                   <span
-                    className="font-serif-heading font-bold text-[#000000] lining-nums text-[13px]"
+                    className="font-serif-heading font-extrabold text-neutral-950 lining-nums text-[13.5px]"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
                     ₹{subtotal.toLocaleString()}
                   </span>
                 </div>
 
-                <div className="h-[1px] bg-gradient-to-r from-transparent via-black/[0.06] to-transparent my-1.5" />
+                <div className="h-[1px] bg-gradient-to-r from-transparent via-black/[0.06] to-transparent my-1" />
 
                 <div className="flex justify-between items-end">
                   <div className="space-y-0.5">
                     <span
-                      className="font-serif-heading text-[14px] font-bold text-[#000000]"
+                      className="font-serif-heading text-[14px] font-extrabold text-neutral-950"
                       style={{ fontFamily: 'var(--font-display)' }}
                     >
                       Estimated Total
                     </span>
-                    <p className="font-body text-[9px] text-black/40 uppercase tracking-[0.1em] font-bold">
+                    <p className="font-body text-[8.5px] text-neutral-600 uppercase tracking-[0.1em] font-extrabold">
                       Shipping calculated at checkout
                     </p>
                   </div>
                   <span
-                    className="font-serif-heading text-[19px] leading-none font-bold text-[#000000] lining-nums"
+                    className="font-serif-heading text-[19px] leading-none font-extrabold text-neutral-950 lining-nums"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
                     ₹{subtotal.toLocaleString()}
                   </span>
                 </div>
 
-                <div className="pt-2 pb-1 flex items-center gap-2.5">
+                <div className="pt-1.5 pb-0.5 flex items-center gap-2">
                   <Link
                     to="/cart"
                     onClick={onClose}
-                    className="flex-1 flex items-center justify-center text-center h-12 rounded-full font-sans text-[11px] sm:text-[12px] uppercase tracking-wider text-neutral-900 bg-white hover:bg-neutral-50 border border-neutral-200 active:scale-[0.98] transition-all font-extrabold shadow-2xs group"
+                    className="flex-1 flex items-center justify-center text-center h-11 rounded-full font-sans text-[11px] uppercase tracking-wider text-neutral-950 bg-white hover:bg-neutral-50 border border-neutral-300 active:scale-[0.98] transition-all font-extrabold shadow-2xs group"
                   >
                     View Bag
                   </Link>
@@ -443,14 +447,14 @@ export function CartDrawer({ isOpen, onClose }) {
                       prefetchManager.prefetchRoute('/checkout', { kind: 'hover' })
                     }
                     onClick={onClose}
-                    className="flex-[1.5] h-12 relative overflow-hidden bg-[#f7bb0e] hover:bg-[#eab00d] text-neutral-950 pl-5 pr-1.5 py-1 rounded-full font-sans text-[12px] uppercase tracking-wider active:scale-[0.98] transition-all shadow-sm font-extrabold group flex items-center justify-between border border-[#f7bb0e]"
+                    className="flex-[1.4] h-11 relative overflow-hidden bg-[#f7bb0e] hover:bg-[#eab00d] text-neutral-950 pl-4 pr-1.5 py-1 rounded-full font-sans text-[11.5px] uppercase tracking-wider active:scale-[0.98] transition-all shadow-sm font-extrabold group flex items-center justify-between border border-[#f7bb0e]"
                   >
-                    <span className="font-extrabold text-[12px] uppercase tracking-wider text-neutral-950">
+                    <span className="font-extrabold text-[11.5px] uppercase tracking-wider text-neutral-950">
                       Checkout
                     </span>
-                    <span className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
+                    <span className="w-7 h-7 rounded-full bg-white text-neutral-950 flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
                       <ArrowRight
-                        className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                        className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
                         strokeWidth={2.5}
                         aria-hidden="true"
                       />

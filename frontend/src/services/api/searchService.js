@@ -52,7 +52,7 @@ export const searchService = {
    * Get fast autocomplete suggestions with visual previews.
    */
   autocomplete: async (query, options = {}) => {
-    if (!query || query.trim().length < 2) {
+    if (!query || query.trim().length < 1) {
       return { success: true, data: { suggestions: [], predictedCategories: [] } };
     }
 

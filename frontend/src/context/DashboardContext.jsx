@@ -380,9 +380,11 @@ export function DashboardProvider({ children }) {
       handleSetDefaultAddress,
       downloadInvoice,
       hasRecentOrderUpdates,
+      updateUser,
     }),
     [
       user,
+      updateUser,
       logout,
       checkAuth,
       openAuthModal,

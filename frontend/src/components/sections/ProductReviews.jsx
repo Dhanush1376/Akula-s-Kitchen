@@ -1,6 +1,5 @@
 import {
   BadgeCheck,
-  FileEdit,
   X,
   MessageSquare,
   Camera,
@@ -21,7 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import { uploadService } from '../../services/api/uploadService';
-import { useMobileDrawerEngine, DrawerDragHandle } from '../ui/drawer';
+import { useMobileDrawerEngine } from '../ui/drawer';
 
 // ─── Star Component ─────────────────────────────────────────────────────────
 function StarRating({ value = 0, max = 5, interactive = false, size = 20, onChange }) {
@@ -29,27 +28,33 @@ function StarRating({ value = 0, max = 5, interactive = false, size = 20, onChan
   const display = interactive ? hovered || value : value;
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className={`flex items-center select-none ${interactive ? 'gap-1.5' : 'gap-0.5'}`}>
       {Array.from({ length: max }).map((_, i) => {
-        const filled = i < Math.round(display);
+        const starNum = i + 1;
+        const filled = starNum <= Math.round(display);
         return (
           <button
             key={i}
             type="button"
             disabled={!interactive}
-            onClick={() => interactive && onChange?.(i + 1)}
-            onMouseEnter={() => interactive && setHovered(i + 1)}
+            onClick={() => interactive && onChange?.(starNum)}
+            onMouseEnter={() => interactive && setHovered(starNum)}
             onMouseLeave={() => interactive && setHovered(0)}
-            className={`transition-transform ${interactive ? 'cursor-pointer hover:scale-125' : 'cursor-default'}`}
-            aria-label={`${i + 1} star${i !== 0 ? 's' : ''}`}
+            className={`transition-all duration-150 ${
+              interactive
+                ? 'cursor-pointer hover:scale-125 active:scale-95 p-0.5'
+                : 'cursor-default'
+            }`}
+            aria-label={`${starNum} star${starNum !== 1 ? 's' : ''}`}
           >
             <svg
               width={size}
               height={size}
               viewBox="0 0 24 24"
               fill={filled ? '#F7BB0E' : 'none'}
-              stroke={filled ? '#F7BB0E' : '#d4cbb8'}
+              stroke={filled ? '#F7BB0E' : '#d1d5db'}
               strokeWidth="1.8"
+              className="transition-colors duration-150"
             >
               <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
             </svg>
@@ -262,185 +267,204 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[99999] flex justify-center items-end sm:items-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[99999] pointer-events-none flex items-end sm:items-center justify-center p-3 sm:p-4">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
         onClick={onClose}
       />
 
-      {/* Modal Card / Drawer */}
+      {/* Floating Bottom Sheet Shell */}
       <motion.div
         variants={{
-          initial: { opacity: 0, y: isMobile ? '100%' : 8, scale: isMobile ? 1 : 0.98 },
-          animate: { opacity: 1, y: 0, scale: 1 },
-          exit: { opacity: 0, y: isMobile ? '100%' : 8, scale: isMobile ? 1 : 0.98 },
+          initial: isMobile ? { y: '100%', opacity: 0.5 } : { opacity: 0, scale: 0.95, y: 15 },
+          animate: { y: 0, opacity: 1, scale: 1 },
+          exit: isMobile ? { y: '100%', opacity: 0 } : { opacity: 0, scale: 0.95, y: 10 },
         }}
         initial="initial"
         animate="animate"
         exit="exit"
         transition={sheetTransition}
-        {...dragProps}
-        className="relative bg-surface w-full max-w-lg h-auto max-h-[88dvh] sm:max-h-[90vh] rounded-t-[18px] sm:rounded-lg shadow-2xl flex flex-col z-[100000] font-body text-left border-t sm:border border-outline-variant/30 overflow-hidden"
+        {...(isMobile ? dragProps : {})}
+        className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[480px] mx-auto"
+        style={{
+          marginBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+        }}
       >
-        {isMobile && <DrawerDragHandle onClick={onClose} />}
-
-        {/* Header — Olive Green Brand Theme */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1f2b13] shrink-0 bg-[#283618] text-white rounded-t-[18px] sm:rounded-t-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-[#f7bb0e] shrink-0">
-              <FileEdit className="w-4 h-4" strokeWidth={2} />
-            </div>
-            <div>
-              <h2 className="text-[11px] font-bold uppercase tracking-wider text-white">
-                {existingReview ? 'Edit Your Review' : 'Write a Review'}
-              </h2>
-              <p className="text-[12px] text-white/80 font-medium line-clamp-1">{productTitle}</p>
-            </div>
+        <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-4 sm:p-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[85dvh] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
+          {/* Handlebar for bottom sheet feel */}
+          <div className="sm:hidden w-full flex justify-center pb-2">
+            <div className="w-10 h-1 rounded-full bg-neutral-300" />
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-white/10 active:scale-95 flex items-center justify-center transition-all text-white/80 hover:text-white cursor-pointer"
-            aria-label="Close review modal"
-          >
-            <X className="w-4 h-4" strokeWidth={2} />
-          </button>
-        </div>
 
-        {/* Scrollable Form Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-5 space-y-4 no-scrollbar bg-neutral-50/50">
-          <form onSubmit={handleSubmit} className="space-y-4 pb-4">
-            {/* User Profile Info */}
-            <div className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-neutral-200/80 shadow-2xs">
-              <div className="w-9 h-9 rounded-full bg-[#283618] text-[#f7bb0e] flex items-center justify-center shrink-0 font-bold text-[11px] shadow-2xs">
-                <span>{userInitials}</span>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">
-                  Reviewing as
-                </p>
-                <p className="text-[12.5px] font-bold text-neutral-900 capitalize">
-                  {user?.name || 'Verified Customer'}
-                </p>
-              </div>
+          {/* Header Row with integrated close button */}
+          <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-black/[0.06]">
+            <div className="flex flex-col min-w-0 pr-2">
+              <h2 className="font-sans text-[20px] sm:text-[22px] text-neutral-900 font-bold leading-tight">
+                {existingReview ? 'Edit Review' : 'Write a Review'}
+              </h2>
+              <span className="font-sans text-[10px] sm:text-[10.5px] text-neutral-500 uppercase tracking-widest font-semibold mt-0.5 truncate">
+                {productTitle || 'Product'}
+              </span>
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8.5 h-8.5 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all shrink-0 cursor-pointer shadow-2xs"
+              aria-label="Close review modal"
+            >
+              <X className="w-4 h-4 text-black" strokeWidth={2.2} />
+            </button>
+          </div>
 
-            {/* Star Picker */}
-            <div className="flex flex-col items-center gap-2 py-5 px-4 bg-white rounded-xl border border-neutral-200/80 shadow-2xs">
-              <p className="text-[10.5px] uppercase tracking-wider text-neutral-600 font-bold">
-                Your Rating
-              </p>
-              <div className="py-1">
-                <StarRating value={rating} interactive size={32} onChange={setRating} />
+          {/* Form Wrapping Body and Sticky Bottom Bar */}
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+            {/* Scrollable Form Body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1 space-y-3">
+              {/* User Profile Info */}
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-neutral-100/70 rounded-2xl border border-black/[0.04]">
+                <div className="w-8 h-8 rounded-full bg-[#283618] text-[#f7bb0e] flex items-center justify-center shrink-0 font-bold text-[11px] shadow-2xs">
+                  <span>{userInitials}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9.5px] uppercase tracking-wider text-neutral-500 font-bold leading-none mb-0.5">
+                    Reviewing as
+                  </p>
+                  <p className="text-[12.5px] font-bold text-neutral-900 capitalize truncate">
+                    {user?.name || 'Verified Customer'}
+                  </p>
+                </div>
               </div>
-              {rating > 0 ? (
-                <motion.p
-                  key={rating}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-[12px] font-bold uppercase tracking-wider text-[#283618]"
-                >
-                  {ratingLabels[rating]}
-                </motion.p>
-              ) : (
-                <p className="text-[11px] text-neutral-400 font-medium">Tap a star to rate</p>
-              )}
-            </div>
 
-            {/* Comment */}
-            <div className="bg-white rounded-xl border border-neutral-200/80 shadow-2xs p-4 space-y-2.5">
-              <label className="text-[10.5px] uppercase tracking-wider text-neutral-700 font-bold flex items-center gap-1.5">
-                <MessageSquare className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
-                Your Experience
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={4}
-                placeholder="Tell others about the quality, taste, and delivery experience..."
-                className="w-full bg-neutral-50/60 border border-neutral-200 rounded-lg p-3 focus:bg-white focus:border-[#283618] focus:ring-1 focus:ring-[#283618] outline-none text-[12.5px] text-neutral-900 placeholder:text-neutral-400 resize-none transition-all leading-relaxed"
-              />
-              <div className="flex items-center justify-between text-[10.5px] text-neutral-400 font-mono">
-                <span>Min 10 characters</span>
-                <span className={comment.length >= 10 ? 'text-[#283618] font-bold' : ''}>
-                  {comment.length} chars
+              {/* Star Picker */}
+              <div className="flex flex-col items-center gap-1.5 py-3 px-4 bg-neutral-50/70 rounded-2xl border border-black/[0.05]">
+                <span className="font-sans text-[11px] uppercase tracking-wider font-bold text-neutral-700">
+                  Your Rating
                 </span>
-              </div>
-            </div>
-
-            {/* Photo Uploader */}
-            <div className="bg-white rounded-xl border border-neutral-200/80 shadow-2xs p-4 space-y-2.5">
-              <label className="text-[10.5px] uppercase tracking-wider text-neutral-700 font-bold flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
-                Add Photos (Max 5)
-              </label>
-              <div className="flex flex-wrap gap-2.5 pt-1">
-                {combinedPreviews.map((preview, idx) => (
-                  <div
-                    key={idx}
-                    className="relative w-16 h-16 rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100 shadow-2xs group flex-shrink-0"
+                <div className="py-0.5">
+                  <StarRating value={rating} interactive size={34} onChange={setRating} />
+                </div>
+                {rating > 0 ? (
+                  <motion.span
+                    key={rating}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-[10.5px] font-bold uppercase tracking-wider text-[#283618] bg-[#283618]/10 px-2.5 py-0.5 rounded-full"
                   >
-                    <OptimizedImage
-                      src={preview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                      width={80}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (idx < remoteImages.length) {
-                          setRemoteImages((prev) => prev.filter((_, i) => i !== idx));
-                        } else {
-                          const localIdx = idx - remoteImages.length;
-                          setSelectedFiles((prev) => prev.filter((_, i) => i !== localIdx));
-                          setLocalPreviews((prev) => prev.filter((_, i) => i !== localIdx));
-                        }
-                      }}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-all opacity-90 group-hover:opacity-100"
-                    >
-                      <X className="w-3 h-3" strokeWidth={2} />
-                    </button>
-                  </div>
-                ))}
-                {selectedFiles.length + remoteImages.length < 5 && (
-                  <label className="w-16 h-16 rounded-xl border-2 border-dashed border-neutral-300 hover:border-[#283618] bg-neutral-50 hover:bg-[#283618]/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-neutral-500 hover:text-[#283618] flex-shrink-0">
-                    <Plus className="w-5 h-5" strokeWidth={2} />
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Add</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        const currentTotal = remoteImages.length + selectedFiles.length;
-                        const allowedRemaining = 5 - currentTotal;
-                        const filesToAdd = files.slice(0, Math.max(0, allowedRemaining));
-
-                        const newFiles = [...selectedFiles, ...filesToAdd];
-                        setSelectedFiles(newFiles);
-
-                        const newPreviews = filesToAdd.map((file) => URL.createObjectURL(file));
-                        setLocalPreviews((prev) => [...prev, ...newPreviews]);
-                      }}
-                      className="hidden"
-                    />
-                  </label>
+                    {ratingLabels[rating]}
+                  </motion.span>
+                ) : (
+                  <span className="text-[10.5px] text-neutral-400 font-medium">
+                    Tap a star to rate
+                  </span>
                 )}
               </div>
+
+              {/* Comment */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 font-sans text-[11.5px] sm:text-[12px] uppercase tracking-wider font-bold text-neutral-800">
+                    <MessageSquare className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
+                    Your Experience
+                  </label>
+                  <div className="flex items-center gap-1 text-[10px] font-mono text-neutral-400">
+                    <span>Min 10</span>
+                    <span>•</span>
+                    <span className={comment.length >= 10 ? 'text-[#283618] font-bold' : ''}>
+                      {comment.length} chars
+                    </span>
+                  </div>
+                </div>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={3}
+                  placeholder="Tell others about the quality, taste, freshness, and delivery experience..."
+                  className="w-full bg-neutral-50/70 hover:bg-neutral-50 focus:bg-white border border-neutral-200/90 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 rounded-2xl p-3 outline-none text-[12.5px] sm:text-[13px] text-neutral-900 placeholder:text-neutral-400 resize-none transition-all leading-relaxed"
+                />
+              </div>
+
+              {/* Photo Uploader */}
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 font-sans text-[11.5px] sm:text-[12px] uppercase tracking-wider font-bold text-neutral-800">
+                  <Camera className="w-3.5 h-3.5 text-[#283618]" strokeWidth={2.2} />
+                  Add Photos{' '}
+                  <span className="text-[10px] text-neutral-400 font-normal lowercase">
+                    (optional, max 5)
+                  </span>
+                </label>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  {combinedPreviews.map((preview, idx) => (
+                    <div
+                      key={idx}
+                      className="relative w-15 h-15 rounded-2xl overflow-hidden border border-neutral-200/90 bg-neutral-100 shadow-2xs group flex-shrink-0"
+                    >
+                      <OptimizedImage
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        width={80}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (idx < remoteImages.length) {
+                            setRemoteImages((prev) => prev.filter((_, i) => i !== idx));
+                          } else {
+                            const localIdx = idx - remoteImages.length;
+                            setSelectedFiles((prev) => prev.filter((_, i) => i !== localIdx));
+                            setLocalPreviews((prev) => prev.filter((_, i) => i !== localIdx));
+                          }
+                        }}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-all shadow-xs"
+                      >
+                        <X className="w-3 h-3" strokeWidth={2} />
+                      </button>
+                    </div>
+                  ))}
+                  {selectedFiles.length + remoteImages.length < 5 && (
+                    <label className="w-15 h-15 rounded-2xl border-2 border-dashed border-neutral-300 hover:border-[#283618] bg-neutral-50/70 hover:bg-[#283618]/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-0.5 text-neutral-500 hover:text-[#283618] flex-shrink-0">
+                      <Plus className="w-4 h-4" strokeWidth={2} />
+                      <span className="text-[9px] font-bold uppercase tracking-wider">Add</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          const currentTotal = remoteImages.length + selectedFiles.length;
+                          const allowedRemaining = 5 - currentTotal;
+                          const filesToAdd = files.slice(0, Math.max(0, allowedRemaining));
+
+                          const newFiles = [...selectedFiles, ...filesToAdd];
+                          setSelectedFiles(newFiles);
+
+                          const newPreviews = filesToAdd.map((file) => URL.createObjectURL(file));
+                          setLocalPreviews((prev) => [...prev, ...newPreviews]);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="pt-2">
+            {/* Bottom Action Bar matching FilterPanel */}
+            <div className="mt-2.5 pt-2.5 border-t border-black/[0.06] shrink-0">
               <button
                 type="submit"
                 disabled={submitting || rating === 0}
-                className="w-full h-11 rounded-xl bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.99] text-white font-bold text-[12.5px] uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                className="w-full bg-[#283618] hover:bg-[#1f2b13] text-white py-3 rounded-full font-sans text-[12px] sm:text-[13px] uppercase tracking-wider font-bold shadow-sm transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? (
-                  <span>Submitting...</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Submitting...</span>
+                  </div>
                 ) : (
                   <span>{existingReview ? 'Update Review' : 'Submit Review'}</span>
                 )}

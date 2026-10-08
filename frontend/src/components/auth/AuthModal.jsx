@@ -14,7 +14,6 @@ import {
   LinkRequiredScreen,
   NamePromptForm,
 } from './AuthForms';
-import { DrawerDragHandle } from '../ui/drawer';
 import { useMobileDrawerEngine } from '../../hooks/useMobileDrawerEngine';
 import { AuthCornerLeaves } from './AuthCornerLeaves';
 

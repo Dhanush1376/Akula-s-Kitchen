@@ -49,7 +49,6 @@ export function AdminReviews() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [rewardModal, setRewardModal] = useState({ isOpen: false, review: null, amount: 20 });
   const [reviewImageSelections, setReviewImageSelections] = useState({});
   const [savingReviewImages, setSavingReviewImages] = useState({});
   const [previewImage, setPreviewImage] = useState(null);
@@ -142,18 +141,13 @@ export function AdminReviews() {
     }
   };
 
-  const handleModerate = async (reviewId, action, customRewardAmount = 0) => {
+  const handleModerate = async (reviewId, action) => {
     const approvedImages = reviewImageSelections[reviewId];
     const toastId = toast.loading(
-      action === 'approve' ? 'Disbursing review rewards...' : 'Rejecting review...',
+      action === 'approve' ? 'Approving review...' : 'Rejecting review...',
     );
     try {
-      const res = await loyaltyService.adminModerateReview(
-        reviewId,
-        action,
-        customRewardAmount,
-        approvedImages,
-      );
+      const res = await loyaltyService.adminModerateReview(reviewId, action, 0, approvedImages);
       if (res.success) {
         toast.success(res.message || `Review ${action}d! `, { id: toastId, duration: 4000 });
         if (action === 'approve') {
@@ -573,43 +567,6 @@ export function AdminReviews() {
                     </div>
                   )}
 
-                  {/* Financial Reward & Payout Strip */}
-                  <div className="flex items-center justify-between pt-0.5 text-xs">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] text-[var(--admin-text-secondary)] font-medium">
-                        Reward:
-                      </span>
-                      <span className="font-extrabold text-emerald-700 dark:text-emerald-400 text-[12.5px]">
-                        ₹{r.rewardPaid !== undefined ? r.rewardPaid : 20}
-                      </span>
-                      <span className="text-[10px] text-stone-400 font-medium">
-                        {status === 'approved' ? 'Disbursed' : 'Pending Approval'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {status === 'approved' && (
-                        <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] border bg-emerald-50 text-emerald-700 border-emerald-200">
-                          <span className="material-symbols-outlined text-[11px]">
-                            check_circle
-                          </span>
-                          Live
-                        </span>
-                      )}
-                      {status === 'rejected' && (
-                        <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] border bg-rose-50 text-rose-700 border-rose-200">
-                          <span className="material-symbols-outlined text-[11px]">block</span>
-                          Rejected
-                        </span>
-                      )}
-                      {status === 'pending' && (
-                        <span className="inline-flex items-center gap-0.5 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-[4px] border bg-amber-50 text-amber-800 border-amber-200">
-                          Pending
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
                   {/* 5. Symmetrical Action Controls (Equal 36px Height, 6px Radius) */}
                   {status === 'pending' ? (
                     <div
@@ -622,11 +579,7 @@ export function AdminReviews() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setRewardModal({
-                              isOpen: true,
-                              review: r,
-                              amount: r.rewardPaid && r.rewardPaid > 0 ? 0 : 20,
-                            });
+                            handleModerate(rId, 'approve');
                           }}
                           className="flex-1 min-w-0 h-9 rounded-[6px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 px-3 shadow-2xs cursor-pointer border-0"
                         >
@@ -917,128 +870,6 @@ export function AdminReviews() {
           </div>
         )}
       </motion.div>
-
-      {/* Custom Reward Modal */}
-      <AnimatePresence>
-        {rewardModal.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setRewardModal({ ...rewardModal, isOpen: false })}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98, y: 4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98, y: 4 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-md bg-white dark:bg-stone-900 rounded-t-[10px] sm:rounded-[8px] shadow-xl overflow-hidden flex flex-col z-10 border border-stone-200/80 dark:border-stone-700/80"
-            >
-              <div className="p-4 sm:p-5 border-b border-[var(--admin-border)] flex items-center justify-between bg-stone-50/50 dark:bg-stone-800/50">
-                <h3 className="font-bold text-[16px] text-stone-800 dark:text-stone-100">
-                  Reward Customer
-                </h3>
-                <button
-                  onClick={() => setRewardModal({ ...rewardModal, isOpen: false })}
-                  className="w-8 h-8 flex items-center justify-center rounded-[6px] hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-              <div className="p-4 sm:p-5 space-y-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-11 h-11 rounded-[6px] bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[22px] text-emerald-600 dark:text-emerald-400">
-                      card_giftcard
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-stone-800 dark:text-stone-100 truncate">
-                      {rewardModal.review?.customer?.name || 'Customer'}
-                    </p>
-                    <p className="text-[12.5px] text-stone-500 dark:text-stone-400 mt-0.5">
-                      Total previously spent:{' '}
-                      <span className="font-bold text-stone-700 dark:text-stone-300">
-                        ₹{rewardModal.review?.customer?.totalSpent || 0}
-                      </span>
-                    </p>
-                    {rewardModal.review?.rewardPaid > 0 && (
-                      <p className="text-[11.5px] text-emerald-700 dark:text-emerald-400 font-bold mt-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                        Already paid reward: ₹{rewardModal.review.rewardPaid}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {rewardModal.review?.rewardPaid > 0 && (
-                  <div className="p-3 rounded-[6px] bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 flex items-start gap-2.5">
-                    <span className="material-symbols-outlined text-[18px] text-amber-700 dark:text-amber-400 shrink-0 mt-0.5">
-                      info
-                    </span>
-                    <div className="text-[11.5px] text-amber-900 dark:text-amber-300 leading-relaxed">
-                      <p className="font-bold text-amber-950 dark:text-amber-200">
-                        Already paid ₹{rewardModal.review.rewardPaid} for this review.
-                      </p>
-                      <p className="text-amber-800 dark:text-amber-400 text-[11px] mt-0.5">
-                        Amount is automatically preset to <strong>₹0</strong> so the customer is not
-                        double-paid upon re-approving. Leave as 0 to approve without extra payment,
-                        or enter an amount if you want to pay an additional reward.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wider">
-                    Reward Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={rewardModal.amount}
-                    onChange={(e) =>
-                      setRewardModal({ ...rewardModal, amount: Number(e.target.value) })
-                    }
-                    className="w-full bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-[6px] px-3.5 py-2.5 text-[14px] font-bold text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                  />
-                  <p className="text-[10.5px] text-stone-500 dark:text-stone-400 leading-relaxed mt-1">
-                    {rewardModal.review?.rewardPaid > 0
-                      ? `Already credited ₹${rewardModal.review.rewardPaid}. Leave as 0 to re-approve without paying again.`
-                      : 'Enter reward amount to credit. Leave as 0 to just approve without a custom reward.'}
-                  </p>
-                </div>
-              </div>
-              <div className="p-4 sm:p-5 border-t border-[var(--admin-border)] flex items-center justify-end gap-2.5 bg-stone-50/50 dark:bg-stone-800/50">
-                <button
-                  type="button"
-                  onClick={() => setRewardModal({ ...rewardModal, isOpen: false })}
-                  className="h-9 px-4 rounded-[6px] border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-[12px] font-bold text-stone-600 hover:text-stone-900 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 transition-all cursor-pointer flex items-center justify-center"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleModerate(rewardModal.review._id, 'approve', rewardModal.amount);
-                    setRewardModal({ ...rewardModal, isOpen: false });
-                  }}
-                  className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-[6px] text-[12px] font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer border-0"
-                >
-                  <span className="material-symbols-outlined text-[16px]">check</span>
-                  <span>
-                    {rewardModal.amount > 0
-                      ? `Approve & Pay ₹${rewardModal.amount}`
-                      : 'Approve Review (₹0)'}
-                  </span>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Image Zoom Preview Lightbox */}
       <AnimatePresence>

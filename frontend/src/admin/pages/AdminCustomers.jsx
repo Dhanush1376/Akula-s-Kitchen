@@ -768,13 +768,19 @@ export function AdminCustomers() {
                       </div>
                     </td>
                     <td className="py-3.5 px-3">
-                      <span
-                        className={`rounded-[4px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border shadow-2xs ${getTierBadgeStyle(
-                          tier,
-                        )}`}
-                      >
-                        {tier}
-                      </span>
+                      {tier && tier !== 'BRONZE' ? (
+                        <span
+                          className={`rounded-[4px] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border shadow-2xs ${getTierBadgeStyle(
+                            tier,
+                          )}`}
+                        >
+                          {tier}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--admin-text-tertiary)] text-[12px] font-medium">
+                          —
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-3 font-bold text-[var(--admin-text-primary)] font-mono">
                       ₹{(cust.totalSpent || 0).toLocaleString('en-IN')}
@@ -954,13 +960,15 @@ export function AdminCustomers() {
                       </div>
                     </div>
                   </div>
-                  <span
-                    className={`rounded-[4px] px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider border shrink-0 ${getTierBadgeStyle(
-                      tier,
-                    )}`}
-                  >
-                    {tier}
-                  </span>
+                  {tier && tier !== 'BRONZE' && (
+                    <span
+                      className={`rounded-[4px] px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider border shrink-0 ${getTierBadgeStyle(
+                        tier,
+                      )}`}
+                    >
+                      {tier}
+                    </span>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 py-2 px-3 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border-subtle)] text-center">

@@ -6,7 +6,7 @@ import {
   ArrowRight,
   ArrowLeft,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 import toast from 'react-hot-toast';
 
@@ -73,7 +73,8 @@ export default function CheckoutPaymentStep() {
     }
   }, [paymentOption, setCodConfirmed]);
 
-  const currentPayableTotal = backendTotals?.total ?? 0;
+  const shippingFee = backendTotals?.shippingFee || 0;
+  const currentPayableTotal = Math.max(0, (backendTotals?.total ?? 0) - shippingFee);
 
   const getSubmitButtonLabel = () => {
     if (isProcessing) return 'Processing...';
@@ -229,15 +230,15 @@ export default function CheckoutPaymentStep() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 mb-4">
+          <div className="flex flex-col gap-2.5 mb-4">
             {/* Option: Razorpay (Secure Online Payment) */}
             {isRazorpayEnabled && (
               <div
                 onClick={() => setPaymentOption('razorpay')}
-                className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden ${
+                className={`relative px-4 py-3.5 rounded-[8px] border transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.99] ${
                   paymentOption === 'razorpay'
-                    ? 'border-[#283618] ring-2 ring-[#283618]/20 bg-[#f9faf7] shadow-sm'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md'
+                    ? 'border-[#283618] bg-[#283618] text-white shadow-sm ring-1 ring-[#283618]'
+                    : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-xs hover:shadow-sm'
                 }`}
               >
                 <div className="flex items-center gap-3 select-none">
@@ -246,7 +247,7 @@ export default function CheckoutPaymentStep() {
                     <div
                       className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-all ${
                         paymentOption === 'razorpay'
-                          ? 'border-[#283618] bg-white'
+                          ? 'border-white bg-white'
                           : 'border-neutral-300 bg-white'
                       }`}
                     >
@@ -257,10 +258,20 @@ export default function CheckoutPaymentStep() {
                   </div>
 
                   <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                    <span className="text-[13px] font-semibold text-neutral-900 truncate">
+                    <span
+                      className={`text-[12.5px] sm:text-[13px] font-semibold truncate ${
+                        paymentOption === 'razorpay' ? 'text-white' : 'text-neutral-900'
+                      }`}
+                    >
                       Online Payment (UPI / Cards / Netbanking)
                     </span>
-                    <span className="bg-[#283618]/10 text-[#283618] border border-[#283618]/20 text-[9.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider shrink-0">
+                    <span
+                      className={`text-[9px] sm:text-[9.5px] px-2 sm:px-2.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
+                        paymentOption === 'razorpay'
+                          ? 'bg-white text-[#283618] font-extrabold shadow-2xs'
+                          : 'bg-[#283618]/10 text-[#283618] border border-[#283618]/20'
+                      }`}
+                    >
                       Recommended
                     </span>
                   </div>
@@ -276,13 +287,13 @@ export default function CheckoutPaymentStep() {
                     setPaymentOption('cod');
                   }
                 }}
-                className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 overflow-hidden ${
+                className={`relative px-4 py-3.5 rounded-[8px] border transition-all duration-200 overflow-hidden ${
                   backendTotals.total > codMaxOrder || backendTotals.total < codMinOrder
-                    ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-sm'
-                    : 'cursor-pointer ' +
+                    ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-xs'
+                    : 'cursor-pointer active:scale-[0.99] ' +
                       (paymentOption === 'cod'
-                        ? 'border-[#283618] ring-2 ring-[#283618]/20 bg-[#f9faf7] shadow-sm'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-sm hover:shadow-md')
+                        ? 'border-[#283618] bg-[#283618] text-white shadow-sm ring-1 ring-[#283618]'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 shadow-xs hover:shadow-sm')
                 }`}
               >
                 <div className="flex items-center gap-3 select-none">
@@ -291,7 +302,7 @@ export default function CheckoutPaymentStep() {
                     <div
                       className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center transition-all ${
                         paymentOption === 'cod'
-                          ? 'border-[#283618] bg-white'
+                          ? 'border-white bg-white'
                           : 'border-neutral-300 bg-white'
                       }`}
                     >
@@ -302,18 +313,38 @@ export default function CheckoutPaymentStep() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <span className="text-[13px] font-semibold text-neutral-900">
+                    <span
+                      className={`text-[13px] font-semibold ${
+                        paymentOption === 'cod' ? 'text-white' : 'text-neutral-900'
+                      }`}
+                    >
                       Cash on Delivery (COD)
                     </span>
                     {backendTotals.total > codMaxOrder && (
-                      <p className="text-[11px] text-red-600 font-bold mt-1 flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                      <p
+                        className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${
+                          paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
+                        }`}
+                      >
+                        <AlertTriangle
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
+                          }`}
+                        />
                         COD unavailable for orders above ₹{codMaxOrder.toLocaleString('en-IN')}
                       </p>
                     )}
                     {backendTotals.total < codMinOrder && (
-                      <p className="text-[11px] text-red-600 font-bold mt-1 flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                      <p
+                        className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${
+                          paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
+                        }`}
+                      >
+                        <AlertTriangle
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
+                          }`}
+                        />
                         COD requires minimum order of ₹{codMinOrder.toLocaleString('en-IN')}
                       </p>
                     )}
@@ -333,35 +364,46 @@ export default function CheckoutPaymentStep() {
           </div>
 
           {/* Dedicated Separate COD OTP Verification Box */}
-          {isCodEnabled && paymentOption === 'cod' && (
-            <CodOtpVerificationSection
-              paymentOption={paymentOption}
-              isCodEnabled={isCodEnabled}
-              orderTotal={backendTotals.total}
-              codMinOrder={codMinOrder}
-              codMaxOrder={codMaxOrder}
-              codVerified={codVerified}
-              codOtpSent={codOtpSent}
-              isSendingOtp={isSendingOtp}
-              isProcessing={isProcessing}
-              deliveryPhone={activeSelectedAddress?.phone || user?.phone}
-              customerEmail={activeSelectedAddress?.email || user?.email}
-              configuredCodChannel={configuredCodChannel}
-              effectiveCodChannel={effectiveCodChannel}
-              selectedCodChannel={selectedCodChannel}
-              onSelectCodChannel={setSelectedCodChannel}
-              codOtpInput={codOtpInput}
-              setCodOtpInput={setCodOtpInput}
-              handleSendCodOtp={() => {
-                if (!needByDate) {
-                  toast.error('Please select a target delivery date first');
-                  return;
-                }
-                handleSendCodOtp();
-              }}
-              handleVerifyCodOtp={handleVerifyCodOtp}
-            />
-          )}
+          <AnimatePresence>
+            {isCodEnabled && paymentOption === 'cod' && (
+              <motion.div
+                key="cod-otp-section"
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden"
+              >
+                <CodOtpVerificationSection
+                  paymentOption={paymentOption}
+                  isCodEnabled={isCodEnabled}
+                  orderTotal={currentPayableTotal}
+                  codMinOrder={codMinOrder}
+                  codMaxOrder={codMaxOrder}
+                  codVerified={codVerified}
+                  codOtpSent={codOtpSent}
+                  isSendingOtp={isSendingOtp}
+                  isProcessing={isProcessing}
+                  deliveryPhone={activeSelectedAddress?.phone || user?.phone}
+                  customerEmail={activeSelectedAddress?.email || user?.email}
+                  configuredCodChannel={configuredCodChannel}
+                  effectiveCodChannel={effectiveCodChannel}
+                  selectedCodChannel={selectedCodChannel}
+                  onSelectCodChannel={setSelectedCodChannel}
+                  codOtpInput={codOtpInput}
+                  setCodOtpInput={setCodOtpInput}
+                  handleSendCodOtp={() => {
+                    if (!needByDate) {
+                      toast.error('Please select a target delivery date first');
+                      return;
+                    }
+                    handleSendCodOtp();
+                  }}
+                  handleVerifyCodOtp={handleVerifyCodOtp}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
 

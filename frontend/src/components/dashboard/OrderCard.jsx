@@ -229,14 +229,11 @@ export function OrderCard({ order, item, itemIdx, idx = 0 }) {
           ) : (
             items[0]?.selectedOptions &&
             items[0].selectedOptions.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
                 {items[0].selectedOptions.map((opt, optIdx) => (
-                  <span
-                    key={optIdx}
-                    className="inline-flex items-center text-[9.5px] font-medium px-1.5 py-0.2 rounded bg-amber-50 text-amber-900 border border-amber-200/60"
-                  >
-                    <span className="opacity-75 mr-0.5">{opt.groupName}:</span>
-                    <span className="font-bold">{opt.optionLabel}</span>
+                  <span key={optIdx} className="text-[10px] text-neutral-500 font-normal">
+                    <span className="text-neutral-400">{opt.groupName}:</span>{' '}
+                    <span className="font-medium text-neutral-700">{opt.optionLabel}</span>
                   </span>
                 ))}
               </div>

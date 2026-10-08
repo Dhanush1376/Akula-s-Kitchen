@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingBag, User, MapPin, Settings } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, User, MapPin } from 'lucide-react';
 import { Routes, Route, Navigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardProvider } from '../context/DashboardContext';
 import { DashboardLayout } from './Dashboard/DashboardLayout';

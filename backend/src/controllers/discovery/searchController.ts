@@ -34,9 +34,10 @@ export const autocomplete = async (req: Request, res: Response) => {
     const sanitizedQuery = stripUnsafeControlChars(query)
       .replace(/[<>]/g, '') // HTML angle brackets
       .trim()
-      .substring(0, 200); // Hard length cap
+      .substring(0, 100); // Hard length cap: nobody types a 100-letter food name
 
-    if (sanitizedQuery.length < 2) {
+    // A single letter is a real query: "d" should already offer Dosa Batter
+    if (sanitizedQuery.length < 1) {
       return res.status(200).json({
         success: true,
         data: { suggestions: [], predictedCategories: [] },

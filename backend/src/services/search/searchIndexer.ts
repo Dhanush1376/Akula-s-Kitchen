@@ -3,6 +3,7 @@ import Product from '../../models/Product';
 import logger from '../../config/logger';
 import { getTransliterationsAndSynonyms } from './queryParser';
 import { getSingularForm } from './queryParser';
+import { invalidateCatalogVocabulary } from './catalogVocabulary';
 
 /**
  * Generates character n-grams from a string (min length 2, max length 6)
@@ -149,6 +150,8 @@ export async function indexProduct(product: any): Promise<void> {
     },
     { upsert: true, new: true },
   );
+  // A new or edited product (title, tags, sizes, stock) feeds the search vocabulary
+  invalidateCatalogVocabulary();
 }
 
 /**

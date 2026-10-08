@@ -197,10 +197,10 @@ const ConfirmModal = ({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') onConfirm();
                     }}
-                    className={`w-full px-3 py-2 border rounded-md outline-none transition-colors ${
+                    className={`w-full px-4 py-2.5 border outline-none transition-colors ${
                       isAdmin
-                        ? 'bg-[var(--admin-surface)] border-[var(--admin-border)] focus:border-blue-500 text-[var(--admin-text-primary)] text-sm'
-                        : 'bg-surface border-outline-variant focus:border-primary text-on-surface'
+                        ? 'bg-[var(--admin-surface)] border-[var(--admin-border)] focus:border-blue-500 text-[var(--admin-text-primary)] text-sm rounded-md'
+                        : 'bg-surface border-outline-variant focus:border-primary text-on-surface rounded-full'
                     }`}
                   />
                 </div>
