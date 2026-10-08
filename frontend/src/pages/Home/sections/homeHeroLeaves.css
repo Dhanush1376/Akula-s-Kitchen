@@ -1,0 +1,295 @@
+/* ─── Banana leaves framing the top of the home page ───────────────────────────
+   Two leaves hang from the top corners behind the frosted header (it blurs them into a
+   soft green glow) and curl out below it beside the heading. Each zone fades its leaf
+   out before it can reach the heading text or the cards.
+
+   Layers, outermost first, so no two animations fight over one property:
+     .ak-hl         where the leaf hangs, plus the pointer / scroll lean (translate, rotate)
+     .ak-hl__enter  the unfurl on page load (CSS animation)
+     .ak-hl__sway   the breeze and gusts (Web Animations on transform)
+   All three pivot on the leaf's stem. */
+
+.ak-hero-leaves {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* How far the right leaf carries on below the top of the cards, in the strip beside
+     them, before it melts away */
+  --hl-tail-w: 90px;
+  --hl-tail-h: 170px;
+  /* Down past where the cards begin (measured in HomeHeroLeaves.jsx) */
+  height: calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 20px);
+  /* Behind the hero content (z-10) and, being in the page, behind the fixed header */
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  /* Everything above the cards, plus a rounded, uneven patch beside them at the right
+     (two overlapping ellipses) where the leaf fades out on a curve, never a straight line.
+     Behind the cards themselves nothing shows: they are opaque and in front. */
+  -webkit-mask-image:
+    linear-gradient(
+      to bottom,
+      #000 calc(var(--hl-floor, 220px) - 10px),
+      transparent calc(var(--hl-floor, 220px) + 14px)
+    ),
+    radial-gradient(
+      var(--hl-tail-w) var(--hl-tail-h) at 100% var(--hl-floor, 220px),
+      #000 30%,
+      transparent 100%
+    ),
+    radial-gradient(
+      calc(var(--hl-tail-w) * 0.55) calc(var(--hl-tail-h) * 0.65) at
+        calc(100% - var(--hl-tail-w) * 0.35) calc(var(--hl-floor, 220px) + var(--hl-tail-h) * 0.15),
+      #000 25%,
+      transparent 100%
+    );
+  mask-image:
+    linear-gradient(
+      to bottom,
+      #000 calc(var(--hl-floor, 220px) - 10px),
+      transparent calc(var(--hl-floor, 220px) + 14px)
+    ),
+    radial-gradient(
+      var(--hl-tail-w) var(--hl-tail-h) at 100% var(--hl-floor, 220px),
+      #000 30%,
+      transparent 100%
+    ),
+    radial-gradient(
+      calc(var(--hl-tail-w) * 0.55) calc(var(--hl-tail-h) * 0.65) at
+        calc(100% - var(--hl-tail-w) * 0.35) calc(var(--hl-floor, 220px) + var(--hl-tail-h) * 0.15),
+      #000 25%,
+      transparent 100%
+    );
+}
+
+/* The leaves show everywhere above the heading (behind the header and in the gap below
+   it) and everywhere to the right of the heading text (around See all). Two gradients,
+   added together: the heading and eyebrow always sit on a clean background. */
+.ak-hl-zone {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image:
+    linear-gradient(
+      to bottom,
+      #000 calc(var(--hl-band, 140px) - 18px),
+      transparent calc(var(--hl-band, 140px) - 3px)
+    ),
+    linear-gradient(
+      to right,
+      transparent calc(var(--hl-clear, 100%) + 8px),
+      #000 calc(var(--hl-clear, 100%) + 34px)
+    );
+  mask-image:
+    linear-gradient(
+      to bottom,
+      #000 calc(var(--hl-band, 140px) - 18px),
+      transparent calc(var(--hl-band, 140px) - 3px)
+    ),
+    linear-gradient(
+      to right,
+      transparent calc(var(--hl-clear, 100%) + 8px),
+      #000 calc(var(--hl-clear, 100%) + 34px)
+    );
+}
+
+.ak-hl {
+  position: absolute;
+  rotate: calc(var(--hl-r0) + var(--hl-r, 0deg));
+  translate: var(--hl-x, 0px) var(--hl-y, 0px);
+}
+.ak-hl,
+.ak-hl__enter,
+.ak-hl__sway {
+  transform-origin: var(--hl-stem);
+}
+
+/* The corner frame's left leaf, flipped to hang from the top-left corner: its stem
+   enters at the left edge, the blade rises off the top and its free edge droops */
+.ak-hl--left {
+  --hl-stem: 0% 52%;
+  --hl-r0: 7deg;
+  left: -46px;
+  top: -46px;
+  width: 300px;
+}
+.ak-hl--left .ak-hl__enter {
+  animation: ak-hl-unfurl-left 1.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+/* The corner frame's right leaf upright, as on the policy pages: it rises from behind
+   the cards at the right edge of the screen and leans in beside "See all". Its stem and
+   cut base stay hidden below the fade at the bottom of the stage. */
+.ak-hl--right {
+  --hl-stem: 90% 100%;
+  --hl-r0: -8deg;
+  right: -52px;
+  /* Measured from the top of the cards, so it stays put however tall the stage is */
+  top: calc(var(--hl-floor, 211px) - 157px);
+  width: 270px;
+}
+/* Upright, unlike the left leaf. The top of the leaf fades in, so its upper end never
+   shows, whatever angle the wind holds it at. */
+.ak-hl--right .ak-hl__img,
+.ak-hl--right .ak-hl__shadow {
+  scale: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 4%, #000 34%);
+  mask-image: linear-gradient(to bottom, transparent 4%, #000 34%);
+}
+.ak-hl--right .ak-hl__enter {
+  animation: ak-hl-unfurl-right 1.45s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+}
+
+.ak-hl__sway {
+  position: relative;
+  will-change: transform;
+}
+
+.ak-hl__img,
+.ak-hl__shadow {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  /* The source leaf rises from the bottom of its frame; flipped, it hangs */
+  scale: 1 -1;
+}
+.ak-hl__img {
+  position: relative;
+  /* Tight contact shadow that crisps the edge; the cast shadow below adds the depth */
+  filter: drop-shadow(0 1px 1.5px rgba(28, 40, 14, 0.24));
+}
+/* Soft shade on the page, thrown down and right (light from the top left) */
+.ak-hl__shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  translate: 7px 12px;
+  filter: brightness(0.25) saturate(0.6) blur(7px);
+  opacity: 0.2;
+}
+
+/* Where small leaves let go: along each leaf's hanging edge */
+.ak-hl__drip {
+  position: absolute;
+}
+.ak-hl--left .ak-hl__drip {
+  left: 18%;
+  top: 25%;
+  width: 60%;
+  height: 50%;
+}
+.ak-hl--right .ak-hl__drip {
+  left: 46%;
+  top: 28%;
+  width: 46%;
+  height: 52%;
+}
+
+/* Each leaf swings down from its corner, overshoots a touch and settles, the way a
+   leaf springs back after being pushed aside */
+@keyframes ak-hl-unfurl-left {
+  0% {
+    opacity: 0;
+    rotate: -24deg;
+    translate: -14% -18%;
+    scale: 0.92;
+  }
+  45% {
+    opacity: 1;
+  }
+  62% {
+    rotate: 2.6deg;
+    translate: 0 0;
+    scale: 1;
+  }
+  80% {
+    rotate: -0.9deg;
+  }
+  100% {
+    opacity: 1;
+    rotate: 0deg;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+/* The right leaf slides in from the screen edge, swinging up from its stem */
+@keyframes ak-hl-unfurl-right {
+  0% {
+    opacity: 0;
+    rotate: 16deg;
+    translate: 45% 10%;
+    scale: 0.94;
+  }
+  45% {
+    opacity: 1;
+  }
+  62% {
+    rotate: -2.6deg;
+    translate: -2% 0;
+    scale: 1;
+  }
+  80% {
+    rotate: 0.9deg;
+    translate: 0.5% 0;
+  }
+  100% {
+    opacity: 1;
+    rotate: 0deg;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* Tablet: taller header, more room to either side of the heading */
+@media (min-width: 640px) {
+  .ak-hero-leaves {
+    --hl-tail-w: 120px;
+    --hl-tail-h: 220px;
+  }
+  .ak-hl--left {
+    left: -60px;
+    top: -74px;
+    width: 440px;
+  }
+  .ak-hl--right {
+    right: -64px;
+    top: calc(var(--hl-floor, 257px) - 218px);
+    width: 360px;
+  }
+}
+
+/* Desktop: the heading row has a wide empty middle, so both tips can drape into it */
+@media (min-width: 1024px) {
+  .ak-hero-leaves {
+    --hl-tail-w: 160px;
+    --hl-tail-h: 280px;
+  }
+  .ak-hl--left {
+    left: -70px;
+    top: -122px;
+    width: 600px;
+  }
+  .ak-hl--right {
+    right: -80px;
+    top: calc(var(--hl-floor, 240px) - 213px);
+    width: 500px;
+  }
+  /* Wide screens leave open space beside the header, so the leaf would show all the way
+     up: it sits lower here and fades in over a shorter stretch */
+  .ak-hl--right .ak-hl__img,
+  .ak-hl--right .ak-hl__shadow {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 26%);
+    mask-image: linear-gradient(to bottom, transparent 6%, #000 26%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ak-hl__enter {
+    animation: none !important;
+  }
+  .ak-hl__sway {
+    will-change: auto;
+  }
+}

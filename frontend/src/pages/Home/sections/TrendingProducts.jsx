@@ -105,12 +105,25 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
     return null;
   }
 
+  const headingTitle =
+    config.sectionTitle && config.sectionTitle !== "Today's picks"
+      ? config.sectionTitle
+      : 'Trending Now';
+
+  const rawKicker = config.sectionSubtitle !== undefined ? config.sectionSubtitle : config.kicker;
+  const kicker =
+    rawKicker &&
+    rawKicker.trim().toLowerCase() !== 'trending now' &&
+    rawKicker.trim().toLowerCase() !== headingTitle.trim().toLowerCase()
+      ? rawKicker
+      : null;
+
   return (
     <section className="h1-section !pt-4 lg:!pt-8 !pb-4 lg:!pb-8 relative isolate" id="h1-trending">
       <div className="h1-container relative z-10">
         <SectionHeader
-          kicker={config.sectionSubtitle !== undefined ? config.sectionSubtitle : config.kicker}
-          title={config.sectionTitle || "Today's picks"}
+          kicker={kicker}
+          title={headingTitle}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>

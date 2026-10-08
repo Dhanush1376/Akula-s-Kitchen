@@ -125,8 +125,8 @@ class ContentService {
           isVisible: true,
         },
         trendingProducts: {
-          sectionTitle: "Today's picks",
-          sectionSubtitle: 'Trending Now',
+          sectionTitle: 'Trending Now',
+          sectionSubtitle: '',
           useAutoFeed: true,
           maxDisplay: 10,
           isVisible: true,

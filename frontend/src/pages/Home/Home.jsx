@@ -4,6 +4,7 @@ import { lazyWithRetry as lazy } from '../../utils/performance/lazyWithRetry';
 import { SEO } from '../../components/seo/SEO';
 
 import { EditorialHero } from './sections/EditorialHero';
+import { HomeHeroLeaves } from './sections/HomeHeroLeaves';
 import { FreshEveryDay } from './sections/FreshEveryDay';
 import { MadeFreshStrip } from './sections/MadeFreshStrip';
 import { LazySection } from '../../components/ui/LazySection';
@@ -76,6 +77,7 @@ export function Home({ previewContent }) {
       />
 
       <div className="h1-page relative bg-surface-bright overflow-hidden">
+        <HomeHeroLeaves />
         <div className="relative z-10">
           {visibleSections.length === 0 && <HomepageEmptyState />}
           {visibleSections.map((section) => {

@@ -115,26 +115,44 @@ export function windGust(
   return true;
 }
 
+// Whole numbers of cycles per loop keep it seamless; mixing periods (about 9s, 5s and
+// 3.3s over the default 36s loop) avoids a metronome feel. Each wave starts at rest, so
+// nothing jumps. Peaks reach about 4 degrees: always visibly alive, never more than a
+// gentle sway.
+const BREEZE_WAVES = [
+  { cycles: 4, amp: 2.4 },
+  { cycles: 7, amp: 1.2 },
+  { cycles: 11, amp: 0.5 },
+];
+
 /**
  * Keep a leaf drifting slowly in a light breeze, forever. Returns the Animation (cancel it
  * on unmount) or null when motion is reduced. Gusts from `windGust` layer on top of it.
+ *
+ * Leaves that share a page can be given their own character so they never sway as one:
+ *   duration: length of one loop in ms
+ *   waves: [{ cycles, amp }], whole cycles per loop and their size in degrees
+ *   bend: 0..1, how much of the sway is a flex of the blade rather than a swing at the stem
+ *   randomStart: start somewhere along the loop instead of at its beginning
  */
-export function windBreeze(el, { strength = 1 } = {}) {
+export function windBreeze(
+  el,
+  {
+    strength = 1,
+    duration = 36000,
+    waves: waveSpec = BREEZE_WAVES,
+    bend = 0.25,
+    randomStart = false,
+  } = {},
+) {
   if (!el?.animate || prefersReducedMotion()) return null;
 
-  const duration = 36000; // one loop
-  // Whole numbers of cycles per loop keep it seamless; mixing periods (about 9s, 5s and
-  // 3.3s) avoids a metronome feel. Each wave starts at rest, so nothing jumps. Peaks reach
-  // about 4 degrees: always visibly alive, never more than a gentle sway.
-  const waves = [
-    { cycles: 4, amp: 2.4 },
-    { cycles: 7, amp: 1.2 },
-    { cycles: 11, amp: 0.5 },
-  ].map((w) => ({ ...w, sign: randomSign() }));
+  const waves = waveSpec.map((w) => ({ ...w, sign: randomSign() }));
   const swellPhase = rand(0, TAU); // the breeze picks up and dies down twice a loop
 
   const frames = [];
-  const steps = 240;
+  // At least 24 keyframes per cycle of the fastest wave keeps every ripple round
+  const steps = Math.max(240, 24 * Math.max(...waves.map((w) => w.cycles)));
   for (let i = 0; i <= steps; i += 1) {
     const t = i / steps;
     const swell = 0.75 + 0.25 * Math.sin(TAU * 2 * t + swellPhase);
@@ -144,11 +162,13 @@ export function windBreeze(el, { strength = 1 } = {}) {
       waves.reduce((sum, w) => sum + w.sign * w.amp * Math.sin(TAU * w.cycles * t), 0);
     frames.push({
       offset: t,
-      transform: `rotate(${(sway * 0.75).toFixed(3)}deg) skewY(${(sway * 0.25).toFixed(3)}deg)`,
+      transform: `rotate(${(sway * (1 - bend)).toFixed(3)}deg) skewY(${(sway * bend).toFixed(3)}deg)`,
     });
   }
 
-  return el.animate(frames, { duration, iterations: Infinity, easing: 'linear' });
+  const animation = el.animate(frames, { duration, iterations: Infinity, easing: 'linear' });
+  if (randomStart) animation.currentTime = rand(0, duration);
+  return animation;
 }
 
 /**
