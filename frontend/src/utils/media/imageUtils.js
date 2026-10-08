@@ -170,7 +170,7 @@ export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', fo
 
     const transformStr = transform.join(',');
 
-    const urlParts = url.split('/upload/');
+    const urlParts = sanitizedUrl.split('/upload/');
     if (urlParts.length === 2) {
       let pathPart = urlParts[1];
       // Strip all existing transformation segments until we hit the version string (v+digits) or the filename
@@ -187,12 +187,13 @@ export const getOptimizedUrl = (url, widthOrPreset, height, quality = 'auto', fo
         }
       }
       pathPart = cleanPathSegments.join('/');
+      if (/\.(heic|heif)$/i.test(pathPart)) {
+        pathPart = pathPart.replace(/\.(heic|heif)$/i, '.jpg');
+      }
 
-      const transformStrFinal = transformStr;
-
-      resultUrl = `${urlParts[0]}/upload/${transformStrFinal}/${pathPart}`;
+      resultUrl = `${urlParts[0]}/upload/${transformStr}/${pathPart}`;
     } else {
-      resultUrl = url;
+      resultUrl = sanitizedUrl;
     }
 
     // Removed backend proxy for Cloudinary URLs in DEV to prevent bandwidth leaks and masked CDN issues.

@@ -10,10 +10,6 @@
       "destination": "https://akula-s-kitchen.onrender.com/api/:path*"
     },
     {
-      "source": "/uploads/:path*",
-      "destination": "https://akula-s-kitchen.onrender.com/uploads/:path*"
-    },
-    {
       "source": "/socket.io/:path*",
       "destination": "https://akula-s-kitchen.onrender.com/socket.io/:path*"
     },

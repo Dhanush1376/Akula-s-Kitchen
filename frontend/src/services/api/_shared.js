@@ -55,11 +55,12 @@ export const uploadDirectToCloudinary = async (
   const files = [];
   for (let value of formData.values()) {
     if (value instanceof File || value instanceof Blob) {
-      // Compress if it's a valid image (skip SVGs and GIFs as they shouldn't/can't be compressed well)
+      // Compress if it's a valid image exceeding 1.5MB (skip SVGs, GIFs, and already-compressed mobile files)
       if (
         value.type.startsWith('image/') &&
         !value.type.includes('svg') &&
-        !value.type.includes('gif')
+        !value.type.includes('gif') &&
+        value.size > 1.5 * 1024 * 1024
       ) {
         try {
           const compressor = await getImageCompression();

@@ -30,7 +30,13 @@ function BaseOptimizedImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [activeSrc, setActiveSrc] = useState(src);
   const MAX_RETRIES = 3;
+
+  // Sync activeSrc when incoming src changes
+  useEffect(() => {
+    setActiveSrc(src);
+  }, [src]);
 
   // If skipObserver is true, we immediately treat it as in view
   // (the parent component is responsible for visibility gating)
@@ -75,6 +81,7 @@ function BaseOptimizedImage({
       setIsLoaded(false);
       setHasError(false);
       setRetryCount(0);
+      setActiveSrc(src);
       prevSrcRef.current = src;
       loadStartTime.current = Date.now();
     }
@@ -97,14 +104,15 @@ function BaseOptimizedImage({
   }, [src, eager, loading]);
 
   const { optimizedUrl, autoSrcSet } = useMemo(() => {
-    const isData = src && (src.startsWith('data:') || src.startsWith('blob:'));
-    let url = isData ? src : src ? getOptimizedUrl(src, width, height, quality) : '';
+    const target = activeSrc || src;
+    const isData = target && (target.startsWith('data:') || target.startsWith('blob:'));
+    let url = isData ? target : target ? getOptimizedUrl(target, width, height, quality) : '';
     if (retryCount > 0 && url && !isData) {
       url += (url.includes('?') ? '&' : '?') + `retry=${retryCount}`;
     }
-    const srcSet = isData || !src ? null : getSrcSet(src, width, quality);
+    const srcSet = isData || !target ? null : getSrcSet(target, width, quality);
     return { optimizedUrl: url, autoSrcSet: srcSet };
-  }, [src, width, height, retryCount, quality]);
+  }, [activeSrc, src, width, height, retryCount, quality]);
 
   const { hasPositioning, isImageAutoHeight, hasObjectFit } = useMemo(
     () => ({
@@ -211,6 +219,36 @@ function BaseOptimizedImage({
             }
           }}
           onError={(e) => {
+            const current = activeSrc || src;
+            if (retryCount < MAX_RETRIES) {
+              // Fallback 1: If it's a relative /uploads/ path and failed on the current origin,
+              // fallback to the production canonical static CDN host https://akulas.kitchen
+              if (
+                typeof current === 'string' &&
+                current.startsWith('/uploads/') &&
+                !current.startsWith('http') &&
+                typeof window !== 'undefined' &&
+                !window.location.origin.includes('akulas.kitchen')
+              ) {
+                setRetryCount((prev) => prev + 1);
+                setActiveSrc(`https://akulas.kitchen${current}`);
+                return;
+              }
+
+              // Fallback 2: If image URL contains .heic or .heif, fallback to .jpg
+              if (typeof current === 'string' && /\.(heic|heif)$/i.test(current)) {
+                setRetryCount((prev) => prev + 1);
+                setActiveSrc(current.replace(/\.(heic|heif)$/i, '.jpg'));
+                return;
+              }
+
+              // Fallback 3: Standard retry
+              if (retryCount === 0) {
+                setRetryCount(1);
+                return;
+              }
+            }
+
             handleImageError(e);
             setHasError(true);
             setIsLoaded(true);

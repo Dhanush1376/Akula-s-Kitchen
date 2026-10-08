@@ -30,8 +30,13 @@ export const uploadOnCloudinary = async (localFilePath: string) => {
 export const getOptimizedUrl = (url: string, width?: number, height?: number) => {
   if (!url || !url.includes('cloudinary.com')) return url;
 
-  const parts = url.split('/upload/');
-  if (parts.length !== 2) return url;
+  let sanitizedUrl = url;
+  if (/\.(heic|heif)$/i.test(sanitizedUrl)) {
+    sanitizedUrl = sanitizedUrl.replace(/\.(heic|heif)$/i, '.jpg');
+  }
+
+  const parts = sanitizedUrl.split('/upload/');
+  if (parts.length !== 2) return sanitizedUrl;
 
   let transformations = 'f_auto,q_auto';
   if (width) transformations += `,w_${width}`;

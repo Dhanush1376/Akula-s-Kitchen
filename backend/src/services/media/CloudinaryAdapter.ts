@@ -99,8 +99,11 @@ export class CloudinaryAdapter {
         );
         const fs = await import('fs');
         const path = await import('path');
-        const safeFolder = (options.folder || 'products').replace(/[^a-zA-Z0-9_\-/]/g, '_');
-        const uploadDir = path.resolve(process.cwd(), 'uploads', safeFolder);
+        const rawFolder = (options.folder || 'products').replace(/[^a-zA-Z0-9_\-/]/g, '_');
+        const canonicalFolder = rawFolder.startsWith('akulas-kitchen/')
+          ? rawFolder
+          : `akulas-kitchen/${rawFolder}`;
+        const uploadDir = path.resolve(process.cwd(), 'uploads', canonicalFolder);
         fs.mkdirSync(uploadDir, { recursive: true });
 
         const ext = options.resourceType === 'video' ? 'mp4' : 'webp';
@@ -108,7 +111,22 @@ export class CloudinaryAdapter {
         const filePath = path.join(uploadDir, filename);
         fs.writeFileSync(filePath, buffer);
 
-        const fileUrl = `/uploads/${safeFolder}/${filename}`;
+        // Mirror to frontend/public/uploads if running in local monorepo
+        try {
+          const frontendDir = path.resolve(
+            process.cwd(),
+            '../frontend/public/uploads',
+            canonicalFolder,
+          );
+          if (fs.existsSync(path.resolve(process.cwd(), '../frontend/public'))) {
+            fs.mkdirSync(frontendDir, { recursive: true });
+            fs.writeFileSync(path.join(frontendDir, filename), buffer);
+          }
+        } catch (_syncErr) {
+          // Ignore if frontend directory is not available
+        }
+
+        const fileUrl = `/uploads/${canonicalFolder}/${filename}`;
 
         return {
           publicId: options.publicId || `local_${Date.now()}`,
