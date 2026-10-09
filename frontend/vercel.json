@@ -14,6 +14,10 @@
       "destination": "https://akula-s-kitchen.onrender.com/socket.io/:path*"
     },
     {
+      "source": "/uploads/:path*",
+      "destination": "https://akula-s-kitchen.onrender.com/uploads/:path*"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }

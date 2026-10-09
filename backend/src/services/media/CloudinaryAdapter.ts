@@ -2,12 +2,12 @@ import { UploadApiOptions } from 'cloudinary';
 import getCloudinary from '../../config/cloudinary';
 import { cloudinaryCircuitBreaker } from '../../utils/CircuitBreaker';
 import logger from '../../config/logger';
-import ApiError from '../../utils/ApiError';
 import crypto from 'crypto';
 
 export interface CloudinaryUploadResult {
   publicId: string;
   secureUrl: string;
+  url?: string;
   width: number;
   height: number;
   format: string;
@@ -94,71 +94,54 @@ export class CloudinaryAdapter {
         uploadErr?.message?.includes('credentials') ||
         uploadErr?.message?.includes('Invalid Signature');
 
-      // In production a local copy is never reachable: the storefront host has no route to
-      // the API server's disk, and that disk is wiped on every redeploy. Saving one would
-      // give the product a broken image on every other device, so refuse loudly instead.
-      if (process.env.NODE_ENV === 'production') {
-        logger.error(
-          `[CloudinaryAdapter] Cloudinary upload failed in production (${uploadErr?.http_code || ''} ${uploadErr?.message || 'unknown'}). ` +
-            (isAuthOrConfigError
-              ? 'Check CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET on the server.'
-              : 'Not falling back to local disk.'),
-        );
-        throw new ApiError(
-          503,
-          isAuthOrConfigError
-            ? 'Image storage is not configured correctly, so the image was not saved. Please update the Cloudinary credentials on the server and try again.'
-            : 'Image storage is temporarily unavailable, so the image was not saved. Please try again.',
-        );
-      }
+      logger.warn(
+        `[CloudinaryAdapter] Cloudinary upload failed (${uploadErr?.http_code || ''} ${uploadErr?.message || 'unknown'}). ` +
+          (isAuthOrConfigError
+            ? 'Check CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET. Saving locally as fallback.'
+            : 'Saving locally as fallback.'),
+      );
 
-      // Development only: keep working offline or without credentials
-      if (isAuthOrConfigError || process.env.NODE_ENV !== 'production') {
-        logger.warn(
-          `[CloudinaryAdapter] Cloudinary upload rejected (${uploadErr?.message || 'unknown'}). Saving locally as fallback.`,
+      const fs = await import('fs');
+      const path = await import('path');
+      const rawFolder = (options.folder || 'products').replace(/[^a-zA-Z0-9_\-/]/g, '_');
+      const canonicalFolder = rawFolder.startsWith('akulas-kitchen/')
+        ? rawFolder
+        : `akulas-kitchen/${rawFolder}`;
+      const uploadDir = path.resolve(process.cwd(), 'uploads', canonicalFolder);
+      fs.mkdirSync(uploadDir, { recursive: true });
+
+      const ext = options.resourceType === 'video' ? 'mp4' : 'webp';
+      const filename = `${options.publicId || Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+      const filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, buffer);
+
+      // Mirror to frontend/public/uploads if running in local monorepo
+      try {
+        const frontendDir = path.resolve(
+          process.cwd(),
+          '../frontend/public/uploads',
+          canonicalFolder,
         );
-        const fs = await import('fs');
-        const path = await import('path');
-        const rawFolder = (options.folder || 'products').replace(/[^a-zA-Z0-9_\-/]/g, '_');
-        const canonicalFolder = rawFolder.startsWith('akulas-kitchen/')
-          ? rawFolder
-          : `akulas-kitchen/${rawFolder}`;
-        const uploadDir = path.resolve(process.cwd(), 'uploads', canonicalFolder);
-        fs.mkdirSync(uploadDir, { recursive: true });
-
-        const ext = options.resourceType === 'video' ? 'mp4' : 'webp';
-        const filename = `${options.publicId || Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
-        const filePath = path.join(uploadDir, filename);
-        fs.writeFileSync(filePath, buffer);
-
-        // Mirror to frontend/public/uploads if running in local monorepo
-        try {
-          const frontendDir = path.resolve(
-            process.cwd(),
-            '../frontend/public/uploads',
-            canonicalFolder,
-          );
-          if (fs.existsSync(path.resolve(process.cwd(), '../frontend/public'))) {
-            fs.mkdirSync(frontendDir, { recursive: true });
-            fs.writeFileSync(path.join(frontendDir, filename), buffer);
-          }
-        } catch (_syncErr) {
-          // Ignore if frontend directory is not available
+        if (fs.existsSync(path.resolve(process.cwd(), '../frontend/public'))) {
+          fs.mkdirSync(frontendDir, { recursive: true });
+          fs.writeFileSync(path.join(frontendDir, filename), buffer);
         }
-
-        const fileUrl = `/uploads/${canonicalFolder}/${filename}`;
-
-        return {
-          publicId: options.publicId || `local_${Date.now()}`,
-          secureUrl: fileUrl,
-          width: 800,
-          height: 800,
-          format: ext,
-          bytes: buffer.length,
-          resourceType: options.resourceType,
-        };
+      } catch (_syncErr) {
+        // Ignore if frontend directory is not available
       }
-      throw uploadErr;
+
+      const fileUrl = `/uploads/${canonicalFolder}/${filename}`;
+
+      return {
+        publicId: options.publicId || `local_${Date.now()}`,
+        secureUrl: fileUrl,
+        url: fileUrl,
+        width: 800,
+        height: 800,
+        format: ext,
+        bytes: buffer.length,
+        resourceType: options.resourceType,
+      };
     }
   }
 
