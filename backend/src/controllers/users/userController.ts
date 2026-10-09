@@ -7,6 +7,7 @@ import ApiResponse from '../../utils/ApiResponse';
 import ApiError from '../../utils/ApiError';
 import { getPaginationOptions, formatPaginationResponse } from '../../utils/pagination';
 import Product from '../../models/Product';
+import Category from '../../models/Category';
 import { setPaginationHeaders } from '../../utils/paginationHeaders';
 import {
   cacheCart,

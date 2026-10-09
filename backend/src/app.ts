@@ -213,6 +213,13 @@ app.head('/health', noCacheMiddleware, (req: Request, res: Response) => {
 
 app.use(['/health', '/api/health', '/api/v1/health'], noCacheMiddleware, healthRoutes);
 app.use(['/api/business-metrics', '/api/v1/business-metrics'], noCacheMiddleware, metricsRoutes);
+app.use(
+  '/uploads',
+  express.static(path.resolve(process.cwd(), 'uploads'), {
+    maxAge: '1d',
+    immutable: true,
+  }),
+);
 
 // Lightweight limiter for public endpoints that live outside the /api mount
 // (the global/flooding limiters below only attach to /api/*). Honors the same

@@ -221,17 +221,15 @@ function BaseOptimizedImage({
           onError={(e) => {
             const current = activeSrc || src;
             if (retryCount < MAX_RETRIES) {
-              // Fallback 1: If it's a relative /uploads/ path and failed on the current origin,
-              // fallback to the production canonical static CDN host https://akulas.kitchen
+              // Fallback 1: If it's a relative /uploads/ path and failed on current origin,
+              // fallback to the backend API origin if not already attempted
               if (
                 typeof current === 'string' &&
                 current.startsWith('/uploads/') &&
-                !current.startsWith('http') &&
-                typeof window !== 'undefined' &&
-                !window.location.origin.includes('akulas.kitchen')
+                !current.startsWith('http')
               ) {
                 setRetryCount((prev) => prev + 1);
-                setActiveSrc(`https://akulas.kitchen${current}`);
+                setActiveSrc(`https://api.akulas.kitchen${current}`);
                 return;
               }
 

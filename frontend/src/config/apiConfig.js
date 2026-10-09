@@ -73,6 +73,9 @@ export const getApiRootUrl = () => getApiConfig().apiRootUrl;
 export const getApiOrigin = () => getApiConfig().apiOrigin;
 
 export const getWebSocketUrl = () => {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
   const config = getApiConfig();
   if (!config.isDev && PRODUCTION_API_ORIGIN) {
     return PRODUCTION_API_ORIGIN;

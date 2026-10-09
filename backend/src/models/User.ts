@@ -2,6 +2,8 @@ import mongoose, { Schema } from 'mongoose';
 import { decryptField, encryptField } from '../utils/security/fieldEncryption';
 import SoftDeletePlugin, { SoftDeleteModel } from '../utils/SoftDeletePlugin';
 import { AssetLifecyclePlugin } from '../utils/AssetLifecyclePlugin';
+import './Product';
+import './Category';
 
 import { IUser } from '../types/user';
 
