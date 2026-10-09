@@ -162,7 +162,12 @@ export function useProductSubmission({
           import('../../utils/core/logger').then(({ default: logger }) => {
             logger.error('Failed to upload pending images:', error);
           });
-          toast.error(error.message || 'Failed to upload images. Please try again.');
+          const errorMsg =
+            error.response?.data?.message ||
+            error.response?.data?.error?.message ||
+            error.message ||
+            'Failed to upload images. Please try again.';
+          toast.error(errorMsg);
           return null; // Return null instead of re-throwing to handle gracefully
         }
         toast.dismiss('upload-toast');

@@ -43,12 +43,12 @@ router.get(
   signedUrlLimiter,
   requireAuth,
   asyncHandler(async (req: Request, res: Response) => {
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
     if (!apiSecret) {
       throw new ApiError(500, 'Cloudinary is not configured');
     }
 
-    const folder = String(req.query.folder || 'akulas-kitchen/direct-uploads');
+    const folder = String(req.query.folder || 'akulas-kitchen/direct-uploads').trim();
     if (!ALLOWED_UPLOAD_FOLDERS.has(folder)) {
       throw new ApiError(400, 'Invalid upload folder');
     }
@@ -61,7 +61,7 @@ router.get(
       }
     }
 
-    const resourceType = String(req.query.resource_type || 'image');
+    const resourceType = String(req.query.resource_type || 'image').trim();
     if (!['image', 'video'].includes(resourceType)) {
       throw new ApiError(400, 'resource_type must be image or video');
     }
@@ -73,16 +73,18 @@ router.get(
     };
 
     const signature = getCloudinary().utils.api_sign_request(paramsToSign, apiSecret);
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+    const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
 
     res.status(200).json(
       new ApiResponse(true, 'Signed upload parameters generated', {
         timestamp,
         signature,
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-        apiKey: process.env.CLOUDINARY_API_KEY,
+        cloudName,
+        apiKey,
         folder,
         resourceType,
-        uploadUrl: `${EXTERNAL_URLS.CLOUDINARY_UPLOAD_BASE}/${process.env.CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
+        uploadUrl: `${EXTERNAL_URLS.CLOUDINARY_UPLOAD_BASE}/${cloudName}/${resourceType}/upload`,
       }),
     );
   }),

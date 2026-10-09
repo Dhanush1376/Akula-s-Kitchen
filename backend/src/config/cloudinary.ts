@@ -1,4 +1,4 @@
-import logger from "./logger";
+import logger from './logger';
 
 let cloudinaryInstance: any = null;
 let configured = false;
@@ -8,13 +8,15 @@ export const getCloudinary = (): any => {
     return cloudinaryInstance;
   }
 
-  const { v2: cloudinary } = require("cloudinary");
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const { v2: cloudinary } = require('cloudinary');
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
   if (!cloudName || !apiKey || !apiSecret) {
-    logger.error("[CLOUDINARY CONFIG ERROR] Cloudinary credentials are missing or undefined! Uploads will fail.");
+    logger.error(
+      '[CLOUDINARY CONFIG ERROR] Cloudinary credentials are missing or undefined! Uploads will fail.',
+    );
     if (process.env.NODE_ENV === 'production') {
       process.exit(1);
     }
@@ -33,4 +35,3 @@ export const getCloudinary = (): any => {
 };
 
 export default getCloudinary;
-

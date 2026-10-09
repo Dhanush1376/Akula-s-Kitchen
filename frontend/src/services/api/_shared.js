@@ -122,9 +122,11 @@ export const uploadDirectToCloudinary = async (
   try {
     results = await Promise.all(uploadPromises);
   } catch (directErr) {
+    const directErrorMessage =
+      directErr.response?.data?.error?.message || directErr.message || 'Direct upload failed';
     logger.warn(
       '[UPLOAD] Direct Cloudinary upload failed, attempting fallback to backend upload:',
-      directErr.message,
+      directErrorMessage,
     );
     try {
       const backendFormData = new FormData();
@@ -142,9 +144,22 @@ export const uploadDirectToCloudinary = async (
         };
       }
     } catch (fallbackErr) {
-      logger.error('[UPLOAD] Fallback upload also failed:', fallbackErr);
+      const fallbackErrorMessage =
+        fallbackErr.response?.data?.message || fallbackErr.message || 'Backend upload failed';
+      logger.error('[UPLOAD] Fallback upload also failed:', fallbackErrorMessage, fallbackErr);
+      const combinedError = new Error(
+        fallbackErr.response?.data?.message ||
+          directErr.response?.data?.error?.message ||
+          fallbackErr.message ||
+          directErr.message ||
+          'Failed to upload images',
+      );
+      combinedError.response = fallbackErr.response || directErr.response;
+      throw combinedError;
     }
-    throw directErr;
+    const finalErr = new Error(directErrorMessage);
+    finalErr.response = directErr.response;
+    throw finalErr;
   }
 
   const urls = results.map((r) => r.secure_url || r.url);

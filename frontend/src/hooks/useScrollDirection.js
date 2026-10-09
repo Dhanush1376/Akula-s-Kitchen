@@ -27,14 +27,26 @@ export function lockScrollDirection(direction, duration = 800) {
 }
 
 const updateScrollDirection = () => {
-  const scrollY = window.scrollY;
+  const scrollY = typeof window !== 'undefined' ? Math.max(0, window.scrollY) : 0;
 
-  const currentIsAtTop = scrollY < 50;
+  // Near the top of the page (within 40px), navbar is always at the top and marked 'up'
+  const currentIsAtTop = scrollY < 40;
 
   let currentScrollDirection = globalScrollDirection;
-  if (!isProgrammaticScroll && Math.abs(scrollY - lastScrollY) >= 10) {
-    currentScrollDirection = scrollY > lastScrollY ? 'down' : 'up';
-    lastScrollY = scrollY > 0 ? scrollY : 0;
+
+  if (currentIsAtTop) {
+    currentScrollDirection = 'up';
+    lastScrollY = scrollY;
+  } else if (!isProgrammaticScroll) {
+    const delta = scrollY - lastScrollY;
+    // Lower threshold for upward scroll (-4px) so going back upwards reveals the navbar immediately
+    if (delta <= -4) {
+      currentScrollDirection = 'up';
+      lastScrollY = scrollY;
+    } else if (delta >= 8) {
+      currentScrollDirection = 'down';
+      lastScrollY = scrollY;
+    }
   }
 
   // Check if anything actually changed
@@ -65,8 +77,9 @@ if (typeof window !== 'undefined') {
 
 export function resetScrollDirection() {
   globalScrollDirection = 'up';
-  globalIsAtTop = typeof window !== 'undefined' ? window.scrollY < 50 : true;
-  lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+  const currentY = typeof window !== 'undefined' ? Math.max(0, window.scrollY) : 0;
+  globalIsAtTop = currentY < 40;
+  lastScrollY = currentY;
   isProgrammaticScroll = false;
   listeners.forEach((listener) =>
     listener({ scrollDirection: globalScrollDirection, isAtTop: globalIsAtTop }),

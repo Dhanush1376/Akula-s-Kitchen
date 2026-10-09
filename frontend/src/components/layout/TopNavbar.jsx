@@ -110,9 +110,12 @@ export function TopNavbar() {
   const [_isMoreOpen, setIsMoreOpen] = useState(false);
   const [hasPendingInvite, setHasPendingInvite] = useState(false);
 
+  // ─── INTELLIGENT SEARCH OVERLAYS ───
+  const search = useSearchOverlay();
+
   const { scrollDirection, isAtTop } = useScrollDirection();
-  // On mobile/tablet, the header must remain permanently accessible and visible at all times
-  const hideNavbar = !isMobileOrTablet && !isAtTop && scrollDirection === 'down';
+  // Slides up on scroll down to maximize content space; reveals immediately when scrolling up or at top
+  const hideNavbar = !isOpen && !search?.isOpen && !isAtTop && scrollDirection === 'down';
 
   const searchParams = new URLSearchParams(location.search);
   const searchParam = searchParams.get('search');
@@ -175,9 +178,6 @@ export function TopNavbar() {
       active = false;
     };
   }, [isAuthenticated, user]);
-
-  // ─── INTELLIGENT SEARCH OVERLAYS ───
-  const search = useSearchOverlay();
 
   // Connect inline search bars across pages to the global search overlay
   useEffect(() => {
