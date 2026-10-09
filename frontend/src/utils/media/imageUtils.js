@@ -301,9 +301,8 @@ export const getSrcSet = (url, maxWidth = null, quality = 'auto', format = 'auto
   if (!url) return null;
   if (url.startsWith('data:') || url.startsWith('blob:')) return null;
 
-  const isAbsoluteExternal = url.startsWith('http://') || url.startsWith('https://');
   const isCloudinary = url.includes('cloudinary.com');
-  if (isAbsoluteExternal && !isCloudinary) return null; // Can't dynamically resize external non-Cloudinary without transforms
+  if (!isCloudinary) return null; // Can't dynamically resize non-Cloudinary without CDN transforms
 
   let validWidths;
 

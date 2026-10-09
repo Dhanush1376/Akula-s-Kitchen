@@ -91,11 +91,11 @@
   </url>
   <url>
     <loc>https://akulas.kitchen/product/6ac77b69b2481d43e58af550</loc>
-    <lastmod>2026-10-08</lastmod>
+    <lastmod>2026-10-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>/uploads/akulas-kitchen/products/dbe37bb0-e08d-4fc6-9b01-206b89881f62-jpg-d356_grkc4.webp</image:loc>
+      <image:loc>/uploads/akulas-kitchen/products/dbe37bb0-e08d-4fc6-9b01-206b89881f62-jpg-9cba_eo2uh.webp</image:loc>
       <image:title>Vada Batter</image:title>
     </image:image>
   </url>
@@ -105,7 +105,7 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>/uploads/akulas-kitchen/products/9e3295c8-4bb8-4ef8-9eff-7306c19c250c-jpeg-a4c7_qot4k.webp</image:loc>
+      <image:loc>/uploads/akulas-kitchen/products/9e3295c8-4bb8-4ef8-9eff-7306c19c250c-jpeg-78fe_mwwet.webp</image:loc>
       <image:title>Green Chilli Amla Pickle</image:title>
     </image:image>
   </url>
@@ -115,8 +115,48 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>/uploads/akulas-kitchen/products/mango-ginger-avakaya-pickle-spread-jpg-12f2_oj2zx.webp</image:loc>
+      <image:loc>/uploads/akulas-kitchen/products/b63a14a9-2930-4be2-a86b-585b0ad2734a-jpg-79d1_f1g80.webp</image:loc>
       <image:title>Mango Ginger Avakaya</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ac841dd13534437d8e181cf</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/a7fe3722-90c6-41f4-8b92-84a9f6ae28ca-jpg-b4e8_0fj7c.webp</image:loc>
+      <image:title>Gongura Pickle</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ac8431113534437d8e18257</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/b851d43d-17ed-4c2f-88ee-f9721722f7f7-jpg-4bf7_0eonc.webp</image:loc>
+      <image:title>Red Chilli Gongura Pickle</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ac8444713534437d8e182a8</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/6aeafe19-774a-4f2f-97d2-77f4fc30f4e2-jpg-a4bc_tl2mx.webp</image:loc>
+      <image:title>Amla Avakaya</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ac847f213534437d8e18362</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/1bca78ee-557f-4121-a537-495831e91b06-jpg-e01a_3rj2j.webp</image:loc>
+      <image:title>Sambar Masala</image:title>
     </image:image>
   </url>
 </urlset>

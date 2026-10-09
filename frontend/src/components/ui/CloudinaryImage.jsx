@@ -221,26 +221,14 @@ function BaseOptimizedImage({
           onError={(e) => {
             const current = activeSrc || src;
             if (retryCount < MAX_RETRIES) {
-              // Fallback 1: If it's a relative /uploads/ path and failed on current origin,
-              // fallback to the backend API origin if not already attempted
-              if (
-                typeof current === 'string' &&
-                current.startsWith('/uploads/') &&
-                !current.startsWith('http')
-              ) {
-                setRetryCount((prev) => prev + 1);
-                setActiveSrc(`https://api.akulas.kitchen${current}`);
-                return;
-              }
-
-              // Fallback 2: If image URL contains .heic or .heif, fallback to .jpg
+              // Fallback 1: If image URL contains .heic or .heif, fallback to .jpg
               if (typeof current === 'string' && /\.(heic|heif)$/i.test(current)) {
                 setRetryCount((prev) => prev + 1);
                 setActiveSrc(current.replace(/\.(heic|heif)$/i, '.jpg'));
                 return;
               }
 
-              // Fallback 3: Standard retry
+              // Fallback 2: Standard retry
               if (retryCount === 0) {
                 setRetryCount(1);
                 return;

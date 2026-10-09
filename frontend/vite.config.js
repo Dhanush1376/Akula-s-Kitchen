@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -183,6 +185,15 @@ export default defineConfig({
         target: process.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000',
         changeOrigin: true,
         secure: false,
+        bypass: (req) => {
+          if (req.url && req.url.startsWith('/uploads/')) {
+            const cleanUrl = req.url.replace(/^\//, '').split('?')[0];
+            const localFile = path.resolve(process.cwd(), 'public', cleanUrl);
+            if (fs.existsSync(localFile)) {
+              return req.url;
+            }
+          }
+        },
       },
       '/socket.io': {
         target: process.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000',
