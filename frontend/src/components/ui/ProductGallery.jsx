@@ -114,35 +114,37 @@ export function ProductGallery({ images = [], product }) {
 
   return (
     <div className="flex flex-col-reverse lg:flex-row gap-4 lg:gap-6 items-start w-full select-none relative">
-      {/* Thumbnail Strip */}
-      <div
-        className="w-full lg:w-[85px] flex lg:flex-col gap-3 sm:gap-4 overflow-x-auto lg:overflow-y-auto no-scrollbar py-2 sm:py-3 px-1 md:px-2 lg:px-3 items-center"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        {images.map((img, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleThumbnailClick(idx)}
-            className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[14px] sm:rounded-[16px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative group cursor-pointer ${
-              selectedIdx === idx
-                ? 'scale-[1.12] z-10 opacity-100'
-                : 'scale-[0.92] opacity-50 hover:opacity-85 hover:scale-100'
-            }`}
-          >
-            <OptimizedImage
-              src={img}
-              alt={`Thumbnail ${idx + 1}`}
-              containerClassName="w-full h-full"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[14px] sm:rounded-[16px]"
-              width={100}
-              height={100}
-            />
-          </button>
-        ))}
-      </div>
+      {/* Thumbnail Strip (Desktop only, when multiple images exist) */}
+      {images.length > 1 && (
+        <div
+          className="hidden lg:flex lg:flex-col lg:w-[85px] gap-3 sm:gap-4 lg:overflow-y-auto no-scrollbar py-2 sm:py-3 px-1 md:px-2 lg:px-3 items-center"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {images.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleThumbnailClick(idx)}
+              className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[14px] sm:rounded-[16px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative group cursor-pointer ${
+                selectedIdx === idx
+                  ? 'scale-[1.12] z-10 opacity-100'
+                  : 'scale-[0.92] opacity-50 hover:opacity-85 hover:scale-100'
+              }`}
+            >
+              <OptimizedImage
+                src={img}
+                alt={`Thumbnail ${idx + 1}`}
+                containerClassName="w-full h-full"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[14px] sm:rounded-[16px]"
+                width={100}
+                height={100}
+              />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Main Image Viewport - Native continuous horizontal scroll enabled */}
-      <div className="flex-1 w-full relative aspect-square max-h-[580px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#fafafa] group border-0 shadow-none">
+      <div className="flex-1 w-full relative aspect-[4/3] max-h-[290px] sm:aspect-[4/3] sm:max-h-[350px] md:aspect-square md:max-h-[520px] lg:max-h-[580px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#fafafa] group border-0 shadow-none">
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -166,6 +168,34 @@ export function ProductGallery({ images = [], product }) {
             </div>
           ))}
         </div>
+
+        {/* Mobile Pagination Indicator (Only when multiple images exist) */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 flex lg:hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur-md pointer-events-auto shadow-sm">
+            {images.length <= 5 ? (
+              images.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleThumbnailClick(idx);
+                  }}
+                  className={`rounded-full transition-all duration-300 p-0 border-0 outline-none cursor-pointer ${
+                    selectedIdx === idx
+                      ? 'w-4 h-1.5 bg-white'
+                      : 'w-1.5 h-1.5 bg-white/60 hover:bg-white/90'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))
+            ) : (
+              <span className="text-[11px] font-bold text-white tracking-wider px-1">
+                {selectedIdx + 1} / {images.length}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Gallery Interaction Overlays */}
 
