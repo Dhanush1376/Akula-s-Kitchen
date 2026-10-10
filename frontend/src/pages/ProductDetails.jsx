@@ -195,12 +195,12 @@ export function ProductDetails() {
         </nav>
       </div>
 
-      <section className="product-detail-section pt-[calc(var(--ak-header-h,96px)+4px)] sm:pt-[calc(var(--ak-header-h,96px)+8px)] lg:pt-0 pb-12 lg:pb-20 lg:pb-24 max-w-max-width mx-auto px-2.5 sm:px-3 md:px-margin-mobile lg:px-margin-desktop relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-6 md:gap-8 lg:gap-12 xl:gap-20">
-          <div className="flex flex-col gap-2 sm:gap-4 md:gap-6 lg:gap-10 md:sticky md:top-24 lg:static lg:top-auto md:self-start lg:self-auto">
+      <section className="product-detail-section pt-[calc(var(--ak-header-h,96px)+12px)] lg:pt-0 pb-12 lg:pb-20 lg:pb-24 max-w-max-width mx-auto px-2.5 sm:px-3 md:px-margin-mobile lg:px-margin-desktop relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-8 lg:gap-12 xl:gap-20">
+          <div className="flex flex-col gap-4 md:gap-6 lg:gap-10 md:sticky md:top-24 lg:static lg:top-auto md:self-start lg:self-auto">
             <ProductGallery images={galleryImages} product={product} />
           </div>
-          <div className="px-1 sm:px-1.5 md:px-0">
+          <div className="px-1.5 md:px-0">
             <ProductInfo product={product} atcRef={atcRef} />
           </div>
         </div>

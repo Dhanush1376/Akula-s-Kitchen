@@ -52,7 +52,7 @@ export function TopNavbar() {
   const [_scrolled, _setScrolled] = useState(false);
   const location = useLocation();
   const { cartCount, setIsCartOpen } = useCart();
-  const { user, isAuthenticated, logout, openAuthModal } = useAuth();
+  const { user, isAuthenticated, isAuthInitialized, logout, openAuthModal } = useAuth();
 
   let wishlistCount = 0;
   try {
@@ -160,7 +160,7 @@ export function TopNavbar() {
 
   useEffect(() => {
     let active = true;
-    if (isAuthenticated && user) {
+    if (isAuthenticated && isAuthInitialized && user) {
       adminInviteService
         .getMyPendingInvite()
         .then((res) => {
@@ -177,7 +177,7 @@ export function TopNavbar() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, isAuthInitialized, user]);
 
   // Connect inline search bars across pages to the global search overlay
   useEffect(() => {

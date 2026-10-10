@@ -74,14 +74,14 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
   };
 
   return (
-    <div className="flex flex-col gap-3.5 sm:gap-5 lg:gap-6 lg:sticky lg:top-28 relative isolate lg:self-start">
+    <div className="flex flex-col gap-5 lg:gap-6 lg:sticky lg:top-28 relative isolate lg:self-start pt-2.5 sm:pt-3.5 md:pt-0">
       {/* Quiet decorative leaf behind the details (phones only) */}
       <ProductLeaf />
       {/* Category, Badges & Title Block */}
-      <div className="space-y-1.5 sm:space-y-2.5">
+      <div className="space-y-2 sm:space-y-2.5">
         {/* Category & Badge Header */}
-        <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
-          <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-start justify-between gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1.5 pt-0.5">
             <Link
               to={`/collections?category=${encodeURIComponent(product.primaryCategory?.name || product.category || '')}`}
               className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-neutral-950 font-extrabold text-[10.5px] uppercase tracking-wider border border-black/10 shadow-2xs hover:bg-[#f7bb0e]/20 hover:border-black/20 transition-all"
@@ -94,13 +94,19 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-1.5 items-center">
-            {(product.isBestseller || product.isFeatured) && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50/80 text-neutral-950 font-extrabold text-[10px] uppercase tracking-wider border border-[#f7bb0e]/30 shadow-2xs">
-                <Award className="w-3 h-3 text-[#f7bb0e]" strokeWidth={2.5} />
-                <span>Bestseller</span>
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center gap-1.5">
+              {(product.isBestseller || product.isFeatured) && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50/80 text-neutral-950 font-extrabold text-[10px] uppercase tracking-wider border border-[#f7bb0e]/30 shadow-2xs">
+                  <Award className="w-3 h-3 text-[#f7bb0e]" strokeWidth={2.5} />
+                  <span>Bestseller</span>
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 font-bold text-[10px] border border-amber-200/80 shadow-2xs">
+                <Ban className="w-3 h-3 text-amber-700 shrink-0" strokeWidth={2} />
+                <span>Non-Returnable (Perishable Food)</span>
               </span>
-            )}
+            </div>
             {(product.reviewCount || product.reviews || 0) > 0 && (
               <button
                 type="button"
@@ -116,24 +122,20 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
                 <span className="text-neutral-400">({product.reviewCount || product.reviews})</span>
               </button>
             )}
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 font-bold text-[10px] border border-amber-200/80 shadow-2xs">
-              <Ban className="w-3 h-3 text-amber-700 shrink-0" strokeWidth={2} />
-              <span>Non-Returnable (Perishable Food)</span>
-            </span>
           </div>
         </div>
 
         {/* Product Title & Metadata */}
         <div className="space-y-1">
           <h1
-            className="font-serif-heading font-extrabold text-[22px] sm:text-[30px] lg:text-[38px] text-[#283618] leading-[1.18] tracking-tight"
+            className="font-serif-heading font-extrabold text-[26px] sm:text-[32px] lg:text-[38px] text-[#283618] leading-[1.15] tracking-tight"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             {product.title}
           </h1>
           {(product.teluguTitle || product.nameTE || product.teluguName) && (
             <p
-              className="font-serif-heading text-[15px] sm:text-[18px] text-neutral-600 font-medium leading-none"
+              className="font-serif-heading text-[16px] sm:text-[19px] text-neutral-600 font-medium leading-none"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {product.teluguTitle || product.nameTE || product.teluguName}
@@ -154,29 +156,29 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
       <ProductNoteCard complimentaryGift={product.complimentaryGift} />
 
       {/* Pricing & Shipping */}
-      <div className="py-2 sm:py-3 border-b border-black/[0.08]">
-        <div className="flex flex-wrap items-baseline gap-2.5 sm:gap-3 mb-2 sm:mb-3">
+      <div className="py-3 border-b border-black/[0.08]">
+        <div className="flex flex-wrap items-baseline gap-3 mb-3">
           <span
-            className="font-serif-heading lining-nums text-[26px] sm:text-[34px] lg:text-[38px] text-neutral-950 font-extrabold leading-none"
+            className="font-serif-heading lining-nums text-[30px] sm:text-[38px] text-neutral-950 font-extrabold leading-none"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             ₹{formatPrice(product.price)}
           </span>
           {oldPrice > 0 && oldPrice > product.price && (
             <span
-              className="font-serif-heading lining-nums text-neutral-400 line-through text-[15px] sm:text-[18px] font-medium leading-none"
+              className="font-serif-heading lining-nums text-neutral-400 line-through text-[16px] sm:text-[18px] font-medium leading-none"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               ₹{formatPrice(oldPrice)}
             </span>
           )}
           {discount > 0 && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-neutral-950 font-extrabold text-[11px] tracking-tight shadow-xs border border-black/10 select-none">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-neutral-950 font-extrabold text-[11.5px] tracking-tight shadow-xs border border-black/10 select-none">
               {discount}% OFF
             </span>
           )}
           {discount > 0 && (
-            <span className="text-emerald-700 dark:text-emerald-500 font-extrabold text-[12px] leading-none">
+            <span className="text-emerald-700 dark:text-emerald-500 font-extrabold text-[12.5px] leading-none">
               Save ₹{formatPrice(oldPrice - product.price)}
             </span>
           )}
@@ -184,7 +186,7 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
       </div>
 
       {/* Action CTA Stack: Weight & Configuration Selection */}
-      <div className="space-y-3 sm:space-y-4 mt-1 sm:mt-2">
+      <div className="space-y-4 mt-2">
         {(Array.isArray(product?.optionGroups) && product.optionGroups.length > 0) ||
         (Array.isArray(product?.variants) && product.variants.length > 0) ||
         (product?.weight && typeof product.weight === 'string' && product.weight.trim()) ? (

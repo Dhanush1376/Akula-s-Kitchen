@@ -168,12 +168,21 @@ export function OrderDetail() {
                 {isDelivered && (
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
+                      const pId =
+                        orderItem.productId?._id ||
+                        (typeof orderItem.productId === 'string' ? orderItem.productId : null) ||
+                        (orderItem.productId && typeof orderItem.productId === 'object'
+                          ? orderItem.productId.id
+                          : null) ||
+                        orderItem.id ||
+                        orderItem._id;
                       setReviewingProduct({
-                        productId: orderItem.productId?._id || orderItem.productId,
+                        productId: pId,
                         productTitle: itemTitle,
-                      })
-                    }
+                        orderItems: itemsList,
+                      });
+                    }}
                     className="px-3 py-1.5 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition-colors shrink-0 cursor-pointer"
                   >
                     Rate & Review

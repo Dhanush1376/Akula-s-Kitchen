@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import toast, { Toaster, ToastBar, useToasterStore } from 'react-hot-toast';
 import debounce from 'lodash.debounce';
@@ -43,28 +44,28 @@ export function GlobalToaster() {
     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   };
 
-  // Storefront styles (pill shape, glassmorphism)
+  // Storefront styles (crisp solid surface to prevent backdrop blur fogging)
   const storefrontStyle = {
-    background: 'rgba(255, 255, 255, 0.85)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255, 255, 255, 0.4)',
+    background: '#ffffff',
+    border: '1px solid rgba(0, 0, 0, 0.08)',
     color: 'var(--text-primary, #111827)',
     fontSize: '13px',
     fontFamily: 'var(--font-body)',
-    fontWeight: '500',
+    fontWeight: '600',
     borderRadius: '50px',
     padding: '12px 20px',
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+    boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div className="toaster-container">
       <Toaster
         position={toastPosition}
         containerStyle={{
           top: toastPosition === 'top-center' ? '80px' : 20,
-          zIndex: 99999,
+          zIndex: 9999999,
         }}
         toastOptions={{
           duration: 3500,
@@ -101,6 +102,7 @@ export function GlobalToaster() {
           </div>
         )}
       </Toaster>
-    </div>
+    </div>,
+    document.body,
   );
 }

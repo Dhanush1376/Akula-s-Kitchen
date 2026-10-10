@@ -63,9 +63,7 @@ export function AuthProvider({ children }) {
       source: 'AuthProvider',
     });
   }, [isAuthenticated, user]);
-  const [isAuthInitialized, setIsAuthInitialized] = useState(
-    !!cachedProfile || (!hasStoredSession && !cachedProfile),
-  );
+  const [isAuthInitialized, setIsAuthInitialized] = useState(!hasStoredSession && !cachedProfile);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [intendedAction, setIntendedAction] = useState(null);

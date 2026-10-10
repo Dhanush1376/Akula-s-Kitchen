@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import logger from '../../utils/core/logger';
 
 export function AdminInviteModal() {
-  const { user, isAuthenticated, checkAuth } = useAuth();
+  const { user, isAuthenticated, isAuthInitialized, checkAuth } = useAuth();
   const [invite, setInvite] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -16,7 +16,7 @@ export function AdminInviteModal() {
     let active = true;
 
     const checkPendingInvitation = async () => {
-      if (!isAuthenticated || !user) return;
+      if (!isAuthenticated || !user || !isAuthInitialized) return;
       try {
         const res = await adminInviteService.getMyPendingInvite();
         if (active && res?.success && res?.data) {
@@ -40,7 +40,7 @@ export function AdminInviteModal() {
       active = false;
       clearInterval(intervalId);
     };
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, isAuthInitialized, user]);
 
   const handleResponse = async (action) => {
     if (!invite || submitting) return;

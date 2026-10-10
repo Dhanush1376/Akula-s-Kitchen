@@ -1,13 +1,13 @@
 import { BadgeCheck, X, Search, Star, Pencil } from 'lucide-react';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { reviewService } from '../../services/domainServices';
 import { useAuth } from '../../context/AuthContext';
 import { WriteReviewModal, getPremiumReviewerName } from './ProductReviews';
 import { OptimizedImage } from '../ui/OptimizedImage';
 import { useMobileDrawerEngine, DrawerDragHandle } from '../ui/drawer';
+import { ProductReviewImagesDrawer } from './ProductReviewImagesDrawer';
 
 // Helper Star Component
 function StarRating({ value = 0, size = 11 }) {
@@ -35,7 +35,7 @@ function StarRating({ value = 0, size = 11 }) {
 }
 
 // Compact Drawer Review Card
-function DrawerReviewCard({ review, productId }) {
+function DrawerReviewCard({ review, productId, onPhotoClick }) {
   const customerName = getPremiumReviewerName(review);
   const initials = customerName
     .split(' ')
@@ -122,10 +122,12 @@ function DrawerReviewCard({ review, productId }) {
       {reviewImages.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-black/[0.06]">
           {reviewImages.slice(0, 4).map((imgUrl, idx) => (
-            <Link
+            <button
               key={idx}
-              to={`/product/${productId}/reviews/images`}
-              className="w-8.5 h-8.5 rounded-lg overflow-hidden border border-black/5 bg-neutral-50 shadow-3xs cursor-pointer relative group shrink-0"
+              type="button"
+              onClick={() => onPhotoClick?.(imgUrl)}
+              className="w-8.5 h-8.5 rounded-lg overflow-hidden border border-black/5 bg-neutral-50 shadow-3xs cursor-pointer relative group shrink-0 active:scale-95 transition-transform"
+              aria-label={`View review photo ${idx + 1}`}
             >
               <OptimizedImage
                 src={imgUrl}
@@ -133,15 +135,17 @@ function DrawerReviewCard({ review, productId }) {
                 containerClassName="w-full h-full"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-            </Link>
+            </button>
           ))}
           {reviewImages.length > 4 && (
-            <Link
-              to={`/product/${productId}/reviews/images`}
-              className="w-8.5 h-8.5 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer"
+            <button
+              type="button"
+              onClick={() => onPhotoClick?.(reviewImages[4])}
+              className="w-8.5 h-8.5 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer active:scale-95"
+              aria-label="View more photos"
             >
               +{reviewImages.length - 4}
-            </Link>
+            </button>
           )}
         </div>
       )}
@@ -168,6 +172,29 @@ export function ReviewsDrawer({
   const [starFilter, setStarFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [hasBackgroundFetched, setHasBackgroundFetched] = useState(false);
+  const [isPhotosDrawerOpen, setIsPhotosDrawerOpen] = useState(false);
+  const [photosDrawerIndex, setPhotosDrawerIndex] = useState(0);
+
+  const handlePhotoClick = useCallback(
+    (imgUrl) => {
+      let foundIndex = 0;
+      let count = 0;
+      for (const r of reviews) {
+        const raw = r.images || r.reviewImages || [];
+        for (const img of raw) {
+          const url = typeof img === 'string' ? img : img?.secureUrl || img?.url;
+          if (url === imgUrl) {
+            foundIndex = count;
+            break;
+          }
+          if (url) count++;
+        }
+      }
+      setPhotosDrawerIndex(foundIndex);
+      setIsPhotosDrawerOpen(true);
+    },
+    [reviews],
+  );
 
   // Sync with initialReviews if provided or updated
   useEffect(() => {
@@ -288,7 +315,7 @@ export function ReviewsDrawer({
                     marginBottom: 'env(safe-area-inset-bottom, 0px)',
                   }}
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-4 sm:p-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[85dvh] overflow-hidden border border-black/[0.08]">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl p-4 sm:p-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[85dvh] overflow-hidden border border-black/[0.08]">
                     {/* Handlebar for mobile bottom sheet feel */}
                     <DrawerDragHandle
                       onClick={onClose}
@@ -462,6 +489,7 @@ export function ReviewsDrawer({
                               key={review._id || review.id}
                               review={review}
                               productId={productId}
+                              onPhotoClick={handlePhotoClick}
                             />
                           ))}
                         </div>
@@ -486,6 +514,16 @@ export function ReviewsDrawer({
           </AnimatePresence>,
           document.body,
         )}
+
+      {/* Customer Review Images Drawer / Modal (In-Page instant open) */}
+      <ProductReviewImagesDrawer
+        isOpen={isPhotosDrawerOpen}
+        onClose={() => setIsPhotosDrawerOpen(false)}
+        productId={productId}
+        productTitle={productTitle}
+        initialPhotoIndex={photosDrawerIndex}
+        reviews={reviews}
+      />
 
       {/* Write Review Modal */}
       <AnimatePresence>

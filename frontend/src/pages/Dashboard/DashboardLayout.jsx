@@ -134,6 +134,7 @@ export function DashboardLayout() {
           <WriteReviewModal
             productId={reviewingProduct.productId}
             productTitle={reviewingProduct.productTitle}
+            orderItems={reviewingProduct.orderItems}
             onClose={() => setReviewingProduct(null)}
           />
         )}

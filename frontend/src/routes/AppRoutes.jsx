@@ -201,7 +201,7 @@ export function AppRoutes() {
                 <Route path="/collections" element={<ProductListing />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews" element={<ProductDetails />} />
-                <Route path="/product/:id/reviews/images" element={<ProductReviewImages />} />
+                <Route path="/product/:id/reviews/images" element={<ProductDetails />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/about" element={<Navigate to="/" replace />} />
                 <Route path="/contact" element={<Contact />} />

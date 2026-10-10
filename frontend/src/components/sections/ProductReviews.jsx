@@ -9,12 +9,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ChefHat,
+  Check,
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { OptimizedImage } from '../ui/OptimizedImage';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
 import { reviewService } from '../../services/domainServices';
 import { useAuth } from '../../context/AuthContext';
 import { SectionHeader } from '../shared/SectionHeader';
@@ -23,6 +23,7 @@ import imageCompression from 'browser-image-compression';
 import { uploadService } from '../../services/api/uploadService';
 import { useMobileDrawerEngine } from '../ui/drawer';
 import { ReviewsDrawer } from './ReviewsDrawer';
+import { ProductReviewImagesDrawer } from './ProductReviewImagesDrawer';
 
 // ─── Star Component ─────────────────────────────────────────────────────────
 function StarRating({ value = 0, max = 5, interactive = false, size = 20, onChange }) {
@@ -73,7 +74,7 @@ export function getPremiumReviewerName(review) {
 }
 
 // ─── Review Card ─────────────────────────────────────────────────────────────
-function ReviewCard({ review, productId }) {
+function ReviewCard({ review, productId, onPhotoClick }) {
   const customerName = getPremiumReviewerName(review);
   const initials = customerName
     .split(' ')
@@ -154,10 +155,12 @@ function ReviewCard({ review, productId }) {
       {review.images && review.images.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-black/[0.06]">
           {review.images.slice(0, 3).map((imgUrl, idx) => (
-            <Link
+            <button
               key={idx}
-              to={`/product/${productId}/reviews/images`}
-              className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-neutral-50 shadow-3xs cursor-pointer relative group shrink-0"
+              type="button"
+              onClick={() => onPhotoClick?.(imgUrl)}
+              className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-neutral-50 shadow-3xs cursor-pointer relative group shrink-0 active:scale-95 transition-transform"
+              aria-label={`View review photo ${idx + 1}`}
             >
               <OptimizedImage
                 src={imgUrl}
@@ -165,24 +168,28 @@ function ReviewCard({ review, productId }) {
                 containerClassName="w-full h-full"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               />
-            </Link>
+            </button>
           ))}
           {review.reviewImages && review.reviewImages.length > 3 ? (
-            <Link
-              to={`/product/${productId}/reviews/images`}
-              className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer"
+            <button
+              type="button"
+              onClick={() => onPhotoClick?.(review.images[3] || review.images[0])}
+              className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer active:scale-95"
+              aria-label="View more photos"
             >
               +{review.reviewImages.length - 3}
-            </Link>
+            </button>
           ) : (
             review.images &&
             review.images.length > 3 && (
-              <Link
-                to={`/product/${productId}/reviews/images`}
-                className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer"
+              <button
+                type="button"
+                onClick={() => onPhotoClick?.(review.images[3] || review.images[0])}
+                className="w-9 h-9 rounded-lg overflow-hidden border border-black/5 bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-[9px] font-bold tracking-widest shrink-0 transition-colors cursor-pointer active:scale-95"
+                aria-label="View more photos"
               >
                 +{review.images.length - 3}
-              </Link>
+              </button>
             )
           )}
         </div>
@@ -192,8 +199,91 @@ function ReviewCard({ review, productId }) {
 }
 
 // ─── Write Review Drawer ───────────────────────────────────────────────────────
-export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, existingReview }) {
+export function WriteReviewModal({
+  productId: initialProductId,
+  productTitle: initialProductTitle,
+  orderItems = [],
+  onClose,
+  onSuccess,
+  existingReview,
+}) {
   const { user } = useAuth();
+
+  const normalizedItems = useMemo(() => {
+    if (!Array.isArray(orderItems) || orderItems.length === 0) return [];
+    const seen = new Set();
+    const list = [];
+    for (const item of orderItems) {
+      const pId =
+        item?.productId?._id ||
+        (typeof item?.productId === 'string' ? item.productId : null) ||
+        (item?.productId && typeof item.productId === 'object' ? item.productId.id : null) ||
+        item?.id ||
+        item?._id;
+      const idStr = pId ? String(pId) : '';
+      if (!idStr || seen.has(idStr)) continue;
+      seen.add(idStr);
+
+      const title =
+        item?.title ||
+        (typeof item?.productId === 'object' ? item.productId?.title : null) ||
+        item?.name ||
+        'Delicacy Item';
+
+      const image =
+        item?.imageSrc ||
+        (typeof item?.productId === 'object'
+          ? item.productId?.imageSrc || item.productId?.images?.[0]
+          : null) ||
+        '/MainLogo.png';
+
+      const variant = item?.variant && item.variant !== 'Default' ? item.variant : '';
+
+      list.push({
+        id: idStr,
+        title,
+        image,
+        variant,
+      });
+    }
+    return list;
+  }, [orderItems]);
+
+  const [selectedProductId, setSelectedProductId] = useState(() => {
+    if (initialProductId) return String(initialProductId);
+    if (normalizedItems.length > 0) return normalizedItems[0].id;
+    return '';
+  });
+
+  useEffect(() => {
+    if (initialProductId) {
+      setSelectedProductId(String(initialProductId));
+    }
+  }, [initialProductId]);
+
+  const currentItem = useMemo(() => {
+    return (
+      normalizedItems.find((it) => it.id === selectedProductId) || {
+        id: selectedProductId,
+        title: initialProductTitle || 'Product',
+        image: '/MainLogo.png',
+        variant: '',
+      }
+    );
+  }, [normalizedItems, selectedProductId, initialProductTitle]);
+
+  const activeTitle = currentItem?.title || initialProductTitle || 'Product';
+
+  const handleSelectProduct = (itemId) => {
+    if (itemId === selectedProductId) return;
+    setSelectedProductId(itemId);
+    setRating(0);
+    setComment('');
+    setSelectedFiles([]);
+    setRemoteImages([]);
+    setLocalPreviews([]);
+  };
+
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [comment, setComment] = useState(existingReview?.comment || '');
   const [submitting, setSubmitting] = useState(false);
@@ -267,7 +357,7 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
         toast.success('Your review has been updated and is pending approval.');
       } else {
         await reviewService.create({
-          productId,
+          productId: selectedProductId || initialProductId,
           rating,
           comment: comment.trim(),
           reviewImages: finalReviewImages,
@@ -335,7 +425,7 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
                 {existingReview ? 'Edit Review' : 'Write a Review'}
               </h2>
               <span className="font-sans text-[10px] sm:text-[10.5px] text-neutral-500 uppercase tracking-widest font-semibold mt-0.5 truncate">
-                {productTitle || 'Product'}
+                {activeTitle}
               </span>
             </div>
             <button
@@ -352,6 +442,67 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
             {/* Scrollable Form Body */}
             <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1 space-y-3">
+              {/* Product Selection for Multi-Item Orders */}
+              {normalizedItems.length > 1 && !existingReview && (
+                <div className="p-3 bg-[#fdfbf6] border border-amber-200/80 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10.5px] font-bold text-neutral-800 uppercase tracking-wider">
+                      Select item to review:
+                    </span>
+                    <span className="text-[10px] text-amber-900/80 font-medium">
+                      {normalizedItems.length} items in order
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {normalizedItems.map((item) => {
+                      const isSelected = item.id === selectedProductId;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleSelectProduct(item.id)}
+                          className={`flex items-center gap-2.5 p-2 rounded-xl text-left transition-all border cursor-pointer ${
+                            isSelected
+                              ? 'bg-white border-[#283618] ring-1 ring-[#283618] shadow-2xs'
+                              : 'bg-white/70 border-neutral-200/80 hover:bg-white hover:border-neutral-300'
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-neutral-200">
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = '/MainLogo.png';
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-[12px] font-semibold truncate leading-tight ${
+                                isSelected ? 'text-[#283618]' : 'text-neutral-800'
+                              }`}
+                            >
+                              {item.title}
+                            </p>
+                            {item.variant && (
+                              <p className="text-[10px] text-neutral-500 truncate mt-0.5">
+                                {item.variant}
+                              </p>
+                            )}
+                          </div>
+                          {isSelected && (
+                            <div className="w-5 h-5 rounded-full bg-[#283618] text-white flex items-center justify-center shrink-0">
+                              <Check className="w-3 h-3 stroke-[2.5]" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* User Profile Info */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-neutral-100/70 rounded-2xl border border-black/[0.04]">
                 <div className="w-8 h-8 rounded-full bg-[#283618] text-[#f7bb0e] flex items-center justify-center shrink-0 font-bold text-[11px] shadow-2xs">
@@ -424,21 +575,21 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
                     (optional, max 5)
                   </span>
                 </label>
-                <div className="flex flex-wrap gap-2 pt-0.5">
+                <div className="flex flex-wrap gap-2.5 pt-1.5 pr-1.5">
                   {combinedPreviews.map((preview, idx) => (
-                    <div
-                      key={idx}
-                      className="relative w-15 h-15 rounded-2xl overflow-hidden border border-neutral-200/90 bg-neutral-100 shadow-2xs group flex-shrink-0"
-                    >
-                      <OptimizedImage
-                        src={preview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        width={80}
-                      />
+                    <div key={idx} className="relative w-15 h-15 flex-shrink-0">
+                      <div className="w-full h-full rounded-2xl overflow-hidden border border-neutral-200/90 bg-neutral-100 shadow-2xs">
+                        <OptimizedImage
+                          src={preview}
+                          alt="Review attachment preview"
+                          className="w-full h-full object-cover"
+                          width={80}
+                        />
+                      </div>
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (idx < remoteImages.length) {
                             setRemoteImages((prev) => prev.filter((_, i) => i !== idx));
                           } else {
@@ -447,9 +598,11 @@ export function WriteReviewModal({ productId, productTitle, onClose, onSuccess, 
                             setLocalPreviews((prev) => prev.filter((_, i) => i !== localIdx));
                           }
                         }}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-all shadow-xs"
+                        className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 rounded-full bg-neutral-900 hover:bg-red-600 active:scale-90 text-white flex items-center justify-center cursor-pointer transition-all shadow-md ring-2 ring-white"
+                        aria-label="Remove photo"
+                        title="Remove photo"
                       >
-                        <X className="w-3 h-3" strokeWidth={2} />
+                        <X className="w-3 h-3 text-white" strokeWidth={2.4} />
                       </button>
                     </div>
                   ))}
@@ -590,6 +743,12 @@ export function ProductReviews({ productId, productTitle }) {
     return window.location.pathname.endsWith('/reviews');
   });
 
+  const [isPhotosDrawerOpen, setIsPhotosDrawerOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.location.pathname.endsWith('/reviews/images');
+  });
+  const [photosDrawerIndex, setPhotosDrawerIndex] = useState(0);
+
   const handleOpenReviewsDrawer = useCallback(() => {
     setIsReviewsDrawerOpen(true);
     if (!window.location.pathname.endsWith('/reviews')) {
@@ -604,9 +763,48 @@ export function ProductReviews({ productId, productTitle }) {
     }
   }, [productId]);
 
+  const handleOpenPhotosDrawer = useCallback(
+    (initialIndex = 0) => {
+      setPhotosDrawerIndex(initialIndex);
+      setIsPhotosDrawerOpen(true);
+      if (!window.location.pathname.endsWith('/reviews/images')) {
+        window.history.pushState(
+          { photosDrawer: true },
+          '',
+          `/product/${productId}/reviews/images`,
+        );
+      }
+    },
+    [productId],
+  );
+
+  const handleClosePhotosDrawer = useCallback(() => {
+    setIsPhotosDrawerOpen(false);
+    if (window.location.pathname.endsWith('/reviews/images')) {
+      window.history.replaceState(null, '', `/product/${productId}#reviews-section`);
+    }
+  }, [productId]);
+
+  const handlePhotoClick = useCallback(
+    (imgUrl) => {
+      let targetIndex = 0;
+      if (imgUrl && Array.isArray(allImages)) {
+        const found = allImages.indexOf(imgUrl);
+        if (found !== -1) targetIndex = found;
+      }
+      handleOpenPhotosDrawer(targetIndex);
+    },
+    [allImages, handleOpenPhotosDrawer],
+  );
+
   // Sync with browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
+      if (window.location.pathname.endsWith('/reviews/images')) {
+        setIsPhotosDrawerOpen(true);
+      } else {
+        setIsPhotosDrawerOpen(false);
+      }
       if (window.location.pathname.endsWith('/reviews')) {
         setIsReviewsDrawerOpen(true);
       } else {
@@ -868,42 +1066,9 @@ export function ProductReviews({ productId, productTitle }) {
               key={review._id || review.id}
               className="snap-start shrink-0 w-[240px] xs:w-[280px] sm:w-[300px] lg:w-[320px] h-auto self-stretch"
             >
-              <ReviewCard review={review} productId={productId} />
+              <ReviewCard review={review} productId={productId} onPhotoClick={handlePhotoClick} />
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Customer Gallery Section */}
-      {reviews.length > 0 && allImages.length > 0 && (
-        <div className="mt-2 pt-4 border-t border-black/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <span className="font-label text-[10px] uppercase tracking-widest text-black/40 font-bold">
-              Customer Gallery ({allImages.length} photo{allImages.length !== 1 ? 's' : ''})
-            </span>
-            <div className="flex -space-x-2">
-              {allImages.slice(0, 5).map((img, idx) => (
-                <div
-                  key={idx}
-                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-neutral-100 flex-shrink-0 shadow-sm"
-                >
-                  <OptimizedImage
-                    src={img}
-                    alt=""
-                    containerClassName="w-full h-full"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <Link
-            to={`/product/${productId}/reviews/images`}
-            className="font-label text-[10px] uppercase tracking-widest font-bold text-primary hover:text-primary-dark transition-colors inline-flex items-center gap-1.5"
-          >
-            See All Photos
-            <ChevronRight className="text-[14px]" strokeWidth={1.5} />
-          </Link>
         </div>
       )}
 
@@ -937,6 +1102,16 @@ export function ProductReviews({ productId, productTitle }) {
           fetchReviews(1);
           fetchEligibility();
         }}
+      />
+
+      {/* Customer Review Images Drawer / Modal (In-Page instant open) */}
+      <ProductReviewImagesDrawer
+        isOpen={isPhotosDrawerOpen}
+        onClose={handleClosePhotosDrawer}
+        productId={productId}
+        productTitle={productTitle}
+        initialPhotoIndex={photosDrawerIndex}
+        reviews={reviews}
       />
     </section>
   );

@@ -252,26 +252,114 @@ export function OrderCard({ order, item, itemIdx, idx = 0 }) {
       {/* Interactive Review Action Footer */}
       {statusLower === 'delivered' && (
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            const firstItem = items[0];
-            setReviewingProduct({
-              productId: firstItem?.productId?._id || firstItem?.productId,
-              productTitle: firstItem?.title || 'Delicacy Item',
-            });
-          }}
-          className="px-3.5 py-2 bg-[#fdfbf6] border-t border-amber-100/60 flex items-center justify-between cursor-pointer hover:bg-[#faf4e6] transition-colors"
+          onClick={(e) => e.stopPropagation()}
+          className="px-3.5 py-2.5 bg-[#fdfbf6] border-t border-amber-100/60"
         >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <Star className="w-3 h-3 text-[#916a00] fill-[#916a00] shrink-0" />
-            <span className="text-[11px] font-medium text-neutral-700 truncate">Rate & Review</span>
-          </div>
+          {items.length <= 1 ? (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                const singleItem = items[0];
+                const pId =
+                  singleItem?.productId?._id ||
+                  (typeof singleItem?.productId === 'string' ? singleItem?.productId : null) ||
+                  (singleItem?.productId && typeof singleItem.productId === 'object'
+                    ? singleItem.productId.id
+                    : null) ||
+                  singleItem?.id ||
+                  singleItem?._id;
+                const pTitle =
+                  singleItem?.title ||
+                  (typeof singleItem?.productId === 'object'
+                    ? singleItem?.productId?.title
+                    : null) ||
+                  singleItem?.name ||
+                  'Delicacy Item';
 
-          <div className="flex items-center gap-0.5 text-[#916a00] shrink-0">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3 h-3 fill-[#916a00] text-[#916a00]" />
-            ))}
-          </div>
+                setReviewingProduct({
+                  productId: pId,
+                  productTitle: pTitle,
+                  orderItems: items,
+                });
+              }}
+              className="flex items-center justify-between cursor-pointer hover:opacity-85 transition-opacity"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Star className="w-3.5 h-3.5 text-[#916a00] fill-[#916a00] shrink-0" />
+                <span className="text-[11px] font-medium text-neutral-700 truncate">
+                  Rate & Review
+                </span>
+              </div>
+
+              <div className="flex items-center gap-0.5 text-[#916a00] shrink-0">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3 h-3 fill-[#916a00] text-[#916a00]" />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Star className="w-3.5 h-3.5 text-[#916a00] fill-[#916a00] shrink-0" />
+                  <span className="text-[11px] font-semibold text-neutral-800 truncate">
+                    Rate & Review ({items.length} Products)
+                  </span>
+                </div>
+                <span className="text-[9.5px] font-medium text-amber-800/80">Choose product</span>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {items.map((it, iIdx) => {
+                  const itId =
+                    it?.productId?._id ||
+                    (typeof it?.productId === 'string' ? it?.productId : null) ||
+                    (it?.productId && typeof it.productId === 'object' ? it.productId.id : null) ||
+                    it?.id ||
+                    it?._id;
+                  const itTitle =
+                    it?.title ||
+                    (typeof it?.productId === 'object' ? it?.productId?.title : null) ||
+                    it?.name ||
+                    'Item';
+                  const itImg =
+                    it?.imageSrc ||
+                    (typeof it?.productId === 'object'
+                      ? it.productId?.imageSrc || it.productId?.images?.[0]
+                      : null) ||
+                    '/MainLogo.png';
+
+                  return (
+                    <button
+                      key={iIdx}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReviewingProduct({
+                          productId: itId,
+                          productTitle: itTitle,
+                          orderItems: items,
+                        });
+                      }}
+                      className="group/item inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-amber-200/90 shadow-2xs hover:border-amber-400 hover:bg-amber-50 active:scale-95 transition-all text-neutral-800 text-[11px] font-medium cursor-pointer"
+                      title={`Rate & Review ${itTitle}`}
+                    >
+                      <img
+                        src={itImg}
+                        alt=""
+                        className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-neutral-200"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <span className="max-w-[120px] sm:max-w-[160px] truncate">{itTitle}</span>
+                      <Star className="w-2.5 h-2.5 text-[#916a00] fill-[#916a00] shrink-0 group-hover/item:scale-110 transition-transform" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </motion.div>

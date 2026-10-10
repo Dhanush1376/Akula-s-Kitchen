@@ -354,9 +354,9 @@ export function ProductConfigurator({
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 text-neutral-900 w-full">
+    <div className="flex flex-col gap-6 text-neutral-900 w-full">
       {/* Option Groups Container */}
-      <div className="flex flex-col gap-3.5 sm:gap-6">
+      <div className="flex flex-col gap-6">
         {optionGroups.map((group, groupIndex) => {
           const gid = String(group.groupId || group.id || group._id || group.name);
           const currentSelections = selections[gid] || [];
@@ -366,14 +366,14 @@ export function ProductConfigurator({
             <div
               key={gid}
               ref={(el) => (groupRefs.current[gid] = el)}
-              className={`p-3 sm:p-4 rounded-2xl transition-all duration-300 border ${
+              className={`p-4 rounded-2xl transition-all duration-300 border ${
                 hasError
                   ? 'bg-red-50/50 border-red-300 ring-2 ring-red-200'
                   : 'bg-white border-neutral-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
               }`}
             >
               {/* Group Header */}
-              <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+              <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="font-extrabold text-[13.5px] sm:text-[14px] text-neutral-950 uppercase tracking-wide">
                   {group.name}
                 </span>
@@ -440,7 +440,7 @@ export function ProductConfigurator({
                       type="button"
                       disabled={isUnavailable}
                       onClick={() => handleSelectOption(group, option)}
-                      className={`relative ${(group.options || []).length <= 4 ? 'w-full min-w-0' : 'min-w-[85px] sm:min-w-[100px] shrink-0'} flex flex-col items-center justify-center text-center p-2 sm:p-3 min-h-[52px] sm:min-h-[62px] rounded-xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
+                      className={`relative ${(group.options || []).length <= 4 ? 'w-full min-w-0' : 'min-w-[85px] sm:min-w-[100px] shrink-0'} flex flex-col items-center justify-center text-center p-2.5 sm:p-3 min-h-[58px] sm:min-h-[62px] rounded-xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.98] ${
                         isUnavailable
                           ? 'opacity-40 bg-neutral-100 border-neutral-200 cursor-not-allowed'
                           : isSelected

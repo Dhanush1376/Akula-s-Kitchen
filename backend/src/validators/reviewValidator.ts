@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const imageUrlSchema = z
+  .string()
+  .min(1, 'Image URL cannot be empty')
+  .refine((url) => url.startsWith('/') || /^https?:\/\//i.test(url), 'Invalid image URL format');
+
 export const createReviewSchema = z.object({
   productId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid product ID format'),
   customerName: z.string().trim().min(2, 'Name must be at least 2 characters').max(100).optional(),
@@ -9,14 +14,11 @@ export const createReviewSchema = z.object({
     .trim()
     .min(5, 'Review comment must be at least 5 characters')
     .max(2000, 'Comment is too long'),
-  images: z
-    .array(z.string().url('Invalid image URL format'))
-    .max(5, 'Maximum 5 images allowed')
-    .optional(),
+  images: z.array(imageUrlSchema).max(5, 'Maximum 5 images allowed').optional(),
   reviewImages: z
     .array(
       z.object({
-        secureUrl: z.string().url('Invalid image URL format'),
+        secureUrl: imageUrlSchema,
         publicId: z.string().optional(),
         width: z.number().optional(),
         height: z.number().optional(),
@@ -38,14 +40,11 @@ export const updateReviewSchema = z.object({
     .trim()
     .min(5, 'Review comment must be at least 5 characters')
     .max(2000, 'Comment is too long'),
-  images: z
-    .array(z.string().url('Invalid image URL format'))
-    .max(5, 'Maximum 5 images allowed')
-    .optional(),
+  images: z.array(imageUrlSchema).max(5, 'Maximum 5 images allowed').optional(),
   reviewImages: z
     .array(
       z.object({
-        secureUrl: z.string().url('Invalid image URL format'),
+        secureUrl: imageUrlSchema,
         publicId: z.string().optional(),
         width: z.number().optional(),
         height: z.number().optional(),

@@ -20,7 +20,7 @@ const ICONS = {
 export function BottomNav() {
   const location = useLocation();
   const { cartCount, setIsCartOpen, isCartOpen } = useCart();
-  const { isAuthenticated, openAuthModal, isAuthModalOpen, user } = useAuth();
+  const { isAuthenticated, isAuthInitialized, openAuthModal, isAuthModalOpen, user } = useAuth();
 
   let wishlistCount = 0;
   try {
@@ -30,7 +30,7 @@ export function BottomNav() {
     // Outside WishlistProvider fallback
   }
 
-  const userId = user?._id || user?.id;
+  const userId = isAuthenticated && isAuthInitialized ? user?._id || user?.id : null;
 
   const { orders } = useDashboardData(userId);
 

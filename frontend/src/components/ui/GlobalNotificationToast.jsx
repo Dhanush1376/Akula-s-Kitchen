@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { Bell, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -100,7 +101,7 @@ export function GlobalNotificationToast() {
     } catch {
       // Silently fail background fetch
     }
-  }, [isAuthenticated, triggerToast]);
+  }, [isAuthenticated, isAuthInitialized, triggerToast]);
 
   // Handle socket events for real-time updates across the app
   useEffect(() => {
@@ -242,18 +243,20 @@ export function GlobalNotificationToast() {
     return 'Just now';
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {showToast && latestNotification && (
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0, transition: { duration: 0.3 } }}
-          className="fixed top-6 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4"
+          className="fixed top-6 left-0 right-0 z-[9999999] flex justify-center pointer-events-none px-4"
         >
           <div
             onClick={handleToastClick}
-            className="pointer-events-auto cursor-pointer bg-white dark:bg-zinc-900 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_36px_-6px_rgba(0,0,0,0.7)] border border-black/[0.08] dark:border-white/10 rounded-[18px] w-full max-w-md p-3.5 pr-5 sm:pr-6 flex items-center gap-3.5 transition-all hover:scale-[1.02] hover:shadow-[0_20px_45px_-10px_rgba(0,0,0,0.2)] group"
+            className="pointer-events-auto cursor-pointer bg-white dark:bg-zinc-900 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_12px_-2px_rgba(0,0,0,0.1)] border border-neutral-200/90 dark:border-white/10 rounded-[18px] w-full max-w-md p-3.5 pr-5 sm:pr-6 flex items-center gap-3.5 transition-all hover:scale-[1.02] group"
           >
             {/* Image or Icon Container */}
             <div className="w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] rounded-[18px] overflow-hidden bg-neutral-100 dark:bg-zinc-800 flex-shrink-0 flex items-center justify-center border border-black/5 dark:border-white/10 shadow-2xs relative">
@@ -296,6 +299,7 @@ export function GlobalNotificationToast() {
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

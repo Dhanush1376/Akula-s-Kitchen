@@ -10,6 +10,7 @@ export function StickyMobileATC({ product, triggerRef }) {
   const { runProtectedAction } = useAuth();
   const [added, setAdded] = React.useState(false);
   const [isVisible, setIsVisible] = React.useState(false);
+  const [hasScrolled, setHasScrolled] = React.useState(false);
   const [isScrollingDown, setIsScrollingDown] = React.useState(false);
   const lastScrollY = React.useRef(0);
 
@@ -18,6 +19,9 @@ export function StickyMobileATC({ product, triggerRef }) {
   React.useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+
+      // Only display sticky ATC once user has scrolled past top fold (100px)
+      setHasScrolled(currentScrollY > 100);
 
       // Use 10px threshold to avoid tiny jitter or bounce triggers
       if (Math.abs(currentScrollY - lastScrollY.current) > 10) {
@@ -54,13 +58,13 @@ export function StickyMobileATC({ product, triggerRef }) {
 
   // Coordinate with BottomNav: hide it when this sticky ATC is visible to avoid tap conflicts
   React.useEffect(() => {
-    if (isVisible && !isScrollingDown) {
+    if (hasScrolled && isVisible && !isScrollingDown) {
       document.body.classList.add('sticky-atc-active');
     } else {
       document.body.classList.remove('sticky-atc-active');
     }
     return () => document.body.classList.remove('sticky-atc-active');
-  }, [isVisible, isScrollingDown]);
+  }, [hasScrolled, isVisible, isScrollingDown]);
 
   const handleAddToCart = () => {
     if (product?.optionGroups && product.optionGroups.length > 0) {
@@ -88,7 +92,7 @@ export function StickyMobileATC({ product, triggerRef }) {
 
   return (
     <AnimatePresence>
-      {isVisible && !isScrollingDown && (
+      {hasScrolled && isVisible && !isScrollingDown && (
         <motion.div
           initial={{ y: 150, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
