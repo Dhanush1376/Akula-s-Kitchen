@@ -210,7 +210,7 @@ class MaintenanceService {
     }
 
     const user = await User.findOne({ email: protectedEmail }).select('+passwordHash +role');
-    if (!user || !['super_admin', 'owner'].includes(user.role)) {
+    if (!user || !['super_admin', 'main_admin', 'owner'].includes(user.role)) {
       await this.logAction(
         'auth_attempt',
         'failure',

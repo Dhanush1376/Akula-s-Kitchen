@@ -212,38 +212,41 @@ export function CustomSelect({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: openUpwards ? 4 : -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className={`absolute z-[999] left-0 w-full bg-[var(--admin-surface)] border border-[var(--admin-border-strong)] rounded-[var(--admin-radius-md)] shadow-[var(--admin-shadow-lg)] overflow-hidden ${
-              openUpwards ? 'bottom-full mb-1' : 'top-full mt-1'
+            className={`absolute z-[999] left-0 w-full bg-[var(--admin-surface)] border border-[var(--admin-border-strong)] rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.14)] overflow-hidden p-1 ${
+              openUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
             }`}
           >
-            <div className="max-h-60 overflow-y-auto custom-scrollbar py-1">
+            <div className="max-h-60 overflow-y-auto custom-scrollbar space-y-0.5">
               {options.length === 0 ? (
                 <div className="px-4 py-3 text-[13px] text-[var(--admin-text-tertiary)] text-center font-medium">
                   No options available
                 </div>
               ) : (
-                options.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      onChange(opt.value);
-                      setIsOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors flex items-center justify-between group ${
-                      value === opt.value
-                        ? 'bg-[var(--admin-accent)] text-white font-medium'
-                        : 'text-[var(--admin-text-primary)] font-medium hover:bg-[var(--admin-surface-muted)]'
-                    }`}
-                  >
-                    <span className="truncate">{opt.label}</span>
-                    {value === opt.value && (
-                      <span className="material-symbols-outlined text-[16px] shrink-0 ml-2">
-                        check
-                      </span>
-                    )}
-                  </button>
-                ))
+                options.map((opt) => {
+                  const isSelected = value === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        onChange(opt.value);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2.5 text-[12.5px] rounded-xl transition-all flex items-center justify-between group cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#283618] text-white font-bold shadow-xs'
+                          : 'text-[var(--admin-text-primary)] font-semibold hover:bg-[var(--admin-surface-muted)]'
+                      }`}
+                    >
+                      <span className="truncate tracking-wide">{opt.label}</span>
+                      {isSelected && (
+                        <span className="material-symbols-outlined text-[16px] shrink-0 ml-2 text-white">
+                          check
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
               )}
             </div>
           </motion.div>

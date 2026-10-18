@@ -43,16 +43,35 @@ export function AdminSidebarContent({
         style={{ borderBottom: '1px solid var(--admin-border-subtle)' }}
       >
         <div
-          className={`flex items-center ${sidebarOpen ? 'px-5 justify-start' : 'px-2 justify-center'} pt-3.5 ${sidebarOpen ? 'pb-2' : 'pb-3.5'} transition-all duration-300 overflow-hidden`}
+          className={`flex items-center ${sidebarOpen ? 'px-4 justify-between' : 'px-2 justify-center'} pt-3.5 ${sidebarOpen ? 'pb-2.5' : 'pb-3.5'} transition-all duration-300 overflow-hidden`}
         >
           <button
             type="button"
-            onClick={() => navigate('/admin')}
-            className="flex items-center justify-center cursor-pointer group outline-none overflow-hidden shrink-0 min-h-0 transition-transform hover:scale-105 active:scale-95"
+            onClick={() => {
+              navigate('/admin');
+              if (setSidebarMobileOpen) setSidebarMobileOpen(false);
+            }}
+            className="flex items-center gap-3 cursor-pointer group outline-none overflow-hidden shrink-0 min-h-0 text-left transition-transform active:scale-[0.98]"
             title={`${storeName} Dashboard`}
             aria-label={`${storeName} Dashboard`}
           >
-            <BrandLogo size="44px" showSubtitle={false} className="shrink-0" />
+            <div className="relative shrink-0 flex items-center justify-center p-0.5 rounded-full ring-1 ring-[var(--admin-border-subtle)] bg-[var(--admin-surface-muted)] group-hover:ring-[var(--admin-accent)] transition-all">
+              <BrandLogo size="36px" showSubtitle={false} className="shrink-0 drop-shadow-xs" />
+            </div>
+
+            {sidebarOpen && (
+              <div className="flex flex-col min-w-0 pr-6 lg:pr-1">
+                <span className="font-serif-heading font-bold text-[14px] leading-tight tracking-tight text-[var(--admin-text-primary)] truncate group-hover:text-[var(--admin-accent)] transition-colors">
+                  {storeName || "Akula's Kitchen"}
+                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Admin Panel</span>
+                  </span>
+                </div>
+              </div>
+            )}
           </button>
         </div>
 

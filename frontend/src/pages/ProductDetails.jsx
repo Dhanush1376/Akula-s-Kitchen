@@ -170,7 +170,7 @@ export function ProductDetails() {
       <SEO title={product.title} description={product.description} schema={productSchema} />
 
       {/* Desktop Breadcrumbs */}
-      <div className="hidden lg:block pt-20 lg:pt-22 pb-2.5 max-w-max-width mx-auto px-margin-desktop relative z-10">
+      <div className="hidden lg:block pt-[calc(var(--ak-header-h,144px)+20px)] pb-3.5 max-w-max-width mx-auto px-margin-desktop relative z-10">
         <nav className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em] text-neutral-400 font-bold overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
           <Link to="/" className="hover:text-neutral-950 transition-colors">
             Home

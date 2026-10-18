@@ -48,7 +48,7 @@ const policiesData = [
       {
         heading: '6. Tamper-Evident Packaging & Delivery Acceptance',
         paragraph:
-          'Every order is packed in food-grade, multi-layer, tamper-evident packaging. If the outer parcel seal appears punctured, opened, leaking, or visibly damaged at the time of delivery, please refuse delivery and immediately contact customer care at mahesh.akula@gmail.com or +91 8800775528.',
+          'Every order is packed in food-grade, multi-layer, tamper-maheshevident packaging. If the outer parcel seal appears punctured, opened, leaking, or visibly damaged at the time of delivery, please refuse delivery and immediately contact customer care at .akula@gmail.com or +91 8800775528.',
       },
     ]),
   },

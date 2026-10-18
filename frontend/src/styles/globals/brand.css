@@ -763,7 +763,7 @@ a:hover .ak-tile-icon {
 
 /* Product detail page starts below fixed header on mobile/tablet */
 .product-detail-section {
-  padding-top: calc(var(--ak-header-h, 64px) + 8px);
+  padding-top: calc(var(--ak-header-h, 96px) + 16px);
 }
 @media (min-width: 1024px) {
   .product-detail-section {

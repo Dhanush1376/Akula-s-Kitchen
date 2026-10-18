@@ -17,16 +17,9 @@ import { useConfirm } from '../../context/ConfirmProvider';
 
 const ROLE_WEIGHTS = {
   owner: 100,
-  super_admin: 90,
-  main_admin: 85,
+  super_admin: 100,
+  main_admin: 90,
   admin: 80,
-  moderator: 70,
-  support_admin: 60,
-  support: 50,
-  order_manager: 40,
-  content_manager: 30,
-  manager: 20,
-  coordinator: 10,
   customer: 0,
   user: 0,
 };
@@ -141,7 +134,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
     const targetWeight = ROLE_WEIGHTS[targetRole] || 0;
 
     if (actorWeight < 80) return false; // Must be at least admin
-    if (currentUser.role === 'owner') return true;
+    if (currentUser.role === 'owner' || currentUser.role === 'super_admin') return true;
 
     // Users can only manage roles strictly lower than their own weight
     return actorWeight > targetWeight;
@@ -154,10 +147,16 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
     const targetWeight = ROLE_WEIGHTS[roleToAssign] || 0;
 
     if (actorWeight < 80) return false; // Must be at least admin
-    if (currentUser.role === 'owner') return true;
+    if (
+      currentUser.role === 'owner' ||
+      currentUser.role === 'super_admin' ||
+      currentUser.role === 'main_admin'
+    ) {
+      return true;
+    }
 
-    // Users can only assign roles strictly lower than their own weight
-    return targetWeight < actorWeight;
+    // Admins can assign roles up to their own weight
+    return targetWeight <= actorWeight;
   };
 
   const handleSendInvite = async (e) => {
@@ -275,6 +274,13 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
     (role) => !['user', 'customer'].includes(role) && canAssignRole(role),
   );
 
+  // Keep inviteRole synced to a valid assignable role
+  useEffect(() => {
+    if (assignableRoles.length > 0 && !assignableRoles.includes(inviteRole)) {
+      setInviteRole(assignableRoles[0]);
+    }
+  }, [assignableRoles, inviteRole]);
+
   if (loading) {
     return <AdminTeamSkeleton hideHeader={hideHeader} />;
   }
@@ -315,10 +321,10 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
       <div className="sticky top-[var(--admin-topbar-height,56px)] z-20 -my-2 py-2.5 bg-[var(--admin-bg)]/95 backdrop-blur-md mb-5">
         <motion.div
           variants={fadeUp}
-          className="flex flex-row items-center justify-start gap-2 w-full"
+          className="flex flex-row items-center justify-between gap-2.5 w-full"
         >
-          {/* Tab Segmented Pill Switcher */}
-          <div className="flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border">
+          {/* Tab Segmented Switcher filling width - subtle rounded corners */}
+          <div className="flex-1 flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border">
             {[
               { id: 'active', label: 'Active', count: members.length },
               { id: 'pending', label: 'Pending', count: invites.length },
@@ -330,7 +336,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`h-[32px] min-h-[32px] max-h-[32px] px-2.5 sm:px-3 rounded-[3px] text-[12px] font-semibold cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap box-border ${
+                  className={`flex-1 h-[32px] min-h-[32px] max-h-[32px] px-2 sm:px-3 rounded-[3px] text-[12px] font-semibold cursor-pointer transition-all flex items-center justify-center gap-1.5 whitespace-nowrap box-border ${
                     isActive
                       ? 'bg-white dark:bg-stone-800 text-[var(--admin-accent)] shadow-xs font-bold'
                       : 'text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]'
@@ -338,7 +344,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
                 >
                   <span>{tab.label}</span>
                   <span
-                    className={`min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                    className={`min-w-[16px] h-4 px-1 rounded-[2px] text-[10px] font-bold flex items-center justify-center ${
                       isActive
                         ? 'bg-[var(--admin-accent)] text-white'
                         : 'bg-[var(--admin-surface)] text-[var(--admin-text-tertiary)] border border-[var(--admin-border-subtle)]'
@@ -355,7 +361,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
           <button
             type="button"
             onClick={() => setIsInviteOpen(true)}
-            className="h-[42px] min-h-[42px] max-h-[42px] px-3 sm:px-3.5 bg-[var(--admin-accent)] hover:opacity-95 text-white rounded-[4px] flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-xs shrink-0 gap-1.5 font-semibold text-[13px]"
+            className="h-[42px] min-h-[42px] max-h-[42px] px-3.5 sm:px-4 bg-[var(--admin-accent)] hover:opacity-95 text-white rounded-[4px] flex items-center justify-center cursor-pointer transition-all active:scale-95 shadow-xs shrink-0 gap-1.5 font-semibold text-[13px]"
             title="Add Admin"
           >
             <span className="material-symbols-outlined text-[18px]">person_add</span>
@@ -705,7 +711,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
                     Invite Team Member
                   </h3>
                   <p className="text-[10.5px] text-[var(--admin-text-tertiary)] mt-0.5 leading-normal">
-                    Grants admin access to an existing user email.
+                    Grants administrative portal permissions to the specified email.
                   </p>
                 </div>
                 <button
@@ -718,7 +724,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
 
               <form onSubmit={handleSendInvite} className="space-y-4 flex-1">
                 <div className="space-y-1">
-                  <label className="admin-label">Member Registered Email *</label>
+                  <label className="admin-label">Member Email Address *</label>
                   <input
                     required
                     type="email"

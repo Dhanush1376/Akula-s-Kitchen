@@ -19,11 +19,18 @@ export class AdminInviteService {
   ) {
     const cleanEmail = canonicalizeEmail(email);
 
-    const targetUser = await User.findOne({ email: cleanEmail });
+    let targetUser = await User.findOne({ email: cleanEmail });
     if (!targetUser) {
-      throw new ApiError(
-        404,
-        `No registered user found with email "${cleanEmail}". Admin access invitations can only be sent to existing registered accounts.`,
+      // Auto-provision user account with placeholder name so invitation can be dispatched directly
+      const fallbackName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ');
+      targetUser = await User.create({
+        email: cleanEmail,
+        name: fallbackName.charAt(0).toUpperCase() + fallbackName.slice(1),
+        role: 'customer',
+        emailVerified: false,
+      });
+      logger.info(
+        `[ADMIN INVITE] Pre-created user record for ${cleanEmail} (ID: ${targetUser._id})`,
       );
     }
 

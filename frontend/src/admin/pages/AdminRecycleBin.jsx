@@ -70,7 +70,8 @@ export default function AdminRecycleBin() {
   } = useRecycleBin();
 
   const { activeRole } = useAdminSecurity();
-  const isSuperAdmin = activeRole === 'super_admin' || activeRole === 'owner';
+  const isSuperAdmin =
+    activeRole === 'super_admin' || activeRole === 'main_admin' || activeRole === 'owner';
   const isOwner = activeRole === 'owner';
   const confirm = useConfirm();
 

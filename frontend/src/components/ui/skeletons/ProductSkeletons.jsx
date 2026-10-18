@@ -55,7 +55,7 @@ export function ProductDetailSkeleton() {
   return (
     <div className="bg-surface min-h-screen">
       {/* Desktop Breadcrumbs Skeleton */}
-      <div className="hidden lg:block pt-32 pb-10 max-w-max-width mx-auto px-margin-desktop">
+      <div className="hidden lg:block pt-[calc(var(--ak-header-h,144px)+20px)] pb-3.5 max-w-max-width mx-auto px-margin-desktop">
         <div className="flex gap-2 items-center">
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-3 w-4" />
@@ -65,7 +65,7 @@ export function ProductDetailSkeleton() {
         </div>
       </div>
 
-      <section className="product-detail-section pb-12 lg:pb-20 lg:pb-24 max-w-max-width mx-auto px-2.5 sm:px-3 md:px-margin-mobile lg:px-margin-desktop">
+      <section className="product-detail-section pt-[calc(var(--ak-header-h,96px)+16px)] lg:pt-0 pb-12 lg:pb-20 lg:pb-24 max-w-max-width mx-auto px-2.5 sm:px-3 md:px-margin-mobile lg:px-margin-desktop">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20">
           {/* Left Column: Image Gallery & Extra Cards */}
           <div className="flex flex-col gap-6 lg:gap-10">
