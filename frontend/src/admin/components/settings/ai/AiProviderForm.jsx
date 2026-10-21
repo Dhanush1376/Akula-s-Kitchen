@@ -93,10 +93,10 @@ const AiProviderForm = ({ provider, onClose, onSave }) => {
   const showEndpoint = ['custom', 'azure_openai', 'ollama'].includes(formData.provider);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full animate-fade-in-up flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+      <div className="bg-white rounded-[28px] shadow-2xl border border-gray-100 max-w-lg w-full animate-fade-in-up flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
           <h3 className="text-lg font-bold text-gray-900">
             {provider ? 'Edit AI Provider' : 'Add AI Provider'}
           </h3>

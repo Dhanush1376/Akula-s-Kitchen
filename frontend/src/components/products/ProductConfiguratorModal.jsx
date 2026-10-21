@@ -48,7 +48,7 @@ export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart
 
   const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[250] flex items-end md:items-center justify-center">
+      <div className="fixed inset-0 z-[250] flex items-end md:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] md:p-6">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -66,7 +66,7 @@ export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-          className="relative w-full max-h-[90vh] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-t-[28px] md:rounded-[24px] shadow-2xl flex flex-col z-10 overflow-hidden border border-black/10"
+          className="relative w-full max-h-[calc(100dvh-20px)] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-[28px] shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col z-10 overflow-hidden border border-black/10"
           role="dialog"
           aria-modal="true"
           aria-labelledby="configurator-modal-title"

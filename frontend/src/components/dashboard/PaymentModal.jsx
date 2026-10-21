@@ -24,7 +24,7 @@ export function PaymentModal({
   return createPortal(
     <AnimatePresence>
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+        <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-4 pointer-events-none">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -46,7 +46,7 @@ export function PaymentModal({
             }}
             transition={sheetTransition}
             {...dragProps}
-            className="bg-surface-bright rounded-t-[18px] sm:rounded-2xl border border-outline-variant/30 shadow-2xl p-6 lg:p-8 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 w-full sm:max-w-md relative z-10 space-y-6 max-h-[88dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain touch-pan-y pointer-events-auto"
+            className="bg-surface-bright rounded-[28px] sm:rounded-2xl border border-outline-variant/30 shadow-[0_16px_50px_rgba(0,0,0,0.22)] p-6 lg:p-8 pb-6 sm:pb-8 w-full sm:max-w-md relative z-10 space-y-6 max-h-[calc(100dvh-20px)] sm:max-h-[90vh] overflow-y-auto overscroll-contain touch-pan-y pointer-events-auto"
           >
             {isMobile && <DrawerDragHandle onClick={() => setIsPaymentModalOpen(false)} />}
             <div className="flex justify-between items-start border-b border-outline-variant/20 pb-3">

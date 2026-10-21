@@ -113,7 +113,7 @@ export function AdminInviteModal() {
   return createPortal(
     <AnimatePresence>
       {isOpen && invite && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-0 sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-6 md:p-8">
           {/* Dark blurred background overlay spanning entire viewport and safe area */}
           <motion.div
             key="invite-backdrop"
@@ -134,7 +134,7 @@ export function AdminInviteModal() {
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[440px] md:max-w-[460px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl pt-3 px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_12px_45px_rgba(0,0,0,0.16)] border-t sm:border border-black/[0.08] flex flex-col max-h-[90dvh] sm:max-h-[88dvh] overflow-hidden">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl pt-3 px-5 pb-4 sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88dvh] overflow-hidden">
               {/* Falling leaves ambient breeze */}
               <AuthCornerLeaves />
 

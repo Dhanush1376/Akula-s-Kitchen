@@ -32,15 +32,15 @@ export function AppDrawer({
             className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto"
           />
 
-          {/* Bottom Sheet Drawer - flush on mobile */}
+          {/* Floating Drawer with all sides gap and rounded corners */}
           <motion.div
             initial={{ y: '100%', opacity: 0.5 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-            className={`fixed inset-x-0 bottom-0 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-full sm:${maxWidth} mx-auto`}
+            className={`fixed inset-x-2.5 bottom-2.5 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-20px)] sm:w-full ${maxWidth || 'max-w-[500px]'} mx-auto`}
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[88dvh] overflow-hidden border-t sm:border border-black/[0.08]">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
               {/* Handlebar */}
               <div
                 onClick={onClose}

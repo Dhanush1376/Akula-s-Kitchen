@@ -366,16 +366,16 @@ export function ProductGallery({ images = [], product }) {
                   className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto"
                 />
 
-                {/* Bottom Sheet docked flush on mobile */}
+                {/* Floating Bottom Sheet */}
                 <motion.div
                   initial={{ y: '100%', opacity: 0.5 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: '100%', opacity: 0 }}
                   transition={sheetTransition}
                   {...dragProps}
-                  className="fixed inset-x-0 bottom-0 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[500px] mx-auto"
+                  className="fixed inset-x-2.5 bottom-2.5 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-20px)] sm:w-full max-w-[500px] mx-auto"
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl pt-2 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[85dvh] overflow-hidden border-t sm:border border-black/[0.08] modern-sans-headings font-body">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl pt-2 px-5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
                     {/* Handlebar for bottom sheet feel - moved right to the top rim */}
                     <div
                       className="w-full flex justify-center pt-1 pb-2 cursor-grab select-none"

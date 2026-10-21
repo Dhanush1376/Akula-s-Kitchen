@@ -225,7 +225,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-0 sm:p-5 md:p-6 lg:p-8"
+          className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-5 md:p-6 lg:p-8"
           role="dialog"
           aria-modal="true"
           aria-labelledby="quickview-title"
@@ -244,7 +244,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             }`}
           />
 
-          {/* Bottom Sheet on Mobile / Centered Card on Desktop */}
+          {/* Floating Sheet on Mobile / Centered Card on Desktop */}
           <motion.div
             ref={modalRef}
             key="quickview-card"
@@ -255,14 +255,14 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             {...(!isConverting && isMobile ? dragProps : {})}
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
-            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[500px] lg:max-w-4xl mx-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-[500px] lg:max-w-4xl mx-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isConverting
                 ? '!fixed !inset-0 !z-[10000] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none opacity-0 scale-[1.02] pointer-events-none'
                 : ''
             }`}
           >
             <div
-              className={`relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-5 lg:pb-7 shadow-[0_16px_50px_rgba(0,0,0,0.18)] border-t sm:border border-black/[0.08] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden transition-all duration-300 ${
+              className={`relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 pb-4 sm:pb-5 lg:pb-7 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[90vh] overflow-hidden transition-all duration-300 ${
                 isConverting ? '!rounded-none !border-none !bg-surface' : ''
               }`}
             >

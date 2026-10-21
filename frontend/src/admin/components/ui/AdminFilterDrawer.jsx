@@ -69,7 +69,7 @@ export function AdminFilterDrawer({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={sheetTransition}
-              className="fixed bottom-0 inset-x-0 z-[9999] bg-[var(--admin-surface)] rounded-t-[14px] shadow-[0_-8px_30px_rgba(0,0,0,0.3)] border-t border-[var(--admin-border-strong)] flex flex-col max-h-[85dvh] text-left overflow-hidden pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
+              className="fixed bottom-2.5 inset-x-2.5 sm:bottom-4 sm:left-4 sm:right-4 z-[9999] bg-[var(--admin-surface)] rounded-[28px] sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.25)] border border-[var(--admin-border-strong)] flex flex-col w-[calc(100%-20px)] sm:w-full max-w-[480px] mx-auto max-h-[calc(100dvh-20px)] sm:max-h-[85dvh] text-left overflow-hidden pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
             >
               {/* Drag / Pull Handle */}
               <DrawerDragHandle onClick={onClose} pillClassName="bg-[var(--admin-border-strong)]" />

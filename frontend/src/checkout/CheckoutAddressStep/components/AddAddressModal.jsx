@@ -214,7 +214,7 @@ export function AddAddressModal({
   return createPortal(
     <AnimatePresence>
       {isAddingNewAddress && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-0 sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-6 md:p-8">
           {/* Dark blurred background overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -233,7 +233,7 @@ export function AddAddressModal({
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[510px] md:max-w-[535px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl pt-2 px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_12px_45px_rgba(0,0,0,0.18)] border-t sm:border border-black/[0.08] flex flex-col max-h-[90dvh] sm:max-h-[88dvh] overflow-hidden font-body">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl pt-2 px-5 pb-4 sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88dvh] overflow-hidden font-body">
               {/* Gentle wind-blown corner foliage accents */}
               <AuthCornerLeaves />
 

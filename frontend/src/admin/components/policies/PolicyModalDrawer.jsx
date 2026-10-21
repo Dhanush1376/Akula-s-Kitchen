@@ -218,7 +218,7 @@ export function PolicyModalDrawer({ isOpen, onClose, policy = null, onSuccess })
     <AnimatePresence>
       {isOpen && (
         <div className={`admin-section-root ${isDark ? 'dark' : ''}`}>
-          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-4">
             {/* Blurred Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -244,7 +244,7 @@ export function PolicyModalDrawer({ isOpen, onClose, policy = null, onSuccess })
               }}
               transition={sheetTransition}
               {...dragProps}
-              className="relative w-full sm:max-w-xl md:max-w-2xl bg-white dark:bg-[#201e19] rounded-t-2xl sm:rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col max-h-[90dvh] sm:max-h-[88vh] overflow-hidden z-10"
+              className="relative w-full sm:max-w-xl md:max-w-2xl bg-white dark:bg-[#201e19] rounded-[28px] sm:rounded-3xl shadow-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88vh] overflow-hidden z-10"
               onClick={(e) => e.stopPropagation()}
             >
               {isMobile && <DrawerDragHandle onClick={!submitting ? onClose : undefined} />}
