@@ -287,7 +287,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
         </div>
 
         {/* ── Main Unified Filters Card ── */}
-        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl space-y-3.5 shadow-2xs">
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] space-y-3.5 shadow-2xs">
           {/* Active Filter Chips */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -298,7 +298,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
 
             <div className="min-h-9">
               {parsedTags.length === 0 ? (
-                <div className="p-2.5 text-center rounded-lg border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)]/30 text-[11px] text-[var(--admin-text-tertiary)]">
+                <div className="p-2.5 text-center rounded-[4px] border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)]/30 text-[11px] text-[var(--admin-text-tertiary)]">
                   No active filters yet. Tap any tag below to add.
                 </div>
               ) : (

@@ -192,7 +192,7 @@ export function ProductPricingStep({ formData, setFormData }) {
       {/* Base Pricing Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         {/* Product Base Price */}
-        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl shadow-2xs space-y-2">
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs space-y-2">
           <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
             Base Price (₹) <span className="text-red-500">*</span>
           </label>
@@ -209,19 +209,19 @@ export function ProductPricingStep({ formData, setFormData }) {
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               placeholder="e.g. 200"
-              className="w-full bg-[var(--admin-surface)] rounded-lg pl-7 pr-3 h-10 text-[13px] font-bold outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+              className="w-full bg-[var(--admin-surface)] rounded-[4px] pl-7 pr-3 h-10 text-[13px] font-bold outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
             />
           </div>
         </div>
 
         {/* Old Striking Price */}
-        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl shadow-2xs space-y-2">
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
               Original / Striking Price (₹)
             </label>
             {discountPercent && (
-              <span className="text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-[3px] border border-emerald-200">
                 {discountPercent}% OFF
               </span>
             )}
@@ -237,14 +237,14 @@ export function ProductPricingStep({ formData, setFormData }) {
               value={formData.oldPrice}
               onChange={(e) => setFormData({ ...formData, oldPrice: e.target.value })}
               placeholder="Optional original price"
-              className="w-full bg-[var(--admin-surface)] rounded-lg pl-7 pr-3 h-10 text-[13px] outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+              className="w-full bg-[var(--admin-surface)] rounded-[4px] pl-7 pr-3 h-10 text-[13px] outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
             />
           </div>
         </div>
       </div>
 
       {/* ─── WEIGHT & PORTION PRICING TIERS SECTION ─── */}
-      <div className="border border-[var(--admin-border)] rounded-xl bg-[var(--admin-surface)] shadow-2xs overflow-hidden">
+      <div className="border border-[var(--admin-border)] rounded-[6px] bg-[var(--admin-surface)] shadow-2xs overflow-hidden">
         {/* Section Header */}
         <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[var(--admin-surface-muted)]/60 border-b border-[var(--admin-border)] flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                       : 'RADIO_CARDS'
                 }
                 onChange={(e) => syncWeightGroup({ ...weightGroup, displayStyle: e.target.value })}
-                className="h-7 sm:h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2 text-[11px] font-semibold text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000]"
+                className="h-7 sm:h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2 text-[11px] font-semibold text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000]"
                 title="Storefront selector appearance"
               >
                 <option value="RADIO_CARDS">Cards</option>
@@ -278,7 +278,7 @@ export function ProductPricingStep({ formData, setFormData }) {
               <button
                 type="button"
                 onClick={handleClearWeightGroup}
-                className="h-7 sm:h-8 px-2.5 rounded-md text-[11px] font-semibold text-stone-500 hover:text-red-600 hover:bg-red-50 border border-[var(--admin-border)] transition-colors cursor-pointer"
+                className="h-7 sm:h-8 px-2.5 rounded-[4px] text-[11px] font-semibold text-stone-500 hover:text-red-600 hover:bg-red-50 border border-[var(--admin-border)] transition-colors cursor-pointer"
                 title="Remove weight choices and sell at base price only"
               >
                 Clear
@@ -296,14 +296,14 @@ export function ProductPricingStep({ formData, setFormData }) {
             <button
               type="button"
               onClick={() => handleApplyPreset(STANDARD_WEIGHT_PRESETS, 'Weight')}
-              className="h-7 px-2.5 rounded-md bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
+              className="h-7 px-2.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
             >
               + Standard (250g, 500g, 1kg, 2kg)
             </button>
             <button
               type="button"
               onClick={() => handleApplyPreset(PORTION_SIZE_PRESETS, 'Portion')}
-              className="h-7 px-2.5 rounded-md bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
+              className="h-7 px-2.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
             >
               + Portions (Half, Full, Family)
             </button>
@@ -313,7 +313,7 @@ export function ProductPricingStep({ formData, setFormData }) {
         {/* Options Content */}
         <div className="p-3.5 sm:p-4">
           {!weightGroup || !weightGroup.options || weightGroup.options.length === 0 ? (
-            <div className="p-6 text-center border border-dashed border-[var(--admin-border)] rounded-xl bg-[var(--admin-surface-muted)]/20 space-y-3">
+            <div className="p-6 text-center border border-dashed border-[var(--admin-border)] rounded-[6px] bg-[var(--admin-surface-muted)]/20 space-y-3">
               <span className="material-symbols-outlined text-[26px] text-[var(--admin-text-tertiary)] block mx-auto">
                 straighten
               </span>
@@ -324,14 +324,14 @@ export function ProductPricingStep({ formData, setFormData }) {
                 <button
                   type="button"
                   onClick={() => handleApplyPreset(STANDARD_WEIGHT_PRESETS, 'Weight')}
-                  className="px-3 py-1.5 rounded-lg bg-[var(--admin-accent,#800000)] hover:opacity-90 text-white text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-[4px] bg-[var(--admin-accent,#800000)] hover:opacity-90 text-white text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
                 >
                   + Add Weights (250g, 500g, 1kg)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApplyPreset(PORTION_SIZE_PRESETS, 'Portion')}
-                  className="px-3 py-1.5 rounded-lg bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
                 >
                   + Add Portions (Half / Full)
                 </button>
@@ -357,7 +357,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                   return (
                     <div
                       key={option.optionId || optIdx}
-                      className="p-2.5 sm:p-0 bg-[var(--admin-surface-muted)]/20 sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-[var(--admin-border-subtle)] space-y-2 sm:space-y-0"
+                      className="p-2.5 sm:p-0 bg-[var(--admin-surface-muted)]/20 sm:bg-transparent rounded-[4px] sm:rounded-none border sm:border-0 border-[var(--admin-border-subtle)] space-y-2 sm:space-y-0"
                     >
                       {/* Top Row on mobile / Full Grid on desktop */}
                       <div className="flex items-center gap-2 sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_60px_32px] sm:items-center sm:gap-3">
@@ -394,7 +394,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                             value={option.label}
                             onChange={(e) => handleUpdateOption(optIdx, 'label', e.target.value)}
                             placeholder="e.g. 500g"
-                            className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg px-3 text-[12.5px] font-semibold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                            className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12.5px] font-semibold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                           />
                         </div>
 
@@ -411,14 +411,14 @@ export function ProductPricingStep({ formData, setFormData }) {
                                 handleUpdateOption(optIdx, 'priceAdjustment', e.target.value)
                               }
                               placeholder="0"
-                              className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg pl-7 pr-2.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                              className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                             />
                           </div>
                         </div>
 
                         {/* Desktop: Customer Price Preview */}
                         <div className="hidden sm:flex items-center justify-end">
-                          <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                          <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-[4px] border border-emerald-200">
                             ₹{finalCalculatedPrice.toLocaleString()}
                           </span>
                         </div>
@@ -442,7 +442,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                           <button
                             type="button"
                             onClick={() => handleDeleteOption(optIdx)}
-                            className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                            className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer"
                             title="Remove tier"
                           >
                             <span className="material-symbols-outlined text-[16px]">close</span>
@@ -463,11 +463,11 @@ export function ProductPricingStep({ formData, setFormData }) {
                               handleUpdateOption(optIdx, 'priceAdjustment', e.target.value)
                             }
                             placeholder="0"
-                            className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
+                            className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
                           />
                         </div>
 
-                        <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-[4px] border border-emerald-200">
                           ₹{finalCalculatedPrice.toLocaleString()}
                         </span>
 
@@ -509,7 +509,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                         handleAddCustomOption();
                       }
                     }}
-                    className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg px-3 text-[12px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                    className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                   />
                 </div>
 
@@ -534,13 +534,13 @@ export function ProductPricingStep({ formData, setFormData }) {
                           handleAddCustomOption();
                         }
                       }}
-                      className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg pl-7 pr-2.5 text-[12px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                      className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[12px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-md">
+                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-[4px]">
                     ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
                   </span>
                 </div>
@@ -549,7 +549,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                   <button
                     type="button"
                     onClick={handleAddCustomOption}
-                    className="w-full h-[36px] rounded-lg bg-[#800000] hover:bg-[#6a0000] text-white text-[11.5px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                    className="w-full h-[36px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11.5px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[15px]">add</span>
                     <span>Add</span>
@@ -558,7 +558,7 @@ export function ProductPricingStep({ formData, setFormData }) {
               </div>
 
               {/* Add Option Row - Mobile Stacking */}
-              <div className="sm:hidden p-2.5 bg-[var(--admin-surface-muted)]/20 rounded-lg border border-dashed border-[var(--admin-border)] space-y-2">
+              <div className="sm:hidden p-2.5 bg-[var(--admin-surface-muted)]/20 rounded-[4px] border border-dashed border-[var(--admin-border)] space-y-2">
                 <input
                   type="text"
                   placeholder="New portion (e.g. 1 kg, Family Pack)"
@@ -572,7 +572,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                       handleAddCustomOption();
                     }
                   }}
-                  className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2.5 text-[12px] text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
+                  className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2.5 text-[12px] text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
                 />
 
                 <div className="flex items-center gap-2">
@@ -590,18 +590,18 @@ export function ProductPricingStep({ formData, setFormData }) {
                           priceAdjustment: e.target.value,
                         }))
                       }
-                      className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
+                      className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
                     />
                   </div>
 
-                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded shrink-0">
+                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-[3px] shrink-0">
                     ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
                   </span>
 
                   <button
                     type="button"
                     onClick={handleAddCustomOption}
-                    className="flex-1 h-8 rounded-md bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                    className="flex-1 h-8 rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[14px]">add</span>
                     <span>Add Tier</span>
