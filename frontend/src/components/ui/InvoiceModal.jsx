@@ -199,7 +199,7 @@ export function InvoiceModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
+            className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
           />
 
           {/* Floating Card Modal / Bottom Sheet */}
@@ -212,7 +212,7 @@ export function InvoiceModal({
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[500px] md:max-w-[530px] mx-auto"
             style={{
-              marginBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+              marginBottom: isMobile ? 'max(0.75rem, env(safe-area-inset-bottom, 0px))' : undefined,
             }}
           >
             <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-3 sm:p-4.5 shadow-[0_16px_50px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[90dvh] sm:max-h-[92vh] overflow-hidden">

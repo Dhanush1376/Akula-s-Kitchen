@@ -33,13 +33,20 @@ let scrollYPosition = 0;
 function applyLock() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   scrollYPosition = window.scrollY || window.pageYOffset || 0;
+
+  // Set html overflow
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style.overscrollBehavior = 'none';
+
+  // Lock body without shrinking viewport height on mobile browsers
   document.body.style.position = 'fixed';
   document.body.style.top = `-${scrollYPosition}px`;
   document.body.style.left = '0';
   document.body.style.right = '0';
   document.body.style.width = '100%';
+  document.body.style.minHeight = '100%';
   document.body.style.overflow = 'hidden';
-  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overscrollBehavior = 'none';
 }
 
 function releaseLock() {
@@ -50,8 +57,12 @@ function releaseLock() {
   document.body.style.left = '';
   document.body.style.right = '';
   document.body.style.width = '';
+  document.body.style.minHeight = '';
   document.body.style.overflow = '';
+  document.body.style.overscrollBehavior = '';
   document.documentElement.style.overflow = '';
+  document.documentElement.style.overscrollBehavior = '';
+
   if (top) {
     const y = parseInt(top, 10) * -1;
     window.scrollTo(0, isNaN(y) ? scrollYPosition : y);

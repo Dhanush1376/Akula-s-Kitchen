@@ -236,8 +236,10 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={isConverting ? undefined : onClose}
-            className={`fixed inset-0 pointer-events-auto transition-colors duration-200 ${
-              isConverting ? 'bg-surface' : 'bg-black/40 backdrop-blur-xs cursor-pointer'
+            className={`fixed -inset-x-0 -top-24 -bottom-32 pointer-events-auto transition-colors duration-200 ${
+              isConverting
+                ? 'bg-surface'
+                : 'bg-black/60 sm:bg-black/40 backdrop-blur-xs cursor-pointer'
             }`}
           />
 
@@ -259,7 +261,9 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             }`}
             style={{
               marginBottom:
-                isMobile && !isConverting ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+                isMobile && !isConverting
+                  ? 'max(0.75rem, env(safe-area-inset-bottom, 0px))'
+                  : undefined,
             }}
           >
             <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-3.5 sm:p-5 lg:p-7 shadow-[0_16px_50px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden">

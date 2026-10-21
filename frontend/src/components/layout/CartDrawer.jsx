@@ -93,7 +93,7 @@ export function CartDrawer({ isOpen, onClose }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[200]"
+            className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[200]"
           />
 
           {/* Drawer Panel */}

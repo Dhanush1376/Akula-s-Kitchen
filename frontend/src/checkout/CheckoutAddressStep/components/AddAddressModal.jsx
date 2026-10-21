@@ -221,7 +221,7 @@ export function AddAddressModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsAddingNewAddress(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
+            className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
           />
 
           {/* Floating Card Modal Container in AuthModal style */}
@@ -233,7 +233,7 @@ export function AddAddressModal({
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[510px] md:max-w-[535px] mx-auto"
             style={{
-              marginBottom: isMobile ? 'env(safe-area-inset-bottom, 0px)' : undefined,
+              marginBottom: isMobile ? 'max(0.75rem, env(safe-area-inset-bottom, 0px))' : undefined,
             }}
           >
             <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-2 px-5 pb-5 sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_12px_45px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[88dvh] overflow-hidden font-body">

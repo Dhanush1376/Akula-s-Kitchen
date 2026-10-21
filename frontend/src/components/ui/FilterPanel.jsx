@@ -592,13 +592,13 @@ export function FilterPanel({
           <AnimatePresence>
             {isOpen && (
               <div className="fixed inset-0 z-[1000] lg:hidden pointer-events-none">
-                {/* Backdrop */}
+                {/* Backdrop spanning beyond viewport bounds */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={onClose}
-                  className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto"
+                  className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto"
                 />
 
                 {/* Bottom Sheet Floating Shell */}
@@ -610,7 +610,7 @@ export function FilterPanel({
                   {...dragProps}
                   className="fixed bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col max-w-[480px] mx-auto"
                   style={{
-                    marginBottom: 'env(safe-area-inset-bottom, 0px)',
+                    marginBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
                   }}
                 >
                   <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-4 sm:p-5 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[85dvh] overflow-hidden border border-black/[0.08]">
