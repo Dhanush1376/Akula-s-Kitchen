@@ -33,8 +33,8 @@ const slideIn = {
 const WIZARD_STEPS = [
   { id: 'images', label: 'Media', icon: 'photo_library' },
   { id: 'basics', label: 'Basic Info', icon: 'info' },
-  { id: 'variants', label: 'Variants', icon: 'style' },
-  { id: 'pricing', label: 'Pricing', icon: 'payments' },
+  { id: 'variants', label: 'Options', icon: 'tune' },
+  { id: 'pricing', label: 'Pricing & Weight', icon: 'payments' },
   { id: 'review', label: 'SEO & Publish', icon: 'publish' },
 ];
 

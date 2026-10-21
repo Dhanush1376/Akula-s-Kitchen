@@ -123,7 +123,39 @@ export function ProductReviewStep({
             <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
               Retail Price
             </span>
+            <span className="font-bold text-[var(--admin-accent)] sm:text-right">
+              ₹{Number(formData.price || 0).toLocaleString()}
+              {formData.oldPrice ? (
+                <span className="text-[var(--admin-text-tertiary)] line-through ml-1.5 font-normal text-[10.5px]">
+                  ₹{Number(formData.oldPrice).toLocaleString()}
+                </span>
+              ) : null}
+            </span>
           </div>
+          {(() => {
+            const weightGroup = (formData.optionGroups || []).find(
+              (g) => (g.name || '').trim().toLowerCase() === 'weight',
+            );
+            if (!weightGroup || !weightGroup.options?.length) return null;
+            return (
+              <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">
+                <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
+                  Weight & Portions
+                </span>
+                <div className="flex flex-wrap gap-1 sm:justify-end">
+                  {weightGroup.options.map((opt) => (
+                    <span
+                      key={opt.optionId || opt.label}
+                      className="text-[10.5px] bg-[var(--admin-surface)] px-1.5 py-0.5 rounded border border-[var(--admin-border)] font-medium text-[var(--admin-text-primary)]"
+                    >
+                      {opt.label}: ₹{Number(formData.price || 0) + Number(opt.priceAdjustment || 0)}
+                      {opt.isDefault ? ' (Default)' : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {formData.material && (
             <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">
               <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">

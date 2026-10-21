@@ -3,18 +3,6 @@ import toast from 'react-hot-toast';
 
 const PRESET_GROUPS = [
   {
-    name: 'Weight',
-    type: 'SINGLE_SELECT',
-    required: true,
-    displayStyle: 'RADIO_CARDS',
-    options: [
-      { label: '250 g', value: '250g', priceAdjustment: 0, available: true, isDefault: true },
-      { label: '500 g', value: '500g', priceAdjustment: 200, available: true, isDefault: false },
-      { label: '1 kg', value: '1kg', priceAdjustment: 600, available: true, isDefault: false },
-      { label: '2 kg', value: '2kg', priceAdjustment: 1400, available: true, isDefault: false },
-    ],
-  },
-  {
     name: 'Jar Type',
     type: 'SINGLE_SELECT',
     required: true,
@@ -87,6 +75,15 @@ function generateId(prefix = 'id') {
 export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
   const [newOptionInputs, setNewOptionInputs] = useState({});
 
+  // Filter out the Weight group, which is now managed on the Pricing step
+  const isWeightGroup = (g) => (g?.name || '').trim().toLowerCase() === 'weight';
+  const weightGroups = (optionGroups || []).filter(isWeightGroup);
+  const customizationGroups = (optionGroups || []).filter((g) => !isWeightGroup(g));
+
+  const notifyChange = (newCustomizationGroups) => {
+    onChange([...weightGroups, ...newCustomizationGroups]);
+  };
+
   const handleAddPreset = (preset) => {
     const groupId = generateId('grp');
     const newGroup = {
@@ -98,19 +95,19 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
       maxSelections: preset.maxSelections ?? 1,
       displayStyle:
         preset.displayStyle || (preset.type === 'MULTI_SELECT' ? 'CHECKBOX_CARDS' : 'RADIO_CARDS'),
-      sortOrder: optionGroups.length,
+      sortOrder: customizationGroups.length,
       options: preset.options.map((opt, idx) => ({
         optionId: generateId('opt'),
         label: opt.label,
         value: opt.value || opt.label.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
         priceAdjustment: Number(opt.priceAdjustment) || 0,
-        available: opt.available !== false,
+        available: true,
         isDefault: Boolean(opt.isDefault),
         sortOrder: idx,
       })),
     };
 
-    onChange([...optionGroups, newGroup]);
+    notifyChange([...customizationGroups, newGroup]);
     toast.success(`Added preset group "${preset.name}"`);
   };
 
@@ -124,7 +121,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
       minSelections: 0,
       maxSelections: 1,
       displayStyle: 'RADIO_CARDS',
-      sortOrder: optionGroups.length,
+      sortOrder: customizationGroups.length,
       options: [
         {
           optionId: generateId('opt'),
@@ -138,12 +135,12 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
       ],
     };
 
-    onChange([...optionGroups, newGroup]);
+    notifyChange([...customizationGroups, newGroup]);
     toast.success('Added new configurable option group');
   };
 
   const handleUpdateGroup = (groupIndex, field, value) => {
-    const updated = [...optionGroups];
+    const updated = [...customizationGroups];
     const group = { ...updated[groupIndex], [field]: value };
 
     if (field === 'type') {
@@ -165,21 +162,21 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
     }
 
     updated[groupIndex] = group;
-    onChange(updated);
+    notifyChange(updated);
   };
 
   const handleDeleteGroup = (groupIndex) => {
-    const grpName = optionGroups[groupIndex]?.name || 'Group';
-    const updated = optionGroups.filter((_, idx) => idx !== groupIndex);
-    onChange(updated);
+    const grpName = customizationGroups[groupIndex]?.name || 'Group';
+    const updated = customizationGroups.filter((_, idx) => idx !== groupIndex);
+    notifyChange(updated);
     toast.success(`Removed "${grpName}"`);
   };
 
   const handleMoveGroup = (groupIndex, direction) => {
     const targetIndex = groupIndex + direction;
-    if (targetIndex < 0 || targetIndex >= optionGroups.length) return;
+    if (targetIndex < 0 || targetIndex >= customizationGroups.length) return;
 
-    const updated = [...optionGroups];
+    const updated = [...customizationGroups];
     const temp = updated[groupIndex];
     updated[groupIndex] = updated[targetIndex];
     updated[targetIndex] = temp;
@@ -188,11 +185,11 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
       g.sortOrder = idx;
     });
 
-    onChange(updated);
+    notifyChange(updated);
   };
 
   const handleAddOptionToGroup = (groupIndex) => {
-    const group = optionGroups[groupIndex];
+    const group = customizationGroups[groupIndex];
     const input = newOptionInputs[group.groupId] || { label: '', priceAdjustment: 0 };
 
     const label = input.label.trim();
@@ -213,13 +210,13 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
       sortOrder: (group.options || []).length,
     };
 
-    const updated = [...optionGroups];
+    const updated = [...customizationGroups];
     updated[groupIndex] = {
       ...group,
       options: [...(group.options || []), newOption],
     };
 
-    onChange(updated);
+    notifyChange(updated);
     setNewOptionInputs((prev) => ({
       ...prev,
       [group.groupId]: { label: '', priceAdjustment: 0 },
@@ -228,7 +225,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
   };
 
   const handleUpdateOption = (groupIndex, optionIndex, field, value) => {
-    const updated = [...optionGroups];
+    const updated = [...customizationGroups];
     const group = { ...updated[groupIndex] };
     const options = [...group.options];
 
@@ -242,27 +239,30 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
         ...options[optionIndex],
         [field]: field === 'priceAdjustment' ? Number(value) || 0 : value,
       };
+      if (field === 'label') {
+        options[optionIndex].value = value.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      }
     }
 
     group.options = options;
     updated[groupIndex] = group;
-    onChange(updated);
+    notifyChange(updated);
   };
 
   const handleDeleteOption = (groupIndex, optionIndex) => {
-    const updated = [...optionGroups];
+    const updated = [...customizationGroups];
     const group = { ...updated[groupIndex] };
     group.options = group.options.filter((_, idx) => idx !== optionIndex);
     updated[groupIndex] = group;
-    onChange(updated);
+    notifyChange(updated);
   };
 
   const handleMoveOption = (groupIndex, optionIndex, direction) => {
-    const group = optionGroups[groupIndex];
+    const group = customizationGroups[groupIndex];
     const targetIndex = optionIndex + direction;
     if (targetIndex < 0 || targetIndex >= group.options.length) return;
 
-    const updated = [...optionGroups];
+    const updated = [...customizationGroups];
     const updatedOptions = [...group.options];
     const temp = updatedOptions[optionIndex];
     updatedOptions[optionIndex] = updatedOptions[targetIndex];
@@ -273,7 +273,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
     });
 
     updated[groupIndex] = { ...group, options: updatedOptions };
-    onChange(updated);
+    notifyChange(updated);
   };
 
   return (
@@ -284,11 +284,12 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-[#800000]">tune</span>
             <h3 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider">
-              Product Options
+              Product Options & Customizations
             </h3>
           </div>
           <p className="text-[11.5px] text-[var(--admin-text-secondary)] mt-0.5">
-            Add choices like weight, jar type, and spice level.
+            Add dish choices like jar type, spice level, and packaging. (Weight & portion pricing
+            are configured in the Pricing step).
           </p>
         </div>
 
@@ -302,12 +303,23 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
         </button>
       </div>
 
+      {/* Weight Relocation Notice Banner */}
+      <div className="flex items-center justify-between p-2.5 px-3 bg-amber-500/10 border border-amber-500/20 rounded-[4px] text-[11px] text-[var(--admin-text-secondary)]">
+        <div className="flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-[16px] text-amber-600">scale</span>
+          <span>
+            <strong>Looking for Weight & Portions?</strong> Weight choices and price adjustments are
+            configured directly on the <strong>Pricing</strong> page.
+          </span>
+        </div>
+      </div>
+
       {/* Preset Quick-Add Toolbar */}
       <div className="bg-[var(--admin-surface-muted)]/50 p-3 rounded-[6px] border border-[var(--admin-border)]">
         <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block mb-2.5">
           Presets:
         </span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           {PRESET_GROUPS.map((preset) => (
             <button
               key={preset.name}
@@ -327,16 +339,16 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
       </div>
 
       {/* Empty State */}
-      {optionGroups.length === 0 && (
+      {customizationGroups.length === 0 && (
         <div className="p-8 border border-dashed border-[var(--admin-border)] rounded-[6px] bg-[var(--admin-surface)] text-center">
           <div className="w-10 h-10 rounded-full bg-[var(--admin-surface-muted)] mx-auto flex items-center justify-center text-[var(--admin-text-secondary)] mb-2">
             <span className="material-symbols-outlined text-[20px]">layers</span>
           </div>
           <h4 className="text-[12.5px] font-bold text-[var(--admin-text-primary)]">
-            No Options Added
+            No Customization Options Added
           </h4>
           <p className="text-[11px] text-[var(--admin-text-secondary)] max-w-md mx-auto mt-1 mb-4">
-            Add options like weight or jar type above to offer customer choices.
+            Add choices like jar type, spice level, or packaging add-ons to offer customer choices.
           </p>
           <div className="flex justify-center gap-2">
             <button
@@ -344,7 +356,14 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
               onClick={() => handleAddPreset(PRESET_GROUPS[0])}
               className="px-3.5 py-1.5 rounded-[4px] bg-[#800000] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#600000] transition-colors cursor-pointer"
             >
-              Add Weight Options
+              Add Jar Type Options
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAddPreset(PRESET_GROUPS[1])}
+              className="px-3.5 py-1.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider shadow-2xs transition-colors cursor-pointer"
+            >
+              Add Spice Level Options
             </button>
           </div>
         </div>
@@ -352,7 +371,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
 
       {/* Option Groups List */}
       <div className="space-y-4">
-        {optionGroups.map((group, groupIdx) => (
+        {customizationGroups.map((group, groupIdx) => (
           <div
             key={group.groupId || groupIdx}
             className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-[var(--admin-shadow-sm)] overflow-hidden transition-all"
@@ -375,7 +394,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                   </button>
                   <button
                     type="button"
-                    disabled={groupIdx === optionGroups.length - 1}
+                    disabled={groupIdx === customizationGroups.length - 1}
                     onClick={() => handleMoveGroup(groupIdx, 1)}
                     className="w-7 h-full flex items-center justify-center hover:bg-[var(--admin-surface-hover)] disabled:opacity-20 cursor-pointer text-[var(--admin-text-secondary)] transition-colors"
                     title="Move down"
@@ -391,13 +410,13 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                     type="text"
                     value={group.name}
                     onChange={(e) => handleUpdateGroup(groupIdx, 'name', e.target.value)}
-                    placeholder="Group Name (e.g. Weight)"
+                    placeholder="Group Name (e.g. Jar Type)"
                     className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                   />
                 </div>
               </div>
 
-              {/* Right: Controls (All h-[34px]) */}
+              {/* Right: Controls */}
               <div className="flex items-center gap-2">
                 <select
                   value={group.type}
@@ -454,17 +473,16 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
               </div>
             </div>
 
-            {/* Options Table / Symmetrical Grid */}
+            {/* Options Table (Stock column removed for food made to order) */}
             <div className="p-3 sm:p-4">
               <div className="overflow-x-auto">
-                <div className="min-w-[600px] space-y-2">
+                <div className="min-w-[540px] space-y-2">
                   {/* Table Header Grid */}
-                  <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_104px_36px] items-center gap-2.5 pb-2 border-b border-[var(--admin-border-subtle)] text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)] font-bold select-none">
+                  <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_36px] items-center gap-2.5 pb-2 border-b border-[var(--admin-border-subtle)] text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)] font-bold select-none">
                     <span className="text-center">#</span>
                     <span>Option Label</span>
                     <span>Price Adjustment</span>
                     <span className="text-center">Default</span>
-                    <span className="text-center">Available</span>
                     <span className="text-center"></span>
                   </div>
 
@@ -472,7 +490,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                   {(group.options || []).map((option, optIdx) => (
                     <div
                       key={option.optionId || optIdx}
-                      className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_104px_36px] items-center gap-2.5 py-0.5"
+                      className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_36px] items-center gap-2.5 py-0.5"
                     >
                       {/* Order Handle */}
                       <div className="flex flex-col items-center justify-center">
@@ -508,7 +526,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                           onChange={(e) =>
                             handleUpdateOption(groupIdx, optIdx, 'label', e.target.value)
                           }
-                          placeholder="e.g. 500 g"
+                          placeholder="e.g. Premium Glass Jar"
                           className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[11.5px] font-medium text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                         />
                       </div>
@@ -550,26 +568,6 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                         />
                       </div>
 
-                      {/* Available Status */}
-                      <div className="flex items-center justify-center h-[34px]">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleUpdateOption(groupIdx, optIdx, 'available', !option.available)
-                          }
-                          className={`w-full h-[28px] inline-flex items-center justify-center gap-1 rounded-[4px] text-[10.5px] font-semibold cursor-pointer transition-colors ${
-                            option.available
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100/60'
-                              : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100/60'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[13px]">
-                            {option.available ? 'check_circle' : 'cancel'}
-                          </span>
-                          <span>{option.available ? 'In Stock' : 'Out of Stock'}</span>
-                        </button>
-                      </div>
-
                       {/* Delete Action */}
                       <div className="flex items-center justify-center h-[34px]">
                         <button
@@ -584,8 +582,8 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                     </div>
                   ))}
 
-                  {/* Add Option Row (Exact Same Symmetrical Column Alignment) */}
-                  <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_104px_36px] items-center gap-2.5 pt-2 border-t border-[var(--admin-border-subtle)]">
+                  {/* Add Option Row */}
+                  <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_108px] items-center gap-2.5 pt-2 border-t border-[var(--admin-border-subtle)]">
                     <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
                       <span className="material-symbols-outlined text-[15px]">add</span>
                     </div>
@@ -593,7 +591,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                     <div>
                       <input
                         type="text"
-                        placeholder="New option label (e.g. 3 kg, Wooden Box)"
+                        placeholder="New option label (e.g. Wooden Spoon, Eco Box)"
                         value={newOptionInputs[group.groupId]?.label || ''}
                         onChange={(e) =>
                           setNewOptionInputs((prev) => ({
@@ -643,14 +641,14 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                       </div>
                     </div>
 
-                    <div className="col-span-3">
+                    <div>
                       <button
                         type="button"
                         onClick={() => handleAddOptionToGroup(groupIdx)}
-                        className="w-full h-[34px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+                        className="w-full h-[34px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
                       >
                         <span className="material-symbols-outlined text-[15px]">add</span>
-                        <span>Add Option</span>
+                        <span>Add</span>
                       </button>
                     </div>
                   </div>
