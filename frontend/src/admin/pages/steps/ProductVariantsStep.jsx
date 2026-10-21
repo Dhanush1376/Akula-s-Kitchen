@@ -186,6 +186,18 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
     );
   }, [configuredAttributes]);
 
+  const customTags = useMemo(() => {
+    return parsedTags.filter((tag) => {
+      const norm = normalizeTag(tag);
+      return (
+        !BADGE_PRESETS.some((b) => normalizeTag(b) === norm) &&
+        !DIETARY_FILTER_PRESETS.some((d) => normalizeTag(d) === norm) &&
+        !MEAL_AND_CUISINE_PRESETS.some((m) => normalizeTag(m) === norm) &&
+        !configuredAttributes.some((c) => normalizeTag(c.label) === norm)
+      );
+    });
+  }, [parsedTags, configuredAttributes]);
+
   // ─── Actions for Tags & Filters ───
 
   const isTagActive = (tagText) => {
@@ -309,44 +321,10 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
         </div>
 
         {/* ── Main Unified Filters Card ── */}
-        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] space-y-3.5 shadow-2xs">
-          {/* Active Filter Chips */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-[10px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider block">
-                Active Storefront Filters
-              </label>
-            </div>
-
-            <div className="min-h-9">
-              {parsedTags.length === 0 ? (
-                <div className="p-2.5 text-center rounded-[4px] border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)]/30 text-[11px] text-[var(--admin-text-tertiary)]">
-                  No active filters yet. Tap any tag below to add.
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
-                  {parsedTags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="px-2.5 py-1 text-[11px] rounded-[4px] font-semibold shadow-2xs flex items-center gap-1.5 leading-tight transition-all border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-[var(--admin-text-primary)] hover:border-[var(--admin-error)] hover:text-[var(--admin-error)] cursor-pointer select-none active:scale-95 group"
-                      title={`Click to remove "${tag}"`}
-                    >
-                      <span>{tag}</span>
-                      <span className="material-symbols-outlined text-[12px] opacity-60 group-hover:opacity-100 transition-opacity">
-                        close
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs divide-y divide-[var(--admin-border-subtle)] space-y-3.5 [&>*:not(:first-child)]:pt-3.5">
           {/* ── 1. Portion & Weight Filters from Configured Attributes ── */}
           {configuredAttributes.length > 0 && (
-            <div className="pt-3 border-t border-[var(--admin-border-subtle)] space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
                 <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
                   scale
@@ -368,7 +346,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
 
           {/* ── 2. Storefront Badges & Merchandising ── */}
           {deduplicatedBadges.length > 0 && (
-            <div className="pt-3 border-t border-[var(--admin-border-subtle)] space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
                 <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
                   auto_awesome
@@ -390,7 +368,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
 
           {/* ── 3. Dietary, Taste & Recipe Filters ── */}
           {deduplicatedDietary.length > 0 && (
-            <div className="pt-3 border-t border-[var(--admin-border-subtle)] space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
                 <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
                   eco
@@ -412,7 +390,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
 
           {/* ── 4. Meal & Occasion Tags ── */}
           {deduplicatedMeals.length > 0 && (
-            <div className="pt-3 border-t border-[var(--admin-border-subtle)] space-y-1.5">
+            <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
                 <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
                   restaurant
@@ -425,6 +403,28 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
                     key={meal}
                     label={meal}
                     active={isTagActive(meal)}
+                    onToggle={handleToggleTag}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── 5. Custom Keyword Tags ── */}
+          {customTags.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
+                  label
+                </span>
+                <span>Custom Keyword Filters:</span>
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {customTags.map((tag) => (
+                  <FilterToggleChip
+                    key={tag}
+                    label={tag}
+                    active={isTagActive(tag)}
                     onToggle={handleToggleTag}
                   />
                 ))}
@@ -446,7 +446,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
               setCustomTagInput('');
               toast.success(`Added filter tag "${val}"`);
             }}
-            className="flex items-center gap-2 pt-3 border-t border-[var(--admin-border-subtle)]"
+            className="flex items-center gap-2"
           >
             <input
               type="text"
