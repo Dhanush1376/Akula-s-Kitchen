@@ -55,6 +55,9 @@
   canvas,
   svg {
     max-width: 100%;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    user-select: none;
   }
 
   h1,

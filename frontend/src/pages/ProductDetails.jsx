@@ -162,8 +162,8 @@ export function ProductDetails() {
 
   return (
     <motion.div
-      initial={location.state?.fromQuickView ? { opacity: 0.9, y: 14 } : false}
-      animate={{ opacity: 1, y: 0 }}
+      initial={location.state?.fromQuickView ? { opacity: 0 } : false}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       className="bg-surface relative min-h-screen"
     >

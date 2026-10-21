@@ -52,6 +52,7 @@ export function useLongPress(onLongPress, { shouldPreventDefault = true, delay =
       onMouseLeave: (e) => clear(e),
       onTouchEnd: (e) => clear(e),
       onTouchMove: (e) => onTouchMove(e),
+      onDragStart: (e) => e.preventDefault(),
     },
   };
 }

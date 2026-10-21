@@ -273,6 +273,7 @@ export const ProductCard = React.memo(function ProductCard({
         <div className="relative">
           <div
             className={`relative aspect-[4/5] overflow-hidden bg-[#f7f7f7] border border-black/[0.08] hover:border-black/[0.16] shadow-xs lg:group-hover:shadow-md transition-all duration-300 ease-out group/canvas ${isRectangular ? 'rounded-md' : 'rounded-[14px]'}`}
+            style={{ WebkitTouchCallout: 'none', WebkitUserDrag: 'none', userSelect: 'none' }}
           >
             <div
               ref={scrollContainerRef}
@@ -281,8 +282,21 @@ export const ProductCard = React.memo(function ProductCard({
             >
               {availableImages.length > 0 ? (
                 availableImages.map((img, idx) => (
-                  <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                    <Link to={productRoute} className="block h-full w-full" draggable="false">
+                  <div
+                    key={idx}
+                    className="w-full h-full flex-shrink-0 snap-center relative pointer-events-auto"
+                  >
+                    <Link
+                      to={productRoute}
+                      className="block h-full w-full pointer-events-auto"
+                      draggable="false"
+                      onDragStart={(e) => e.preventDefault()}
+                      style={{
+                        WebkitTouchCallout: 'none',
+                        WebkitUserDrag: 'none',
+                        userSelect: 'none',
+                      }}
+                    >
                       <CloudinaryImage
                         src={img}
                         alt={`${title || 'Product'} - view ${idx + 1}`}

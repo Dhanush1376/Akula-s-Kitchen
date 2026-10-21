@@ -47,10 +47,11 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
       setIsConverting(true);
       const targetRoute = `/product/${productId}`;
 
+      // Smooth cinematic dissolve transition
       setTimeout(() => {
         onClose();
         navigate(targetRoute, { state: { product, fromQuickView: true } });
-      }, 220);
+      }, 260);
     },
     [isConverting, product, productId, onClose, navigate],
   );
@@ -236,9 +237,9 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={isConverting ? undefined : onClose}
-            className={`fixed -inset-x-0 -top-24 -bottom-32 pointer-events-auto transition-colors duration-200 ${
+            className={`fixed -inset-x-0 -top-24 -bottom-32 pointer-events-auto transition-all duration-300 ${
               isConverting
-                ? 'bg-surface'
+                ? 'bg-surface opacity-100 backdrop-blur-none'
                 : 'bg-black/60 sm:bg-black/40 backdrop-blur-xs cursor-pointer'
             }`}
           />
@@ -254,9 +255,9 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             {...(!isConverting && isMobile ? dragProps : {})}
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
-            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-[460px] sm:max-w-[500px] lg:max-w-4xl mx-auto transition-all duration-200 ${
+            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-[460px] sm:max-w-[500px] lg:max-w-4xl mx-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isConverting
-                ? '!fixed !inset-0 !z-[10000] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none'
+                ? '!fixed !inset-0 !z-[10000] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none opacity-0 scale-[1.02] pointer-events-none'
                 : ''
             }`}
             style={{
@@ -266,7 +267,11 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                   : undefined,
             }}
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-3.5 sm:p-5 lg:p-7 shadow-[0_16px_50px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden">
+            <div
+              className={`relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-3.5 sm:p-5 lg:p-7 shadow-[0_16px_50px_rgba(0,0,0,0.18)] border border-black/[0.08] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden transition-all duration-300 ${
+                isConverting ? '!rounded-none !border-none !bg-surface' : ''
+              }`}
+            >
               {/* Atmospheric Corner Leaves matching AuthModal */}
               <AuthCornerLeaves />
 

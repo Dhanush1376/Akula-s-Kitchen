@@ -239,7 +239,9 @@ function BaseOptimizedImage({
             setHasError(true);
             setIsLoaded(true);
           }}
-          className={`w-full ${isImageAutoHeight ? 'h-auto block' : `h-full ${hasObjectFit ? '' : 'object-cover'}`} rounded-[inherit] transition-opacity duration-300 ease-out transform-gpu ${className} ${
+          draggable={false}
+          style={{ WebkitTouchCallout: 'none', WebkitUserDrag: 'none', userSelect: 'none' }}
+          className={`w-full ${isImageAutoHeight ? 'h-auto block' : `h-full ${hasObjectFit ? '' : 'object-cover'}`} rounded-[inherit] transition-opacity duration-300 ease-out transform-gpu pointer-events-none ${className} ${
             isLoaded ? 'opacity-100' : 'opacity-0 will-change-opacity'
           }`}
           {...props}
