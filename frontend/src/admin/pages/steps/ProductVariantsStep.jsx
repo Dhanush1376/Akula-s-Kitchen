@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ProductOptionGroupsManager } from '../../components/ProductOptionGroupsManager';
 
 const BADGE_PRESETS = [
   'Best Seller',
@@ -246,24 +245,18 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
   };
 
   return (
-    <div className="space-y-8">
-      {/* ─── DYNAMIC CONFIGURATION & OPTION GROUPS ENGINE (WEIGHT, JAR, SPICE, ADDONS) ─── */}
-      <ProductOptionGroupsManager
-        optionGroups={formData.optionGroups || []}
-        onChange={(newGroups) => setFormData((prev) => ({ ...prev, optionGroups: newGroups }))}
-      />
-
+    <div className="space-y-5">
       {/* ─── UNIFIED DISCOVERY FILTERS & STOREFRONT TAGS ─── */}
-      <div className="space-y-4 pt-4 border-t border-[var(--admin-border)]">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--admin-border-subtle)]">
           <div className="flex items-center gap-2">
-            <h2 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-[var(--admin-accent)]">
-                filter_alt
-              </span>
-              <span>Product Filters & Storefront Discovery Tags</span>
+            <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent,#800000)]">
+              sell
+            </span>
+            <h2 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider whitespace-nowrap">
+              Storefront Tags & Badges
             </h2>
-            <span className="text-[10px] text-[var(--admin-text-secondary)] font-medium bg-[var(--admin-surface-muted)] px-1.5 py-0.5 rounded-[3px] border border-[var(--admin-border)] whitespace-nowrap">
+            <span className="text-[10px] text-[var(--admin-text-secondary)] font-medium bg-[var(--admin-surface-muted)] px-2 py-0.5 rounded-full border border-[var(--admin-border)] whitespace-nowrap">
               {parsedTags.length} active {parsedTags.length === 1 ? 'filter' : 'filters'}
             </span>
           </div>
@@ -274,10 +267,10 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
                 type="button"
                 onClick={handleSyncAllAttributes}
                 className="text-[11px] text-[var(--admin-accent)] hover:underline font-bold cursor-pointer flex items-center gap-1"
-                title="Add all attributes configured in the groups above into search filters"
+                title="Add all portion weights configured in pricing into search filters"
               >
                 <span className="material-symbols-outlined text-[13px]">sync</span>
-                <span>Add All Attributes to Filters</span>
+                <span>Add Portions to Filters</span>
               </button>
             )}
 
