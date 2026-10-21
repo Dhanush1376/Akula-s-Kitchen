@@ -174,7 +174,7 @@ jobs:
             if curl -s --max-time 3 -o /dev/null "https://api.akulas.kitchen/api/readiness" 2>/dev/null; then
               TARGET_URL="https://api.akulas.kitchen"
             else
-              TARGET_URL="https://akula-s-kitchen.onrender.com"
+              TARGET_URL="https://akula-s-kitchen-23m5.onrender.com"
             fi
           fi
           echo "url=$TARGET_URL" >> "$GITHUB_OUTPUT"

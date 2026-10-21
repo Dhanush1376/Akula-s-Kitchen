@@ -26,7 +26,8 @@ export default async function handler(req, res) {
 
   if (isBot && productId) {
     try {
-      let backendUrl = process.env.VITE_API_URL || 'https://akula-s-kitchen.onrender.com/api/v1';
+      let backendUrl =
+        process.env.VITE_API_URL || 'https://akula-s-kitchen-23m5.onrender.com/api/v1';
       if (!backendUrl.endsWith('/v1')) backendUrl += '/v1';
       const url = new URL(`${backendUrl}/social/product/${productId}`);
 

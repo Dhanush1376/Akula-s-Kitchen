@@ -281,7 +281,7 @@ RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
 Create a `/frontend/.env` file with reference to `/frontend/.env.example`:
 
 ```env
-VITE_API_URL=https://akula-s-kitchen.onrender.com/api
+VITE_API_URL=https://akula-s-kitchen-23m5.onrender.com/api
 VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
 ```
 

@@ -1,6 +1,6 @@
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ArrowRight, X, KeyRound } from 'lucide-react';
+import { ShieldCheck, ArrowRight, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { adminInviteService } from '../../services/domainServices';
 import { refreshAccessToken } from '../../services/api';

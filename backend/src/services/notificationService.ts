@@ -336,7 +336,7 @@ export const sendDirectEmailProcessor = async (options: EmailOptions) => {
     const unsubBase =
       backendUrl && !backendUrl.includes('localhost') && !backendUrl.includes('127.0.0.1')
         ? backendUrl
-        : 'https://akula-s-kitchen.onrender.com';
+        : 'https://akula-s-kitchen-23m5.onrender.com';
     const unsubscribeLink = `${unsubBase}/api/notifications/unsubscribe?email=${encodeURIComponent(emailVal)}`;
     bodyHtml = replacePlaceholders(bodyHtml, { unsubscribe_link: unsubscribeLink });
 
