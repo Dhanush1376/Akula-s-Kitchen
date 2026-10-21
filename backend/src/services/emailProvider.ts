@@ -117,8 +117,8 @@ export const sendViaSMTP = async (payload: EmailPayload): Promise<{ messageId: s
   const smtpPass = process.env.SMTP_PASS;
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
   const configuredPort = Number(process.env.SMTP_PORT);
-  // Default to 465 (direct SSL) for Gmail if not explicitly overridden, or 587
-  const smtpPort = configuredPort || (smtpHost.includes('gmail') ? 465 : 587);
+  // Default to 587 (STARTTLS) because cloud hosts like Render often restrict or drop raw port 465
+  const smtpPort = configuredPort || 587;
   const isSecure = smtpPort === 465;
 
   if (!cachedTransporter) {
@@ -137,7 +137,7 @@ export const sendViaSMTP = async (payload: EmailPayload): Promise<{ messageId: s
       family: 4,
       connectionTimeout: 8000,
       greetingTimeout: 8000,
-      socketTimeout: 15000,
+      socketTimeout: 12000,
     });
   }
 

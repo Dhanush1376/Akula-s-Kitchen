@@ -134,23 +134,20 @@ class OtpAuthService {
       action: 'request',
     });
 
-    try {
-      await sendDirectEmailProcessor({
-        email: cleanEmail,
-        subject: `${otp} is your Akula's Kitchen verification code`,
-        customHtml: getOtpEmailTemplate(otp, expiryMinutes),
-        type: 'security',
-        action: 'otp_auth',
-      });
-    } catch (err: any) {
+    // Dispatch OTP email asynchronously in the background so the HTTP response is instantaneous
+    // and network latency or cloud SMTP firewall issues never stall the user experience.
+    sendDirectEmailProcessor({
+      email: cleanEmail,
+      subject: `${otp} is your Akula's Kitchen verification code`,
+      customHtml: getOtpEmailTemplate(otp, expiryMinutes),
+      type: 'security',
+      action: 'otp_auth',
+    }).catch(async (err: any) => {
       logger.error(
-        `[OTP EMAIL ERROR] Failed to deliver OTP email for ${SecurityAuditService.hashIdentifier(cleanEmail)}:`,
+        `[OTP EMAIL ERROR] Background delivery failed for ${SecurityAuditService.hashIdentifier(cleanEmail)}:`,
         err?.message || err,
       );
-      // Mark challenge as exhausted so it can't be guessed/used
-      await OtpChallenge.updateOne({ _id: otpRecord._id }, { $set: { exhausted: true } });
-      throw new ApiError(500, 'Failed to send verification email. Please try again.');
-    }
+    });
 
     SecurityAuditService.log({
       eventType: 'OTP_REQUESTED',
@@ -634,7 +631,7 @@ class OtpAuthService {
         { $set: { exhausted: true } },
       );
 
-      const otpRecord = await OtpChallenge.create({
+      const _otpRecord = await OtpChallenge.create({
         challengeId,
         purpose,
         identifier: cleanEmail,
@@ -647,25 +644,19 @@ class OtpAuthService {
         logger.info(`[DEV COD OTP] Email verification code for ${cleanEmail}: ${otp}`);
       }
 
-      try {
-        await sendDirectEmailProcessor({
-          email: cleanEmail,
-          subject: `${otp} is your COD Order Verification Code`,
-          customHtml: getCodOtpEmailTemplate(otp, expiryMinutes),
-          type: 'security',
-          action: 'cod_otp',
-        });
-      } catch (err: any) {
+      // Dispatch COD OTP email asynchronously in the background so order checkout is snappy
+      sendDirectEmailProcessor({
+        email: cleanEmail,
+        subject: `${otp} is your COD Order Verification Code`,
+        customHtml: getCodOtpEmailTemplate(otp, expiryMinutes),
+        type: 'security',
+        action: 'cod_otp',
+      }).catch(async (err: any) => {
         logger.error(
-          `[COD OTP EMAIL ERROR] Failed to send email to ${SecurityAuditService.hashIdentifier(cleanEmail)}:`,
+          `[COD OTP EMAIL ERROR] Background delivery failed for ${SecurityAuditService.hashIdentifier(cleanEmail)}:`,
           err?.message || err,
         );
-        await OtpChallenge.updateOne(
-          { _id: (otpRecord as any)._id },
-          { $set: { exhausted: true } },
-        );
-        throw new ApiError(500, 'Failed to send email verification code. Please try again.');
-      }
+      });
 
       SecurityAuditService.log({
         eventType: 'OTP_REQUESTED',
