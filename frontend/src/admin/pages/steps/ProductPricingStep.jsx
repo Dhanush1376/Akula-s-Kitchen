@@ -178,34 +178,27 @@ export function ProductPricingStep({ formData, setFormData }) {
       : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h2 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider flex items-center gap-2">
-          <span className="material-symbols-outlined text-[17px] text-[#800000]">payments</span>
-          <span>Product Pricing & Portion Sizes</span>
+      <div className="flex items-center justify-between">
+        <h2 className="text-[13px] font-bold text-[var(--admin-text-primary)] tracking-wide flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent,#800000)]">
+            payments
+          </span>
+          <span>Pricing & Portions</span>
         </h2>
-        <p className="text-[11.5px] text-[var(--admin-text-secondary)] mt-0.5">
-          Define the base dish price and configure portion or weight pricing tiers. Food is freshly
-          prepared to order.
-        </p>
       </div>
 
       {/* Base Pricing Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         {/* Product Base Price */}
-        <div className="p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
-              Base Price (₹) <span className="text-red-500">*</span>
-            </label>
-            <span className="text-[10px] text-[var(--admin-text-tertiary)] italic">
-              Applies to default weight
-            </span>
-          </div>
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl shadow-2xs space-y-2">
+          <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
+            Base Price (₹) <span className="text-red-500">*</span>
+          </label>
 
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-secondary)] text-[14px] font-bold">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-secondary)] text-[14px] font-bold select-none">
               ₹
             </span>
             <input
@@ -215,27 +208,27 @@ export function ProductPricingStep({ formData, setFormData }) {
               inputMode="decimal"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              placeholder="e.g. 250"
-              className="w-full bg-[var(--admin-surface)] rounded-[4px] pl-7 pr-3 h-10 text-[13px] font-bold outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+              placeholder="e.g. 200"
+              className="w-full bg-[var(--admin-surface)] rounded-lg pl-7 pr-3 h-10 text-[13px] font-bold outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
             />
           </div>
         </div>
 
         {/* Old Striking Price */}
-        <div className="p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs space-y-2">
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
-              Old Striking Price (₹)
+              Original / Striking Price (₹)
             </label>
             {discountPercent && (
-              <span className="text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                 {discountPercent}% OFF
               </span>
             )}
           </div>
 
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-secondary)]/60 text-[14px] font-bold">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--admin-text-secondary)]/60 text-[14px] font-bold select-none">
               ₹
             </span>
             <input
@@ -244,26 +237,23 @@ export function ProductPricingStep({ formData, setFormData }) {
               value={formData.oldPrice}
               onChange={(e) => setFormData({ ...formData, oldPrice: e.target.value })}
               placeholder="Optional original price"
-              className="w-full bg-[var(--admin-surface)] rounded-[4px] pl-7 pr-3 h-10 text-[13px] outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+              className="w-full bg-[var(--admin-surface)] rounded-lg pl-7 pr-3 h-10 text-[13px] outline-none border border-[var(--admin-border)] focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
             />
           </div>
         </div>
       </div>
 
-      {/* ─── WEIGHT & PORTION PRICING TIERS SECTION (MOVED FROM OPTIONS) ─── */}
-      <div className="border border-[var(--admin-border)] rounded-[6px] bg-[var(--admin-surface)] shadow-2xs overflow-hidden">
+      {/* ─── WEIGHT & PORTION PRICING TIERS SECTION ─── */}
+      <div className="border border-[var(--admin-border)] rounded-xl bg-[var(--admin-surface)] shadow-2xs overflow-hidden">
         {/* Section Header */}
-        <div className="px-4 py-3 bg-[var(--admin-surface-muted)]/70 border-b border-[var(--admin-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[var(--admin-surface-muted)]/60 border-b border-[var(--admin-border)] flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[19px] text-[#800000]">scale</span>
-            <div>
-              <h3 className="text-[12.5px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider">
-                Weight & Portion Pricing Tiers
-              </h3>
-              <p className="text-[11px] text-[var(--admin-text-secondary)]">
-                Customer price adjusts automatically based on portion size selected.
-              </p>
-            </div>
+            <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent,#800000)]">
+              scale
+            </span>
+            <h3 className="text-[12px] sm:text-[12.5px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider">
+              Portion & Weight Tiers
+            </h3>
           </div>
 
           {weightGroup && weightGroup.options?.length > 0 && (
@@ -277,10 +267,10 @@ export function ProductPricingStep({ formData, setFormData }) {
                       : 'RADIO_CARDS'
                 }
                 onChange={(e) => syncWeightGroup({ ...weightGroup, displayStyle: e.target.value })}
-                className="h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2 text-[11px] font-semibold text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000]"
+                className="h-7 sm:h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2 text-[11px] font-semibold text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000]"
                 title="Storefront selector appearance"
               >
-                <option value="RADIO_CARDS">Cards (Recommended)</option>
+                <option value="RADIO_CARDS">Cards</option>
                 <option value="BUTTON_GROUP">Pills</option>
                 <option value="DROPDOWN">Dropdown</option>
               </select>
@@ -288,32 +278,32 @@ export function ProductPricingStep({ formData, setFormData }) {
               <button
                 type="button"
                 onClick={handleClearWeightGroup}
-                className="h-8 px-2.5 rounded-[4px] text-[11px] font-semibold text-stone-500 hover:text-red-600 hover:bg-red-50 border border-[var(--admin-border)] transition-colors cursor-pointer"
+                className="h-7 sm:h-8 px-2.5 rounded-md text-[11px] font-semibold text-stone-500 hover:text-red-600 hover:bg-red-50 border border-[var(--admin-border)] transition-colors cursor-pointer"
                 title="Remove weight choices and sell at base price only"
               >
-                Clear Tiers
+                Clear
               </button>
             </div>
           )}
         </div>
 
         {/* Preset Toolbar */}
-        <div className="p-3 bg-[var(--admin-surface-muted)]/30 border-b border-[var(--admin-border-subtle)] flex flex-wrap items-center justify-between gap-2">
+        <div className="px-3.5 py-2.5 bg-[var(--admin-surface-muted)]/30 border-b border-[var(--admin-border-subtle)] flex flex-wrap items-center justify-between gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)]">
-            Quick Weight Presets:
+            Presets:
           </span>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => handleApplyPreset(STANDARD_WEIGHT_PRESETS, 'Weight')}
-              className="h-7 px-2.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
+              className="h-7 px-2.5 rounded-md bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
             >
               + Standard (250g, 500g, 1kg, 2kg)
             </button>
             <button
               type="button"
               onClick={() => handleApplyPreset(PORTION_SIZE_PRESETS, 'Portion')}
-              className="h-7 px-2.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
+              className="h-7 px-2.5 rounded-md bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[11px] font-semibold text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs"
             >
               + Portions (Half, Full, Family)
             </button>
@@ -321,98 +311,148 @@ export function ProductPricingStep({ formData, setFormData }) {
         </div>
 
         {/* Options Content */}
-        <div className="p-4">
+        <div className="p-3.5 sm:p-4">
           {!weightGroup || !weightGroup.options || weightGroup.options.length === 0 ? (
-            <div className="p-6 text-center border border-dashed border-[var(--admin-border)] rounded-[4px] bg-[var(--admin-surface-muted)]/20 space-y-2">
-              <span className="material-symbols-outlined text-[28px] text-[var(--admin-text-tertiary)] block mx-auto">
+            <div className="p-6 text-center border border-dashed border-[var(--admin-border)] rounded-xl bg-[var(--admin-surface-muted)]/20 space-y-3">
+              <span className="material-symbols-outlined text-[26px] text-[var(--admin-text-tertiary)] block mx-auto">
                 straighten
               </span>
-              <p className="text-[12px] font-semibold text-[var(--admin-text-primary)]">
-                No Weight or Portion Options Added
+              <p className="text-[12.5px] font-semibold text-[var(--admin-text-primary)]">
+                Selling at Base Price (₹{basePriceNum || '0'})
               </p>
-              <p className="text-[11px] text-[var(--admin-text-secondary)] max-w-sm mx-auto">
-                This dish will sell at the single Base Price of ₹{basePriceNum || '0'}. Click below
-                to add portion sizes with automatic price adjustments.
-              </p>
-              <div className="pt-2 flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => handleApplyPreset(STANDARD_WEIGHT_PRESETS, 'Weight')}
-                  className="px-3.5 py-1.5 rounded-[4px] bg-[#800000] hover:bg-[#600000] text-white text-[11px] font-bold uppercase tracking-wider transition-colors shadow-2xs cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[var(--admin-accent,#800000)] hover:opacity-90 text-white text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
                 >
-                  Add Standard Weights (250g, 500g, 1kg)
+                  + Add Weights (250g, 500g, 1kg)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApplyPreset(PORTION_SIZE_PRESETS, 'Portion')}
-                  className="px-3.5 py-1.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider transition-colors shadow-2xs cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
                 >
-                  Add Portion Sizes (Half / Full)
+                  + Add Portions (Half / Full)
                 </button>
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-[620px] space-y-2.5">
-                {/* Table Header */}
-                <div className="grid grid-cols-[32px_minmax(0,1.2fr)_130px_140px_60px_36px] items-center gap-2.5 pb-2 border-b border-[var(--admin-border-subtle)] text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)] font-bold select-none">
-                  <span className="text-center">#</span>
-                  <span>Weight / Portion Size</span>
-                  <span>Price Adjustment</span>
-                  <span className="text-right">Customer Price</span>
-                  <span className="text-center">Default</span>
-                  <span></span>
-                </div>
+            <div className="space-y-2.5">
+              {/* Desktop Table Header */}
+              <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_60px_32px] sm:items-center sm:gap-3 sm:pb-2 sm:border-b sm:border-[var(--admin-border-subtle)] sm:text-[10px] sm:uppercase sm:tracking-wider sm:text-[var(--admin-text-secondary)] sm:font-bold sm:select-none">
+                <span className="text-center">#</span>
+                <span>Portion / Weight</span>
+                <span>Price (Diff)</span>
+                <span className="text-right">Final Price</span>
+                <span className="text-center">Default</span>
+                <span></span>
+              </div>
 
-                {/* Table Rows */}
+              {/* Rows List (Responsive card on mobile, grid row on desktop) */}
+              <div className="space-y-2 sm:space-y-1.5">
                 {weightGroup.options.map((option, optIdx) => {
                   const finalCalculatedPrice = basePriceNum + (Number(option.priceAdjustment) || 0);
 
                   return (
                     <div
                       key={option.optionId || optIdx}
-                      className="grid grid-cols-[32px_minmax(0,1.2fr)_130px_140px_60px_36px] items-center gap-2.5 py-0.5"
+                      className="p-2.5 sm:p-0 bg-[var(--admin-surface-muted)]/20 sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-[var(--admin-border-subtle)] space-y-2 sm:space-y-0"
                     >
-                      {/* Reorder Arrows */}
-                      <div className="flex flex-col items-center justify-center">
-                        <button
-                          type="button"
-                          disabled={optIdx === 0}
-                          onClick={() => handleMoveOption(optIdx, -1)}
-                          className="h-3.5 flex items-center justify-center text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] disabled:opacity-20 cursor-pointer"
-                          title="Move up"
-                        >
-                          <span className="material-symbols-outlined text-[14px] leading-none">
-                            expand_less
+                      {/* Top Row on mobile / Full Grid on desktop */}
+                      <div className="flex items-center gap-2 sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_60px_32px] sm:items-center sm:gap-3">
+                        {/* Reorder Arrows */}
+                        <div className="flex flex-col items-center justify-center shrink-0">
+                          <button
+                            type="button"
+                            disabled={optIdx === 0}
+                            onClick={() => handleMoveOption(optIdx, -1)}
+                            className="h-3.5 flex items-center justify-center text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] disabled:opacity-20 cursor-pointer"
+                            title="Move up"
+                          >
+                            <span className="material-symbols-outlined text-[15px] leading-none">
+                              expand_less
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            disabled={optIdx === weightGroup.options.length - 1}
+                            onClick={() => handleMoveOption(optIdx, 1)}
+                            className="h-3.5 flex items-center justify-center text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] disabled:opacity-20 cursor-pointer"
+                            title="Move down"
+                          >
+                            <span className="material-symbols-outlined text-[15px] leading-none">
+                              expand_more
+                            </span>
+                          </button>
+                        </div>
+
+                        {/* Weight Label */}
+                        <div className="flex-1 min-w-0">
+                          <input
+                            type="text"
+                            value={option.label}
+                            onChange={(e) => handleUpdateOption(optIdx, 'label', e.target.value)}
+                            placeholder="e.g. 500g"
+                            className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg px-3 text-[12.5px] font-semibold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                          />
+                        </div>
+
+                        {/* Desktop: Price Adjustment */}
+                        <div className="hidden sm:block">
+                          <div className="relative w-full">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
+                              +₹
+                            </span>
+                            <input
+                              type="number"
+                              value={option.priceAdjustment}
+                              onChange={(e) =>
+                                handleUpdateOption(optIdx, 'priceAdjustment', e.target.value)
+                              }
+                              placeholder="0"
+                              className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg pl-7 pr-2.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Desktop: Customer Price Preview */}
+                        <div className="hidden sm:flex items-center justify-end">
+                          <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                            ₹{finalCalculatedPrice.toLocaleString()}
                           </span>
-                        </button>
-                        <button
-                          type="button"
-                          disabled={optIdx === weightGroup.options.length - 1}
-                          onClick={() => handleMoveOption(optIdx, 1)}
-                          className="h-3.5 flex items-center justify-center text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] disabled:opacity-20 cursor-pointer"
-                          title="Move down"
-                        >
-                          <span className="material-symbols-outlined text-[14px] leading-none">
-                            expand_more
-                          </span>
-                        </button>
+                        </div>
+
+                        {/* Desktop: Default Radio */}
+                        <div className="hidden sm:flex items-center justify-center h-[36px]">
+                          <input
+                            type="radio"
+                            name="default_weight_option"
+                            checked={Boolean(option.isDefault)}
+                            onChange={(e) =>
+                              handleUpdateOption(optIdx, 'isDefault', e.target.checked)
+                            }
+                            className="cursor-pointer text-[#800000] accent-[#800000] focus:ring-0 w-4 h-4"
+                            title="Set as default"
+                          />
+                        </div>
+
+                        {/* Delete button */}
+                        <div className="flex items-center justify-center shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOption(optIdx)}
+                            className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                            title="Remove tier"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">close</span>
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Weight Label */}
-                      <div>
-                        <input
-                          type="text"
-                          value={option.label}
-                          onChange={(e) => handleUpdateOption(optIdx, 'label', e.target.value)}
-                          placeholder="e.g. 500 g or Full Plate"
-                          className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12px] font-semibold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
-                        />
-                      </div>
-
-                      {/* Price Adjustment */}
-                      <div>
-                        <div className="relative w-full">
+                      {/* Mobile Bottom Row (hidden on desktop sm:) */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-[var(--admin-border-subtle)] sm:hidden">
+                        <div className="relative w-28">
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
                             +₹
                           </span>
@@ -423,63 +463,70 @@ export function ProductPricingStep({ formData, setFormData }) {
                               handleUpdateOption(optIdx, 'priceAdjustment', e.target.value)
                             }
                             placeholder="0"
-                            className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                            className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
                           />
                         </div>
-                      </div>
 
-                      {/* Dynamic Customer Price Preview */}
-                      <div className="text-right flex flex-col items-end justify-center">
-                        <span className="text-[12.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                           ₹{finalCalculatedPrice.toLocaleString()}
                         </span>
-                        <span className="text-[9px] text-[var(--admin-text-tertiary)] mt-0.5">
-                          (₹{basePriceNum} + ₹{option.priceAdjustment || 0})
-                        </span>
-                      </div>
 
-                      {/* Default Radio */}
-                      <div className="flex items-center justify-center h-[34px]">
-                        <input
-                          type="radio"
-                          name="default_weight_option"
-                          checked={Boolean(option.isDefault)}
-                          onChange={(e) =>
-                            handleUpdateOption(optIdx, 'isDefault', e.target.checked)
-                          }
-                          className="cursor-pointer text-[#800000] accent-[#800000] focus:ring-0 w-4 h-4"
-                          title="Set as default weight on product page"
-                        />
-                      </div>
-
-                      {/* Remove Option */}
-                      <div className="flex items-center justify-center h-[34px]">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteOption(optIdx)}
-                          className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer"
-                          title="Remove option"
-                        >
-                          <span className="material-symbols-outlined text-[15px]">close</span>
-                        </button>
+                        <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--admin-text-secondary)] cursor-pointer select-none">
+                          <input
+                            type="radio"
+                            name="default_weight_option"
+                            checked={Boolean(option.isDefault)}
+                            onChange={(e) =>
+                              handleUpdateOption(optIdx, 'isDefault', e.target.checked)
+                            }
+                            className="cursor-pointer text-[#800000] accent-[#800000] w-3.5 h-3.5"
+                          />
+                          <span>Default</span>
+                        </label>
                       </div>
                     </div>
                   );
                 })}
+              </div>
 
-                {/* Add Option Row */}
-                <div className="grid grid-cols-[32px_minmax(0,1.2fr)_130px_140px_60px_36px] items-center gap-2.5 pt-2.5 border-t border-[var(--admin-border-subtle)]">
-                  <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
-                    <span className="material-symbols-outlined text-[15px]">add</span>
-                  </div>
+              {/* Add Option Row - Desktop Grid */}
+              <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_96px] sm:items-center sm:gap-3 sm:pt-3 sm:border-t sm:border-[var(--admin-border-subtle)]">
+                <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
+                  <span className="material-symbols-outlined text-[16px]">add</span>
+                </div>
 
-                  <div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="New portion (e.g. 1 kg, Family Pack)"
+                    value={newOptionInput.label}
+                    onChange={(e) =>
+                      setNewOptionInput((prev) => ({ ...prev, label: e.target.value }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomOption();
+                      }
+                    }}
+                    className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg px-3 text-[12px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <div className="relative w-full">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
+                      +₹
+                    </span>
                     <input
-                      type="text"
-                      placeholder="New weight / portion (e.g. 3 kg, Family Pack)"
-                      value={newOptionInput.label}
+                      type="number"
+                      placeholder="0"
+                      value={newOptionInput.priceAdjustment || ''}
                       onChange={(e) =>
-                        setNewOptionInput((prev) => ({ ...prev, label: e.target.value }))
+                        setNewOptionInput((prev) => ({
+                          ...prev,
+                          priceAdjustment: e.target.value,
+                        }))
                       }
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -487,50 +534,78 @@ export function ProductPricingStep({ formData, setFormData }) {
                           handleAddCustomOption();
                         }
                       }}
-                      className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[11.5px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                      className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-lg pl-7 pr-2.5 text-[12px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-md">
+                    ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
+                  </span>
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleAddCustomOption}
+                    className="w-full h-[36px] rounded-lg bg-[#800000] hover:bg-[#6a0000] text-white text-[11.5px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">add</span>
+                    <span>Add</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Option Row - Mobile Stacking */}
+              <div className="sm:hidden p-2.5 bg-[var(--admin-surface-muted)]/20 rounded-lg border border-dashed border-[var(--admin-border)] space-y-2">
+                <input
+                  type="text"
+                  placeholder="New portion (e.g. 1 kg, Family Pack)"
+                  value={newOptionInput.label}
+                  onChange={(e) =>
+                    setNewOptionInput((prev) => ({ ...prev, label: e.target.value }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomOption();
+                    }
+                  }}
+                  className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2.5 text-[12px] text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
+                />
+
+                <div className="flex items-center gap-2">
+                  <div className="relative w-28">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
+                      +₹
+                    </span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={newOptionInput.priceAdjustment || ''}
+                      onChange={(e) =>
+                        setNewOptionInput((prev) => ({
+                          ...prev,
+                          priceAdjustment: e.target.value,
+                        }))
+                      }
+                      className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
                     />
                   </div>
 
-                  <div>
-                    <div className="relative w-full">
-                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
-                        +₹
-                      </span>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        value={newOptionInput.priceAdjustment || ''}
-                        onChange={(e) =>
-                          setNewOptionInput((prev) => ({
-                            ...prev,
-                            priceAdjustment: e.target.value,
-                          }))
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddCustomOption();
-                          }
-                        }}
-                        className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[11.5px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
-                      />
-                    </div>
-                  </div>
+                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded shrink-0">
+                    ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
+                  </span>
 
-                  <div className="text-right text-[11px] text-[var(--admin-text-secondary)] font-semibold pr-1">
-                    Preview: ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
-                  </div>
-
-                  <div className="col-span-2">
-                    <button
-                      type="button"
-                      onClick={handleAddCustomOption}
-                      className="w-full h-[34px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">add</span>
-                      <span>Add</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddCustomOption}
+                    className="flex-1 h-8 rounded-md bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">add</span>
+                    <span>Add Tier</span>
+                  </button>
                 </div>
               </div>
             </div>

@@ -294,23 +294,19 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
         </div>
 
         {/* ── Main Unified Filters Card ── */}
-        <div className="p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] space-y-4 shadow-2xs">
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl space-y-3.5 shadow-2xs">
           {/* Active Filter Chips */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-[10px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider block">
-                Active Storefront Filters:
+                Active Storefront Filters
               </label>
-              <span className="text-[10px] text-[var(--admin-text-tertiary)] italic">
-                (Click any tag below to toggle ON/OFF)
-              </span>
             </div>
 
             <div className="min-h-9">
               {parsedTags.length === 0 ? (
-                <div className="p-3 text-center rounded-[4px] border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)]/40 text-[11px] text-[var(--admin-text-tertiary)] italic">
-                  No active filters or tags yet. Tap any configured attribute or tag below to enable
-                  it for storefront search and filtering.
+                <div className="p-2.5 text-center rounded-lg border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)]/30 text-[11px] text-[var(--admin-text-tertiary)]">
+                  No active filters yet. Tap any tag below to add.
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">

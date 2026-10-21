@@ -279,53 +279,38 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
   return (
     <div className="space-y-5">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--admin-border-subtle)]">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-[#800000]">tune</span>
-            <h3 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider">
-              Product Options & Customizations
-            </h3>
-          </div>
-          <p className="text-[11.5px] text-[var(--admin-text-secondary)] mt-0.5">
-            Add dish choices like jar type, spice level, and packaging. (Weight & portion pricing
-            are configured in the Pricing step).
-          </p>
+      <div className="flex items-center justify-between pb-2 border-b border-[var(--admin-border-subtle)]">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent,#800000)]">
+            tune
+          </span>
+          <h3 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider">
+            Customization Options
+          </h3>
         </div>
 
         <button
           type="button"
           onClick={handleAddCustomGroup}
-          className="h-[34px] inline-flex items-center gap-1.5 px-3 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all shadow-2xs shrink-0"
+          className="h-[34px] inline-flex items-center gap-1.5 px-3 rounded-lg bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all shadow-2xs shrink-0"
         >
           <span className="material-symbols-outlined text-[15px] text-[#800000]">add</span>
           <span>Add Group</span>
         </button>
       </div>
 
-      {/* Weight Relocation Notice Banner */}
-      <div className="flex items-center justify-between p-2.5 px-3 bg-amber-500/10 border border-amber-500/20 rounded-[4px] text-[11px] text-[var(--admin-text-secondary)]">
-        <div className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[16px] text-amber-600">scale</span>
-          <span>
-            <strong>Looking for Weight & Portions?</strong> Weight choices and price adjustments are
-            configured directly on the <strong>Pricing</strong> page.
-          </span>
-        </div>
-      </div>
-
       {/* Preset Quick-Add Toolbar */}
-      <div className="bg-[var(--admin-surface-muted)]/50 p-3 rounded-[6px] border border-[var(--admin-border)]">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block mb-2.5">
+      <div className="bg-[var(--admin-surface-muted)]/30 p-3 rounded-xl border border-[var(--admin-border)]">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block mb-2">
           Presets:
         </span>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {PRESET_GROUPS.map((preset) => (
             <button
               key={preset.name}
               type="button"
               onClick={() => handleAddPreset(preset)}
-              className="h-[36px] px-3 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs flex items-center justify-between gap-1.5 group"
+              className="h-[36px] px-3 rounded-lg bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] hover:border-[#800000] text-[var(--admin-text-primary)] transition-all cursor-pointer shadow-2xs flex items-center justify-between gap-1.5 group"
             >
               <span className="text-[11.5px] font-semibold text-[var(--admin-text-primary)] group-hover:text-[#800000] transition-colors truncate">
                 + {preset.name}
@@ -340,30 +325,24 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
 
       {/* Empty State */}
       {customizationGroups.length === 0 && (
-        <div className="p-8 border border-dashed border-[var(--admin-border)] rounded-[6px] bg-[var(--admin-surface)] text-center">
-          <div className="w-10 h-10 rounded-full bg-[var(--admin-surface-muted)] mx-auto flex items-center justify-center text-[var(--admin-text-secondary)] mb-2">
-            <span className="material-symbols-outlined text-[20px]">layers</span>
-          </div>
-          <h4 className="text-[12.5px] font-bold text-[var(--admin-text-primary)]">
+        <div className="p-6 border border-dashed border-[var(--admin-border)] rounded-xl bg-[var(--admin-surface)] text-center space-y-3">
+          <p className="text-[12.5px] font-semibold text-[var(--admin-text-primary)]">
             No Customization Options Added
-          </h4>
-          <p className="text-[11px] text-[var(--admin-text-secondary)] max-w-md mx-auto mt-1 mb-4">
-            Add choices like jar type, spice level, or packaging add-ons to offer customer choices.
           </p>
-          <div className="flex justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <button
               type="button"
               onClick={() => handleAddPreset(PRESET_GROUPS[0])}
-              className="px-3.5 py-1.5 rounded-[4px] bg-[#800000] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-[#600000] transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#800000] text-white text-[11px] font-bold uppercase tracking-wider shadow-2xs hover:bg-[#600000] transition-colors cursor-pointer"
             >
-              Add Jar Type Options
+              + Jar Type
             </button>
             <button
               type="button"
               onClick={() => handleAddPreset(PRESET_GROUPS[1])}
-              className="px-3.5 py-1.5 rounded-[4px] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider shadow-2xs transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] text-[var(--admin-text-primary)] text-[11px] font-bold uppercase tracking-wider shadow-2xs transition-colors cursor-pointer"
             >
-              Add Spice Level Options
+              + Spice Level
             </button>
           </div>
         </div>
@@ -374,13 +353,13 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
         {customizationGroups.map((group, groupIdx) => (
           <div
             key={group.groupId || groupIdx}
-            className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-[var(--admin-shadow-sm)] overflow-hidden transition-all"
+            className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-xl shadow-2xs overflow-hidden transition-all"
           >
             {/* Group Header */}
-            <div className="px-3 sm:px-4 py-2.5 bg-[var(--admin-surface-muted)]/70 border-b border-[var(--admin-border)] flex flex-wrap items-center justify-between gap-2.5">
+            <div className="px-3 sm:px-4 py-2.5 bg-[var(--admin-surface-muted)]/60 border-b border-[var(--admin-border)] flex flex-wrap items-center justify-between gap-2.5">
               {/* Left: Reorder & Name */}
               <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                <div className="flex items-center bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] overflow-hidden h-[34px] shrink-0">
+                <div className="flex items-center bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md overflow-hidden h-[34px] shrink-0">
                   <button
                     type="button"
                     disabled={groupIdx === 0}
@@ -411,17 +390,17 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                     value={group.name}
                     onChange={(e) => handleUpdateGroup(groupIdx, 'name', e.target.value)}
                     placeholder="Group Name (e.g. Jar Type)"
-                    className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                    className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-3 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                   />
                 </div>
               </div>
 
               {/* Right: Controls */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={group.type}
                   onChange={(e) => handleUpdateGroup(groupIdx, 'type', e.target.value)}
-                  className="h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2.5 text-[11.5px] font-medium text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000]"
+                  className="h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2 text-[11px] font-medium text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000]"
                 >
                   <option value="SINGLE_SELECT">Single Select</option>
                   <option value="MULTI_SELECT">Multi Select</option>
@@ -443,7 +422,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                             (group.type === 'MULTI_SELECT' ? 'CHECKBOX_CARDS' : 'RADIO_CARDS')
                   }
                   onChange={(e) => handleUpdateGroup(groupIdx, 'displayStyle', e.target.value)}
-                  className="h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2.5 text-[11.5px] font-medium text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000] hidden sm:block"
+                  className="h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2 text-[11px] font-medium text-[var(--admin-text-primary)] outline-none cursor-pointer focus:border-[#800000] hidden sm:block"
                 >
                   <option value={group.type === 'MULTI_SELECT' ? 'CHECKBOX_CARDS' : 'RADIO_CARDS'}>
                     Cards
@@ -452,7 +431,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                   <option value="DROPDOWN">Dropdown</option>
                 </select>
 
-                <label className="h-[34px] flex items-center gap-1.5 px-3 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] cursor-pointer text-[11.5px] font-medium text-[var(--admin-text-secondary)] select-none hover:border-[var(--admin-border-subtle)] transition-colors">
+                <label className="h-[34px] flex items-center gap-1.5 px-2.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md cursor-pointer text-[11px] font-medium text-[var(--admin-text-secondary)] select-none hover:border-[var(--admin-border-subtle)] transition-colors">
                   <input
                     type="checkbox"
                     checked={group.required}
@@ -465,7 +444,7 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                 <button
                   type="button"
                   onClick={() => handleDeleteGroup(groupIdx)}
-                  className="w-[34px] h-[34px] flex items-center justify-center bg-red-50/60 hover:bg-red-100/70 text-red-600 border border-red-200/80 rounded-[4px] transition-colors cursor-pointer shrink-0"
+                  className="w-[34px] h-[34px] flex items-center justify-center bg-red-50/60 hover:bg-red-100/70 text-red-600 border border-red-200/80 rounded-md transition-colors cursor-pointer shrink-0"
                   title="Delete Group"
                 >
                   <span className="material-symbols-outlined text-[17px]">delete</span>
@@ -473,27 +452,28 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
               </div>
             </div>
 
-            {/* Options Table (Stock column removed for food made to order) */}
-            <div className="p-3 sm:p-4">
-              <div className="overflow-x-auto">
-                <div className="min-w-[540px] space-y-2">
-                  {/* Table Header Grid */}
-                  <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_36px] items-center gap-2.5 pb-2 border-b border-[var(--admin-border-subtle)] text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)] font-bold select-none">
-                    <span className="text-center">#</span>
-                    <span>Option Label</span>
-                    <span>Price Adjustment</span>
-                    <span className="text-center">Default</span>
-                    <span className="text-center"></span>
-                  </div>
+            {/* Options List */}
+            <div className="p-3 sm:p-4 space-y-2.5">
+              {/* Desktop Table Header */}
+              <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1fr)_130px_60px_32px] sm:items-center sm:gap-2.5 sm:pb-2 sm:border-b sm:border-[var(--admin-border-subtle)] sm:text-[10px] sm:uppercase sm:tracking-wider sm:text-[var(--admin-text-secondary)] sm:font-bold sm:select-none">
+                <span className="text-center">#</span>
+                <span>Option Label</span>
+                <span>Price (Diff)</span>
+                <span className="text-center">Default</span>
+                <span className="text-center"></span>
+              </div>
 
-                  {/* Option Rows */}
-                  {(group.options || []).map((option, optIdx) => (
-                    <div
-                      key={option.optionId || optIdx}
-                      className="grid grid-cols-[32px_minmax(0,1fr)_140px_72px_36px] items-center gap-2.5 py-0.5"
-                    >
+              {/* Option Rows */}
+              <div className="space-y-2 sm:space-y-1">
+                {(group.options || []).map((option, optIdx) => (
+                  <div
+                    key={option.optionId || optIdx}
+                    className="p-2 sm:p-0 bg-[var(--admin-surface-muted)]/20 sm:bg-transparent rounded-lg sm:rounded-none border sm:border-0 border-[var(--admin-border-subtle)] space-y-2 sm:space-y-0"
+                  >
+                    {/* Top Row on mobile / Grid on desktop */}
+                    <div className="flex items-center gap-2 sm:grid sm:grid-cols-[28px_minmax(0,1fr)_130px_60px_32px] sm:items-center sm:gap-2.5">
                       {/* Order Handle */}
-                      <div className="flex flex-col items-center justify-center">
+                      <div className="flex flex-col items-center justify-center shrink-0">
                         <button
                           type="button"
                           disabled={optIdx === 0}
@@ -519,20 +499,20 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                       </div>
 
                       {/* Option Label */}
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <input
                           type="text"
                           value={option.label}
                           onChange={(e) =>
                             handleUpdateOption(groupIdx, optIdx, 'label', e.target.value)
                           }
-                          placeholder="e.g. Premium Glass Jar"
-                          className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[11.5px] font-medium text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                          placeholder="e.g. Standard Jar"
+                          className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-3 text-[12px] font-medium text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                         />
                       </div>
 
-                      {/* Price Adjustment */}
-                      <div>
+                      {/* Desktop: Price Adjustment */}
+                      <div className="hidden sm:block">
                         <div className="relative w-full">
                           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
                             +₹
@@ -549,13 +529,13 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                               )
                             }
                             placeholder="0"
-                            className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[11.5px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                            className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2.5 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                           />
                         </div>
                       </div>
 
-                      {/* Default Selection */}
-                      <div className="flex items-center justify-center h-[34px]">
+                      {/* Desktop: Default Selection */}
+                      <div className="hidden sm:flex items-center justify-center h-[34px]">
                         <input
                           type={group.type === 'MULTI_SELECT' ? 'checkbox' : 'radio'}
                           name={`default_${group.groupId}`}
@@ -569,89 +549,177 @@ export function ProductOptionGroupsManager({ optionGroups = [], onChange }) {
                       </div>
 
                       {/* Delete Action */}
-                      <div className="flex items-center justify-center h-[34px]">
+                      <div className="flex items-center justify-center shrink-0">
                         <button
                           type="button"
                           onClick={() => handleDeleteOption(groupIdx, optIdx)}
-                          className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                           title="Remove Option"
                         >
                           <span className="material-symbols-outlined text-[15px]">close</span>
                         </button>
                       </div>
                     </div>
-                  ))}
 
-                  {/* Add Option Row */}
-                  <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_108px] items-center gap-2.5 pt-2 border-t border-[var(--admin-border-subtle)]">
-                    <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
-                      <span className="material-symbols-outlined text-[15px]">add</span>
-                    </div>
-
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="New option label (e.g. Wooden Spoon, Eco Box)"
-                        value={newOptionInputs[group.groupId]?.label || ''}
-                        onChange={(e) =>
-                          setNewOptionInputs((prev) => ({
-                            ...prev,
-                            [group.groupId]: {
-                              ...prev[group.groupId],
-                              label: e.target.value,
-                            },
-                          }))
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddOptionToGroup(groupIdx);
-                          }
-                        }}
-                        className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[11.5px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="relative w-full">
+                    {/* Mobile Bottom Row (hidden on desktop sm:) */}
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-[var(--admin-border-subtle)] sm:hidden">
+                      <div className="relative w-28">
                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
                           +₹
                         </span>
                         <input
                           type="number"
-                          placeholder="0"
-                          value={newOptionInputs[group.groupId]?.priceAdjustment ?? ''}
+                          value={option.priceAdjustment}
                           onChange={(e) =>
-                            setNewOptionInputs((prev) => ({
-                              ...prev,
-                              [group.groupId]: {
-                                ...prev[group.groupId],
-                                priceAdjustment: e.target.value,
-                              },
-                            }))
+                            handleUpdateOption(groupIdx, optIdx, 'priceAdjustment', e.target.value)
                           }
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddOptionToGroup(groupIdx);
-                            }
-                          }}
-                          className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[11.5px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                          placeholder="0"
+                          className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddOptionToGroup(groupIdx)}
-                        className="w-full h-[34px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">add</span>
-                        <span>Add</span>
-                      </button>
+                      <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--admin-text-secondary)] cursor-pointer select-none">
+                        <input
+                          type={group.type === 'MULTI_SELECT' ? 'checkbox' : 'radio'}
+                          name={`default_mobile_${group.groupId}`}
+                          checked={Boolean(option.isDefault)}
+                          onChange={(e) =>
+                            handleUpdateOption(groupIdx, optIdx, 'isDefault', e.target.checked)
+                          }
+                          className="cursor-pointer text-[#800000] accent-[#800000] w-3.5 h-3.5"
+                        />
+                        <span>Default</span>
+                      </label>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Add Option Row - Desktop Grid */}
+              <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1fr)_130px_96px] sm:items-center sm:gap-2.5 sm:pt-2.5 sm:border-t sm:border-[var(--admin-border-subtle)]">
+                <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
+                  <span className="material-symbols-outlined text-[15px]">add</span>
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    placeholder="New option label"
+                    value={newOptionInputs[group.groupId]?.label || ''}
+                    onChange={(e) =>
+                      setNewOptionInputs((prev) => ({
+                        ...prev,
+                        [group.groupId]: {
+                          ...prev[group.groupId],
+                          label: e.target.value,
+                        },
+                      }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddOptionToGroup(groupIdx);
+                      }
+                    }}
+                    className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-3 text-[11.5px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <div className="relative w-full">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
+                      +₹
+                    </span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={newOptionInputs[group.groupId]?.priceAdjustment ?? ''}
+                      onChange={(e) =>
+                        setNewOptionInputs((prev) => ({
+                          ...prev,
+                          [group.groupId]: {
+                            ...prev[group.groupId],
+                            priceAdjustment: e.target.value,
+                          },
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddOptionToGroup(groupIdx);
+                        }
+                      }}
+                      className="w-full h-[34px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2.5 text-[11.5px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddOptionToGroup(groupIdx)}
+                    className="w-full h-[34px] rounded-md bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">add</span>
+                    <span>Add</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Option Row - Mobile Stacking */}
+              <div className="sm:hidden p-2.5 bg-[var(--admin-surface-muted)]/20 rounded-lg border border-dashed border-[var(--admin-border)] space-y-2">
+                <input
+                  type="text"
+                  placeholder="New option label"
+                  value={newOptionInputs[group.groupId]?.label || ''}
+                  onChange={(e) =>
+                    setNewOptionInputs((prev) => ({
+                      ...prev,
+                      [group.groupId]: {
+                        ...prev[group.groupId],
+                        label: e.target.value,
+                      },
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddOptionToGroup(groupIdx);
+                    }
+                  }}
+                  className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md px-2.5 text-[12px] text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
+                />
+
+                <div className="flex items-center gap-2">
+                  <div className="relative w-28">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
+                      +₹
+                    </span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={newOptionInputs[group.groupId]?.priceAdjustment ?? ''}
+                      onChange={(e) =>
+                        setNewOptionInputs((prev) => ({
+                          ...prev,
+                          [group.groupId]: {
+                            ...prev[group.groupId],
+                            priceAdjustment: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full h-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md pl-7 pr-2 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000]"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddOptionToGroup(groupIdx)}
+                    className="flex-1 h-8 rounded-md bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">add</span>
+                    <span>Add Option</span>
+                  </button>
                 </div>
               </div>
             </div>
