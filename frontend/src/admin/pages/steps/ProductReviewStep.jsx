@@ -123,17 +123,6 @@ export function ProductReviewStep({
             <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
               Retail Price
             </span>
-            <span className="font-bold text-[var(--admin-text-primary)] sm:text-right">
-              ₹{Number(formData.price || 0).toLocaleString()}
-            </span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">
-            <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
-              Stock Quantity
-            </span>
-            <span className="font-bold text-[var(--admin-text-primary)] sm:text-right">
-              {formData.stock || 0} Units
-            </span>
           </div>
           {formData.material && (
             <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">

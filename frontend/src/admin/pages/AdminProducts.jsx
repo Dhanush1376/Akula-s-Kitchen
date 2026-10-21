@@ -86,8 +86,6 @@ export function AdminProducts() {
     const list = [...rawFilteredProducts];
     if (sortBy === 'price-asc') list.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-desc') list.sort((a, b) => b.price - a.price);
-    else if (sortBy === 'stock-asc') list.sort((a, b) => a.stock - b.stock);
-    else if (sortBy === 'stock-desc') list.sort((a, b) => b.stock - a.stock);
     else if (sortBy === 'name-asc') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return list;
   }, [rawFilteredProducts, sortBy]);
@@ -306,17 +304,6 @@ export function AdminProducts() {
     }
   };
 
-  const handleStockChange = (productId, newStock) => {
-    const val = parseInt(newStock, 10);
-    if (!isNaN(val) && val >= 0) {
-      if (updateProductStock) {
-        updateProductStock(productId, val);
-      } else {
-        toast.error('updateProductStock not implemented in useAdminProducts');
-      }
-    }
-  };
-
   const toggleSelect = (id) =>
     setSelectedProducts((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
@@ -329,8 +316,6 @@ export function AdminProducts() {
 
   const statusLabels = {
     active: 'Active',
-    low_stock: 'Low Stock',
-    out_of_stock: 'Out of Stock',
     draft: 'Draft',
     inactive: 'Inactive',
   };
@@ -350,18 +335,6 @@ export function AdminProducts() {
               {products.filter((p) => p.status !== 'inactive' && p.status !== 'draft').length}{' '}
               Active
             </span>
-            {products.filter((p) => (p.stock || 0) <= 5 && (p.stock || 0) > 0).length > 0 && (
-              <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                {products.filter((p) => (p.stock || 0) <= 5 && (p.stock || 0) > 0).length} Low Stock
-              </span>
-            )}
-            {products.filter((p) => (p.stock || 0) === 0).length > 0 && (
-              <span className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                {products.filter((p) => (p.stock || 0) === 0).length} Out of Stock
-              </span>
-            )}
           </div>
         }
       />
@@ -661,39 +634,6 @@ export function AdminProducts() {
                           </select>
                         </AdminFilterSection>
 
-                        {/* Canonical Stock Health Status */}
-                        <AdminFilterSection
-                          title="Stock Health"
-                          active={filterState.stockStatus !== 'all'}
-                        >
-                          <select
-                            value={filterState.stockStatus}
-                            onChange={(e) => setFilterValue('stockStatus', e.target.value)}
-                            className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-[4px] px-3 py-2 text-[12px] font-medium outline-none text-[var(--admin-text-primary)] cursor-pointer"
-                          >
-                            <option value="all">All Inventory Levels</option>
-                            <option value="in_stock">In Stock (&gt;15 units)</option>
-                            <option value="low_warning">Low Warning (6–15 units)</option>
-                            <option value="critical_low">Critical Low (1–5 units)</option>
-                            <option value="out_of_stock">Out of Stock (0 units)</option>
-                          </select>
-                        </AdminFilterSection>
-
-                        {/* Stock Quantity Exact Range */}
-                        <AdminFilterSection
-                          title="Stock Quantity Units"
-                          active={
-                            filterState.stockRange?.min !== '' || filterState.stockRange?.max !== ''
-                          }
-                        >
-                          <AdminRangeFilter
-                            value={filterState.stockRange}
-                            onChange={(val) => setFilterValue('stockRange', val)}
-                            minPlaceholder="Min units"
-                            maxPlaceholder="Max units"
-                          />
-                        </AdminFilterSection>
-
                         {/* Price Range Filter */}
                         <AdminFilterSection
                           title="Price Range (₹)"
@@ -737,8 +677,6 @@ export function AdminProducts() {
                             <option value="newest">Newest Added</option>
                             <option value="price-asc">Price: Low to High</option>
                             <option value="price-desc">Price: High to Low</option>
-                            <option value="stock-asc">Stock: Low to High</option>
-                            <option value="stock-desc">Stock: High to Low</option>
                             <option value="name-asc">Name: A to Z</option>
                           </select>
                         </AdminFilterSection>
@@ -999,7 +937,6 @@ export function AdminProducts() {
                         <th>Price</th>
                         <th>Category</th>
                         <th className="text-center min-w-[110px]">Status</th>
-                        <th className="text-center min-w-[140px]">Stock Level</th>
                         <th className="text-center">Sold</th>
                         <th className="text-right pr-4">Actions</th>
                       </tr>
@@ -1063,60 +1000,6 @@ export function AdminProducts() {
                                 }}
                               />
                             </div>
-                          </td>
-                          <td className="text-center" onClick={(e) => e.stopPropagation()}>
-                            <div className="inline-flex items-center gap-1 bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] rounded-[4px] p-0.5 shadow-2xs hover:border-[var(--admin-border-strong)] transition-colors">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleStockChange(p.id, Math.max(0, (p.stock || 0) - 1))
-                                }
-                                className="w-6 h-6 rounded-[2px] flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface)] transition-all cursor-pointer active:scale-95"
-                                title="Decrease by 1"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">
-                                  remove
-                                </span>
-                              </button>
-                              <input
-                                type="number"
-                                min="0"
-                                defaultValue={p.stock ?? 0}
-                                key={p.stock}
-                                onBlur={(e) => {
-                                  const val = parseInt(e.target.value, 10);
-                                  if (!isNaN(val) && val !== p.stock) {
-                                    handleStockChange(p.id, Math.max(0, val));
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') e.target.blur();
-                                }}
-                                className="w-12 text-center text-[12px] font-bold text-[var(--admin-text-primary)] bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text"
-                                title="Click to edit stock level"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleStockChange(p.id, (p.stock || 0) + 1)}
-                                className="w-6 h-6 rounded-[2px] flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface)] transition-all cursor-pointer active:scale-95"
-                                title="Increase by 1"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">add</span>
-                              </button>
-                            </div>
-                            {p.stock <= 5 && (
-                              <div className="mt-1">
-                                {p.stock === 0 ? (
-                                  <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded-[3px]">
-                                    Out of stock
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-[3px]">
-                                    Low stock ({p.stock})
-                                  </span>
-                                )}
-                              </div>
-                            )}
                           </td>
                           <td className="text-center font-bold text-[var(--admin-text-primary)] text-[12px]">
                             {p.soldCount || p.sold || 0}
@@ -1275,42 +1158,11 @@ export function AdminProducts() {
                         </div>
                       </div>
 
-                      {/* Footer: Stock Stepper on Left, Actions on Right */}
+                      {/* Footer: Actions on Right */}
                       <div
-                        className="px-2.5 sm:px-3 py-1.5 border-t border-[var(--admin-border-subtle)] flex items-center justify-between"
+                        className="px-2.5 sm:px-3 py-1.5 border-t border-[var(--admin-border-subtle)] flex items-center justify-end"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {/* Compact Stock Stepper */}
-                        <div className="inline-flex items-center bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] rounded-[3px] p-0.5 shadow-2xs">
-                          <button
-                            type="button"
-                            onClick={() => handleStockChange(p.id, Math.max(0, (p.stock || 0) - 1))}
-                            className="w-4 h-4 rounded-[2px] flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface)] cursor-pointer active:scale-95"
-                            title="Decrease stock"
-                          >
-                            <span className="material-symbols-outlined text-[12px]">remove</span>
-                          </button>
-                          <span
-                            className={`min-w-[20px] px-0.5 text-center font-bold text-[11px] font-mono ${
-                              p.stock <= 5
-                                ? p.stock === 0
-                                  ? 'text-rose-600 dark:text-rose-400 font-extrabold'
-                                  : 'text-amber-600 dark:text-amber-400 font-extrabold'
-                                : 'text-[var(--admin-text-primary)]'
-                            }`}
-                          >
-                            {p.stock ?? 0}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleStockChange(p.id, (p.stock || 0) + 1)}
-                            className="w-4 h-4 rounded-[2px] flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface)] cursor-pointer active:scale-95"
-                            title="Increase stock"
-                          >
-                            <span className="material-symbols-outlined text-[12px]">add</span>
-                          </button>
-                        </div>
-
                         {/* Action Buttons */}
                         <div className="flex items-center gap-0.5">
                           <button

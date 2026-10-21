@@ -93,6 +93,7 @@ export function Home({ previewContent }) {
               case 'categoryGrid':
                 return (
                   <RevealSection key={section.id}>
+                    <MadeFreshStrip />
                     <Suspense fallback={<SectionFallback />}>
                       <CategoryGrid previewContent={activeCms} />
                     </Suspense>
@@ -119,7 +120,6 @@ export function Home({ previewContent }) {
                 return (
                   <LazySection key={section.id} fallback={<SectionFallback />}>
                     <RevealSection>
-                      <MadeFreshStrip />
                       <RecommendedGrid previewContent={activeCms} />
                     </RevealSection>
                   </LazySection>

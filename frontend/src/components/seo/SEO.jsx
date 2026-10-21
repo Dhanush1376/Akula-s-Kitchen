@@ -204,9 +204,7 @@ export function SEO({
           price: product.price,
           priceValidUntil: priceValidUntil,
           itemCondition: 'https://schema.org/NewCondition',
-          availability: product.inStock
-            ? 'https://schema.org/InStock'
-            : 'https://schema.org/OutOfStock',
+          availability: 'https://schema.org/InStock',
           seller: {
             '@type': 'Organization',
             name: siteName,

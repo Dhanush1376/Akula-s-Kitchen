@@ -28,45 +28,44 @@ import { useEffect, useId } from 'react';
 // This is intentionally NOT React state — it must survive re-renders
 // and be shared across the entire component tree.
 const activeLocks = new Set();
-let scrollYPosition = 0;
+let savedHtmlBg = '';
+let savedHtmlOverflow = '';
+let savedHtmlOverscroll = '';
+let savedBodyOverflow = '';
+let savedBodyOverscroll = '';
+let savedBodyTouchAction = '';
 
 function applyLock() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  scrollYPosition = window.scrollY || window.pageYOffset || 0;
 
-  // Set html overflow
+  savedHtmlBg = document.documentElement.style.backgroundColor;
+  savedHtmlOverflow = document.documentElement.style.overflow;
+  savedHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+  savedBodyOverflow = document.body.style.overflow;
+  savedBodyOverscroll = document.body.style.overscrollBehavior;
+  savedBodyTouchAction = document.body.style.touchAction;
+
+  // Prevent background scrolling and bouncing
   document.documentElement.style.overflow = 'hidden';
   document.documentElement.style.overscrollBehavior = 'none';
+  // Ensure the underlying canvas is dark so overscroll bounce reveals dark backdrop, NEVER white canvas
+  document.documentElement.style.backgroundColor = '#121212';
 
-  // Lock body without shrinking viewport height on mobile browsers
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${scrollYPosition}px`;
-  document.body.style.left = '0';
-  document.body.style.right = '0';
-  document.body.style.width = '100%';
-  document.body.style.minHeight = '100%';
   document.body.style.overflow = 'hidden';
   document.body.style.overscrollBehavior = 'none';
+  document.body.style.touchAction = 'none';
 }
 
 function releaseLock() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  const top = document.body.style.top;
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.width = '';
-  document.body.style.minHeight = '';
-  document.body.style.overflow = '';
-  document.body.style.overscrollBehavior = '';
-  document.documentElement.style.overflow = '';
-  document.documentElement.style.overscrollBehavior = '';
 
-  if (top) {
-    const y = parseInt(top, 10) * -1;
-    window.scrollTo(0, isNaN(y) ? scrollYPosition : y);
-  }
+  document.documentElement.style.backgroundColor = savedHtmlBg;
+  document.documentElement.style.overflow = savedHtmlOverflow;
+  document.documentElement.style.overscrollBehavior = savedHtmlOverscroll;
+
+  document.body.style.overflow = savedBodyOverflow;
+  document.body.style.overscrollBehavior = savedBodyOverscroll;
+  document.body.style.touchAction = savedBodyTouchAction;
 }
 
 /**

@@ -546,8 +546,8 @@ export function ProductConfigurator({
                 </span>
                 <button
                   type="button"
-                  onClick={() => onQuantityChange(Math.min(product?.stock || 50, quantity + 1))}
-                  disabled={(product?.stock != null && quantity >= product.stock) || isSubmitting}
+                  onClick={() => onQuantityChange(Math.min(99, quantity + 1))}
+                  disabled={quantity >= 99 || isSubmitting}
                   className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-950 hover:bg-[#f7bb0e] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                   aria-label="Increase quantity"
                 >
@@ -564,7 +564,7 @@ export function ProductConfigurator({
             ref={ctaRef}
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting || product?.stock <= 0}
+            disabled={isSubmitting}
             className="w-full h-[48px] sm:h-[52px] rounded-full flex items-center justify-center gap-2 sm:gap-2.5 font-extrabold text-[12px] sm:text-[13px] uppercase tracking-wider bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[1.5px] border-[#f7bb0e] shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)] active:scale-98 transition-all cursor-pointer px-3 sm:px-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" strokeWidth={2.2} />

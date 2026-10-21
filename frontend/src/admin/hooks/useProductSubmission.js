@@ -203,7 +203,10 @@ export function useProductSubmission({
             : formData.tags,
         price: Number(formData.price),
         oldPrice: formData.oldPrice ? Number(formData.oldPrice) : undefined,
-        stock: Number(formData.stock),
+        stock:
+          formData.stock !== undefined && formData.stock !== '' && !isNaN(Number(formData.stock))
+            ? Number(formData.stock)
+            : 999999,
         imageSrc: finalImageSrc,
         images: Array.from(new Set([finalImageSrc, ...finalImages].filter(Boolean))),
         badges:

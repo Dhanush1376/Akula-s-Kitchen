@@ -217,7 +217,7 @@ export function ProductReviewImagesDrawer({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/70 sm:bg-black/60 backdrop-blur-xs pointer-events-auto cursor-pointer"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/70 sm:bg-black/60 backdrop-blur-xs pointer-events-auto cursor-pointer"
             aria-label="Close photos dialog"
           />
 
@@ -231,12 +231,9 @@ export function ProductReviewImagesDrawer({
                 exit={{ y: '100%', opacity: 0 }}
                 transition={sheetTransition}
                 {...dragProps}
-                className="fixed bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-[1060] pointer-events-auto flex flex-col max-w-[500px] mx-auto"
-                style={{
-                  marginBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
-                }}
+                className="fixed inset-x-0 bottom-0 sm:bottom-4 sm:left-4 sm:right-4 z-[1060] pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[500px] mx-auto"
               >
-                <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl p-4 sm:p-5 shadow-[0_12px_45px_rgba(0,0,0,0.22)] flex flex-col max-h-[88dvh] overflow-hidden border border-black/[0.08]">
+                <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-2xl p-4 sm:p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.22)] flex flex-col max-h-[90dvh] sm:max-h-[88dvh] overflow-hidden border-t sm:border border-black/[0.08]">
                   {/* Native mobile drag handle */}
                   <DrawerDragHandle
                     onClick={onClose}

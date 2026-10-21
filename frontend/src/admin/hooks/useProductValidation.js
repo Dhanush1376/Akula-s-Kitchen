@@ -31,8 +31,6 @@ export function useProductValidation({
     if (currentStep === 3) {
       // Pricing step
       if (!formData.price || Number(formData.price) <= 0) errors.price = 'Enter a valid price';
-      if (formData.stock === '' || Number(formData.stock) < 0)
-        errors.stock = 'Enter stock quantity';
     }
     return errors;
   };

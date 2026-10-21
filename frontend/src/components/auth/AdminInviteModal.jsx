@@ -1,5 +1,6 @@
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldCheck, ArrowRight, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { adminInviteService } from '../../services/domainServices';
@@ -107,10 +108,12 @@ export function AdminInviteModal() {
 
   const formattedRole = invite?.roleAssigned?.replace(/_/g, ' ') || 'Admin';
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && invite && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-0 sm:p-6 md:p-8">
           {/* Dark blurred background overlay spanning entire viewport and safe area */}
           <motion.div
             key="invite-backdrop"
@@ -118,10 +121,10 @@ export function AdminInviteModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto"
           />
 
-          {/* Floating Card Modal Container */}
+          {/* Bottom Sheet on Mobile / Centered Card on Desktop */}
           <motion.div
             key="invite-modal"
             variants={modalVariants}
@@ -129,12 +132,9 @@ export function AdminInviteModal() {
             animate="visible"
             exit="exit"
             {...(isMobile ? dragProps : {})}
-            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[440px] md:max-w-[460px] mx-auto"
-            style={{
-              marginBottom: isMobile ? 'max(0.75rem, env(safe-area-inset-bottom, 0px))' : undefined,
-            }}
+            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[440px] md:max-w-[460px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl pt-3 px-5 pb-5 sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_12px_45px_rgba(0,0,0,0.16)] border border-black/[0.08] flex flex-col max-h-[88dvh] overflow-hidden">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl pt-3 px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_12px_45px_rgba(0,0,0,0.16)] border-t sm:border border-black/[0.08] flex flex-col max-h-[90dvh] sm:max-h-[88dvh] overflow-hidden">
               {/* Falling leaves ambient breeze */}
               <AuthCornerLeaves />
 
@@ -245,6 +245,7 @@ export function AdminInviteModal() {
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

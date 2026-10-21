@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useScrollLock } from './useScrollLock';
 
 /**
  * useMobileDrawerEngine
@@ -24,6 +25,9 @@ export function useMobileDrawerEngine({
     return window.innerWidth < breakpoint;
   });
 
+  // Background scroll lock using centralized reference-counted hook
+  useScrollLock(isOpen);
+
   // Responsive listener
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -39,22 +43,6 @@ export function useMobileDrawerEngine({
       return () => mql.removeListener(onChange);
     }
   }, [breakpoint]);
-
-  // Background scroll lock
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (!isOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
-
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.touchAction = originalTouchAction;
-    };
-  }, [isOpen]);
 
   // Dismiss / Expand callback for drag gesture
   const handleDragEnd = useCallback(

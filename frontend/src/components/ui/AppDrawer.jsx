@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 export function AppDrawer({
   isOpen,
@@ -12,17 +13,8 @@ export function AppDrawer({
   maxWidth = 'max-w-[500px]',
   headerIcon: HeaderIcon,
 }) {
-  // Prevent body scrolling when drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  // Centralized scroll lock
+  useScrollLock(isOpen);
 
   if (typeof document === 'undefined') return null;
 
@@ -37,21 +29,18 @@ export function AppDrawer({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto"
           />
 
-          {/* Floating Drawer Island */}
+          {/* Bottom Sheet Drawer - flush on mobile */}
           <motion.div
             initial={{ y: '100%', opacity: 0.5 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-            className={`fixed bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col ${maxWidth} mx-auto`}
-            style={{
-              marginBottom: 'env(safe-area-inset-bottom, 0px)',
-            }}
+            className={`fixed inset-x-0 bottom-0 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-full sm:${maxWidth} mx-auto`}
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-3xl p-5 sm:p-6 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[85dvh] overflow-hidden border border-black/[0.08]">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-[0_12px_45px_rgba(0,0,0,0.18)] flex flex-col max-h-[88dvh] overflow-hidden border-t sm:border border-black/[0.08]">
               {/* Handlebar */}
               <div
                 onClick={onClose}

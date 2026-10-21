@@ -266,7 +266,7 @@ export function AppRoutes() {
               <Route path="homepage" element={<AdminContent />} />
               <Route path="products" element={<AdminProducts />} />
               <Route path="catalog-registry" element={<AdminCatalogRegistry />} />
-              <Route path="inventory" element={<AdminInventory />} />
+              <Route path="inventory" element={<Navigate to="/admin/products" replace />} />
               <Route path="settings" element={<AdminSettings />} />
 
               <Route path="policies" element={<AdminPolicies />} />

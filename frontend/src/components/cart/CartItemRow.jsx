@@ -63,7 +63,7 @@ export const CartItemRow = React.memo(function CartItemRow({
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       // CSS transitions only for colour and shadow: a `transition-all` here would also
       // tween the transform framer-motion sets, and the two fight (the "jitter" on add)
-      className={`bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md p-3 sm:p-3.5 relative group border transition-[box-shadow,border-color] duration-200 ${item.stock === 0 ? 'border-red-200' : 'border-neutral-200 hover:border-neutral-300'}`}
+      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md p-3 sm:p-3.5 relative group border border-neutral-200 hover:border-neutral-300 transition-[box-shadow,border-color] duration-200"
     >
       {/* Top Right Close Icon */}
       <button
@@ -80,13 +80,6 @@ export const CartItemRow = React.memo(function CartItemRow({
       <div className="flex gap-3.5 sm:gap-4">
         {/* Left Column: Food Image */}
         <div className="relative w-[85px] h-[85px] sm:w-[96px] sm:h-[96px] bg-neutral-100 rounded-md overflow-hidden flex-shrink-0 border border-neutral-200">
-          {item.stock === 0 && (
-            <div className="absolute inset-0 bg-white/75 backdrop-blur-xs z-10 flex items-center justify-center">
-              <span className="bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Out of Stock
-              </span>
-            </div>
-          )}
           <Link
             to={`/product/${item.productId || (typeof item.id === 'string' && item.id.includes('___') ? item.id.split('___')[0] : item.id || item._id)}`}
             className="w-full h-full block"
@@ -98,7 +91,7 @@ export const CartItemRow = React.memo(function CartItemRow({
                 getBlurDataUri(110, 110)
               }
               alt={displayTitle}
-              className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${item.stock === 0 ? 'grayscale' : ''} text-[10px] text-neutral-400 text-center flex items-center justify-center break-words`}
+              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105 text-[10px] text-neutral-400 text-center flex items-center justify-center break-words"
             />
           </Link>
         </div>
@@ -140,9 +133,7 @@ export const CartItemRow = React.memo(function CartItemRow({
               </div>
             )}
 
-            <div
-              className={`inline-flex items-center border border-neutral-200 rounded-md overflow-hidden bg-neutral-50 h-[28px] sm:h-[30px] ${item.stock === 0 ? 'opacity-50 pointer-events-none' : ''}`}
-            >
+            <div className="inline-flex items-center border border-neutral-200 rounded-md overflow-hidden bg-neutral-50 h-[28px] sm:h-[30px]">
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -174,11 +165,9 @@ export const CartItemRow = React.memo(function CartItemRow({
                     item.configurationSignature,
                   );
                 }}
-                disabled={
-                  item.quantity >= (item.stock || 999) || item.quantity >= maxQuantityPerItem
-                }
+                disabled={item.quantity >= maxQuantityPerItem}
                 className={`w-8 sm:w-8.5 h-full flex items-center justify-center transition-colors min-h-0 ${
-                  item.quantity >= (item.stock || 999) || item.quantity >= maxQuantityPerItem
+                  item.quantity >= maxQuantityPerItem
                     ? 'text-neutral-300 cursor-not-allowed bg-neutral-100'
                     : 'text-neutral-600 hover:text-black hover:bg-neutral-200/60 cursor-pointer'
                 }`}
@@ -208,12 +197,6 @@ export const CartItemRow = React.memo(function CartItemRow({
           {item.quantity === maxQuantityPerItem && (
             <span className="text-[10px] text-amber-700 font-semibold block mt-1">
               Max order limit reached ({maxQuantityPerItem} items)
-            </span>
-          )}
-
-          {item.quantity >= item.stock && item.stock > 0 && item.quantity < maxQuantityPerItem && (
-            <span className="text-[10px] text-red-500 font-medium block mt-1">
-              Maximum stock reached
             </span>
           )}
 

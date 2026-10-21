@@ -185,7 +185,7 @@ const ProductSchema: Schema = new Schema(
     weight: { type: String },
     seoTitle: { type: String },
     seoDescription: { type: String },
-    stock: { type: Number, default: 0, min: 0 },
+    stock: { type: Number, default: 999999, min: 0 },
     reservedStock: { type: Number, default: 0, min: 0 },
     inventory: {
       available: { type: Number, default: 0 },

@@ -23,7 +23,7 @@ export function useProductForm({ id, isEditMode }) {
       tags: '',
       price: '',
       oldPrice: '',
-      stock: '',
+      stock: 999999,
       imageSrc: '',
       images: [],
       badges: '',

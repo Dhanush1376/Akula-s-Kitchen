@@ -122,7 +122,7 @@ export function useCartMutations() {
           imageSrc: resolvedImage,
           images: product.images || (resolvedImage ? [resolvedImage] : []),
           category: product.category,
-          stock: product.stock ?? 10,
+          stock: product.stock ?? 999999,
           isNonRefundable: product.isNonRefundable ?? true,
           seller: product.seller || BRAND.name,
           rating: product.rating || 0,

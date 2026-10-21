@@ -16,6 +16,7 @@ import {
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { BrandLogo } from '../ui/BrandLogo';
 import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -622,292 +623,294 @@ export function TopNavbar() {
         </div>
       </nav>
 
-      {/* Premium Floating Rounded Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={() => setIsOpen(false)}
-              className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[115] lg:hidden"
-            />
-
-            {/* Slide-out Floating Card / Drawer Panel */}
-            <motion.div
-              ref={mobileMenuRef}
-              id="mobile-menu-drawer"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Mobile Navigation Menu"
-              initial={{ x: '100%', opacity: 0.5 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-              className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[78%] max-w-[300px] sm:max-w-[320px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/85 backdrop-blur-2xl z-[120] lg:hidden p-4 sm:p-5 flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.18),inset_0_1px_1px_rgba(255,255,255,0.9)] rounded-3xl border border-neutral-200"
-              style={{
-                marginTop: 'env(safe-area-inset-top, 0px)',
-                marginBottom: 'env(safe-area-inset-bottom, 0px)',
-              }}
-            >
-              {/* Drawer Header */}
-              <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">
-                <BrandLogo size="50px" />
-                <button
+      {/* Mobile Navigation Drawer (App Drawer) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {isOpen && (
+              <>
+                {/* Backdrop spanning beyond viewport bounds */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
                   onClick={() => setIsOpen(false)}
-                  className="w-10 h-10 rounded-full bg-neutral-100/80 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer"
-                  aria-label="Close menu"
+                  className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[115] lg:hidden"
+                />
+
+                {/* Slide-out Drawer Panel docked flush to screen edges on mobile */}
+                <motion.div
+                  ref={mobileMenuRef}
+                  id="mobile-menu-drawer"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Mobile Navigation Menu"
+                  initial={{ x: '100%', opacity: 0.5 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: '100%', opacity: 0 }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
+                  className="fixed right-0 top-0 bottom-0 w-[84%] max-w-[320px] sm:max-w-[340px] h-full bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-l-3xl rounded-r-none border-l border-neutral-200"
                 >
-                  <X size={20} strokeWidth={2} />
-                </button>
-              </div>
-
-              {/* Navigation List */}
-              <div className="flex-grow flex flex-col justify-start items-start w-full">
-                <ul className="relative z-10 flex flex-col items-start w-full divide-y divide-black/[0.06]">
-                  {navLinks.map((link, idx) => {
-                    const active = isActive(link.href);
-                    const isShopLink =
-                      link.label.toLowerCase() === 'shop' ||
-                      link.label.toLowerCase() === 'collections' ||
-                      link.label.toLowerCase() === 'shop by category';
-                    const hasSubMenu = isShopLink;
-                    const accordionId = isShopLink ? 'shop' : null;
-                    const subItems = isShopLink ? displayCategories : [];
-
-                    return (
-                      <motion.li
-                        key={idx}
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                          delay: 0.04 + idx * 0.04,
-                          duration: 0.3,
-                        }}
-                        className="w-full flex flex-col items-start"
-                      >
-                        <div className="flex items-center justify-between w-full group py-0.5">
-                          {hasSubMenu ? (
-                            <button
-                              onClick={() =>
-                                setOpenAccordion(openAccordion === accordionId ? null : accordionId)
-                              }
-                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
-                                active || openAccordion === accordionId
-                                  ? 'text-primary bg-neutral-100/50'
-                                  : 'text-neutral-800'
-                              }`}
-                            >
-                              <span>{link.label}</span>
-                              <div className="w-6 h-6 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                                <ChevronDown
-                                  size={13}
-                                  strokeWidth={2.2}
-                                  className={`transition-transform duration-200 ${
-                                    openAccordion === accordionId
-                                      ? 'rotate-180 text-black'
-                                      : 'text-neutral-500'
-                                  }`}
-                                />
-                              </div>
-                            </button>
-                          ) : (
-                            <Link
-                              onClick={() => setIsOpen(false)}
-                              className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
-                                active
-                                  ? 'text-primary bg-[#f7bb0e]/15 font-extrabold'
-                                  : 'text-neutral-800'
-                              }`}
-                              to={link.href}
-                            >
-                              <span>{link.label}</span>
-                            </Link>
-                          )}
-                        </div>
-
-                        {/* Accordion Content */}
-                        {hasSubMenu && (
-                          <AnimatePresence>
-                            {openAccordion === accordionId && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.25 }}
-                                className="overflow-hidden w-full flex flex-col items-start space-y-1 pl-3 pr-1 pb-3 pt-1"
-                              >
-                                {isShopLink && (
-                                  <div className="w-full">
-                                    <Link
-                                      to={link.href}
-                                      onClick={() => setIsOpen(false)}
-                                      className="font-sans font-medium text-[13px] text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
-                                    >
-                                      All Collections
-                                    </Link>
-                                  </div>
-                                )}
-                                {subItems.map((cat, i) => {
-                                  const categoryName = typeof cat === 'string' ? cat : cat.name;
-                                  return (
-                                    <div key={i} className="w-full">
-                                      <Link
-                                        to={`/collections?category=${encodeURIComponent(categoryName)}`}
-                                        onClick={() => setIsOpen(false)}
-                                        className="font-sans font-medium text-[13px] capitalize text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
-                                      >
-                                        {categoryName.toLowerCase()}
-                                      </Link>
-                                    </div>
-                                  );
-                                })}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        )}
-                      </motion.li>
-                    );
-                  })}
-                  {isAuthenticated && adminRoles.includes(user?.role) && (
-                    <motion.li
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        delay: 0.04 + navLinks.length * 0.04,
-                        duration: 0.3,
-                      }}
-                      className="w-full pt-2 pb-1"
-                    >
-                      <Link
-                        onClick={() => setIsOpen(false)}
-                        className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-3 px-3.5 rounded-xl bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.98] text-white shadow-sm shadow-[#283618]/25"
-                        to="/admin"
-                      >
-                        <span className="flex items-center gap-2">
-                          <LayoutGrid size={15} strokeWidth={2.2} className="text-[#f7bb0e]" />
-                          <span>Admin Portal</span>
-                        </span>
-                        {hasPendingInvite ? (
-                          <span className="relative w-2 h-2 rounded-full bg-[#f7bb0e] shadow-xs" />
-                        ) : (
-                          <ChevronRight
-                            size={16}
-                            strokeWidth={2.2}
-                            className="text-white/80 group-hover:translate-x-0.5 transition-transform"
-                          />
-                        )}
-                      </Link>
-                    </motion.li>
-                  )}
-                </ul>
-              </div>
-
-              {/* Bottom Quick Actions Footer */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                className="mt-auto w-full pt-4 border-t border-black/[0.06]"
-              >
-                <div className="flex items-center justify-between w-full px-1">
-                  {/* Left: Utilities */}
-                  <div className="flex items-center gap-4 sm:gap-6">
-                    <Link
-                      to="/wishlist"
-                      onClick={() => setIsOpen(false)}
-                      className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
-                    >
-                      <div className="relative w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
-                        <Heart size={18} strokeWidth={1.8} />
-                        {wishlistCount > 0 && (
-                          <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white shadow-xs" />
-                        )}
-                      </div>
-                      <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
-                        Wishlist
-                      </span>
-                    </Link>
-
+                  {/* Drawer Header */}
+                  <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">
+                    <BrandLogo size="50px" />
                     <button
-                      onClick={() => {
-                        setIsOpen(false);
-                        setIsCartOpen(true);
-                      }}
-                      className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
+                      onClick={() => setIsOpen(false)}
+                      className="w-10 h-10 rounded-full bg-neutral-100/80 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer"
+                      aria-label="Close menu"
                     >
-                      <div className="relative w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
-                        <ShoppingBag size={18} strokeWidth={1.8} />
-                        {cartCount > 0 && (
-                          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#f7bb0e] text-black text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
-                            {cartCount}
+                      <X size={20} strokeWidth={2} />
+                    </button>
+                  </div>
+
+                  {/* Navigation List */}
+                  <div className="flex-grow flex flex-col justify-start items-start w-full">
+                    <ul className="relative z-10 flex flex-col items-start w-full divide-y divide-black/[0.06]">
+                      {navLinks.map((link, idx) => {
+                        const active = isActive(link.href);
+                        const isShopLink =
+                          link.label.toLowerCase() === 'shop' ||
+                          link.label.toLowerCase() === 'collections' ||
+                          link.label.toLowerCase() === 'shop by category';
+                        const hasSubMenu = isShopLink;
+                        const accordionId = isShopLink ? 'shop' : null;
+                        const subItems = isShopLink ? displayCategories : [];
+
+                        return (
+                          <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              delay: 0.04 + idx * 0.04,
+                              duration: 0.3,
+                            }}
+                            className="w-full flex flex-col items-start"
+                          >
+                            <div className="flex items-center justify-between w-full group py-0.5">
+                              {hasSubMenu ? (
+                                <button
+                                  onClick={() =>
+                                    setOpenAccordion(
+                                      openAccordion === accordionId ? null : accordionId,
+                                    )
+                                  }
+                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
+                                    active || openAccordion === accordionId
+                                      ? 'text-primary bg-neutral-100/50'
+                                      : 'text-neutral-800'
+                                  }`}
+                                >
+                                  <span>{link.label}</span>
+                                  <div className="w-6 h-6 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+                                    <ChevronDown
+                                      size={13}
+                                      strokeWidth={2.2}
+                                      className={`transition-transform duration-200 ${
+                                        openAccordion === accordionId
+                                          ? 'rotate-180 text-black'
+                                          : 'text-neutral-500'
+                                      }`}
+                                    />
+                                  </div>
+                                </button>
+                              ) : (
+                                <Link
+                                  onClick={() => setIsOpen(false)}
+                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
+                                    active
+                                      ? 'text-primary bg-[#f7bb0e]/15 font-extrabold'
+                                      : 'text-neutral-800'
+                                  }`}
+                                  to={link.href}
+                                >
+                                  <span>{link.label}</span>
+                                </Link>
+                              )}
+                            </div>
+
+                            {/* Accordion Content */}
+                            {hasSubMenu && (
+                              <AnimatePresence>
+                                {openAccordion === accordionId && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="overflow-hidden w-full flex flex-col items-start space-y-1 pl-3 pr-1 pb-3 pt-1"
+                                  >
+                                    {isShopLink && (
+                                      <div className="w-full">
+                                        <Link
+                                          to={link.href}
+                                          onClick={() => setIsOpen(false)}
+                                          className="font-sans font-medium text-[13px] text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
+                                        >
+                                          All Collections
+                                        </Link>
+                                      </div>
+                                    )}
+                                    {subItems.map((cat, i) => {
+                                      const categoryName = typeof cat === 'string' ? cat : cat.name;
+                                      return (
+                                        <div key={i} className="w-full">
+                                          <Link
+                                            to={`/collections?category=${encodeURIComponent(categoryName)}`}
+                                            onClick={() => setIsOpen(false)}
+                                            className="font-sans font-medium text-[13px] capitalize text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
+                                          >
+                                            {categoryName.toLowerCase()}
+                                          </Link>
+                                        </div>
+                                      );
+                                    })}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            )}
+                          </motion.li>
+                        );
+                      })}
+                      {isAuthenticated && adminRoles.includes(user?.role) && (
+                        <motion.li
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: 0.04 + navLinks.length * 0.04,
+                            duration: 0.3,
+                          }}
+                          className="w-full pt-2 pb-1"
+                        >
+                          <Link
+                            onClick={() => setIsOpen(false)}
+                            className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-3 px-3.5 rounded-xl bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.98] text-white shadow-sm shadow-[#283618]/25"
+                            to="/admin"
+                          >
+                            <span className="flex items-center gap-2">
+                              <LayoutGrid size={15} strokeWidth={2.2} className="text-[#f7bb0e]" />
+                              <span>Admin Portal</span>
+                            </span>
+                            {hasPendingInvite ? (
+                              <span className="relative w-2 h-2 rounded-full bg-[#f7bb0e] shadow-xs" />
+                            ) : (
+                              <ChevronRight
+                                size={16}
+                                strokeWidth={2.2}
+                                className="text-white/80 group-hover:translate-x-0.5 transition-transform"
+                              />
+                            )}
+                          </Link>
+                        </motion.li>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* Bottom Quick Actions Footer */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                    className="mt-auto w-full pt-4 border-t border-black/[0.06]"
+                  >
+                    <div className="flex items-center justify-between w-full px-1">
+                      {/* Left: Utilities */}
+                      <div className="flex items-center gap-4 sm:gap-6">
+                        <Link
+                          to="/wishlist"
+                          onClick={() => setIsOpen(false)}
+                          className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
+                        >
+                          <div className="relative w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                            <Heart size={18} strokeWidth={1.8} />
+                            {wishlistCount > 0 && (
+                              <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#ff4d4f] ring-2 ring-white shadow-xs" />
+                            )}
+                          </div>
+                          <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                            Wishlist
                           </span>
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            setIsOpen(false);
+                            setIsCartOpen(true);
+                          }}
+                          className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
+                        >
+                          <div className="relative w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                            <ShoppingBag size={18} strokeWidth={1.8} />
+                            {cartCount > 0 && (
+                              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#f7bb0e] text-black text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                                {cartCount}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                            Bag
+                          </span>
+                        </button>
+
+                        {isAuthenticated && (
+                          <Link
+                            to="/dashboard"
+                            onClick={() => setIsOpen(false)}
+                            className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
+                          >
+                            <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                              <User size={18} strokeWidth={1.8} />
+                            </div>
+                            <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                              Profile
+                            </span>
+                          </Link>
                         )}
                       </div>
-                      <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
-                        Bag
-                      </span>
-                    </button>
 
-                    {isAuthenticated && (
-                      <Link
-                        to="/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
-                          <User size={18} strokeWidth={1.8} />
-                        </div>
-                        <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
-                          Profile
-                        </span>
-                      </Link>
-                    )}
-                  </div>
-
-                  {/* Right: Auth Action */}
-                  <div>
-                    {!isAuthenticated ? (
-                      <button
-                        onClick={() => {
-                          setIsOpen(false);
-                          openAuthModal();
-                        }}
-                        className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
-                          <LogIn size={18} strokeWidth={1.8} />
-                        </div>
-                        <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
-                          Sign In
-                        </span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setIsOpen(false);
-                          logout();
-                        }}
-                        className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-red-600 transition-colors group cursor-pointer"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-red-50 text-neutral-700 group-hover:text-red-600 transition-colors">
-                          <LogOut size={18} strokeWidth={1.8} />
-                        </div>
-                        <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-red-600">
-                          Sign Out
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          </>
+                      {/* Right: Auth Action */}
+                      <div>
+                        {!isAuthenticated ? (
+                          <button
+                            onClick={() => {
+                              setIsOpen(false);
+                              openAuthModal();
+                            }}
+                            className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-black transition-colors group cursor-pointer"
+                          >
+                            <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-neutral-200/80 transition-colors">
+                              <LogIn size={18} strokeWidth={1.8} />
+                            </div>
+                            <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
+                              Sign In
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setIsOpen(false);
+                              logout();
+                            }}
+                            className="flex flex-col items-center gap-1.5 text-neutral-700 hover:text-red-600 transition-colors group cursor-pointer"
+                          >
+                            <div className="w-9 h-9 rounded-full bg-neutral-100/80 flex items-center justify-center group-hover:bg-red-50 text-neutral-700 group-hover:text-red-600 transition-colors">
+                              <LogOut size={18} strokeWidth={1.8} />
+                            </div>
+                            <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-red-600">
+                              Sign Out
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body,
         )}
-      </AnimatePresence>
 
       {search.isOpen && (
         <Suspense fallback={null}>

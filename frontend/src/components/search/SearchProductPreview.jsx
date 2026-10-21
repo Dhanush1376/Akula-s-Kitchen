@@ -2,7 +2,7 @@ import { Image, Heart, Star, ShoppingCart } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
-import { formatPrice, getStockLabel, formatDiscount } from './searchUtils';
+import { formatPrice, formatDiscount } from './searchUtils';
 import { m as motion, AnimatePresence } from 'framer-motion';
 
 export function SearchProductPreview({ product, onClose }) {
@@ -10,7 +10,6 @@ export function SearchProductPreview({ product, onClose }) {
 
   if (!product) return null;
 
-  const stockInfo = getStockLabel(product.stockStatus);
   const discountText = formatDiscount(product.discount);
 
   const handleNavigate = () => {
@@ -99,15 +98,6 @@ export function SearchProductPreview({ product, onClose }) {
           )}
 
           <div className="mt-auto space-y-3">
-            {stockInfo && (
-              <div
-                className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest ${stockInfo.color}`}
-              >
-                <span className={`w-2 h-2 rounded-full ${stockInfo.dot}`}></span>
-                {stockInfo.label}
-              </div>
-            )}
-
             <div className="flex gap-2">
               <button
                 onClick={handleNavigate}

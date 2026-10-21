@@ -55,7 +55,7 @@ export function transformDbCart(dbCartItems) {
         selectedOptions: item.selectedOptions || [],
         configurationSignature: signature,
         oldPrice: item.product.oldPrice || item.product.price || item.price,
-        stock: item.product.stock ?? 10,
+        stock: item.product.stock ?? 999999,
         seller: item.product.seller || BRAND.name,
         rating: item.product.rating || 0,
         imageSrc:

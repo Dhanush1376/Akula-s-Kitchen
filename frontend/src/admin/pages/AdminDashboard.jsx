@@ -42,8 +42,6 @@ export function AdminDashboard() {
   }, [refreshDashboard, refreshOrders]);
 
   const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
-  const lowStockProducts = products.filter((p) => p.stock > 0 && p.stock <= 5).length;
-  const outOfStock = products.filter((p) => p.stock === 0).length;
 
   // Prepare Revenue Overview data from backend
   const revenueChartData = useMemo(() => {
@@ -249,8 +247,6 @@ export function AdminDashboard() {
         quickActions={quickActions}
         dynamicRecentActivity={dynamicRecentActivity}
         products={products}
-        outOfStock={outOfStock}
-        lowStockProducts={lowStockProducts}
       />
 
       {/* ─── Recents & Catalog Row ─── */}

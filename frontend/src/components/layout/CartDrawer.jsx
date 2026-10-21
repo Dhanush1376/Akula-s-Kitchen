@@ -93,7 +93,7 @@ export function CartDrawer({ isOpen, onClose }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed -inset-x-0 -top-24 -bottom-32 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[200]"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[200]"
           />
 
           {/* Drawer Panel */}
@@ -112,11 +112,7 @@ export function CartDrawer({ isOpen, onClose }) {
                 onClose();
               }
             }}
-            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[340px] sm:max-w-[360px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.18),inset_0_1px_1px_rgba(255,255,255,0.9)] touch-pan-y overscroll-contain rounded-3xl border border-black/[0.08] modern-sans-headings font-body overflow-hidden"
-            style={{
-              marginTop: 'env(safe-area-inset-top, 0px)',
-              marginBottom: 'env(safe-area-inset-bottom, 0px)',
-            }}
+            className="fixed right-0 top-0 bottom-0 sm:right-4 sm:top-4 sm:bottom-4 w-[88vw] max-w-[360px] sm:max-w-[380px] h-full sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.18)] touch-pan-y overscroll-contain rounded-l-3xl rounded-r-none sm:rounded-3xl border-l sm:border border-black/[0.08] modern-sans-headings font-body pt-[calc(0.5rem+env(safe-area-inset-top,0px))] sm:pt-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-0 overflow-hidden"
           >
             {/* Header */}
             <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">
@@ -327,13 +323,9 @@ export function CartDrawer({ isOpen, onClose }) {
                                             item.configurationSignature,
                                           );
                                         }}
-                                        disabled={
-                                          item.quantity >= maxQuantityPerItem ||
-                                          item.quantity >= (item.stock || 999)
-                                        }
+                                        disabled={item.quantity >= maxQuantityPerItem}
                                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                                          item.quantity >= maxQuantityPerItem ||
-                                          item.quantity >= (item.stock || 999)
+                                          item.quantity >= maxQuantityPerItem
                                             ? 'opacity-40 cursor-not-allowed text-neutral-400'
                                             : 'text-neutral-700 hover:bg-black/5 hover:text-neutral-950 active:scale-95'
                                         }`}

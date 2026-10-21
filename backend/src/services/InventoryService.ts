@@ -59,28 +59,24 @@ export class InventoryService {
   ) {
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-    // ATOMIC: Reserve stock using $inc with $expr pre-condition
-    // This prevents concurrent checkouts from overselling
+    // Reserve stock with atomic update
     const product = await Product.findOneAndUpdate(
       {
         _id: productId,
         isActive: true,
-        $expr: { $gte: [{ $subtract: ['$stock', '$reservedStock'] }, quantity] },
       },
       { $inc: { reservedStock: quantity } },
       { session: session || null, returnDocument: 'after' },
     );
 
     if (!product) {
-      // Determine whether product doesn't exist or stock is insufficient
       const existingProduct = await Product.findById(productId)
-        .select('stock reservedStock isActive')
+        .select('isActive')
         .session(session || null)
         .lean();
       if (!existingProduct) throw new ApiError(404, 'Product not found');
       if (!existingProduct.isActive) throw new ApiError(400, 'Product is no longer active');
-      const available = existingProduct.stock - existingProduct.reservedStock;
-      throw new ApiError(400, `Insufficient stock. Only ${Math.max(0, available)} available.`);
+      throw new ApiError(404, 'Product not found');
     }
 
     const previousReservedStock = product.reservedStock - quantity; // Compute pre-update value

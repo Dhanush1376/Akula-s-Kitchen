@@ -274,7 +274,6 @@ function SuggestionRow({ id, label, query, index, isActive, hint, onClick, onHov
 /** Small note beside a suggestion, only when it adds something: the size asked for, or stock. */
 const suggestionHint = (item) => {
   if (item.type !== 'product') return '';
-  if (item.stockStatus === 'out_of_stock') return 'Out of stock';
   return item.matchedWeight || '';
 };
 

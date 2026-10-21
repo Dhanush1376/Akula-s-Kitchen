@@ -2,9 +2,7 @@ import {
   Award,
   Heart,
   Star,
-  Ban,
   Lock,
-  Zap,
   Check,
   ShoppingBag,
   Plus,
@@ -12,6 +10,7 @@ import {
   ChefHat,
   Leaf,
   PackageCheck,
+  Ban,
 } from 'lucide-react';
 import { m as motion } from 'framer-motion';
 import React from 'react';
@@ -227,7 +226,7 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
           </div>
         ) : (
           <>
-            {/* Quantity Selector & Low Stock Warning */}
+            {/* Quantity Selector */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-3">
                 <span className="text-[11px] uppercase tracking-wider font-extrabold text-neutral-500">
@@ -248,8 +247,8 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((q) => Math.min(product.stock || 10, q + 1))}
-                    disabled={(product.stock != null && quantity >= product.stock) || added}
+                    onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                    disabled={quantity >= 99 || added}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-neutral-950 hover:bg-[#f7bb0e] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
                     aria-label="Increase quantity"
                   >
@@ -257,17 +256,6 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
                   </button>
                 </div>
               </div>
-
-              {product.stock != null && product.stock <= 5 && product.stock > 0 && (
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
-                  <Zap className="w-3 h-3 text-amber-600 animate-pulse" />
-                  <span>
-                    {product.stock === 1
-                      ? 'Only 1 left in stock'
-                      : `Only ${product.stock} left in stock`}
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}
@@ -280,19 +268,17 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
                         toast(
                           'Online ordering is temporarily paused while the store is in catalog-only mode.',
                         )
-                    : product.stock <= 0 || added
+                    : added
                       ? undefined
                       : handleAddToCart
                 }
-                disabled={!isStoreClosed && (product.stock <= 0 || added)}
+                disabled={!isStoreClosed && added}
                 className={`w-full h-[48px] sm:h-[52px] rounded-full flex items-center justify-center gap-2.5 font-extrabold text-[12px] sm:text-[13px] uppercase tracking-wider transition-all duration-200 active:scale-98 cursor-pointer px-4 ${
                   isStoreClosed
                     ? 'bg-[#fef2c0] text-[#8a6800] border border-[#fae182] cursor-not-allowed'
-                    : product.stock <= 0
-                      ? 'bg-[#fef2c0] text-[#8a6800] border border-[#fae182] cursor-not-allowed'
-                      : added
-                        ? 'bg-black text-[#f7bb0e] border-[1.5px] border-black shadow-sm'
-                        : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[1.5px] border-[#f7bb0e] shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)]'
+                    : added
+                      ? 'bg-black text-[#f7bb0e] border-[1.5px] border-black shadow-sm'
+                      : 'bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[1.5px] border-[#f7bb0e] shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)]'
                 }`}
               >
                 {isStoreClosed ? (
@@ -311,7 +297,7 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
                       className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110"
                       strokeWidth={2.2}
                     />
-                    <span>{product.stock <= 0 ? 'Out of Stock' : 'Add to Bag'}</span>
+                    <span>Add to Bag</span>
                   </>
                 )}
               </button>

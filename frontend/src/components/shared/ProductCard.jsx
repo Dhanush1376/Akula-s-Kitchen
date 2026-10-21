@@ -1,4 +1,4 @@
-import { Check, ImageOff, Heart, Plus, Ban } from 'lucide-react';
+import { Check, ImageOff, Heart, Plus } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
@@ -195,7 +195,7 @@ export const ProductCard = React.memo(function ProductCard({
       ? Math.round(((numericOldPrice - numericPrice) / numericOldPrice) * 100)
       : null;
 
-  const isOutOfStock = stock <= 0;
+  const isOutOfStock = false;
   const productRoute = getProductRoute(productId);
 
   const handleCardClick = (e) => {
@@ -457,21 +457,14 @@ export const ProductCard = React.memo(function ProductCard({
                         transition={{ duration: 0.15 }}
                         className="inline-flex items-center gap-1"
                       >
-                        {isOutOfStock ? (
-                          <>
-                            <Ban size={compact ? 11 : 12} strokeWidth={2.5} />
-                            <span>Sold</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus
-                              size={compact ? 13 : 15}
-                              strokeWidth={3}
-                              className="text-[#d99b00]"
-                            />
-                            <span>Add</span>
-                          </>
-                        )}
+                        <>
+                          <Plus
+                            size={compact ? 13 : 15}
+                            strokeWidth={3}
+                            className="text-[#d99b00]"
+                          />
+                          <span>Add</span>
+                        </>
                       </motion.span>
                     )}
                   </AnimatePresence>

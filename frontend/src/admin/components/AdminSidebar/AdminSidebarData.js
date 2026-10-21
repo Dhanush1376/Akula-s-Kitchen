@@ -49,15 +49,15 @@ export const navSections = [
     ],
   },
   {
-    label: 'Products & Stock',
-    subtitle: 'Manage catalog and inventory',
+    label: 'Products & Menu',
+    subtitle: 'Manage kitchen menu and dishes',
     roles: ['owner', 'manager', 'website_manager', 'warehouse'],
     items: [
       {
         label: 'Products',
         icon: 'inventory_2',
         path: '/admin/products',
-        keywords: 'items, stock, catalog',
+        keywords: 'items, dishes, menu, catalog',
         domain: 'products',
       },
       {

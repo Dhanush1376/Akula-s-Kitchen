@@ -45,17 +45,7 @@ export const highlightMatch = (text, searchQuery) => {
   );
 };
 
-export const getStockLabel = (status) => {
-  if (!status) return null;
-  const s = status.toLowerCase();
-  if (s === 'in stock' || s === 'instock')
-    return { label: 'In Stock', color: 'text-green-600', dot: 'bg-green-500' };
-  if (s === 'low stock' || s === 'low')
-    return { label: 'Low Stock', color: 'text-amber-600', dot: 'bg-amber-500' };
-  if (s === 'out of stock' || s === 'outofstock')
-    return { label: 'Out of Stock', color: 'text-red-500', dot: 'bg-red-500' };
-  return null;
-};
+export const getStockLabel = () => null;
 
 export const formatDiscount = (discount) => {
   if (!discount || discount <= 0) return null;

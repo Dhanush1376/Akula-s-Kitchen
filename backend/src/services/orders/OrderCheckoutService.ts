@@ -86,10 +86,6 @@ export class OrderCheckoutService {
         if (!product) throw new ApiError(404, `Product ${item.productId} not found`);
         if (!product.isActive)
           throw new ApiError(400, `Product is no longer active: ${product.title}`);
-        const availableStock = product.stock - (product.reservedStock || 0);
-        if (availableStock < item.quantity) {
-          throw new ApiError(400, `Insufficient stock for product: ${product.title}`);
-        }
       }
 
       for (const item of items) {
