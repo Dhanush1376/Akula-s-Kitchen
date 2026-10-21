@@ -81,7 +81,7 @@ export function MobileFilterDrawer({ isOpen, onClose, title = 'Filters', childre
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-2.5 inset-x-2.5 z-[1010] w-[calc(100%-20px)] bg-[var(--admin-surface)] rounded-[28px] shadow-[0_16px_50px_rgba(0,0,0,0.25)] flex flex-col max-h-[calc(100dvh-20px)] md:hidden border border-[var(--admin-border)] overflow-hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+            className="fixed bottom-3 inset-x-3 z-[1010] w-[calc(100%-24px)] bg-[var(--admin-surface)] rounded-2xl shadow-[0_16px_50px_rgba(0,0,0,0.25)] flex flex-col max-h-[calc(100dvh-24px)] md:hidden border border-[var(--admin-border)] overflow-hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
           >
             <div
               className="w-full flex justify-center pt-3 pb-1 shrink-0 cursor-pointer"

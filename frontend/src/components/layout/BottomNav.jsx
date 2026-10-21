@@ -106,7 +106,7 @@ export function BottomNav() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       aria-label="Primary"
-      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto z-[var(--z-overlay)] bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-full px-2 py-1 select-none"
+      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto z-[var(--z-overlay)] bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-2xl sm:rounded-3xl px-2 py-1 select-none"
       style={{
         marginBottom: 'env(safe-area-inset-bottom, 0px)',
       }}

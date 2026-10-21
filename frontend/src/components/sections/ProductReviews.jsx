@@ -385,7 +385,7 @@ export function WriteReviewModal({
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[99999] pointer-events-none flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-5 md:p-6">
+    <div className="fixed inset-0 z-[99999] pointer-events-none flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-5 md:p-6">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -409,7 +409,7 @@ export function WriteReviewModal({
         {...(isMobile ? dragProps : {})}
         className="relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[480px] mx-auto"
       >
-        <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl p-4 sm:p-5 pb-4 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
+        <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-5 pb-4 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[calc(100dvh-24px)] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
           {/* Handlebar for bottom sheet feel */}
           <div className="sm:hidden w-full flex justify-center pb-2">
             <div className="w-10 h-1 rounded-full bg-neutral-300" />

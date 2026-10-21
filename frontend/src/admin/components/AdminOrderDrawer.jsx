@@ -146,7 +146,7 @@ export function AdminOrderDrawer({
         exit="exit"
         variants={slideDrawer}
         transition={sheetTransition}
-        className="fixed z-[1000] flex flex-col overflow-hidden shadow-[var(--admin-shadow-2xl)] border border-[var(--admin-border)] bottom-2.5 inset-x-2.5 w-[calc(100%-20px)] max-h-[calc(100dvh-20px)] h-auto rounded-[28px] sm:top-4 sm:bottom-4 sm:right-4 sm:left-auto sm:w-[520px] sm:h-[calc(100dvh-32px)] sm:max-h-none sm:rounded-3xl bg-[var(--admin-surface)] text-[var(--admin-text-primary)] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
+        className="fixed z-[1000] flex flex-col overflow-hidden shadow-[var(--admin-shadow-2xl)] border border-[var(--admin-border)] bottom-3 inset-x-3 w-[calc(100%-24px)] max-h-[calc(100dvh-24px)] h-auto rounded-2xl sm:top-4 sm:bottom-4 sm:right-4 sm:left-auto sm:w-[520px] sm:h-[calc(100dvh-32px)] sm:max-h-none sm:rounded-3xl bg-[var(--admin-surface)] text-[var(--admin-text-primary)] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
         style={{ background: 'var(--admin-surface, #ffffff)' }}
       >
         {/* Mobile Pull Handle */}

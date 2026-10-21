@@ -141,7 +141,7 @@ export function AdminSidebar() {
               animate={{ x: 0 }}
               exit={{ x: '-110%' }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed left-2.5 top-2.5 bottom-2.5 h-[calc(100dvh-20px)] w-[min(calc(100vw-20px),300px)] z-[110] lg:hidden overflow-hidden rounded-[26px] border border-[var(--admin-border)]"
+              className="fixed left-3 top-3 bottom-3 sm:left-4 sm:top-4 sm:bottom-4 h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] w-[min(calc(100vw-24px),300px)] z-[110] lg:hidden overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--admin-border)]"
               style={{ background: 'var(--admin-surface)', boxShadow: 'var(--admin-shadow-2xl)' }}
             >
               <div className="absolute top-3 right-3 z-10">

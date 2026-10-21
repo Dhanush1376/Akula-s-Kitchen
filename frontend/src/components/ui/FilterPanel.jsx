@@ -608,9 +608,9 @@ export function FilterPanel({
                   exit={{ y: '100%', opacity: 0 }}
                   transition={sheetTransition}
                   {...dragProps}
-                  className="fixed inset-x-2.5 bottom-2.5 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-20px)] sm:w-full max-w-[480px] mx-auto"
+                  className="fixed inset-x-3 bottom-3 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-24px)] sm:w-full max-w-[480px] mx-auto"
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl p-4 sm:p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[calc(100dvh-24px)] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
                     {/* Handlebar for bottom sheet feel */}
                     <DrawerDragHandle
                       onClick={onClose}

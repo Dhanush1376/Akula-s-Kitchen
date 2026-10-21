@@ -685,7 +685,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[990] flex items-end sm:items-center justify-center admin-section-root p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-4"
+            className="fixed inset-0 z-[990] flex items-end sm:items-center justify-center admin-section-root p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4"
           >
             <div
               onClick={() => setIsInviteOpen(false)}
@@ -697,7 +697,7 @@ export function AdminTeam({ hideHeader = false, setHeaderAction }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 8 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-xl bg-[var(--admin-surface)] rounded-[28px] sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] z-10 max-h-[calc(100dvh-20px)] sm:max-h-[85%] overflow-y-auto custom-scrollbar p-5 sm:p-6 lg:p-8 border border-[var(--admin-border-strong)] flex flex-col pb-6 sm:pb-8"
+              className="relative w-full max-w-xl bg-[var(--admin-surface)] rounded-2xl sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] z-10 max-h-[calc(100dvh-24px)] sm:max-h-[85%] overflow-y-auto custom-scrollbar p-5 sm:p-6 lg:p-8 border border-[var(--admin-border-strong)] flex flex-col pb-6 sm:pb-8"
             >
               {/* Grab Handle (Mobile Only) */}
               <div className="w-12 h-1.5 bg-neutral-400 rounded-full mx-auto mb-4 shrink-0 sm:hidden" />

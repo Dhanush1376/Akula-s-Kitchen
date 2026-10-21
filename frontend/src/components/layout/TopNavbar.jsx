@@ -650,7 +650,7 @@ export function TopNavbar() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: '110%', opacity: 0 }}
                   transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-                  className="fixed right-2.5 top-2.5 bottom-2.5 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-20px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-20px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-[28px] sm:rounded-3xl border border-black/[0.08]"
+                  className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-2xl sm:rounded-3xl border border-black/[0.08]"
                 >
                   {/* Drawer Header */}
                   <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">

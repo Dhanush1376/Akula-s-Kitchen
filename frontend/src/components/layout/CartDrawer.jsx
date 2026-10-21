@@ -112,7 +112,7 @@ export function CartDrawer({ isOpen, onClose }) {
                 onClose();
               }
             }}
-            className="fixed right-2.5 top-2.5 bottom-2.5 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-20px)] max-w-[360px] sm:max-w-[380px] h-[calc(100dvh-20px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.2)] touch-pan-y overscroll-contain rounded-[28px] sm:rounded-3xl border border-black/[0.08] modern-sans-headings font-body pt-[calc(0.5rem+env(safe-area-inset-top,0px))] sm:pt-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0 overflow-hidden"
+            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[360px] sm:max-w-[380px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.2)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] modern-sans-headings font-body pt-[calc(0.5rem+env(safe-area-inset-top,0px))] sm:pt-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0 overflow-hidden"
           >
             {/* Header */}
             <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">

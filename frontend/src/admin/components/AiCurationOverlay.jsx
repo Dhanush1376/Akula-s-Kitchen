@@ -83,7 +83,7 @@ export function AiCurationOverlay({
   return createPortal(
     <AnimatePresence>
       {showAIHUD && (
-        <div className="admin-section-root fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-4 pointer-events-none">
+        <div className="admin-section-root fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-4 pointer-events-none">
           {/* Blurred Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -113,7 +113,7 @@ export function AiCurationOverlay({
             }}
             transition={sheetTransition}
             {...dragProps}
-            className="pointer-events-auto relative z-10 bg-[var(--admin-surface)] border border-[var(--admin-border)] w-full sm:max-w-2xl lg:max-w-3xl rounded-[28px] sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.25)] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[86vh] overflow-hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
+            className="pointer-events-auto relative z-10 bg-[var(--admin-surface)] border border-[var(--admin-border)] w-full sm:max-w-2xl lg:max-w-3xl rounded-2xl sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.25)] flex flex-col max-h-[calc(100dvh-24px)] sm:max-h-[86vh] overflow-hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:pb-0"
             onClick={(e) => e.stopPropagation()}
           >
             {isMobile && (

@@ -71,7 +71,7 @@ export function AdminMobileBottomNav({ isFabOpen, setIsFabOpen, fabActions }) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-[calc(var(--admin-bottom-nav-height,60px)+12px)] inset-x-2.5 z-[38] lg:hidden bg-white rounded-[28px] shadow-[0_16px_50px_rgba(0,0,0,0.18)] pt-5 pb-6 px-6 border border-black/[0.08]"
+            className="fixed bottom-[calc(var(--admin-bottom-nav-height,60px)+12px)] inset-x-3 z-[38] lg:hidden bg-white rounded-2xl sm:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.18)] pt-5 pb-6 px-6 border border-black/[0.08]"
             style={
               {
                 // Add a tiny bit of padding to the top for the drag handle

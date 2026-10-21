@@ -124,7 +124,7 @@ export function AuthModal() {
   return createPortal(
     <AnimatePresence>
       {isAuthModalOpen && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-6 md:p-8">
           {/* Dark blurred background overlay spanning entire viewport and safe area */}
           <motion.div
             key="auth-backdrop"
@@ -145,7 +145,7 @@ export function AuthModal() {
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[450px] md:max-w-[475px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-[28px] sm:rounded-3xl pt-2 px-5 pb-5 sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_16px_50px_rgba(0,0,0,0.2)] border border-black/[0.08] flex flex-col max-h-[calc(100dvh-20px)] sm:max-h-[88dvh] overflow-hidden">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-5 pb-5 sm:pt-6 sm:px-7 sm:pb-7 md:pt-7 md:px-8 md:pb-8 shadow-[0_16px_50px_rgba(0,0,0,0.2)] border border-black/[0.08] flex flex-col max-h-[calc(100dvh-24px)] sm:max-h-[88dvh] overflow-hidden">
               {/* Decorative gentle corner leaves falling slowly */}
               <AuthCornerLeaves />
 

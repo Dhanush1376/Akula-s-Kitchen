@@ -388,7 +388,7 @@ export function AdminCustomerDetailDrawer({
 
   const modalContent = (
     <div
-      className={`fixed inset-0 z-[9999] flex items-end md:items-center justify-center p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] md:p-4 overflow-hidden font-sans pointer-events-none ${
+      className={`fixed inset-0 z-[9999] flex items-end md:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-4 overflow-hidden font-sans pointer-events-none ${
         isDark ? 'dark' : ''
       }`}
       style={{
@@ -430,8 +430,8 @@ export function AdminCustomerDetailDrawer({
         aria-modal="true"
         aria-labelledby="customer-profile-name"
         className={`admin-section-root relative z-[9999] pointer-events-auto bg-white dark:bg-[#1a1815] shadow-2xl flex flex-col border border-stone-200 dark:border-stone-800
-          w-full max-h-[calc(100dvh-20px)] h-[88dvh] rounded-[28px] pb-3 overflow-hidden
-          md:w-[860px] md:max-w-[92vw] md:h-[660px] md:max-h-[88vh] md:rounded-[24px] md:border md:pb-0 md:overflow-hidden
+          w-full max-h-[calc(100dvh-24px)] h-[88dvh] rounded-2xl pb-3 overflow-hidden
+          md:w-[860px] md:max-w-[92vw] md:h-[660px] md:max-h-[88vh] md:rounded-3xl md:border md:pb-0 md:overflow-hidden
         `}
         style={{
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
