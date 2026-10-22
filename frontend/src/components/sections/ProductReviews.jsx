@@ -439,18 +439,23 @@ export function WriteReviewModal({
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
             {/* Scrollable Form Body */}
             <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1 space-y-3">
-              {/* Product Selection for Multi-Item Orders */}
+              {/* Product Selection for Multi-Item Orders - Compact Horizontally Scrollable Strip */}
               {normalizedItems.length > 1 && !existingReview && (
-                <div className="p-3 bg-[#fdfbf6] border border-amber-200/80 rounded-2xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10.5px] font-bold text-neutral-800 uppercase tracking-wider">
-                      Select item to review:
-                    </span>
-                    <span className="text-[10px] text-amber-900/80 font-medium">
-                      {normalizedItems.length} items in order
+                <div className="p-2 sm:p-2.5 bg-neutral-50/80 border border-neutral-200/80 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between px-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#283618]" />
+                      <span className="text-[10px] sm:text-[10.5px] font-bold text-neutral-800 uppercase tracking-wider">
+                        Select Item to Review
+                      </span>
+                    </div>
+                    <span className="text-[9.5px] font-semibold text-neutral-500 bg-white px-2 py-0.5 rounded-full border border-neutral-200/80 shadow-2xs">
+                      {normalizedItems.length} items
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+                  {/* Horizontal Scrollable Row */}
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 -mx-0.5 px-0.5 overscroll-x-contain touch-pan-x">
                     {normalizedItems.map((item) => {
                       const isSelected = item.id === selectedProductId;
                       return (
@@ -458,41 +463,47 @@ export function WriteReviewModal({
                           key={item.id}
                           type="button"
                           onClick={() => handleSelectProduct(item.id)}
-                          className={`flex items-center gap-2.5 p-2 rounded-xl text-left transition-all border cursor-pointer ${
+                          className={`group shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-all border cursor-pointer max-w-[210px] ${
                             isSelected
-                              ? 'bg-white border-[#283618] ring-1 ring-[#283618] shadow-2xs'
-                              : 'bg-white/70 border-neutral-200/80 hover:bg-white hover:border-neutral-300'
+                              ? 'bg-white border-[#283618] ring-1.5 ring-[#283618]/20 shadow-xs'
+                              : 'bg-white/70 border-neutral-200/80 hover:bg-white hover:border-neutral-300 shadow-2xs'
                           }`}
                         >
-                          <div className="w-10 h-10 rounded-lg bg-neutral-100 overflow-hidden shrink-0 border border-neutral-200">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-neutral-100 overflow-hidden shrink-0 border border-neutral-200/80">
                             <img
                               src={item.image}
                               alt={item.title}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               onError={(e) => {
                                 e.target.src = '/MainLogo.png';
                               }}
                             />
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 pr-0.5">
                             <p
-                              className={`text-[12px] font-semibold truncate leading-tight ${
-                                isSelected ? 'text-[#283618]' : 'text-neutral-800'
+                              className={`text-[11.5px] sm:text-[12px] font-bold truncate leading-tight transition-colors ${
+                                isSelected
+                                  ? 'text-[#283618]'
+                                  : 'text-neutral-800 group-hover:text-neutral-900'
                               }`}
                             >
                               {item.title}
                             </p>
-                            {item.variant && (
-                              <p className="text-[10px] text-neutral-500 truncate mt-0.5">
+                            {item.variant ? (
+                              <p className="text-[9.5px] text-neutral-500 truncate mt-0.5 font-medium">
                                 {item.variant}
                               </p>
-                            )}
+                            ) : null}
                           </div>
-                          {isSelected && (
-                            <div className="w-5 h-5 rounded-full bg-[#283618] text-white flex items-center justify-center shrink-0">
-                              <Check className="w-3 h-3 stroke-[2.5]" />
-                            </div>
-                          )}
+                          <div
+                            className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ml-auto transition-all ${
+                              isSelected
+                                ? 'bg-[#283618] text-white shadow-2xs'
+                                : 'border border-neutral-300 bg-white group-hover:border-neutral-400'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-2.5 h-2.5 stroke-[2.5]" />}
+                          </div>
                         </button>
                       );
                     })}

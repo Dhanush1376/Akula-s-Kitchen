@@ -1,23 +1,15 @@
 import React from 'react';
 import { AdminToggle } from '../../components/AdminUIKit';
-import { ProductSeoStep } from './ProductSeoStep';
 
-export function ProductReviewStep({
-  formData,
-  setFormData,
-  focusedField,
-  handleAIFill,
-  isAIGenerating,
-}) {
+export function ProductReviewStep({ formData, setFormData }) {
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-[11px] font-bold text-[var(--admin-text-primary)]">
-          SEO, Curation & Publish
+          Curation & Review
         </h2>
         <p className="text-[11px] text-[var(--admin-text-secondary)]">
-          Configure search engine presence, set visibility preferences, and review details before
-          publishing.
+          Set visibility preferences and review product details before publishing.
         </p>
       </div>
 
@@ -47,17 +39,6 @@ export function ProductReviewStep({
             onChange={() => setFormData({ ...formData, featured: !formData.featured })}
           />
         </div>
-      </div>
-
-      {/* SEO Configuration & Search Appearance Preview */}
-      <div className="p-4 sm:p-5 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px]">
-        <ProductSeoStep
-          formData={formData}
-          setFormData={setFormData}
-          focusedField={focusedField}
-          handleAIFill={handleAIFill}
-          isAIGenerating={isAIGenerating}
-        />
       </div>
 
       {/* Summary Data Review list */}

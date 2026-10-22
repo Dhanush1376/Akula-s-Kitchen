@@ -258,25 +258,33 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
     toast.success('Cleared all storefront filters');
   };
 
-  // Sync all options from all configured Option Groups above into Tags
-  const handleSyncAllAttributes = () => {
-    if (configuredAttributes.length === 0) {
-      toast.error('No attributes configured in the Option Groups above yet');
-      return;
-    }
-    const toAdd = configuredAttributes.map((c) => c.label).filter((label) => !isTagActive(label));
+  // Automatically ensure configured portion/weight options from Pricing are active in tags
+  useEffect(() => {
+    if (configuredAttributes.length === 0) return;
 
-    if (toAdd.length === 0) {
-      toast('All configured attributes are already added to filters', { icon: 'ℹ️' });
-      return;
-    }
+    setFormData((prev) => {
+      const currentTags = Array.isArray(prev.tags)
+        ? prev.tags
+        : typeof prev.tags === 'string'
+          ? prev.tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [];
 
-    const nextTags = [...parsedTags, ...toAdd];
-    setFormData((prev) => ({ ...prev, tags: nextTags.join(', ') }));
-    toast.success(
-      `Added ${toAdd.length} attribute${toAdd.length > 1 ? 's' : ''} to storefront filters`,
-    );
-  };
+      const currentNorms = new Set(currentTags.map((t) => normalizeTag(t)));
+      const toAdd = configuredAttributes
+        .map((c) => c.label.trim())
+        .filter((label) => label && !currentNorms.has(normalizeTag(label)));
+
+      if (toAdd.length === 0) return prev;
+
+      return {
+        ...prev,
+        tags: [...currentTags, ...toAdd].join(', '),
+      };
+    });
+  }, [configuredAttributes, setFormData]);
 
   return (
     <div className="space-y-5">
@@ -296,18 +304,6 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {configuredAttributes.length > 0 && (
-              <button
-                type="button"
-                onClick={handleSyncAllAttributes}
-                className="text-[11px] text-[var(--admin-accent)] hover:underline font-bold cursor-pointer flex items-center gap-1"
-                title="Add all portion weights configured in pricing into search filters"
-              >
-                <span className="material-symbols-outlined text-[13px]">sync</span>
-                <span>Add Portions to Filters</span>
-              </button>
-            )}
-
             {parsedTags.length > 0 && (
               <button
                 type="button"

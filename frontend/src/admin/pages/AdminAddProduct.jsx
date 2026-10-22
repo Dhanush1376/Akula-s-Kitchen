@@ -35,7 +35,7 @@ const WIZARD_STEPS = [
   { id: 'basics', label: 'Basic Info', icon: 'info' },
   { id: 'variants', label: 'Tags & Badges', icon: 'sell' },
   { id: 'pricing', label: 'Pricing & Portions', icon: 'payments' },
-  { id: 'review', label: 'SEO & Publish', icon: 'publish' },
+  { id: 'review', label: 'Review & Publish', icon: 'publish' },
 ];
 
 export function AdminAddProduct({ editId }) {
@@ -495,15 +495,9 @@ export function AdminAddProduct({ editId }) {
                   />
                 )}
 
-                {/* STEP 4: SEO & PUBLISH */}
+                {/* STEP 4: REVIEW & PUBLISH */}
                 {currentStep === 4 && (
-                  <ProductReviewStep
-                    formData={formData}
-                    setFormData={setFormData}
-                    focusedField={focusedField}
-                    handleAIFill={handleAIFill}
-                    isAIGenerating={isAIGenerating}
-                  />
+                  <ProductReviewStep formData={formData} setFormData={setFormData} />
                 )}
               </motion.div>
             </AnimatePresence>

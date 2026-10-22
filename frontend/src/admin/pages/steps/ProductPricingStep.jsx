@@ -33,6 +33,7 @@ export function ProductPricingStep({ formData, setFormData }) {
   }, [formData.optionGroups]);
 
   // Synchronize weight group changes back into formData.optionGroups and formData.weight
+  // Synchronize weight group changes back into formData.optionGroups, formData.weight, and formData.tags
   const syncWeightGroup = (updatedWeightGroup) => {
     let updatedOptionGroups;
     if (
@@ -49,11 +50,45 @@ export function ProductPricingStep({ formData, setFormData }) {
       updatedWeightGroup?.options?.find((o) => o.isDefault) || updatedWeightGroup?.options?.[0];
     const weightString = defaultOpt ? defaultOpt.label : '';
 
-    setFormData((prev) => ({
-      ...prev,
-      optionGroups: updatedOptionGroups,
-      weight: weightString || prev.weight || '',
-    }));
+    const oldWeightLabels = (weightGroup?.options || [])
+      .map((o) => (o.label || '').trim())
+      .filter(Boolean);
+    const newWeightLabels = (updatedWeightGroup?.options || [])
+      .map((o) => (o.label || '').trim())
+      .filter(Boolean);
+
+    setFormData((prev) => {
+      const currentTags = Array.isArray(prev.tags)
+        ? prev.tags
+        : typeof prev.tags === 'string'
+          ? prev.tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [];
+
+      // Filter out any previous weight labels that were removed or changed
+      const baseTags = currentTags.filter((t) => {
+        const norm = t.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return !oldWeightLabels.some((old) => old.toLowerCase().replace(/[^a-z0-9]/g, '') === norm);
+      });
+
+      // Add new weight labels that are not already present
+      const updatedTags = [...baseTags];
+      newWeightLabels.forEach((label) => {
+        const norm = label.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!updatedTags.some((t) => t.toLowerCase().replace(/[^a-z0-9]/g, '') === norm)) {
+          updatedTags.push(label);
+        }
+      });
+
+      return {
+        ...prev,
+        optionGroups: updatedOptionGroups,
+        weight: weightString || prev.weight || '',
+        tags: updatedTags.join(', '),
+      };
+    });
   };
 
   const handleApplyPreset = (presetOptions, groupName = 'Weight') => {
@@ -340,29 +375,29 @@ export function ProductPricingStep({ formData, setFormData }) {
               </div>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {/* Desktop Table Header */}
-              <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_60px_32px] sm:items-center sm:gap-3 sm:pb-2 sm:border-b sm:border-[var(--admin-border-subtle)] sm:text-[10px] sm:uppercase sm:tracking-wider sm:text-[var(--admin-text-secondary)] sm:font-bold sm:select-none">
-                <span className="text-center">#</span>
-                <span>Portion / Weight</span>
-                <span>Price (Diff)</span>
-                <span className="text-right">Final Price</span>
-                <span className="text-center">Default</span>
-                <span></span>
-              </div>
+            <div className="overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:px-0">
+              <div className="min-w-[440px] space-y-2">
+                {/* Table Header */}
+                <div className="grid grid-cols-[24px_minmax(100px,1fr)_85px_75px_40px_28px] items-center gap-2 sm:gap-2.5 pb-2 border-b border-[var(--admin-border-subtle)] text-[10px] uppercase tracking-wider text-[var(--admin-text-secondary)] font-bold select-none">
+                  <span className="text-center">#</span>
+                  <span>Portion / Weight</span>
+                  <span>Price (Diff)</span>
+                  <span className="text-center">Final Price</span>
+                  <span className="text-center">Default</span>
+                  <span></span>
+                </div>
 
-              {/* Rows List (Responsive card on mobile, grid row on desktop) */}
-              <div className="space-y-2 sm:space-y-1.5">
-                {weightGroup.options.map((option, optIdx) => {
-                  const finalCalculatedPrice = basePriceNum + (Number(option.priceAdjustment) || 0);
+                {/* Rows List */}
+                <div className="space-y-1.5">
+                  {weightGroup.options.map((option, optIdx) => {
+                    const finalCalculatedPrice =
+                      basePriceNum + (Number(option.priceAdjustment) || 0);
 
-                  return (
-                    <div
-                      key={option.optionId || optIdx}
-                      className="rounded-[6px] sm:rounded-none border sm:border-0 border-[var(--admin-border)] bg-[var(--admin-surface)] sm:bg-transparent p-2.5 sm:p-0 space-y-2 sm:space-y-0 shadow-2xs sm:shadow-none"
-                    >
-                      {/* Desktop Grid Row (sm: and up) */}
-                      <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_60px_32px] sm:items-center sm:gap-3">
+                    return (
+                      <div
+                        key={option.optionId || optIdx}
+                        className="grid grid-cols-[24px_minmax(100px,1fr)_85px_75px_40px_28px] items-center gap-2 sm:gap-2.5"
+                      >
                         {/* Reorder Arrows */}
                         <div className="flex flex-col items-center justify-center shrink-0">
                           <button
@@ -396,14 +431,14 @@ export function ProductPricingStep({ formData, setFormData }) {
                             value={option.label}
                             onChange={(e) => handleUpdateOption(optIdx, 'label', e.target.value)}
                             placeholder="e.g. 500g"
-                            className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12.5px] font-semibold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                            className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2.5 text-[12.5px] font-semibold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                           />
                         </div>
 
                         {/* Price Adjustment */}
                         <div>
                           <div className="relative w-full">
-                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
                               +₹
                             </span>
                             <input
@@ -413,14 +448,14 @@ export function ProductPricingStep({ formData, setFormData }) {
                                 handleUpdateOption(optIdx, 'priceAdjustment', e.target.value)
                               }
                               placeholder="0"
-                              className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                              className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-6 pr-1.5 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                             />
                           </div>
                         </div>
 
                         {/* Customer Price Preview */}
-                        <div className="flex items-center justify-end">
-                          <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-[4px] border border-emerald-200">
+                        <div className="flex items-center justify-center">
+                          <span className="text-[11.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-[4px] border border-emerald-200 whitespace-nowrap">
                             ₹{finalCalculatedPrice.toLocaleString()}
                           </span>
                         </div>
@@ -429,7 +464,7 @@ export function ProductPricingStep({ formData, setFormData }) {
                         <div className="flex items-center justify-center h-[36px]">
                           <input
                             type="radio"
-                            name="default_weight_option_desktop"
+                            name="default_weight_option"
                             checked={Boolean(option.isDefault)}
                             onChange={(e) =>
                               handleUpdateOption(optIdx, 'isDefault', e.target.checked)
@@ -444,156 +479,30 @@ export function ProductPricingStep({ formData, setFormData }) {
                           <button
                             type="button"
                             onClick={() => handleDeleteOption(optIdx)}
-                            className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer"
+                            className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer"
                             title="Remove tier"
                           >
-                            <span className="material-symbols-outlined text-[16px]">close</span>
+                            <span className="material-symbols-outlined text-[15px]">close</span>
                           </button>
                         </div>
                       </div>
-
-                      {/* Mobile Card Layout (sm:hidden) */}
-                      <div className="sm:hidden space-y-2">
-                        {/* Row 1: Label + Final Price + Delete */}
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 min-w-0">
-                            <input
-                              type="text"
-                              value={option.label}
-                              onChange={(e) => handleUpdateOption(optIdx, 'label', e.target.value)}
-                              placeholder="e.g. 500g"
-                              className="w-full h-8 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] focus:border-[#800000] focus:bg-[var(--admin-surface)] rounded-[4px] px-2.5 text-[12.5px] font-bold text-[var(--admin-text-primary)] outline-none transition-all"
-                            />
-                          </div>
-
-                          <div className="shrink-0">
-                            <span className="text-[11.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-[4px] border border-emerald-200">
-                              ₹{finalCalculatedPrice.toLocaleString()}
-                            </span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteOption(optIdx)}
-                            className="w-8 h-8 flex items-center justify-center text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors cursor-pointer shrink-0"
-                            title="Remove tier"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">close</span>
-                          </button>
-                        </div>
-
-                        {/* Row 2: Price Diff + Default Pill + Up/Down Reorder */}
-                        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-[var(--admin-border-subtle)]">
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[10px] uppercase font-bold text-[var(--admin-text-tertiary)] tracking-wider">
-                              Diff:
-                            </span>
-                            <div className="relative w-20">
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
-                                +₹
-                              </span>
-                              <input
-                                type="number"
-                                value={option.priceAdjustment}
-                                onChange={(e) =>
-                                  handleUpdateOption(optIdx, 'priceAdjustment', e.target.value)
-                                }
-                                placeholder="0"
-                                className="w-full h-7 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] focus:border-[#800000] focus:bg-[var(--admin-surface)] rounded-[4px] pl-6 pr-1.5 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            {/* Default Pill Button */}
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateOption(optIdx, 'isDefault', true)}
-                              className={`h-7 px-2 rounded-[4px] text-[10.5px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                                option.isDefault
-                                  ? 'bg-[#800000] text-white shadow-2xs'
-                                  : 'bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[var(--admin-text-secondary)] hover:border-[#800000]'
-                              }`}
-                              title={option.isDefault ? 'Default portion' : 'Tap to set as default'}
-                            >
-                              <span className="material-symbols-outlined text-[13px]">
-                                {option.isDefault ? 'check' : 'radio_button_unchecked'}
-                              </span>
-                              <span>Default</span>
-                            </button>
-
-                            {/* Up/Down Reorder Pair */}
-                            <div className="flex items-center border border-[var(--admin-border)] rounded-[4px] bg-[var(--admin-surface)] overflow-hidden shrink-0">
-                              <button
-                                type="button"
-                                disabled={optIdx === 0}
-                                onClick={() => handleMoveOption(optIdx, -1)}
-                                className="w-6 h-7 flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[#800000] hover:bg-[var(--admin-surface-muted)] disabled:opacity-20 cursor-pointer"
-                                title="Move up"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">
-                                  arrow_upward
-                                </span>
-                              </button>
-                              <div className="w-[1px] h-3.5 bg-[var(--admin-border)]" />
-                              <button
-                                type="button"
-                                disabled={optIdx === weightGroup.options.length - 1}
-                                onClick={() => handleMoveOption(optIdx, 1)}
-                                className="w-6 h-7 flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[#800000] hover:bg-[var(--admin-surface-muted)] disabled:opacity-20 cursor-pointer"
-                                title="Move down"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">
-                                  arrow_downward
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Add Option Row - Desktop Grid */}
-              <div className="hidden sm:grid sm:grid-cols-[28px_minmax(0,1.2fr)_130px_110px_96px] sm:items-center sm:gap-3 sm:pt-3 sm:border-t sm:border-[var(--admin-border-subtle)]">
-                <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
-                  <span className="material-symbols-outlined text-[16px]">add</span>
+                    );
+                  })}
                 </div>
 
-                <div>
-                  <input
-                    type="text"
-                    placeholder="New portion (e.g. 1 kg, Family Pack)"
-                    value={newOptionInput.label}
-                    onChange={(e) =>
-                      setNewOptionInput((prev) => ({ ...prev, label: e.target.value }))
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddCustomOption();
-                      }
-                    }}
-                    className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-3 text-[12px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
-                  />
-                </div>
+                {/* Add Option Row */}
+                <div className="grid grid-cols-[24px_minmax(100px,1fr)_85px_75px_70px] items-center gap-2 sm:gap-2.5 pt-2.5 border-t border-[var(--admin-border-subtle)]">
+                  <div className="flex items-center justify-center text-[var(--admin-text-tertiary)]">
+                    <span className="material-symbols-outlined text-[15px]">add</span>
+                  </div>
 
-                <div>
-                  <div className="relative w-full">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
-                      +₹
-                    </span>
+                  <div>
                     <input
-                      type="number"
-                      placeholder="0"
-                      value={newOptionInput.priceAdjustment || ''}
+                      type="text"
+                      placeholder="New portion (e.g. 1 kg, Family Pack)"
+                      value={newOptionInput.label}
                       onChange={(e) =>
-                        setNewOptionInput((prev) => ({
-                          ...prev,
-                          priceAdjustment: e.target.value,
-                        }))
+                        setNewOptionInput((prev) => ({ ...prev, label: e.target.value }))
                       }
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -601,53 +510,12 @@ export function ProductPricingStep({ formData, setFormData }) {
                           handleAddCustomOption();
                         }
                       }}
-                      className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-7 pr-2.5 text-[12px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
+                      className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] px-2.5 text-[12px] text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                     />
                   </div>
-                </div>
 
-                <div className="text-right">
-                  <span className="text-[11.5px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-[4px]">
-                    ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
-                  </span>
-                </div>
-
-                <div>
-                  <button
-                    type="button"
-                    onClick={handleAddCustomOption}
-                    className="w-full h-[36px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11.5px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-[15px]">add</span>
-                    <span>Add</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Add Option Row - Mobile Stacking */}
-              <div className="sm:hidden p-2.5 bg-[var(--admin-surface)] rounded-[6px] border border-dashed border-[var(--admin-border)] space-y-2 shadow-2xs">
-                <input
-                  type="text"
-                  placeholder="New portion (e.g. 1 kg, Family Pack)"
-                  value={newOptionInput.label}
-                  onChange={(e) =>
-                    setNewOptionInput((prev) => ({ ...prev, label: e.target.value }))
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddCustomOption();
-                    }
-                  }}
-                  className="w-full h-8 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] focus:border-[#800000] focus:bg-[var(--admin-surface)] rounded-[4px] px-2.5 text-[12px] font-medium text-[var(--admin-text-primary)] outline-none"
-                />
-
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] uppercase font-bold text-[var(--admin-text-tertiary)]">
-                      Diff:
-                    </span>
-                    <div className="relative w-20">
+                  <div>
+                    <div className="relative w-full">
                       <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-[var(--admin-text-secondary)] select-none pointer-events-none">
                         +₹
                       </span>
@@ -661,24 +529,33 @@ export function ProductPricingStep({ formData, setFormData }) {
                             priceAdjustment: e.target.value,
                           }))
                         }
-                        className="w-full h-7 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] focus:border-[#800000] focus:bg-[var(--admin-surface)] rounded-[4px] pl-6 pr-1.5 text-[12px] font-bold text-[var(--admin-text-primary)] outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCustomOption();
+                          }
+                        }}
+                        className="w-full h-[36px] bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] pl-6 pr-1.5 text-[12px] font-bold text-[var(--admin-text-primary)] placeholder:text-[var(--admin-text-tertiary)] outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/20 transition-all"
                       />
                     </div>
                   </div>
 
-                  <span className="text-[11px] font-bold text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-[3px] shrink-0">
-                    ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
-                  </span>
+                  <div className="flex items-center justify-center">
+                    <span className="text-[11px] font-bold text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-[4px] whitespace-nowrap">
+                      ₹{basePriceNum + (Number(newOptionInput.priceAdjustment) || 0)}
+                    </span>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAddCustomOption}
-                    disabled={!newOptionInput.label.trim()}
-                    className="flex-1 h-7 rounded-[4px] bg-[#800000] hover:bg-[#6a0000] disabled:opacity-40 text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-[13px]">add</span>
-                    <span>Add Tier</span>
-                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomOption}
+                      className="w-full h-[36px] rounded-[4px] bg-[#800000] hover:bg-[#6a0000] text-white text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-colors shadow-2xs flex items-center justify-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">add</span>
+                      <span>Add</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
