@@ -236,10 +236,27 @@ overages.
 
 ## I. Capacity assumptions
 
-**No load test was run.** There is no staging environment, and load-testing production was not
-authorised. So:
+No hosted staging environment exists and load-testing production was not authorised. A **local isolated
+staging** test was run on 2026-10-27: in-memory MongoDB 8 with a read-only copy of the live catalog, the
+compiled backend, one Node process on a Windows desktop, all external services disconnected.
+Traffic mix: 40% product list, 25% product detail, 15% categories, 10% settings, 10% CMS.
 
-1. **Measured safe operating level: none measured.**
+| Virtual users | Req/s | p50    | p95    | p99    | Errors |
+| ------------- | ----- | ------ | ------ | ------ | ------ |
+| 5             | 369   | 12 ms  | 24 ms  | 49 ms  | 0      |
+| 25            | 495   | 47 ms  | 74 ms  | 103 ms | 0      |
+| 50            | 518   | 91 ms  | 124 ms | 234 ms | 0      |
+| 100           | 524   | 176 ms | 240 ms | 733 ms | 0      |
+
+Re-run it with `backend/ops/testing/staging-db.cjs` and `backend/ops/testing/loadtest.cjs` (see the
+launch checklist, C2).
+
+1. **Measured safe operating level:**
+   - **Local isolated staging only:** 50 concurrent virtual users at about 518 req/s, p95 124 ms, 0 errors,
+     for catalog reads.
+   - **Production: none measured.** The local database answers in about 8 ms versus 213 ms from Render to
+     Atlas, and the Render instance size is unverified, so the local figure is a per-process code ceiling,
+     not production capacity.
 2. **Estimated practical capacity [ESTIMATE].** Inputs:
    - Uncached catalog request: p50 0.72 s, of which ~0.24 s is server/DB time [VERIFIED, n=10].
    - Single Node process; DB pool up to 50 connections (code); DB round trip 206 ms today.
@@ -261,7 +278,7 @@ or checkout errors from contention appear.
 
 ## J. Implementation status
 
-**Completed in code (uncommitted)**
+**Completed in code (committed as `c3ef351f` and deployed)**
 
 - Performance:
   - Footer layout shift removed (CLS 0.541 → 0).
@@ -299,8 +316,13 @@ or checkout errors from contention appear.
 - Recreating the Render service in Singapore (infrastructure change).
 - Retiring `frontend/public/uploads` from git after the image migration is verified.
 
-**Tests that remain blocked:** load and concurrency tests (no staging); real-device iOS/Android login; live
-Razorpay; WhatsApp end to end; Atlas restore drill.
+**Done since:** isolated local staging load test (section I); inventory concurrency tests (20 racing buyers
+for 5 units → exactly 5); oversell fix; MongoDB compressor fix; readiness that honours `REQUIRE_REDIS`;
+CI audit at `high`. See `PRODUCTION_READINESS_REPORT.md` §3.
+
+**Tests that remain blocked:** load test on production-like staging (same region, instance size and Atlas
+tier); real-device iOS/Android login; Razorpay test-mode order on a non-production database; WhatsApp end
+to end; Atlas restore drill.
 
 ---
 

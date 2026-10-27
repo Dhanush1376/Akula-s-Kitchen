@@ -59,11 +59,20 @@ export class InventoryService {
   ) {
     const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-    // Reserve stock with atomic update
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      throw new ApiError(400, 'Quantity must be a positive whole number');
+    }
+
+    // Check availability and reserve in ONE atomic update: the filter only matches when
+    // (stock - reservedStock) still covers this quantity, so concurrent checkouts can
+    // never reserve more units than exist (previously the $inc had no stock condition).
     const product = await Product.findOneAndUpdate(
       {
         _id: productId,
         isActive: true,
+        $expr: {
+          $gte: [{ $subtract: ['$stock', { $ifNull: ['$reservedStock', 0] }] }, quantity],
+        },
       },
       { $inc: { reservedStock: quantity } },
       { session: session || null, returnDocument: 'after' },
@@ -71,12 +80,15 @@ export class InventoryService {
 
     if (!product) {
       const existingProduct = await Product.findById(productId)
-        .select('isActive')
+        .select('isActive title stock reservedStock')
         .session(session || null)
         .lean();
       if (!existingProduct) throw new ApiError(404, 'Product not found');
       if (!existingProduct.isActive) throw new ApiError(400, 'Product is no longer active');
-      throw new ApiError(404, 'Product not found');
+      throw new ApiError(
+        409,
+        `Insufficient stock for ${existingProduct.title || 'this product'}. Please reduce the quantity.`,
+      );
     }
 
     const previousReservedStock = product.reservedStock - quantity; // Compute pre-update value

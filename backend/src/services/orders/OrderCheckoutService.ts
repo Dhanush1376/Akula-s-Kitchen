@@ -568,6 +568,17 @@ export class OrderCheckoutService {
       if (err.code === 11000 && err.keyPattern && err.keyPattern.idempotencyKey) {
         throw new ApiError(409, 'Duplicate order detected.');
       }
+      // Two checkouts touched the same product document at the same instant; MongoDB
+      // aborted this one. Nothing was written, so the customer can safely retry.
+      if (
+        typeof err?.hasErrorLabel === 'function' &&
+        err.hasErrorLabel('TransientTransactionError')
+      ) {
+        throw new ApiError(
+          409,
+          'Another order for this item was placed at the same moment. Please try again.',
+        );
+      }
       throw err;
     } finally {
       session.endSession();

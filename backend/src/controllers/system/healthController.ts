@@ -76,10 +76,16 @@ export class HealthController {
       readyState: mongoose.connection.readyState,
     };
 
-    const isReady = checks.mongodb.status === 'connected';
+    // Redis gates readiness only where the deployment declares it required (shared rate
+    // limits, queues, sockets across instances); otherwise it is reported, not enforced.
+    const redisRequired = process.env.REQUIRE_REDIS === 'true';
+    const isReady =
+      checks.mongodb.status === 'connected' &&
+      (!redisRequired || checks.redis.status === 'connected');
     res.status(isReady ? 200 : 503).json({
       status: isReady ? 'ready' : 'not_ready',
       timestamp: new Date().toISOString(),
+      redisRequired,
       checks,
     });
   }

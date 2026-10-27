@@ -31,6 +31,13 @@ mongoose.plugin((schema) => {
 // Apply global Destruction Guard to all schemas
 mongoose.plugin(DestructionGuard);
 
+/**
+ * Wire compressors. zlib is built into Node. 'zstd'/'snappy' need optional native packages
+ * that are not installed: any server that negotiates them (e.g. stock MongoDB 8) fails every
+ * query with MongoMissingDependencyError. Atlas currently does not, which hid the defect.
+ */
+export const MONGO_COMPRESSORS: ('zlib' | 'zstd' | 'snappy')[] = ['zlib'];
+
 export interface DbMetrics {
   readyState: number;
   readyStateName: string;
@@ -279,7 +286,7 @@ class DatabaseManager {
       maxIdleTimeMS: 270000, // 4.5 minutes (safely below 5m NAT drop)
       waitQueueTimeoutMS: 30000, // 30 seconds to prevent checkout timeout during startup
       bufferCommands: true, // Enable buffering to ride over transient connection drops
-      compressors: ['zstd', 'snappy'],
+      compressors: MONGO_COMPRESSORS,
       retryReads: true,
       retryWrites: true,
       serverApi: { version: '1' as const, strict: false, deprecationErrors: true },
