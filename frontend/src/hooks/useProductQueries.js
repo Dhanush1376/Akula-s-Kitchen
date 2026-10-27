@@ -88,6 +88,34 @@ export function useCategories(options = {}) {
   });
 }
 
+export function useActiveCategories(options = {}) {
+  const {
+    enabled = true,
+    staleTime = 5 * 60 * 1000,
+    gcTime = 30 * 60 * 1000,
+    ...restOptions
+  } = options;
+  return useQuery({
+    queryKey: ['active_database_categories'],
+    queryFn: async () => {
+      try {
+        const res = await productService.getActiveCategories();
+        const raw = res?.data || res;
+        if (Array.isArray(raw)) {
+          return raw.filter((c) => c && c.isActive !== false && !c.isDeleted);
+        }
+      } catch (err) {
+        // Fallback to distinct categories
+      }
+      return [];
+    },
+    enabled,
+    staleTime,
+    gcTime,
+    ...restOptions,
+  });
+}
+
 export function useProductMutations() {
   const queryClient = useQueryClient();
 

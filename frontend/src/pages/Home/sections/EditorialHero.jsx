@@ -106,7 +106,7 @@ function TodayHead({ title, subtitle, count }) {
         </h1>
         {subtitle && <p className="ak-today__subtitle">{subtitle}</p>}
       </div>
-      <Link to="/collections" className="ak-today__all">
+      <Link to="/menu" className="ak-today__all">
         {count > 0 && <span className="ak-today__count">{count}</span>}
         <span>See all</span>
         <ArrowRight strokeWidth={2.4} aria-hidden="true" />
@@ -147,6 +147,44 @@ function HeroSkeleton({ columns }) {
   );
 }
 
+const FALLBACK_HERO_ITEMS = [
+  {
+    id: '6ac4ba5658b53ac90876a53b',
+    title: 'Tomato Pickle',
+    image:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123121/akulas-kitchen/products/ouv4ci03wehkucl4nrxk.jpg',
+  },
+  {
+    id: '6ac62b733e575188a53b7110',
+    title: 'Idli Dosa Batter',
+    image:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123124/akulas-kitchen/products/ykliysxhqcecv1ipyzjq.jpg',
+  },
+  {
+    id: '6ac4f0f6771f3f0d427c1448',
+    title: 'Mango Avakaaya',
+    image:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123122/akulas-kitchen/products/bmv5h5wodrbnajoolldp.jpg',
+  },
+  {
+    id: '6ac847f213534437d8e18362',
+    title: 'Sambar Masala',
+    image:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+  },
+  {
+    id: '6ac8444713534437d8e182a8',
+    title: 'Amla Avakaya',
+    image:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+  },
+  {
+    id: '6ac494ab8c02f506a4f4bd1e',
+    title: 'Coconut Chutney',
+    image: '/uploads/akulas-kitchen/products/rustic-tomato-chutney-jar-jpg-8cd5_b8bea.webp',
+  },
+];
+
 export function EditorialHero({ previewContent }) {
   const cms = useWebsiteContent({ includeDefaults: false });
   const activeCms = previewContent || cms;
@@ -154,26 +192,38 @@ export function EditorialHero({ previewContent }) {
   const productIds = useMemo(() => heroConfig.productIds || [], [heroConfig.productIds]);
   const maxColumns = useColumnCount();
 
-  const { data, isPending } = useProducts(
-    { ids: productIds.join(','), limit: Math.min(productIds.length || 5, MAX_ITEMS) },
+  const { data } = useProducts(
+    { ids: productIds.join(','), limit: Math.min(productIds.length || 6, MAX_ITEMS) },
     { enabled: productIds.length > 0 },
   );
 
   const items = useMemo(() => {
-    const raw = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
+    const raw = Array.isArray(data?.products)
+      ? data.products
+      : Array.isArray(data?.data?.products)
+        ? data.data.products
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : Array.isArray(data?.items)
+              ? data.items
+              : [];
+
     // Keep the admin's chosen order
     const byId = new Map(raw.map((p) => [String(p.id || p._id), p]));
     const ordered = productIds.map((id) => byId.get(String(id))).filter(Boolean);
-    return (ordered.length ? ordered : raw)
+    const resolved = (ordered.length ? ordered : raw)
       .slice(0, MAX_ITEMS)
       .map(toItem)
       .filter((i) => i.id);
+
+    return resolved.length > 0 ? resolved : FALLBACK_HERO_ITEMS;
   }, [data, productIds]);
 
   const columnCount = Math.max(1, Math.min(maxColumns, items.length));
   const columns = useMemo(() => packColumns(items, columnCount), [items, columnCount]);
 
-  if (productIds.length > 0 && isPending) return <HeroSkeleton columns={maxColumns} />;
   if (items.length === 0) return null;
 
   const badge = heroConfig.badgeText || "Today's special";

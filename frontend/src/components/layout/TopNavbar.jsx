@@ -9,7 +9,6 @@ import {
   ShoppingBag,
   ChevronDown,
   ChevronRight,
-  ChevronLeft,
   X,
   LayoutGrid,
 } from 'lucide-react';
@@ -108,6 +107,7 @@ export function TopNavbar() {
   }, [cartCount]);
   const isMobile = useMediaQuery('(max-width: 767px)');
   const isMobileOrTablet = useMediaQuery('(max-width: 1023px)');
+  const isDesktop = !isMobileOrTablet;
   const [_isMoreOpen, setIsMoreOpen] = useState(false);
   const [hasPendingInvite, setHasPendingInvite] = useState(false);
 
@@ -117,6 +117,12 @@ export function TopNavbar() {
   const { scrollDirection, isAtTop } = useScrollDirection();
   // Slides up on scroll down to maximize content space; reveals immediately when scrolling up or at top
   const hideNavbar = !isOpen && !search?.isOpen && !isAtTop && scrollDirection === 'down';
+
+  // Let sticky page elements (like the menu's section chips) move up while the bar is away
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-nav-hidden', hideNavbar);
+  }, [hideNavbar]);
+  useEffect(() => () => document.documentElement.removeAttribute('data-nav-hidden'), []);
 
   const searchParams = new URLSearchParams(location.search);
   const searchParam = searchParams.get('search');
@@ -284,12 +290,22 @@ export function TopNavbar() {
 
   const navLinks = [
     { label: 'Home', href: '/', mobileOnly: true },
-    ...dbLinks,
+    { label: 'Menu', href: '/menu', mobileOnly: true },
+    ...dbLinks.filter((link) => link.href !== '/menu' && link.label?.toLowerCase() !== 'menu'),
     { label: 'My Orders', href: '/dashboard/orders', mobileOnly: true },
     { label: 'Contact Us', href: '/contact', mobileOnly: true },
   ];
 
   const isActive = (href) => location.pathname === href;
+
+  const todayFormatted = useMemo(() => {
+    return new Date().toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }, []);
 
   // Real, dynamic categories only — no hardcoded fallbacks
   const displayCategories = useMemo(() => {
@@ -302,12 +318,10 @@ export function TopNavbar() {
 
   const categoriesScrollRef = React.useRef(null);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
 
   const checkCategoriesScroll = useCallback(() => {
     if (categoriesScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = categoriesScrollRef.current;
-      setCanScrollLeft(scrollLeft > 6);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
     }
   }, []);
@@ -333,16 +347,25 @@ export function TopNavbar() {
     };
   }, [checkCategoriesScroll, displayCategories]);
 
+  // Bring the selected category chip to the front of the row (where SHOP sits), so the
+  // visitor sees what they picked and the categories after it
+  useEffect(() => {
+    const row = categoriesScrollRef.current;
+    if (!row || !isShopPage) return;
+    const chip = activeCategory
+      ? row.querySelector(`[data-cat="${CSS.escape(activeCategory.toLowerCase())}"]`)
+      : null;
+    const left = chip
+      ? row.scrollLeft + chip.getBoundingClientRect().left - row.getBoundingClientRect().left - 4
+      : 0;
+    row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    const timer = setTimeout(checkCategoriesScroll, 350);
+    return () => clearTimeout(timer);
+  }, [activeCategory, isShopPage, displayCategories, checkCategoriesScroll]);
+
   const handleScrollRight = () => {
     if (categoriesScrollRef.current) {
       categoriesScrollRef.current.scrollBy({ left: 180, behavior: 'smooth' });
-      setTimeout(checkCategoriesScroll, 250);
-    }
-  };
-
-  const handleScrollLeft = () => {
-    if (categoriesScrollRef.current) {
-      categoriesScrollRef.current.scrollBy({ left: -180, behavior: 'smooth' });
       setTimeout(checkCategoriesScroll, 250);
     }
   };
@@ -356,151 +379,29 @@ export function TopNavbar() {
         }`}
         style={{ zIndex: 'var(--z-sticky)' }}
       >
-        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 pb-1.5 sm:pb-2 pointer-events-auto">
-          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
+        <div className="max-w-[1400px] lg:max-w-[1280px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 lg:pt-4 pb-1.5 sm:pb-2 pointer-events-auto">
+          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 lg:pl-3 lg:pr-3 lg:py-2.5 lg:rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
             {/* Big Circular Logo spanning full height on left */}
             <Link to="/" className="shrink-0 flex items-center self-center group pl-0.5 sm:pl-1">
               <BrandLogo
-                size={isMobile ? '78px' : '86px'}
+                size={isMobile ? '78px' : isDesktop ? '78px' : '86px'}
                 className="drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
                 variant="default"
               />
             </Link>
 
-            {/* Right Content: Top Row (Search + Actions) & Bottom Row (SHOP + Categories) */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5">
+            {/* Right Content: Top Row (Search + Actions) & Bottom Row (SHOP + Categories).
+                On laptops both rows sit on one line: categories, then search + actions. */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5 lg:flex-row lg:items-center lg:gap-4">
               {/* Top Row: Pill Search Bar + Actions */}
-              <div className="flex items-center gap-2 sm:gap-3 w-full">
+              <div className="flex items-center gap-2 sm:gap-3 w-full lg:contents">
                 {/* Search pill: opens the search panel (the mic opens it in voice mode) */}
-                <SearchTrigger onOpen={search.handleOpen} />
+                <div className="flex flex-1 min-w-0 lg:flex-none lg:w-[240px] xl:w-[280px] lg:order-1">
+                  <SearchTrigger onOpen={search.handleOpen} />
+                </div>
 
-                {/* Right Action Group: Profile (Laptop/Desktop), Cart & Menu Circular Buttons */}
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  {/* Laptop/Desktop Profile Button & Dropdown */}
-                  <div ref={profileDropdownRef} className="relative hidden md:block">
-                    <button
-                      type="button"
-                      id="profile-trigger-btn"
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          openAuthModal();
-                        } else {
-                          setIsProfileDropdownOpen((prev) => !prev);
-                        }
-                      }}
-                      className={`w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full border flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] transition-all relative cursor-pointer shrink-0 ${
-                        isProfileDropdownOpen
-                          ? 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] ring-2 ring-[#f7bb0e]/30'
-                          : 'bg-white hover:bg-neutral-50 border-neutral-300 hover:border-neutral-400 text-neutral-900'
-                      }`}
-                      aria-label="Account Profile"
-                      title={
-                        isAuthenticated ? user?.name || user?.email || 'My Account' : 'Sign In'
-                      }
-                    >
-                      <User size={19} strokeWidth={1.8} />
-                      {isAuthenticated && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
-                      )}
-                    </button>
-
-                    {/* Profile Dropdown Menu */}
-                    <AnimatePresence>
-                      {isProfileDropdownOpen && isAuthenticated && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                          transition={{ duration: 0.16 }}
-                          className="absolute right-0 top-full mt-2 w-64 bg-white/85 backdrop-blur-2xl rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-neutral-200 p-2 z-50 text-left"
-                        >
-                          {/* User Header */}
-                          <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 mb-1.5">
-                            <p className="text-[13px] font-bold text-neutral-900 truncate">
-                              {user?.name || 'My Account'}
-                            </p>
-                            <p className="text-[11px] text-neutral-500 truncate mt-0.5">
-                              {user?.email || user?.phone || ''}
-                            </p>
-                            {user?.role && adminRoles.includes(user.role) && (
-                              <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f7bb0e]/20 text-[#a37200] text-[10px] font-bold uppercase tracking-wider">
-                                {user.role.replace('_', ' ')}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Navigation Options */}
-                          <div className="py-1 space-y-0.5">
-                            <Link
-                              to="/dashboard?drawer=profile"
-                              onClick={() => setIsProfileDropdownOpen(false)}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
-                            >
-                              <User size={16} strokeWidth={2} className="text-neutral-500" />
-                              <span>My Profile</span>
-                            </Link>
-
-                            <Link
-                              to="/dashboard/orders"
-                              onClick={() => setIsProfileDropdownOpen(false)}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
-                            >
-                              <ShoppingBag size={16} strokeWidth={2} className="text-neutral-500" />
-                              <span>My Orders</span>
-                            </Link>
-
-                            <Link
-                              to="/wishlist"
-                              onClick={() => setIsProfileDropdownOpen(false)}
-                              className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
-                            >
-                              <span className="flex items-center gap-2.5">
-                                <Heart size={16} strokeWidth={2} className="text-neutral-500" />
-                                <span>Wishlist</span>
-                              </span>
-                              {wishlistCount > 0 && (
-                                <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#f7bb0e] text-[#283618] text-[10px] font-extrabold flex items-center justify-center shadow-xs">
-                                  {wishlistCount}
-                                </span>
-                              )}
-                            </Link>
-
-                            {adminRoles.includes(user?.role) && (
-                              <Link
-                                to="/admin"
-                                onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-bold text-[#b4820a] hover:bg-[#fff9e6] transition-colors"
-                              >
-                                <span className="flex items-center gap-2.5">
-                                  <LayoutGrid size={16} strokeWidth={2} />
-                                  <span>Admin Portal</span>
-                                </span>
-                                {hasPendingInvite && (
-                                  <span className="w-2 h-2 rounded-full bg-rose-500" />
-                                )}
-                              </Link>
-                            )}
-                          </div>
-
-                          <div className="my-1 border-t border-neutral-100" />
-
-                          {/* Sign Out */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsProfileDropdownOpen(false);
-                              logout();
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                          >
-                            <LogOut size={16} strokeWidth={2} />
-                            <span>Sign Out</span>
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
+                {/* Right Action Group: Cart & Profile (Laptop/Desktop) / Log In Button */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 lg:order-3">
                   {/* Cart Circle Button */}
                   <motion.button
                     type="button"
@@ -527,6 +428,139 @@ export function TopNavbar() {
                     )}
                   </motion.button>
 
+                  {/* Laptop/Desktop Profile Button & Dropdown (When logged in) / Log In Button (When logged out) */}
+                  {isAuthenticated ? (
+                    <div ref={profileDropdownRef} className="relative hidden md:block">
+                      <button
+                        type="button"
+                        id="profile-trigger-btn"
+                        onClick={() => setIsProfileDropdownOpen((prev) => !prev)}
+                        className={`w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full border flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] transition-all relative cursor-pointer shrink-0 ${
+                          isProfileDropdownOpen
+                            ? 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] ring-2 ring-[#f7bb0e]/30'
+                            : 'bg-white hover:bg-neutral-50 border-neutral-300 hover:border-neutral-400 text-neutral-900'
+                        }`}
+                        aria-label="Account Profile"
+                        title={user?.name || user?.email || 'My Account'}
+                      >
+                        <User size={19} strokeWidth={1.8} />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
+                      </button>
+
+                      {/* Profile Dropdown Menu */}
+                      <AnimatePresence>
+                        {isProfileDropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                            transition={{ duration: 0.16 }}
+                            className="absolute right-0 top-full mt-2 w-64 bg-white/85 backdrop-blur-2xl rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-neutral-200 p-2 z-50 text-left"
+                          >
+                            {/* User Header */}
+                            <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 mb-1.5">
+                              <p className="text-[13px] font-bold text-neutral-900 truncate">
+                                {user?.name || 'My Account'}
+                              </p>
+                              <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                                {user?.email || user?.phone || ''}
+                              </p>
+                              {user?.role && adminRoles.includes(user.role) && (
+                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f7bb0e]/20 text-[#a37200] text-[10px] font-bold uppercase tracking-wider">
+                                  {user.role.replace('_', ' ')}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Navigation Options */}
+                            <div className="py-1 space-y-0.5">
+                              <Link
+                                to="/dashboard?drawer=profile"
+                                onClick={() => setIsProfileDropdownOpen(false)}
+                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                              >
+                                <User size={16} strokeWidth={2} className="text-neutral-500" />
+                                <span>My Profile</span>
+                              </Link>
+
+                              <Link
+                                to="/dashboard/orders"
+                                onClick={() => setIsProfileDropdownOpen(false)}
+                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                              >
+                                <ShoppingBag
+                                  size={16}
+                                  strokeWidth={2}
+                                  className="text-neutral-500"
+                                />
+                                <span>My Orders</span>
+                              </Link>
+
+                              <Link
+                                to="/wishlist"
+                                onClick={() => setIsProfileDropdownOpen(false)}
+                                className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                              >
+                                <span className="flex items-center gap-2.5">
+                                  <Heart size={16} strokeWidth={2} className="text-neutral-500" />
+                                  <span>Wishlist</span>
+                                </span>
+                                {wishlistCount > 0 && (
+                                  <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#f7bb0e] text-[#283618] text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                                    {wishlistCount}
+                                  </span>
+                                )}
+                              </Link>
+
+                              {adminRoles.includes(user?.role) && (
+                                <Link
+                                  to="/admin"
+                                  onClick={() => setIsProfileDropdownOpen(false)}
+                                  className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-bold text-[#b4820a] hover:bg-[#fff9e6] transition-colors"
+                                >
+                                  <span className="flex items-center gap-2.5">
+                                    <LayoutGrid size={16} strokeWidth={2} />
+                                    <span>Admin Portal</span>
+                                  </span>
+                                  {hasPendingInvite && (
+                                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                                  )}
+                                </Link>
+                              )}
+                            </div>
+
+                            <div className="my-1 border-t border-neutral-100" />
+
+                            {/* Sign Out */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsProfileDropdownOpen(false);
+                                logout();
+                              }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            >
+                              <LogOut size={16} strokeWidth={2} />
+                              <span>Sign Out</span>
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      id="login-trigger-btn"
+                      onClick={() => openAuthModal()}
+                      className="hidden md:flex h-[42px] sm:h-[44px] px-3.5 sm:px-4 rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400 text-neutral-900 font-bold text-[11.5px] sm:text-[12px] uppercase tracking-wider items-center gap-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer shrink-0"
+                      aria-label="Log In"
+                      title="Log In"
+                    >
+                      <LogIn size={16} strokeWidth={2.2} className="text-neutral-700" />
+                      <span>Log In</span>
+                    </button>
+                  )}
+
                   {/* Menu Hamburger Circle Button (Mobile only) */}
                   <button
                     type="button"
@@ -541,7 +575,7 @@ export function TopNavbar() {
               </div>
 
               {/* Bottom Row: Horizontal Scrolling Row (SHOP + Categories) */}
-              <div className="flex items-center w-full min-w-0 relative rounded-full overflow-hidden isolate">
+              <div className="flex items-center w-full min-w-0 relative rounded-full overflow-hidden isolate lg:order-2 lg:flex-1">
                 {/* Horizontal Scrolling Categories including SHOP */}
                 <div
                   ref={categoriesScrollRef}
@@ -572,6 +606,7 @@ export function TopNavbar() {
                     return (
                       <button
                         key={`${catName}-${i}`}
+                        data-cat={catName.toLowerCase()}
                         type="button"
                         onClick={() =>
                           navigate(`/collections?category=${encodeURIComponent(catName)}`)
@@ -599,21 +634,6 @@ export function TopNavbar() {
                       title="Next categories"
                     >
                       <ChevronRight size={14} strokeWidth={2.5} />
-                    </button>
-                  </div>
-                )}
-
-                {/* Left Scroll Arrow Button (<) */}
-                {canScrollLeft && (
-                  <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-6 pl-0.5 sm:pl-1 bg-gradient-to-r from-white/95 via-white/80 to-transparent pointer-events-none">
-                    <button
-                      type="button"
-                      onClick={handleScrollLeft}
-                      className="pointer-events-auto w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full bg-white hover:bg-neutral-50 active:scale-95 text-neutral-900 border border-neutral-200/90 shadow-xs flex items-center justify-center transition-all cursor-pointer"
-                      aria-label="Scroll categories left"
-                      title="Previous categories"
-                    >
-                      <ChevronLeft size={14} strokeWidth={2.5} />
                     </button>
                   </div>
                 )}
@@ -726,6 +746,12 @@ export function TopNavbar() {
                                   to={link.href}
                                 >
                                   <span>{link.label}</span>
+                                  {link.label.toLowerCase() === 'menu' && (
+                                    <span className="text-[10px] sm:text-[10.5px] font-sans font-bold tracking-normal capitalize text-[#283618]/70 bg-[#283618]/[0.07] px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e]" />
+                                      {todayFormatted}
+                                    </span>
+                                  )}
                                 </Link>
                               )}
                             </div>
@@ -883,7 +909,7 @@ export function TopNavbar() {
                               <LogIn size={18} strokeWidth={1.8} />
                             </div>
                             <span className="text-[10px] font-sans font-semibold tracking-wide text-neutral-600 group-hover:text-black">
-                              Sign In
+                              Log In
                             </span>
                           </button>
                         ) : (

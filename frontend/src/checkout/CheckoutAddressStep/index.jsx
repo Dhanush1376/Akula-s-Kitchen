@@ -46,10 +46,10 @@ export default function CheckoutAddressStep() {
         {isSelectingList ? (
           <motion.div
             key="address-list-view"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
           >
             <AddressList
               savedAddresses={savedAddresses}
@@ -63,10 +63,10 @@ export default function CheckoutAddressStep() {
         ) : (
           <motion.div
             key="main-delivery-view"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
           >
             <MainDeliveryView
               activeSelectedAddress={activeSelectedAddress}

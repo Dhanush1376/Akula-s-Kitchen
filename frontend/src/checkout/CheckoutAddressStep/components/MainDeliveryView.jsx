@@ -72,6 +72,7 @@ export function MainDeliveryView({
             {/* Address lines */}
             <p className="text-[12.5px] text-neutral-600 leading-relaxed max-w-xl">
               {activeSelectedAddress.addressString || activeSelectedAddress.address}
+              {activeSelectedAddress.landmark && <>, {activeSelectedAddress.landmark}</>}
               {activeSelectedAddress.locality && <>, {activeSelectedAddress.locality}</>}
               <br />
               {activeSelectedAddress.city}, {activeSelectedAddress.state}{' '}

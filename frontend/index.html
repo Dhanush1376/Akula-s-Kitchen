@@ -220,70 +220,7 @@
       </div>
     </noscript>
 
-    <div id="root">
-      <!-- App Shell Skeleton: Displays instantly on cold start before React loads -->
-      <style>
-        .app-skeleton {
-          display: flex;
-          flex-direction: column;
-          min-height: 100vh;
-          background-color: #ffffff;
-          overflow: hidden;
-        }
-        .skel-header {
-          height: 72px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 5%;
-          background: rgba(250, 250, 250, 0.85);
-        }
-        .skel-pulse {
-          background: rgba(0, 0, 0, 0.06);
-          animation: skel-pulse 1.5s infinite ease-in-out;
-        }
-        @keyframes skel-pulse {
-          0% { opacity: 0.5; }
-          50% { opacity: 1; }
-          100% { opacity: 0.5; }
-        }
-        .skel-logo { width: 140px; height: 24px; border-radius: 6px; }
-        .skel-nav { display: flex; gap: 24px; }
-        .skel-nav-item { width: 64px; height: 16px; border-radius: 8px; }
-        .skel-icons { display: flex; gap: 16px; }
-        .skel-icon { width: 36px; height: 36px; border-radius: 50%; }
-        
-        .skel-hero {
-          margin: 32px 5%;
-          height: 60vh;
-          border-radius: 32px;
-        }
-        
-        @media (max-width: 768px) {
-          .skel-nav { display: none; }
-          .skel-header { padding: 0 24px; }
-          .skel-hero { height: 50vh; border-radius: 24px; margin: 24px 24px; }
-        }
-      </style>
-      <div id="app-shell" class="app-skeleton">
-        <div class="skel-header">
-          <div class="skel-pulse skel-logo"></div>
-          <div class="skel-nav">
-            <div class="skel-pulse skel-nav-item"></div>
-            <div class="skel-pulse skel-nav-item"></div>
-            <div class="skel-pulse skel-nav-item"></div>
-            <div class="skel-pulse skel-nav-item"></div>
-          </div>
-          <div class="skel-icons">
-            <div class="skel-pulse skel-icon"></div>
-            <div class="skel-pulse skel-icon" style="display: none;"></div>
-            <div class="skel-pulse skel-icon" style="display: none;"></div>
-          </div>
-        </div>
-        <div class="skel-pulse skel-hero"></div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx" fetchpriority="high"></script>
 
   </body>

@@ -4,21 +4,20 @@ import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { ProductCard } from '../../../components/shared/ProductCard';
 import { useProducts } from '../../../hooks/useProductQueries';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 /**
- * Recommended grid using real personalized feed API or manual curation.
+ * Recommended grid using real personalized feed API or manual curation with automatic fallback.
  */
 export function RecommendedGrid({ previewContent }) {
-  const cms = useWebsiteContent({ includeDefaults: false });
+  const cms = useWebsiteContent();
   const activeCms = previewContent || cms;
-  const loading = !previewContent && cms?.loading;
   const config = activeCms?.recommendedProducts || {};
 
   const productIds = config.productIds || [];
   const isManualMode = config.useAutoFeed === false && productIds.length > 0;
 
-  const { data, isPending, isError, refetch } = useProducts(
+  const { data, isPending, isError } = useProducts(
     {
       ...(isManualMode ? { ids: productIds.join(',') } : {}),
       limit: config.maxDisplay || 12,
@@ -26,56 +25,57 @@ export function RecommendedGrid({ previewContent }) {
     { enabled: config.isVisible !== false },
   );
 
+  const rawList = useMemo(() => {
+    if (Array.isArray(data?.products)) return data.products;
+    if (Array.isArray(data?.data?.products)) return data.data.products;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    return [];
+  }, [data]);
+
+  const needsFallback = (rawList.length === 0 || isError) && !isPending;
+  const { data: fallbackData } = useProducts(
+    { limit: config.maxDisplay || 8 },
+    { enabled: config.isVisible !== false && needsFallback },
+  );
+
+  const fallbackList = useMemo(() => {
+    if (Array.isArray(fallbackData?.products)) return fallbackData.products;
+    if (Array.isArray(fallbackData?.data?.products)) return fallbackData.data.products;
+    if (Array.isArray(fallbackData?.data)) return fallbackData.data;
+    if (Array.isArray(fallbackData)) return fallbackData;
+    if (Array.isArray(fallbackData?.items)) return fallbackData.items;
+    return [];
+  }, [fallbackData]);
+
+  const products = rawList.length > 0 ? rawList : fallbackList;
+
   if (config.isVisible === false) return null;
-
-  if (isPending || loading) {
-    return (
-      <section className="h1-section relative isolate" id="h1-recommended">
-        <div className="h1-container relative z-10 animate-pulse">
-          <div className="flex justify-between items-end mb-8 lg:mb-10">
-            <div>
-              <div className="h-8 lg:h-10 w-48 lg:w-64 bg-surface-container-high rounded-full"></div>
-            </div>
-            <div className="h-4 w-20 bg-surface-container-high rounded-full hidden lg:block"></div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 lg:gap-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex flex-col gap-4">
-                <div className="w-full aspect-[3/4] bg-surface-container-high rounded-[24px] lg:rounded-[32px]"></div>
-                <div className="px-1 lg:px-2">
-                  <div className="w-[80%] h-4 bg-surface-container-high rounded-full mb-2"></div>
-                  <div className="w-[60%] h-3 bg-surface-container-high rounded-full mb-3"></div>
-                  <div className="w-[40%] h-5 bg-surface-container-high rounded-full"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const products = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
-  if (isError || !products || products.length === 0) {
-    return null;
-  }
+  if (products.length === 0 && !isPending) return null;
 
   return (
-    <section className="h1-section relative isolate" id="h1-recommended">
+    <section className="h1-section relative isolate py-8 lg:py-12" id="h1-recommended">
       <div className="h1-container relative z-10">
         <SectionHeader
           title={config.sectionTitle || 'Recommended For You'}
+          kicker={config.sectionSubtitle || 'Specially Handpicked'}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>
       <div className="h1-container relative z-10 mt-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-6 lg:gap-8">
           {products.slice(0, config.maxDisplay || 8).map((product) => (
             <ProductCard
               key={product.id || product._id}
               {...product}
               id={product.id || product._id}
-              imageSrc={product.imageSrc || product.image || product.thumbnail}
+              imageSrc={
+                product.imageSrc ||
+                product.image ||
+                product.thumbnail ||
+                (product.images && product.images[0])
+              }
               price={product.price || product.basePrice}
               oldPrice={product.strikingPrice || product.oldPrice || product.mrp}
               badges={config.badgeText ? [config.badgeText] : []}

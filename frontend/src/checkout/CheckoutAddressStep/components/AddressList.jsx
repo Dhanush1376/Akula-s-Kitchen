@@ -71,7 +71,9 @@ export function AddressList({
                     )}
                   </div>
                   <p className="text-[12px] text-neutral-600 leading-relaxed max-w-xl mb-2">
-                    {addr.addressString || addr.address}, {addr.locality}, {addr.city}, {addr.state}{' '}
+                    {addr.addressString || addr.address}
+                    {addr.landmark ? `, ${addr.landmark}` : ''}, {addr.locality}, {addr.city},{' '}
+                    {addr.state}{' '}
                     <strong className="text-neutral-900 font-bold">{addr.pincode}</strong>
                   </p>
                   <div className="text-[11.5px] flex items-center gap-1.5 text-neutral-600">

@@ -1,7 +1,13 @@
 import { ArrowLeft, ShieldCheck, Check } from 'lucide-react';
 import React from 'react';
 import { m as motion } from 'framer-motion';
-export function CheckoutSteps({ currentStep, onStepClick, steps = ['BAG', 'ADDRESS', 'PAYMENT'] }) {
+export function CheckoutSteps({
+  currentStep,
+  onStepClick,
+  steps = ['BAG', 'ADDRESS', 'PAYMENT'],
+  isSticky = true,
+  className = '',
+}) {
   const getStepLabel = (step) => {
     switch (step) {
       case 'BAG':
@@ -20,7 +26,11 @@ export function CheckoutSteps({ currentStep, onStepClick, steps = ['BAG', 'ADDRE
   };
 
   return (
-    <div className="bg-white/95 border-b border-black/[0.08] sticky top-[48px] sm:top-[52px] z-40 shadow-[0_2px_10px_rgba(0,0,0,0.02)] backdrop-blur-md py-2 sm:py-2.5 px-3 sm:px-6">
+    <div
+      className={`bg-white/95 border-b border-black/[0.08] ${
+        isSticky ? 'sticky top-[48px] sm:top-[52px] z-40 shadow-[0_2px_10px_rgba(0,0,0,0.02)]' : ''
+      } backdrop-blur-md py-2 sm:py-2.5 px-3 sm:px-6 ${className}`}
+    >
       <div className="max-w-[1240px] mx-auto flex items-center justify-between gap-3 sm:gap-4">
         {/* Left: Discreet Back Button (hidden on mobile) */}
         <div className="hidden sm:flex items-center gap-2 min-w-[90px]">

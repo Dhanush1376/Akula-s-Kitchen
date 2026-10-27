@@ -139,7 +139,7 @@ export function useCheckoutShipping({ isAuthenticated, user, setActiveStep, setI
           pincode: d.pincode || prev.pincode,
           address: d.address || prev.address,
           locality: d.locality || prev.locality,
-          landmark: d.landmark || prev.landmark || d.locality || d.city,
+          landmark: prev.landmark || '',
           city: d.city || prev.city,
           state: d.state || prev.state,
           country: d.country || prev.country || 'India',

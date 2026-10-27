@@ -81,7 +81,7 @@ export function BottomNav() {
       : { label: 'Orders', icon: 'receipt_long', onClick: openAuthModal },
     isAuthenticated
       ? { label: 'Account', icon: 'person', path: '/dashboard', exact: true }
-      : { label: 'Sign In', icon: 'login', onClick: openAuthModal },
+      : { label: 'Log In', icon: 'login', onClick: openAuthModal },
   ];
 
   const isActive = (path, exact) => {

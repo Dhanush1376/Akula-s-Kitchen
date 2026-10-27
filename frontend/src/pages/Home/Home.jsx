@@ -7,7 +7,7 @@ import { EditorialHero } from './sections/EditorialHero';
 import { HomeHeroLeaves } from './sections/HomeHeroLeaves';
 import { FreshEveryDay } from './sections/FreshEveryDay';
 import { MadeFreshStrip } from './sections/MadeFreshStrip';
-import { LazySection } from '../../components/ui/LazySection';
+import { TodaysMenuBanner } from './sections/TodaysMenuBanner';
 
 const CategoryGrid = lazy(() =>
   import('./sections/CategoryGrid').then((m) => ({ default: m.CategoryGrid })),
@@ -58,10 +58,6 @@ export function Home({ previewContent }) {
     [activeCms],
   );
 
-  if (loading) {
-    return <HomeSkeleton />;
-  }
-
   const sections =
     Array.isArray(activeCms?.homepageSections) && activeCms.homepageSections.length > 0
       ? activeCms.homepageSections
@@ -92,37 +88,38 @@ export function Home({ previewContent }) {
                 );
               case 'categoryGrid':
                 return (
-                  <RevealSection key={section.id}>
-                    <MadeFreshStrip />
-                    <Suspense fallback={<SectionFallback />}>
+                  <div key={section.id}>
+                    <TodaysMenuBanner />
+                    <Suspense fallback={null}>
                       <CategoryGrid previewContent={activeCms} />
                     </Suspense>
-                    <FreshEveryDay />
-                  </RevealSection>
+                  </div>
                 );
               case 'trendingProducts':
                 return (
-                  <LazySection key={section.id} fallback={<SectionFallback />}>
-                    <RevealSection>
+                  <div key={section.id}>
+                    <Suspense fallback={null}>
                       <TrendingProducts previewContent={activeCms} />
-                    </RevealSection>
-                  </LazySection>
+                    </Suspense>
+                  </div>
                 );
               case 'featuredProducts':
                 return (
-                  <LazySection key={section.id} fallback={<SectionFallback />}>
-                    <RevealSection>
+                  <div key={section.id}>
+                    <MadeFreshStrip />
+                    <Suspense fallback={null}>
                       <BestSellers previewContent={activeCms} />
-                    </RevealSection>
-                  </LazySection>
+                    </Suspense>
+                  </div>
                 );
               case 'recommendedProducts':
                 return (
-                  <LazySection key={section.id} fallback={<SectionFallback />}>
-                    <RevealSection>
+                  <div key={section.id}>
+                    <FreshEveryDay />
+                    <Suspense fallback={null}>
                       <RecommendedGrid previewContent={activeCms} />
-                    </RevealSection>
-                  </LazySection>
+                    </Suspense>
+                  </div>
                 );
               default:
                 return null;
@@ -202,12 +199,7 @@ function HomeSkeleton() {
 }
 
 function SectionFallback() {
-  return (
-    <div className="w-full max-w-[1400px] mx-auto px-6 py-20 animate-pulse">
-      <div className="h-8 w-56 bg-surface-container-high rounded-full mb-10"></div>
-      <div className="w-full h-64 bg-surface-container-high rounded-[32px]"></div>
-    </div>
-  );
+  return <div className="w-full min-h-[160px]" />;
 }
 
 function HomepageEmptyState() {

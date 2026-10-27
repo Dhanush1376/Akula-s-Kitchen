@@ -469,6 +469,25 @@
   will-change: transform;
 }
 
+/* --- Today's Menu Banner Marquee --- */
+@keyframes menu-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-menu-scroll {
+  animation: menu-scroll 75s linear infinite;
+  will-change: transform;
+}
+
+.animate-menu-scroll:hover {
+  animation-play-state: paused;
+}
+
 /* --- Hover Lift Glow --- */
 .hover-lift-glow {
   transition:

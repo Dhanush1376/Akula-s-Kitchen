@@ -418,11 +418,12 @@
   top: 8px;
   left: 8px;
   z-index: 12;
-  padding: 5px 9px;
+  padding: 5px 10px;
   border-radius: 999px;
-  background: var(--ak-yellow);
-  color: var(--ak-black);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  color: #1a2210;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   font-size: 10.5px;
   font-weight: 800;
   line-height: 1;
@@ -938,7 +939,9 @@ a:hover .ak-tile-icon {
   .h1-page > .relative {
     padding-inline: calc(var(--spacing-margin-desktop, 48px) - 16px);
   }
-  .h1-page .ak-fresh {
+  .h1-page .ak-fresh,
+  .h1-page .ak-fresh-strip {
     margin-inline: calc(16px - var(--spacing-margin-desktop, 48px));
+    width: calc(100% + 2 * (var(--spacing-margin-desktop, 48px) - 16px));
   }
 }
