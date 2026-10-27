@@ -15,7 +15,34 @@ export class CategoryService {
    */
   static async getActiveCategories(filter: any = {}) {
     filter.isActive = true;
-    return await Category.find(filter).sort({ displayOrder: 1 }).lean();
+    const categories = await Category.find(filter).sort({ displayOrder: 1 }).lean();
+
+    const Product = mongoose.models.Product || mongoose.model('Product');
+    if (!Product) return categories;
+
+    const enriched = await Promise.all(
+      categories.map(async (cat: any) => {
+        if (cat.imageSrc) return cat;
+        try {
+          const prod = await Product.findOne({
+            isActive: true,
+            isDeleted: false,
+            primaryCategory: cat._id,
+            imageSrc: { $exists: true, $ne: '' },
+          })
+            .select('imageSrc')
+            .lean();
+          if (prod && (prod as any).imageSrc) {
+            cat.imageSrc = (prod as any).imageSrc;
+          }
+        } catch {
+          // Ignore lookup error
+        }
+        return cat;
+      }),
+    );
+
+    return enriched;
   }
 
   private static matchCache = new Map<string, mongoose.Types.ObjectId | null>();

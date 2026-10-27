@@ -336,11 +336,12 @@ export const getSrcSet = (url, maxWidth = null, quality = 'auto', format = 'auto
     validWidths.push(getResponsiveWidth(effectiveMaxWidth));
   }
 
-  return validWidths
-    .map((w) => {
-      const qualityParam = quality === 'auto' ? derivedQuality : quality;
-      return `${getOptimizedUrl(url, w, null, qualityParam, format)} ${w}w`;
-    })
+  // getOptimizedUrl snaps each width to a CDN breakpoint; label every candidate with the
+  // width actually served (and drop duplicates) so the browser's choice is accurate.
+  const qualityParam = quality === 'auto' ? derivedQuality : quality;
+  const servedWidths = [...new Set(validWidths.map((w) => getResponsiveWidth(w)))];
+  return servedWidths
+    .map((w) => `${getOptimizedUrl(url, w, null, qualityParam, format)} ${w}w`)
     .join(', ');
 };
 

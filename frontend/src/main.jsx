@@ -81,10 +81,9 @@ window.addEventListener(
 ); // Use capture phase to catch resource load errors
 
 const rootEl = document.getElementById('root');
-const shellEl = document.getElementById('app-shell');
 
-// The raw index.html has an app-shell inside #root. If it's still there, we haven't been pre-rendered by react-snap.
-const isPrerendered = rootEl.hasChildNodes() && (!shellEl || shellEl.parentElement !== rootEl);
+// The raw index.html ships an empty #root, so any markup inside it came from pre-rendering.
+const isPrerendered = rootEl.hasChildNodes();
 
 if (isPrerendered) {
   hydrateRoot(
@@ -105,26 +104,4 @@ if (isPrerendered) {
   );
 }
 
-// Fallback to ensure loader is removed even if React suspends indefinitely
-setTimeout(() => {
-  requestAnimationFrame(() => {
-    const shell = document.getElementById('app-shell');
-    if (shell) {
-      shell.style.transition = 'opacity 0.5s ease-out';
-      shell.style.opacity = '0';
-      setTimeout(() => shell.remove(), 500);
-    }
-  });
-}, 5000);
-
-if (shellEl) {
-  // Smoothly fade out the app shell after React hydrates/renders
-  requestAnimationFrame(() => {
-    shellEl.style.transition = 'opacity 0.2s ease-out';
-    shellEl.style.opacity = '0';
-    setTimeout(() => {
-      shellEl.remove();
-      performance.measure('app-startup-duration', 'app-startup');
-    }, 250);
-  });
-}
+requestAnimationFrame(() => performance.measure('app-startup-duration', 'app-startup'));

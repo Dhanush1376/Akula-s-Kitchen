@@ -12,9 +12,9 @@ import {
 } from '../../utils/security/twoFactorPending';
 import User from '../../models/User';
 import {
-  ADMIN_REFRESH_COOKIE,
   setAdminRefreshCookie,
-  clearAdminRefreshCookie,
+  collectRefreshTokensFromCookies,
+  clearAllRefreshCookies,
   setCustomerRefreshCookie,
   refreshTokenForResponseBody,
 } from '../../utils/security/authCookies';
@@ -162,13 +162,13 @@ export const adminVerifyTwoFactor = asyncHandler(async (req: Request, res: Respo
 });
 
 export const adminLogout = asyncHandler(async (req: Request, res: Response) => {
-  const refreshToken = String(req.cookies?.[ADMIN_REFRESH_COOKIE] || '').trim();
-
   logger.info('[ADMIN AUTH] Admin manual logout requested');
-  if (refreshToken) {
-    await SessionAuthService.revokeSession(refreshToken);
+  // Admin login sets both the admin and customer refresh cookies; revoke and clear every
+  // refresh cookie (current and legacy names) so no session survives logout.
+  for (const token of collectRefreshTokensFromCookies(req)) {
+    await SessionAuthService.revokeSession(token);
   }
-  clearAdminRefreshCookie(res);
+  clearAllRefreshCookies(res);
   clearCsrfCookie(res);
 
   res.status(200).json(new ApiResponse(true, 'Admin logged out successfully'));

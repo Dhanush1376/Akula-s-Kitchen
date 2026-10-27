@@ -50,6 +50,7 @@ const OrderSuccess = lazy(() =>
   import('../pages/OrderSuccess').then((m) => ({ default: m.OrderSuccess })),
 );
 const Contact = lazy(() => import('../pages/Contact').then((m) => ({ default: m.Contact })));
+const Menu = lazy(() => import('../pages/Menu/Menu').then((m) => ({ default: m.Menu })));
 const Wishlist = lazy(() => import('../pages/Wishlist').then((m) => ({ default: m.Wishlist })));
 const CollectionDetail = lazy(() =>
   import('../pages/CollectionDetail').then((m) => ({ default: m.CollectionDetail })),
@@ -205,6 +206,7 @@ export function AppRoutes() {
                 <Route path="/order-success" element={<OrderSuccess />} />
                 <Route path="/about" element={<Navigate to="/" replace />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/menu" element={<Menu />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/collection/:id" element={<CollectionDetail />} />
                 <Route

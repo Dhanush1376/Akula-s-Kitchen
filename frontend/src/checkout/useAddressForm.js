@@ -27,8 +27,7 @@ export function useAddressForm({ setNewAddress, setIsAddingNewAddress, newAddres
 
       if (res.success && res.data) {
         const d = res.data;
-        const resolvedAddressLine =
-          d.address || [d.locality, d.landmark, d.city].filter(Boolean).join(', ');
+        const resolvedAddressLine = d.address || [d.locality, d.city].filter(Boolean).join(', ');
 
         setNewAddress((prev) => ({
           ...prev,
@@ -39,7 +38,7 @@ export function useAddressForm({ setNewAddress, setIsAddingNewAddress, newAddres
           state: d.state || prev.state,
           locality: d.locality || prev.locality,
           address: resolvedAddressLine || prev.address,
-          landmark: d.landmark || prev.landmark,
+          landmark: prev.landmark || '',
         }));
 
         toast.success('Address updated from map!', { id: 'geocoding' });
@@ -70,8 +69,7 @@ export function useAddressForm({ setNewAddress, setIsAddingNewAddress, newAddres
           setMapPosition({ lat: d.latitude, lng: d.longitude });
         }
 
-        const resolvedAddressLine =
-          d.address || [d.locality, d.landmark, d.city].filter(Boolean).join(', ');
+        const resolvedAddressLine = d.address || [d.locality, d.city].filter(Boolean).join(', ');
 
         setNewAddress((prev) => ({
           ...prev,
@@ -85,7 +83,7 @@ export function useAddressForm({ setNewAddress, setIsAddingNewAddress, newAddres
           address: res.isPinpoint
             ? resolvedAddressLine || prev.address
             : prev.address || resolvedAddressLine,
-          landmark: d.landmark || prev.landmark,
+          landmark: prev.landmark || '',
         }));
 
         if (res.isPinpoint && res.source === 'gps') {

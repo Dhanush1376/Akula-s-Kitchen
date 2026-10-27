@@ -235,7 +235,7 @@ export default function CheckoutPaymentStep() {
             {isRazorpayEnabled && (
               <div
                 onClick={() => setPaymentOption('razorpay')}
-                className={`relative px-4 py-3.5 rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.99] ${
+                className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden active:scale-[0.99] ${
                   paymentOption === 'razorpay'
                     ? 'border-[#283618] bg-[#283618] text-white shadow-[0_4px_16px_rgba(40,54,24,0.22)] ring-1 ring-[#283618]'
                     : 'border-neutral-300 bg-white hover:border-neutral-400 shadow-[0_2px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)]'
@@ -257,23 +257,32 @@ export default function CheckoutPaymentStep() {
                     </div>
                   </div>
 
-                  <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                    <span
-                      className={`text-[12.5px] sm:text-[13px] font-semibold truncate ${
-                        paymentOption === 'razorpay' ? 'text-white' : 'text-neutral-900'
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`text-[13px] font-bold ${
+                          paymentOption === 'razorpay' ? 'text-white' : 'text-neutral-900'
+                        }`}
+                      >
+                        Online Payment
+                      </span>
+                      <span
+                        className={`text-[9px] sm:text-[9.5px] px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider shrink-0 transition-colors ${
+                          paymentOption === 'razorpay'
+                            ? 'bg-[#f7bb0e] text-[#283618] shadow-xs'
+                            : 'bg-[#f7bb0e]/15 text-[#8f6607] border border-[#f7bb0e]/30'
+                        }`}
+                      >
+                        Recommended
+                      </span>
+                    </div>
+                    <p
+                      className={`text-[11px] mt-0.5 truncate ${
+                        paymentOption === 'razorpay' ? 'text-white/70' : 'text-neutral-500'
                       }`}
                     >
-                      Online Payment (UPI / Cards / Netbanking)
-                    </span>
-                    <span
-                      className={`text-[9px] sm:text-[9.5px] px-2 sm:px-2.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
-                        paymentOption === 'razorpay'
-                          ? 'bg-white text-[#283618] font-extrabold shadow-2xs'
-                          : 'bg-[#283618]/10 text-[#283618] border border-[#283618]/20'
-                      }`}
-                    >
-                      Recommended
-                    </span>
+                      UPI (Google Pay, PhonePe), Cards & Netbanking
+                    </p>
                   </div>
                 </div>
               </div>
@@ -287,7 +296,7 @@ export default function CheckoutPaymentStep() {
                     setPaymentOption('cod');
                   }
                 }}
-                className={`relative px-4 py-3.5 rounded-2xl border transition-all duration-200 overflow-hidden ${
+                className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 overflow-hidden ${
                   backendTotals.total > codMaxOrder || backendTotals.total < codMinOrder
                     ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-xs'
                     : 'cursor-pointer active:scale-[0.99] ' +
@@ -314,12 +323,21 @@ export default function CheckoutPaymentStep() {
 
                   <div className="flex-1 min-w-0">
                     <span
-                      className={`text-[13px] font-semibold ${
+                      className={`text-[13px] font-bold block ${
                         paymentOption === 'cod' ? 'text-white' : 'text-neutral-900'
                       }`}
                     >
                       Cash on Delivery (COD)
                     </span>
+                    {backendTotals.total <= codMaxOrder && backendTotals.total >= codMinOrder && (
+                      <p
+                        className={`text-[11px] mt-0.5 truncate ${
+                          paymentOption === 'cod' ? 'text-white/70' : 'text-neutral-500'
+                        }`}
+                      >
+                        Pay with cash upon delivery at your doorstep
+                      </p>
+                    )}
                     {backendTotals.total > codMaxOrder && (
                       <p
                         className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${

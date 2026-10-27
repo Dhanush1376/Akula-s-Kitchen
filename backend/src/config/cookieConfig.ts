@@ -1,7 +1,12 @@
 import { CookieOptions } from 'express';
 import logger from './logger';
+import { isHostedDeployment } from './runtimeEnv';
 
-const isProd = process.env.NODE_ENV === 'production';
+// Hosted deployments always get production cookie hardening (Secure, __Secure- prefix),
+// even if NODE_ENV is misconfigured on the platform. Requests arriving with the older
+// plain cookie names are still accepted by refresh and fully revoked by logout
+// (see utils/security/authCookies.ts), so the switch does not log anyone out.
+const isProd = process.env.NODE_ENV === 'production' || isHostedDeployment();
 let cookieDomain = process.env.COOKIE_DOMAIN || undefined;
 if (cookieDomain === 'localhost') {
   cookieDomain = undefined;

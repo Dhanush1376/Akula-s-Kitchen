@@ -1,4 +1,4 @@
-import { Clock, MapPin, ArrowRight, ChevronDown } from 'lucide-react';
+import { Clock, MapPin, ArrowRight } from 'lucide-react';
 import { Suspense, useState, useRef, useEffect } from 'react';
 import { lazyWithRetry as lazy } from '../utils/performance/lazyWithRetry';
 import { Link } from 'react-router-dom';
@@ -6,12 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SEO } from '../components/seo/SEO';
 import { CheckoutProvider, useCheckout } from '../checkout/CheckoutProvider';
 import { useConfig } from '../context/ConfigContext';
-import {
-  CheckoutSidebarSkeleton,
-  CheckoutStepSkeleton,
-  AddressBarSkeleton,
-} from '../components/ui/Skeleton';
+import { CheckoutSidebarSkeleton, CheckoutStepSkeleton } from '../components/ui/Skeleton';
 import { CheckoutSteps } from '../components/ui/CheckoutSteps';
+import { CartAddressBar } from '../components/cart/CartView/CartAddressBar';
 import toast from 'react-hot-toast';
 
 const CheckoutAddressStep = lazy(() => import('../checkout/CheckoutAddressStep'));
@@ -31,55 +28,23 @@ function CheckoutContent() {
     activeSelectedAddress,
     savedAddresses,
     setSelectedAddressId,
+    setIsAddingNewAddress,
     navigate,
     checkoutSteps,
   } = useCheckout();
 
   const [isAddressDropdownOpen, setIsAddressDropdownOpen] = useState(false);
-  const addressDropdownRef = useRef(null);
-
-  useEffect(() => {
-    if (!isAddressDropdownOpen) return;
-    const handleClickOutside = (e) => {
-      if (addressDropdownRef.current && !addressDropdownRef.current.contains(e.target)) {
-        setIsAddressDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isAddressDropdownOpen]);
 
   const prevStepRef = useRef(activeStep);
-  const direction = activeStep >= prevStepRef.current ? 1 : -1;
   useEffect(() => {
     prevStepRef.current = activeStep;
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeStep]);
 
-  const stepVariants = {
-    enter: (dir) => ({
-      x: dir > 0 ? 24 : -24,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        x: { type: 'spring', stiffness: 320, damping: 28, mass: 0.8 },
-        opacity: { duration: 0.28, ease: 'easeOut' },
-      },
-    },
-    exit: (dir) => ({
-      x: dir > 0 ? -24 : 24,
-      opacity: 0,
-      transition: {
-        x: { type: 'spring', stiffness: 320, damping: 28, mass: 0.8 },
-        opacity: { duration: 0.2, ease: 'easeIn' },
-      },
-    }),
+  const pageTransition = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.2, ease: 'easeOut' } },
+    exit: { opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } },
   };
 
   if (isStoreClosed) {
@@ -121,172 +86,59 @@ function CheckoutContent() {
         noindex
       />
 
-      {/* Top Header Strip with Animated Progress Bar */}
-      <CheckoutSteps
-        steps={checkoutSteps}
-        currentStep={activeStep}
-        onStepClick={(stepIndex) => {
-          if (stepIndex === 0) {
-            navigate('/cart');
-          } else if (stepIndex === activeStep) {
-            return; // Already here
-          } else if (stepIndex < activeStep) {
-            setActiveStep(stepIndex);
-          } else {
-            // Cannot jump forward without passing validations, rely on continue buttons
-            toast('Complete the current step to continue', {
-              icon: <MapPin className="w-4 h-4 text-brand-primary" />,
-            });
-          }
-        }}
-      />
+      {/* Sticky Top Section: Checkout Steps + Address Bar (on PAYMENT step) */}
+      <div className="sticky top-[44px] sm:top-[48px] md:top-[52px] z-40 bg-white/95 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-4">
+        <CheckoutSteps
+          steps={checkoutSteps}
+          currentStep={activeStep}
+          isSticky={false}
+          onStepClick={(stepIndex) => {
+            if (stepIndex === 0) {
+              navigate('/cart');
+            } else if (stepIndex === activeStep) {
+              return; // Already here
+            } else if (stepIndex < activeStep) {
+              setActiveStep(stepIndex);
+            } else {
+              // Cannot jump forward without passing validations, rely on continue buttons
+              toast('Complete the current step to continue', {
+                icon: <MapPin className="w-4 h-4 text-brand-primary" />,
+              });
+            }
+          }}
+        />
 
-      {/* Address Bar - Attached perfectly below checkout steps */}
-      <AnimatePresence>
         {checkoutSteps[activeStep] === 'PAYMENT' && (
-          <motion.div
-            key="payment-address-bar"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className={isAddressDropdownOpen ? 'overflow-visible relative z-50' : 'overflow-hidden'}
-          >
-            {!activeSelectedAddress ? (
-              <AddressBarSkeleton />
-            ) : (
-              <div
-                ref={addressDropdownRef}
-                className={`w-full bg-white border-b border-black/[0.06] relative hover:bg-neutral-50/80 transition-colors ${isAddressDropdownOpen ? 'z-50' : 'z-30'}`}
-              >
-                <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative">
-                  <div
-                    onClick={() => setIsAddressDropdownOpen(!isAddressDropdownOpen)}
-                    className="flex items-center justify-between md:justify-center py-2.5 cursor-pointer select-none"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 max-w-2xl">
-                      <span className="hidden sm:inline-flex items-center gap-1 bg-neutral-100 text-neutral-800 border border-neutral-200 text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full shrink-0">
-                        <MapPin className="w-3 h-3 text-neutral-700" strokeWidth={2.2} />
-                        Deliver to
-                      </span>
-                      <span className="text-[11px] sm:text-xs text-neutral-800 font-medium truncate leading-tight">
-                        <strong className="font-bold text-neutral-950">
-                          {activeSelectedAddress.name}
-                        </strong>
-                        <span className="text-neutral-300 mx-1.5">•</span>
-                        <span className="text-neutral-600">
-                          {activeSelectedAddress.addressString || activeSelectedAddress.address},{' '}
-                          {activeSelectedAddress.locality
-                            ? `${activeSelectedAddress.locality}, `
-                            : ''}
-                          {activeSelectedAddress.city}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-neutral-900 text-[10.5px] font-extrabold uppercase tracking-wider shrink-0 ml-3 sm:ml-4 hover:text-black">
-                      <span>Change</span>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-neutral-500 transition-transform duration-200 ${
-                          isAddressDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                        strokeWidth={2}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Address Switcher Dropdown */}
-                  <AnimatePresence>
-                    {isAddressDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-xl mt-1 bg-white border border-neutral-200 rounded-[8px] shadow-xl z-50 p-2.5 max-h-60 overflow-y-auto"
-                      >
-                        <div className="text-[9px] uppercase tracking-wider font-extrabold text-neutral-400 px-2.5 pb-2 mb-1 border-b border-black/5">
-                          Select Destination
-                        </div>
-                        {!savedAddresses ? (
-                          <div className="flex flex-col gap-2 px-2 pb-2">
-                            <div className="h-11 bg-black/[0.04] rounded-[8px] animate-pulse" />
-                            <div className="h-11 bg-black/[0.04] rounded-[8px] animate-pulse" />
-                          </div>
-                        ) : savedAddresses.length > 0 ? (
-                          savedAddresses.map((addr) => {
-                            const isSelected =
-                              activeSelectedAddress &&
-                              String(activeSelectedAddress._id || activeSelectedAddress.id) ===
-                                String(addr._id || addr.id);
-                            return (
-                              <div
-                                key={addr._id || addr.id}
-                                onClick={() => {
-                                  setSelectedAddressId(addr._id || addr.id);
-                                  setIsAddressDropdownOpen(false);
-                                }}
-                                className={`p-2.5 rounded-[8px] text-[11px] cursor-pointer hover:bg-neutral-50 transition-colors flex items-start gap-2.5 ${isSelected ? 'bg-[#283618]/10 text-neutral-900 font-bold border border-[#283618]/25' : 'text-neutral-700'}`}
-                              >
-                                <div className="mt-0.5 shrink-0">
-                                  <div
-                                    className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                                      isSelected
-                                        ? 'border-[#283618] bg-white'
-                                        : 'border-neutral-300 bg-white'
-                                    }`}
-                                  >
-                                    {isSelected && (
-                                      <div className="w-1.5 h-1.5 rounded-full bg-[#283618]" />
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="font-bold text-neutral-950">
-                                    {addr.name} ({addr.tag})
-                                  </div>
-                                  <div className="truncate text-neutral-500 text-[10.5px]">
-                                    {addr.addressString || addr.address}, {addr.locality},{' '}
-                                    {addr.city}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="p-2.5 rounded-[8px] text-[11px] text-neutral-400 text-center">
-                            No other addresses saved.
-                          </div>
-                        )}
-                        <div className="mt-2 pt-2 border-t border-black/5 flex justify-end">
-                          <Link
-                            to="/dashboard?drawer=addresses"
-                            className="text-[10px] font-extrabold text-neutral-900 uppercase tracking-wider hover:text-[#d99b00] flex items-center gap-1"
-                          >
-                            Manage Addresses
-                            <ArrowRight className="w-3 h-3" strokeWidth={2} />
-                          </Link>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-            )}
-          </motion.div>
+          <CartAddressBar
+            isAddressDropdownOpen={isAddressDropdownOpen}
+            setIsAddressDropdownOpen={setIsAddressDropdownOpen}
+            activeAddress={activeSelectedAddress}
+            addresses={savedAddresses}
+            setDefaultAddress={setSelectedAddressId}
+            onAddNewClick={() => {
+              setIsAddingNewAddress?.(true);
+              setActiveStep(1);
+              setIsAddressDropdownOpen(false);
+            }}
+            onManageClick={() => {
+              setActiveStep(1);
+              setIsAddressDropdownOpen(false);
+            }}
+          />
         )}
-      </AnimatePresence>
+      </div>
 
       <div className="max-w-[1240px] mx-auto w-full pt-6 lg:pt-10 px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-6 items-start">
           {/* Left Column: Active Step Form Details */}
           <div className="w-full col-span-1 lg:col-span-7 xl:col-span-8">
-            <AnimatePresence mode="wait" custom={direction} initial={false}>
+            <AnimatePresence mode="wait" initial={false}>
               {checkoutSteps[activeStep] === 'ADDRESS' && (
                 <motion.div
                   key="step-address"
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
+                  variants={pageTransition}
+                  initial="initial"
+                  animate="animate"
                   exit="exit"
                   className="w-full"
                 >
@@ -298,10 +150,9 @@ function CheckoutContent() {
               {checkoutSteps[activeStep] === 'PAYMENT' && (
                 <motion.div
                   key="step-payment"
-                  custom={direction}
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
+                  variants={pageTransition}
+                  initial="initial"
+                  animate="animate"
                   exit="exit"
                   className="w-full"
                 >
@@ -315,7 +166,7 @@ function CheckoutContent() {
 
           {/* Right Column: Price Details Sidebar & Recommendations */}
           <div
-            className={`col-span-1 lg:col-span-5 xl:col-span-4 transition-all duration-300 ${
+            className={`col-span-1 lg:col-span-5 xl:col-span-4 ${
               checkoutSteps[activeStep] === 'ADDRESS' ? 'hidden lg:block' : 'block'
             }`}
           >

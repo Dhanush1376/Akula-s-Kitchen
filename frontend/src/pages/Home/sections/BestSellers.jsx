@@ -52,8 +52,18 @@ export function BestSellers({ previewContent }) {
     );
   }
 
-  const products = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
-  if (isError || !products || products.length === 0) {
+  const products = Array.isArray(data?.products)
+    ? data.products
+    : Array.isArray(data?.data?.products)
+      ? data.data.products
+      : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+          ? data
+          : Array.isArray(data?.items)
+            ? data.items
+            : [];
+  if (isError || products.length === 0) {
     return null;
   }
 

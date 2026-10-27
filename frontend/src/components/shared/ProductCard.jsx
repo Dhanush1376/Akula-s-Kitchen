@@ -309,7 +309,6 @@ export const ProductCard = React.memo(function ProductCard({
                         width={800}
                         height={1000}
                         sizes={sizes}
-                        quality="original"
                       />
                     </Link>
                   </div>

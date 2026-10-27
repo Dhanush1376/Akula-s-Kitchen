@@ -103,7 +103,11 @@ const maskObject = (obj: any): any => {
     const masked: any = {};
     for (const key of Object.keys(obj)) {
       if (standardKeys.has(key)) {
-        masked[key] = obj[key];
+        // Never key-masked, but free text can still embed a URI, token or card number.
+        masked[key] =
+          (key === 'message' || key === 'stack') && typeof obj[key] === 'string'
+            ? maskStringPatterns(obj[key])
+            : obj[key];
         continue;
       }
 
@@ -130,12 +134,15 @@ const secretMaskingFormat = winston.format((info) => {
   return maskObject(info);
 });
 
+// Masking must run AFTER splat(): for logger.warn('msg', meta) calls winston keeps the
+// original meta in info[SPLAT] and splat() merges it back into info, which silently
+// undid any masking applied earlier (credentials reached the logs this way).
 const logFormat = winston.format.combine(
   requestContextFormat(),
-  secretMaskingFormat(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
+  secretMaskingFormat(),
   winston.format.json(),
 );
 

@@ -28,13 +28,13 @@ export default function CheckoutSidebar() {
     <>
       {/* Right Column: PRICE DETAILS */}
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
         className="space-y-4"
       >
         {/* Price Details Card */}
-        <div className="bg-white border border-neutral-300 rounded-2xl p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)] sticky top-24 relative overflow-hidden">
+        <div className="bg-white border border-neutral-300 rounded-lg p-5 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.04)] sticky top-24 relative overflow-hidden">
           {/* Header */}
           <div className="pb-3.5 border-b border-neutral-200 mb-4 relative z-10 flex items-center justify-between">
             <span

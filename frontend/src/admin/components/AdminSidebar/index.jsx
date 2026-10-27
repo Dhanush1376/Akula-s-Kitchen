@@ -137,17 +137,18 @@ export function AdminSidebar() {
             />
             <motion.aside
               ref={mobileSidebarRef}
-              initial={{ x: '-110%' }}
+              initial={{ x: '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-110%' }}
+              exit={{ x: '-100%' }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed left-3 top-3 bottom-3 sm:left-4 sm:top-4 sm:bottom-4 h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] w-[min(calc(100vw-24px),300px)] z-[110] lg:hidden overflow-hidden rounded-2xl sm:rounded-3xl border border-[var(--admin-border)]"
-              style={{ background: 'var(--admin-surface)', boxShadow: 'var(--admin-shadow-2xl)' }}
+              className="fixed left-0 top-0 bottom-0 h-full h-[100dvh] w-[280px] sm:w-[300px] z-[110] lg:hidden overflow-hidden border-r border-[var(--admin-border)] shadow-2xl"
+              style={{ background: 'var(--admin-surface)' }}
             >
-              <div className="absolute top-3 right-3 z-10">
+              <div className="absolute top-3 right-3 z-30">
                 <button
                   onClick={() => setSidebarMobileOpen(false)}
-                  className="p-2.5 rounded-[var(--admin-radius-md)] hover:bg-[var(--admin-surface-muted)] text-[var(--admin-text-tertiary)] cursor-pointer min-h-0"
+                  className="p-2 rounded-[var(--admin-radius-md)] hover:bg-[var(--admin-surface-muted)] text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] transition-colors cursor-pointer min-h-0 flex items-center justify-center"
+                  aria-label="Close Sidebar"
                 >
                   <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>

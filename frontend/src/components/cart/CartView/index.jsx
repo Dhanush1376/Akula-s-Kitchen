@@ -288,22 +288,19 @@ export function CartView({ isEmbedded = false }) {
         )}
       </AnimatePresence>
 
-      {/* Checkout Steps - Sits directly beneath CheckoutNavbar */}
+      {/* Sticky Top Section: Checkout Steps + Address Bar */}
       {!isEmbedded && (
-        <CheckoutSteps
-          steps={['BAG', 'ADDRESS', 'PAYMENT']}
-          currentStep={0}
-          onStepClick={(stepIndex) => {
-            if (stepIndex > 0 && items.length > 0) {
-              navigate('/checkout');
-            }
-          }}
-        />
-      )}
-
-      {/* Address Bar */}
-      {!isEmbedded && (
-        <div className="mb-3 lg:mb-4">
+        <div className="sticky top-[44px] sm:top-[48px] md:top-[52px] z-40 bg-white/95 backdrop-blur-md shadow-[0_2px_12px_rgba(0,0,0,0.03)] mb-3 lg:mb-4">
+          <CheckoutSteps
+            steps={['BAG', 'ADDRESS', 'PAYMENT']}
+            currentStep={0}
+            isSticky={false}
+            onStepClick={(stepIndex) => {
+              if (stepIndex > 0 && items.length > 0) {
+                navigate('/checkout');
+              }
+            }}
+          />
           <CartAddressBar
             isAddressDropdownOpen={isAddressDropdownOpen}
             setIsAddressDropdownOpen={setIsAddressDropdownOpen}
