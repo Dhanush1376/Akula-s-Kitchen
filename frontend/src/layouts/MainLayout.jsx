@@ -31,7 +31,7 @@ const AdminInviteModal = lazy(() =>
 export function MainLayout() {
   const { pathname } = useLocation();
   const { isStoreClosed } = useConfig();
-  const { isCartOpen, setIsCartOpen } = useCart();
+  const { isCartOpen, setIsCartOpen, cartCount, items = [] } = useCart();
 
   const isHighDensityPage = pathname === '/auth' || pathname === '/checkout';
 
@@ -39,11 +39,12 @@ export function MainLayout() {
 
   const isOrderSuccess = pathname === '/order-success' || pathname.startsWith('/order-success');
 
+  const isCartEmpty = (cartCount || 0) === 0 && items.length === 0;
+
   const isCartOrCheckout =
-    pathname === '/cart' ||
-    pathname.startsWith('/cart') ||
-    pathname === '/checkout' ||
-    pathname.startsWith('/checkout');
+    pathname === '/cart' || pathname.startsWith('/cart')
+      ? !isCartEmpty
+      : pathname === '/checkout' || pathname.startsWith('/checkout');
 
   return (
     <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">

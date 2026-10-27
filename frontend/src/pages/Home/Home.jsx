@@ -7,7 +7,6 @@ import { EditorialHero } from './sections/EditorialHero';
 import { HomeHeroLeaves } from './sections/HomeHeroLeaves';
 import { FreshEveryDay } from './sections/FreshEveryDay';
 import { MadeFreshStrip } from './sections/MadeFreshStrip';
-import { TodaysMenuBanner } from './sections/TodaysMenuBanner';
 
 const CategoryGrid = lazy(() =>
   import('./sections/CategoryGrid').then((m) => ({ default: m.CategoryGrid })),
@@ -89,7 +88,7 @@ export function Home({ previewContent }) {
               case 'categoryGrid':
                 return (
                   <div key={section.id}>
-                    <TodaysMenuBanner />
+                    <MadeFreshStrip />
                     <Suspense fallback={null}>
                       <CategoryGrid previewContent={activeCms} />
                     </Suspense>
@@ -106,7 +105,6 @@ export function Home({ previewContent }) {
               case 'featuredProducts':
                 return (
                   <div key={section.id}>
-                    <MadeFreshStrip />
                     <Suspense fallback={null}>
                       <BestSellers previewContent={activeCms} />
                     </Suspense>

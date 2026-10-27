@@ -19,7 +19,7 @@ const ICONS = {
 
 export function BottomNav() {
   const location = useLocation();
-  const { cartCount, setIsCartOpen, isCartOpen } = useCart();
+  const { cartCount, setIsCartOpen, isCartOpen, items = [] } = useCart();
   const { isAuthenticated, isAuthInitialized, openAuthModal, isAuthModalOpen, user } = useAuth();
 
   let wishlistCount = 0;
@@ -90,13 +90,12 @@ export function BottomNav() {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
-  if (
-    isCartOpen ||
-    location.pathname === '/cart' ||
-    location.pathname.startsWith('/cart') ||
-    location.pathname === '/checkout' ||
-    location.pathname.startsWith('/checkout')
-  ) {
+  const isCartEmpty = (cartCount || 0) === 0 && items.length === 0;
+  const isCartPage = location.pathname === '/cart' || location.pathname.startsWith('/cart');
+  const isCheckoutPage =
+    location.pathname === '/checkout' || location.pathname.startsWith('/checkout');
+
+  if (isCartOpen || (isCartPage && !isCartEmpty) || isCheckoutPage) {
     return null;
   }
 

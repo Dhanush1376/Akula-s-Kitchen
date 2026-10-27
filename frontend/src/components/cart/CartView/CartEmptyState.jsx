@@ -11,7 +11,7 @@ const RecommendationSystem = React.lazy(() =>
 
 export const CartEmptyState = () => {
   return (
-    <>
+    <div className="pb-24 lg:pb-12">
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,6 +48,6 @@ export const CartEmptyState = () => {
           <RecommendationSystem hideHeader={false} horizontalScroll={true} compact={true} />
         </React.Suspense>
       </div>
-    </>
+    </div>
   );
 };
