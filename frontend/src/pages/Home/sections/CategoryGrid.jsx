@@ -4,8 +4,40 @@ import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
 import React, { useMemo } from 'react';
 import { useActiveCategories } from '../../../hooks/useProductQueries';
 
+const DEFAULT_CATEGORY_FALLBACK_IMAGES = {
+  batters:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123124/akulas-kitchen/products/ykliysxhqcecv1ipyzjq.jpg',
+  chutneys:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123125/akulas-kitchen/products/lbmarekwegbzfxauigxq.jpg',
+  pickles:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123121/akulas-kitchen/products/ouv4ci03wehkucl4nrxk.jpg',
+  masala:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+  podis:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+  snacks:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+  namkeen:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+  sweets:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123126/akulas-kitchen/products/uepc6xoknuoagrs3qtnt.jpg',
+};
+
 const getCategoryImage = (cat) => {
-  return cat.image || cat.imageSrc || null;
+  const img = cat.image || cat.imageSrc || null;
+  if (typeof img === 'string') {
+    if (img.startsWith('/uploads/')) {
+      const slug = String(cat.slug || cat.name || '')
+        .toLowerCase()
+        .trim();
+      return DEFAULT_CATEGORY_FALLBACK_IMAGES[slug] || null;
+    }
+    return img;
+  }
+  const slug = String(cat?.slug || cat?.name || '')
+    .toLowerCase()
+    .trim();
+  return DEFAULT_CATEGORY_FALLBACK_IMAGES[slug] || null;
 };
 
 export const CategoryGrid = React.memo(function CategoryGrid({ previewContent }) {
@@ -77,7 +109,8 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
     });
   }, [config.categories, dbCategories]);
 
-  if (cms.loading || isCategoriesLoading) {
+  // Only show skeleton if we have zero categories available
+  if (categories.length === 0 && (cms.loading || isCategoriesLoading)) {
     return (
       <section className="ak-cats py-8 lg:py-12" aria-busy="true">
         <div className="h1-container animate-pulse">
@@ -118,20 +151,24 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
                 to={category.link}
                 className="group relative aspect-[8/9] sm:aspect-auto sm:h-[210px] md:h-[240px] lg:h-[270px] rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 isolate bg-[#1f2b13]"
               >
-                {/* Full Bleed Background Image or Initials Fallback */}
-                {imgSrc ? (
+                {/* Fallback Monogram Backing */}
+                <div className="absolute inset-0 bg-[#1f2b13] flex items-center justify-center">
+                  <span className="text-white/20 font-display font-black text-3xl select-none">
+                    {String(category.name).charAt(0)}
+                  </span>
+                </div>
+
+                {/* Full Bleed Background Image with Error Graceful Degradation */}
+                {imgSrc && (
                   <img
                     src={imgSrc}
                     alt={category.name}
                     loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
-                ) : (
-                  <div className="absolute inset-0 bg-[#1f2b13] flex items-center justify-center">
-                    <span className="text-white/20 font-display font-black text-3xl select-none">
-                      {String(category.name).charAt(0)}
-                    </span>
-                  </div>
                 )}
 
                 {/* Gradient Overlay for Text Legibility */}

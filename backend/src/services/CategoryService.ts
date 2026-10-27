@@ -10,39 +10,136 @@ export class CategoryService {
       { targetModel: 'Product', targetField: 'primaryCategory', action: 'nullify' },
     ]);
   }
+
+  private static cachedActiveCategories: any[] | null = null;
+  private static cacheExpiresAt = 0;
+
+  private static DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
+    batters:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123124/akulas-kitchen/products/ykliysxhqcecv1ipyzjq.jpg',
+    chutneys:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123125/akulas-kitchen/products/lbmarekwegbzfxauigxq.jpg',
+    pickles:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123121/akulas-kitchen/products/ouv4ci03wehkucl4nrxk.jpg',
+    masala:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+    podis:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+    snacks:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+    namkeen:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+    sweets:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123126/akulas-kitchen/products/uepc6xoknuoagrs3qtnt.jpg',
+  };
+
+  public static invalidateCache() {
+    this.cachedActiveCategories = null;
+    this.cacheExpiresAt = 0;
+  }
+
   /**
-   * Retrieves active categories based on optional filter.
+   * Retrieves active categories based on optional filter with fast in-memory caching.
    */
   static async getActiveCategories(filter: any = {}) {
-    filter.isActive = true;
-    const categories = await Category.find(filter).sort({ displayOrder: 1 }).lean();
+    const isDefaultQuery = !filter || Object.keys(filter).length === 0;
+
+    if (isDefaultQuery && this.cachedActiveCategories && Date.now() < this.cacheExpiresAt) {
+      return this.cachedActiveCategories;
+    }
+
+    const query = { ...filter, isActive: true, isDeleted: { $ne: true } };
+    const categories = await Category.find(query).sort({ displayOrder: 1 }).lean();
 
     const Product = mongoose.models.Product || mongoose.model('Product');
-    if (!Product) return categories;
 
-    const enriched = await Promise.all(
-      categories.map(async (cat: any) => {
-        if (cat.imageSrc) return cat;
-        try {
-          const prod = await Product.findOne({
-            isActive: true,
-            isDeleted: false,
-            primaryCategory: cat._id,
-            imageSrc: { $exists: true, $ne: '' },
-          })
-            .select('imageSrc')
-            .lean();
-          if (prod && (prod as any).imageSrc) {
-            cat.imageSrc = (prod as any).imageSrc;
+    // Collect category IDs that still need an image (or currently point to dead local paths)
+    const neededCatIds: mongoose.Types.ObjectId[] = [];
+    categories.forEach((cat: any) => {
+      const hasValidRemoteImage =
+        cat.imageSrc &&
+        typeof cat.imageSrc === 'string' &&
+        (cat.imageSrc.startsWith('http://') || cat.imageSrc.startsWith('https://'));
+      if (!hasValidRemoteImage) {
+        cat.imageSrc = '';
+        neededCatIds.push(cat._id);
+      }
+    });
+
+    if (Product && neededCatIds.length > 0) {
+      try {
+        // Single batch aggregation for all missing category images (replaces N+1 single queries)
+        const sampleProducts = await Product.aggregate([
+          {
+            $match: {
+              isActive: true,
+              isDeleted: false,
+              primaryCategory: { $in: neededCatIds },
+              imageSrc: { $exists: true, $regex: '^https?://' },
+            },
+          },
+          {
+            $group: {
+              _id: '$primaryCategory',
+              imageSrc: { $first: '$imageSrc' },
+            },
+          },
+        ]);
+
+        const imageMap = new Map<string, string>();
+        sampleProducts.forEach((p: any) => {
+          if (p._id && p.imageSrc) {
+            imageMap.set(String(p._id), String(p.imageSrc));
           }
-        } catch {
-          // Ignore lookup error
-        }
-        return cat;
-      }),
-    );
+        });
 
-    return enriched;
+        categories.forEach((cat: any) => {
+          if (!cat.imageSrc) {
+            const foundImage = imageMap.get(String(cat._id));
+            if (foundImage) {
+              cat.imageSrc = foundImage;
+            } else {
+              const slug = String(cat.slug || cat.name || '')
+                .toLowerCase()
+                .trim();
+              if (this.DEFAULT_CATEGORY_IMAGES[slug]) {
+                cat.imageSrc = this.DEFAULT_CATEGORY_IMAGES[slug];
+              }
+            }
+          }
+        });
+      } catch {
+        // Fallback to default images if aggregation fails
+        categories.forEach((cat: any) => {
+          if (!cat.imageSrc) {
+            const slug = String(cat.slug || cat.name || '')
+              .toLowerCase()
+              .trim();
+            if (this.DEFAULT_CATEGORY_IMAGES[slug]) {
+              cat.imageSrc = this.DEFAULT_CATEGORY_IMAGES[slug];
+            }
+          }
+        });
+      }
+    } else {
+      categories.forEach((cat: any) => {
+        if (!cat.imageSrc) {
+          const slug = String(cat.slug || cat.name || '')
+            .toLowerCase()
+            .trim();
+          if (this.DEFAULT_CATEGORY_IMAGES[slug]) {
+            cat.imageSrc = this.DEFAULT_CATEGORY_IMAGES[slug];
+          }
+        }
+      });
+    }
+
+    if (isDefaultQuery) {
+      this.cachedActiveCategories = categories;
+      this.cacheExpiresAt = Date.now() + 5 * 60 * 1000; // 5 min TTL
+    }
+
+    return categories;
   }
 
   private static matchCache = new Map<string, mongoose.Types.ObjectId | null>();
@@ -112,6 +209,7 @@ export class CategoryService {
    * Creates a new category.
    */
   static async createCategory(data: any) {
+    this.invalidateCache();
     const category = new Category(data);
     return await category.save();
   }
@@ -120,6 +218,7 @@ export class CategoryService {
    * Updates an existing category and handles cascading name changes to dependent collections.
    */
   static async updateCategory(id: string, data: any) {
+    this.invalidateCache();
     const existing = await Category.findById(id);
     if (!existing) {
       return null;
@@ -162,6 +261,7 @@ export class CategoryService {
    * ReferenceIntegrityService will handle the cascading logic.
    */
   static async deleteCategory(id: string, user: any) {
+    this.invalidateCache();
     const session = await mongoose.startSession();
     session.startTransaction();
 

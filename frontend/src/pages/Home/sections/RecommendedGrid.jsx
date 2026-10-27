@@ -59,7 +59,7 @@ export function RecommendedGrid({ previewContent }) {
       <div className="h1-container relative z-10">
         <SectionHeader
           title={config.sectionTitle || 'Recommended For You'}
-          kicker={config.sectionSubtitle || 'Specially Handpicked'}
+          kicker={config.sectionSubtitle || ''}
           seeAllLink={config.seeAllLink || '/collections'}
         />
       </div>
