@@ -1,7 +1,14 @@
 import axios from 'axios';
 import logger from '../utils/core/logger';
 import { logCartTrace } from '../utils/forensic/cartTrace';
-import { getCachedGet, setCachedGet, clearApiCache } from '../utils/api/apiCache';
+import {
+  getCachedGet,
+  setCachedGet,
+  clearApiCache,
+  isCacheableGet,
+  buildCacheKey,
+  isTelemetryWrite,
+} from '../utils/api/apiCache';
 import {
   hasSessionMarker,
   setSessionMarker,
@@ -210,6 +217,7 @@ api.interceptors.response.use(onResponse, onError);
 const originalGet = api.get;
 
 let cartGetSequenceCounter = 0;
+const inflightGets = new Map();
 
 api.get = function (url, config) {
   const isCart = url.includes('/users/cart');
@@ -246,7 +254,17 @@ api.get = function (url, config) {
     });
   }
 
-  return originalGet
+  // Share one network request between concurrent callers of the same public GET
+  // (e.g. navbar + config context + catalog all asking for categories at startup).
+  // Requests with their own AbortSignal are not shared, so one caller cancelling
+  // can never cancel another.
+  const shareable = !config?.signal && isCacheableGet(url);
+  const inflightKey = shareable ? buildCacheKey(url, config) : null;
+  if (inflightKey && inflightGets.has(inflightKey)) {
+    return inflightGets.get(inflightKey);
+  }
+
+  const request = originalGet
     .call(this, url, config)
     .then((response) => {
       if (response?.data !== undefined) {
@@ -285,12 +303,18 @@ api.get = function (url, config) {
       }
       throw error;
     });
+
+  if (inflightKey) {
+    inflightGets.set(inflightKey, request);
+    request.finally(() => inflightGets.delete(inflightKey)).catch(() => {});
+  }
+  return request;
 };
 
 // High-performance POST request de-duplication wrapper for token refresh to avoid concurrent replay race conditions
 const originalPost = api.post;
 api.post = function (url, data, config) {
-  clearApiCache();
+  if (!isTelemetryWrite(url)) clearApiCache();
   if (url === '/auth/refresh' || url?.includes('/auth/refresh')) {
     const body = data && Object.keys(data).length ? data : buildRefreshBody();
     if (!refreshPostPromise) {

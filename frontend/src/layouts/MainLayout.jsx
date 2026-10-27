@@ -56,7 +56,7 @@ export function MainLayout() {
           <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </Suspense>
       )}
-      <main id="main-content" className="flex-1 relative" tabIndex={-1}>
+      <main id="main-content" className="flex-1 relative min-h-[100svh]" tabIndex={-1}>
         <ErrorBoundary>
           <AuthGate>
             <Suspense fallback={<RouteSkeleton variant={fallbackVariant} />}>
@@ -109,7 +109,7 @@ export function MinimalLayout() {
     <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
       <SEO />
       <CheckoutNavbar />
-      <main id="main-content" className="flex-1 relative" tabIndex={-1}>
+      <main id="main-content" className="flex-1 relative min-h-[100svh]" tabIndex={-1}>
         <ErrorBoundary>
           <AuthGate>
             <Suspense fallback={<RouteSkeleton variant={getRouteSkeletonVariant(pathname)} />}>

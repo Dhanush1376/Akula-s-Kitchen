@@ -262,7 +262,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             }`}
           >
             <div
-              className={`relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 pb-4 sm:pb-5 lg:pb-7 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[calc(100dvh-24px)] sm:max-h-[90vh] overflow-hidden transition-all duration-300 ${
+              className={`relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 pb-4 sm:pb-5 lg:pb-7 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[75dvh] sm:max-h-[90vh] overflow-hidden transition-all duration-300 ${
                 isConverting ? '!rounded-none !border-none !bg-surface' : ''
               }`}
             >

@@ -202,6 +202,9 @@ export const ProductCard = React.memo(function ProductCard({
     if (longPressTriggered) return;
     // If the user clicked a button or any interactive element inside a button, don't trigger the card link
     if (e.target.closest('button')) return;
+    // Links inside the card already navigate; navigating again here pushed a duplicate
+    // history entry, so the first Back press stayed on the same product page.
+    if (e.target.closest('a[href]') || e.defaultPrevented) return;
     navigate(productRoute);
   };
 

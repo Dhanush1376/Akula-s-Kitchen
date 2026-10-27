@@ -26,24 +26,27 @@ export const ConfigProvider = ({ children }) => {
     let isMounted = true;
 
     const fetchGlobalData = async () => {
-      try {
-        // Fetch categories
-        const categoriesRes = await api.get('/categories/active');
-        if (isMounted && categoriesRes?.data?.success) {
-          setCategories(categoriesRes.data.data);
-        }
+      // Independent requests run together, and one failing never blocks the other.
+      const [categoriesResult, settingsResult] = await Promise.allSettled([
+        api.get('/categories/active'),
+        storeSettingsService.getPublicSettings(),
+      ]);
+      if (!isMounted) return;
 
-        // Fetch store settings
-        const settingsRes = await storeSettingsService.getPublicSettings();
-        if (isMounted && settingsRes) {
-          setStoreSettings(settingsRes);
-        }
-      } catch (err) {
-        logger.error('Failed to fetch global data', err);
-        if (isMounted) setError(err);
-      } finally {
-        if (isMounted) setLoading(false);
+      if (categoriesResult.status === 'fulfilled') {
+        if (categoriesResult.value?.data?.success) setCategories(categoriesResult.value.data.data);
+      } else {
+        logger.error('Failed to fetch categories', categoriesResult.reason);
       }
+
+      if (settingsResult.status === 'fulfilled') {
+        if (settingsResult.value) setStoreSettings(settingsResult.value);
+      } else {
+        logger.error('Failed to fetch store settings', settingsResult.reason);
+        setError(settingsResult.reason);
+      }
+
+      setLoading(false);
     };
 
     fetchGlobalData();

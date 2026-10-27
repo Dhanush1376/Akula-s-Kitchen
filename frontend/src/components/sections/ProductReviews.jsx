@@ -767,7 +767,12 @@ export function ProductReviews({ productId, productTitle }) {
   const handleCloseReviewsDrawer = useCallback(() => {
     setIsReviewsDrawerOpen(false);
     if (window.location.pathname.endsWith('/reviews')) {
-      window.history.replaceState(null, '', `/product/${productId}#reviews-section`);
+      if (window.history.state?.reviewsDrawer) {
+        // Opened from the page: leave the entry we pushed, so Back isn't "used up".
+        window.history.back();
+      } else {
+        window.history.replaceState(null, '', `/product/${productId}#reviews-section`);
+      }
     }
   }, [productId]);
 
@@ -789,7 +794,11 @@ export function ProductReviews({ productId, productTitle }) {
   const handleClosePhotosDrawer = useCallback(() => {
     setIsPhotosDrawerOpen(false);
     if (window.location.pathname.endsWith('/reviews/images')) {
-      window.history.replaceState(null, '', `/product/${productId}#reviews-section`);
+      if (window.history.state?.photosDrawer) {
+        window.history.back();
+      } else {
+        window.history.replaceState(null, '', `/product/${productId}#reviews-section`);
+      }
     }
   }, [productId]);
 

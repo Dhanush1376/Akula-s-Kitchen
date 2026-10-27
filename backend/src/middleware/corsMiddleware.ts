@@ -19,10 +19,13 @@ export const corsErrorHandler = (err: Error, req: Request, res: Response, next: 
   next(err);
 };
 
+export const WHATSAPP_WEBHOOK_PATHS = ['/api/webhooks/whatsapp', '/api/v1/webhooks/whatsapp'];
+
 // S2S webhooks and strict direct access blocker
 export const strictOriginBlocker = (req: Request, res: Response, next: NextFunction) => {
   // Webhooks from trusted providers don't have an origin but need to POST
-  if (req.path === '/api/orders/webhook') {
+  // (each verifies its own HMAC signature in the route handler).
+  if (req.path === '/api/orders/webhook' || WHATSAPP_WEBHOOK_PATHS.includes(req.path)) {
     return next();
   }
 

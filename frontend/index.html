@@ -7,8 +7,15 @@
     
     <!-- Anti-Stale Service Worker Cleanup Script -->
 
-    <!-- Anti-Stale Service Worker Cleanup Script -->
-    <script defer src="/sw-cleanup.js"></script>
+    <!-- Anti-Stale Service Worker Cleanup (inlined: as a deferred external file it ran
+         before the app module and made every page load wait for an uncached request) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (var i = 0; i < registrations.length; i++) registrations[i].unregister();
+        });
+      }
+    </script>
 
     <!-- Font Loading Fallback Handler -->
     <script>

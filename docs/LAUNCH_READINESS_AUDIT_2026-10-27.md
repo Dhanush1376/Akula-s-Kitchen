@@ -379,3 +379,184 @@ Why:
 Recommended post-launch follow-up: add BEING_BAKED between Confirmed and Processing, and DISPATCHED with a
 server-validated required delivery agent. No data migration is needed (existing orders keep valid states).
 Add state-machine and admin-UI tests before releasing it.
+
+---
+
+## O. Performance, WhatsApp and cleanup pass — results, scorecard and decision
+
+### O.1 Performance: measured before → after (lab)
+
+**Conditions.** Chromium in-app browser, mobile viewport 375×812, no CPU/network throttling, from India.
+Production builds of the committed code (`b8c238e3`, "before") and the working tree ("after") were each
+served with `vite preview` against the **live** production API. The two were measured alternately in the
+same tab. This is **lab data**. **No real-user (field) Web Vitals data exists yet.** LCP/INP could not be
+captured: the pane was not painting in the foreground, so paint entries came back empty.
+
+| Metric                                | Page                   | Before                                         | After                   | n      |
+| ------------------------------------- | ---------------------- | ---------------------------------------------- | ----------------------- | ------ |
+| CLS                                   | Home                   | 0.541, 0.541, 0                                | **0, 0, 0**             | 3 + 3  |
+| CLS                                   | Product                | 0.541                                          | **0**                   | 1 + 1  |
+| CLS                                   | Live site (production) | 0.541 home, 0.564 shop                         | (needs deploy)          | 1 each |
+| Duplicate API calls                   | Home                   | 1, 3, 2                                        | **0, 0, 0**             | 3 + 3  |
+| API calls per load                    | Shop / Product         | 12 / 17                                        | **10 / 15**             | 1 + 1  |
+| Back from product → shop              | Shop                   | **never arrived** (still on product after 6 s) | **123 ms, 0 API calls** | 1 + 1  |
+| Shop → product (client nav)           | —                      | 237 ms, 3 API                                  | 59 ms, 2 API            | 1 + 1  |
+| Revisit same product                  | —                      | n/a                                            | 98 ms, 0 API (cached)   | 1      |
+| First API call after navigation start | Home (cold run)        | 1,675 ms                                       | 586 ms                  | 1 + 1  |
+| First API call (warm runs)            | Home                   | 448, 462 ms                                    | 332, 558 ms             | 2 + 2  |
+
+On the live site, `sw-cleanup.js` cost **555 ms** of network time before the app could start. Locally it
+is served from localhost, so the warm-run medians do not show the gain. Confirm it after deploy.
+
+**Root causes fixed**
+
+1. **CLS:** while content loaded, the 458 px footer sat at y=354 and was then pushed away. Main content now
+   reserves `min-h-[100svh]` (`layouts/MainLayout.jsx`).
+2. **Startup stall:** `<script defer src="/sw-cleanup.js">` ran before the app module, so every load waited
+   for an uncached request. Now inlined (`index.html`).
+3. **Duplicate startup requests:** concurrent identical public GETs now share one request
+   (`services/api.js`, `utils/api/apiCache.js`). Requests carrying an AbortSignal are never shared.
+4. **Cache wiped constantly:** every POST cleared the GET cache, including analytics/tracking beacons that
+   fire every few seconds. Telemetry writes no longer clear it.
+5. **Config waterfall and failure coupling:** categories then settings ran in sequence, and a categories
+   failure skipped settings. Now `Promise.allSettled` (`context/ConfigContext.jsx`).
+6. **Broken Back button:** one tap on a product card pushed two history entries (the inner `<Link>` plus the
+   card's `onClick` `navigate()`). Fixed in `components/shared/ProductCard.jsx`.
+7. **Reviews/photos drawers** left a history entry behind when closed with ✕, which used up the next Back
+   press. They now step back out of their own entry (`components/sections/ProductReviews.jsx`).
+8. Duplicate `/tracking/session` per page: now one per page load (`services/api/recommendationService.js`).
+
+**Not fixed (documented)**
+
+- Product images are full-size local WebP files with no responsive variants until they move to Cloudinary
+  (D-02). This is the largest remaining image-weight issue (~980 KB of images on the home page).
+- The home page loads CMS sections first and then the products they reference (a two-step waterfall).
+- Backend cross-region latency of 206 ms per DB round trip is a hosting fix (see the cost report).
+
+### O.2 WhatsApp new-order alerts
+
+Implemented with the official Meta Cloud API:
+
+- `services/notifications/WhatsAppAdminAlertService.ts`
+- `models/WhatsAppNotification.ts`
+- `controllers/notifications/whatsappWebhookController.ts`
+- Routes in `app.ts`
+- Hook in `jobs/outboxProcessor.ts`
+
+The alert fires only on the outbox `OrderCreated` event. That event is written in the same transaction as
+a verified online payment or an accepted COD/zero-total order, never for a started checkout.
+
+| Property                      | How it is achieved                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| No duplicates                 | Unique `dedupeKey` per (order, recipient); atomic claim of each attempt                           |
+| Never affects orders or email | Runs after commit; in a `finally` after email; never throws                                       |
+| Bounded retries               | 3 per run (network/429/5xx only), 6 total; 10 s timeout per call                                  |
+| Delivery truth                | `accepted` (API) → `sent` / `delivered` / `read` / `failed` from the signed webhook; forward-only |
+| Privacy                       | No phone, email or address in messages or logs; delivery city only; admin link needs admin login  |
+
+Tests: `tests/integration/whatsappAdminAlert.test.ts` (10). **Not verified end to end**: no Meta account,
+token or approved template exists yet. Setup steps and costs are in `PRODUCTION_COST_AND_OPERATIONS_REPORT.md` §E.
+
+### O.3 Cleanup
+
+- **67 orphan source files removed**, 25 frontend and 42 backend. A file counted as an orphan only if its
+  name appears nowhere in the repository (imports, dynamic imports, `require`, routes, config, CI; docs
+  excluded). All are tracked in git: restore any file with `git checkout -- <path>`.
+- **Kept on purpose:**
+  - 11 `backend/src/scripts/*` CLI tools.
+  - 2 config modules.
+  - 6 name-collision candidates.
+  - `frontend/public/uploads/` (17 files). These are the **only working copies** of 11 live product images
+    until the Cloudinary migration is verified.
+- **Dependencies:** no unused direct dependency (the only hit, `typescript`, is the `tsc` binary).
+- **`.gitignore`:** already covers logs, the OTP dev log, backups, local uploads, build output, coverage, env
+  files and editor/OS files. No change needed. No file was untracked and history was not rewritten.
+
+### O.4 Sector scorecard (0–10)
+
+"Code" = the code after this audit's fixes. "Live" = production as it runs today (none of these fixes are
+deployed yet). Confidence: H = measured or tested, M = code review plus partial tests, L = provisional.
+
+| #   | Sector                           | Score                       | Conf.   | Evidence                                                                                                                                          | To reach 9                                                    |
+| --- | -------------------------------- | --------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1   | Frontend architecture            | 6                           | M       | React 19 with lazy routes, but 3 overlapping data layers (custom GET cache, React Query, context fetches); 25 dead files; a double-navigation bug | One data layer; route-level data loaders; E2E tests           |
+| 2   | Visual design consistency        | 7                           | L       | Shared tokens; drawers now one shape; no full visual pass done                                                                                    | Visual regression snapshots                                   |
+| 3   | UX & ease of use                 | 6                           | M       | Back button was broken on every product (fixed); no usability testing                                                                             | Usability sessions on real phones                             |
+| 4   | Initial loading                  | 5                           | M       | CLS 0.54 → 0 (lab); startup stall removed; images unoptimised; no LCP data                                                                        | Cloudinary responsive images; field Web Vitals at p75 targets |
+| 5   | Page navigation                  | 7                           | H (lab) | 59–123 ms client navigation, cached revisits, Back fixed                                                                                          | Field INP data                                                |
+| 6   | Catalog reliability              | 6                           | M       | 28 cards render consistently; CMS→products waterfall; category set differs from brief                                                             | Catalog E2E; empty and error state tests                      |
+| 7   | Image infrastructure             | **2**                       | H       | 14/14 refs local, 3 lost, credentials invalid. Code no longer fakes success                                                                       | Valid credentials, migration applied, all refs on Cloudinary  |
+| 8   | Auth reliability                 | 5                           | M       | Real-IP fix, token families; 206 ms × ~11 queries per login; no device tests                                                                      | Region fix; iOS/Android verification                          |
+| 9   | Auth security                    | Code 7 / **Live 2**         | M       | Live: password-less admin 2FA bypass, no rate limits, OTPs logged. All fixed in code                                                              | Deploy; NODE_ENV=production; Redis; pen test                  |
+| 10  | Authorization                    | 7                           | M       | 2 IDORs + metrics exposure fixed with tests; route-guard scan done                                                                                | Automated authz tests for every route                         |
+| 11  | DB schema & integrity            | 6                           | M       | Transactions, unique indexes, TTLs; mixed-case enums (`paid` and `Paid`)                                                                          | Enum cleanup migration; schema tests                          |
+| 12  | DB query performance             | 4                           | H       | 206 ms RTT; sequential queries; admin loads whole collections                                                                                     | Region fix; admin pagination; slow-query telemetry            |
+| 13  | Cart correctness                 | 5                           | L       | Server-priced totals; not re-tested this pass                                                                                                     | Cart E2E across login and refresh                             |
+| 14  | Checkout reliability             | 5                           | L       | Idempotency guard, outbox; ~3 s of DB round trips                                                                                                 | Staging checkout tests under concurrency                      |
+| 15  | Payment integrity                | 6                           | M       | HMAC webhook, idempotency tests pass; no live sandbox run                                                                                         | Razorpay test-mode E2E and reconciliation drill               |
+| 16  | Order lifecycle                  | 6                           | M       | Transactional state machine; differs from brief (decision recorded, D-08)                                                                         | Lifecycle tests including dispatch agent                      |
+| 17  | Inventory consistency            | 5                           | L       | Reservations in transactions; never load-tested                                                                                                   | Concurrent oversell test in staging                           |
+| 18  | Profiles & addresses             | 5                           | L       | Not exercised this pass                                                                                                                           | E2E coverage                                                  |
+| 19  | Admin dashboard                  | 4                           | M       | Enterprise search always returned 401 (fixed); loads full collections                                                                             | Server pagination; admin E2E                                  |
+| 20  | Mobile responsiveness            | 6                           | M       | Drawers fixed at 375 px; iOS Safari strip fix unverified                                                                                          | Real-device pass                                              |
+| 21  | Accessibility                    | 5                           | L       | Skip link, aria labels present; no audit                                                                                                          | axe/Lighthouse audit + keyboard pass                          |
+| 22  | API design & errors              | 6                           | M       | Consistent `ApiError`; live stack traces (fixed in code)                                                                                          | Contract tests                                                |
+| 23  | Backend architecture             | 6                           | M       | Modular monolith, outbox pattern; 42 dead files removed                                                                                           | Fewer duplicate mechanisms                                    |
+| 24  | Scalability & concurrency        | **3**                       | M       | Single instance, no Redis, in-memory limits, no load test                                                                                         | Redis, staging load test, 2 instances                         |
+| 25  | External integrations            | **3**                       | H       | Cloudinary broken; email delivery unverified; WhatsApp unconfigured                                                                               | All verified end to end                                       |
+| 26  | Monitoring & observability       | 4                           | L       | Sentry optional; no alerting verified                                                                                                             | Alerts on errors, latency, outbox dead letters                |
+| 27  | Backup & recovery                | **2**                       | L       | No evidence of backups; M0 has none                                                                                                               | Confirmed backups + restore drill                             |
+| 28  | Deployment & hosting config      | **2**                       | H       | Wrong NODE_ENV live; cross-region; Vercel plan unknown                                                                                            | Cost report §J actions done                                   |
+| 29  | Automated testing                | 6                           | H       | Backend suite strong (see O.7); frontend 31; no E2E                                                                                               | Playwright E2E for the critical journey                       |
+| 30  | Maintainability                  | 5                           | M       | Large surface; dead code removed; overlapping caches                                                                                              | Consolidation; ownership docs                                 |
+| 31  | Dependency security              | 8                           | H       | 0 production advisories in both apps                                                                                                              | Automated audit in CI                                         |
+| 32  | **Overall production readiness** | **4** (live) / **6** (code) | M       | Code gates pass; live config, images, backups, hosting unresolved                                                                                 | §J complete + staging verification                            |
+
+### O.5 Honest answers
+
+- **Would I approve launch today?** **No.** The code is in much better shape and every code gate passes, but
+  the running site has an admin-takeover path, no rate limiting, broken image storage and unverified
+  backups. All of these are closed by deploying and configuring, not by more code.
+- **Would I trust it with real customer accounts and orders?** After the §J actions, the real-device checks
+  and one Razorpay test-mode order: yes, at launch scale (≤ 100 concurrent shoppers). Not before.
+- **Three biggest remaining risks:** (1) deploy and config not done (NODE_ENV, Redis, Cloudinary);
+  (2) no verified backups or restore; (3) no load or concurrency test of checkout and inventory.
+- **Looks ready but is under-tested:** checkout and inventory under concurrency; the cart across devices;
+  the admin dashboard; email delivery; iOS Safari cookies and layout.
+- **Single most dangerous hidden defect found:** password-less admin login. `hasTwoFactorPending()` returned
+  `true` for any user ID when Redis was down and NODE_ENV ≠ production, and production meets both conditions.
+- **Immediately:** deploy; set NODE_ENV and production variables; fix Cloudinary and migrate images;
+  provision Redis; confirm backups.
+- **First week:** move the API to Singapore; Razorpay test order; real-device login; WhatsApp setup;
+  Sentry alerts; uptime check.
+- **First month:** staging + load test; admin server-side pagination; Playwright E2E; responsive Cloudinary
+  images; restore drill; Vercel/Atlas plan review.
+
+### O.6 Final launch decision (this pass)
+
+**READY AFTER EXPLICIT ACTIONS.** Every code-side gate passes (O.7). Launch is gated on the operator actions
+in `PRODUCTION_COST_AND_OPERATIONS_REPORT.md` §J and on the unverified items above. It is not "READY TO
+LAUNCH": important external dependencies (images, backups, payments, email, WhatsApp, real devices) remain
+unverified, and the live site is still misconfigured.
+
+### O.7 Final gate (this pass)
+
+Run after every change in this pass, including the 67 file removals:
+
+| Check                      | Command                                                | Result                                                          |
+| -------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| Backend typecheck          | `npx tsc --noEmit`                                     | pass                                                            |
+| Backend lint               | `npx eslint src`                                       | pass                                                            |
+| Backend build              | `npm run build`                                        | pass                                                            |
+| Backend tests              | `npx vitest run`                                       | **28 files, 240/240 pass** (230 before this pass + 10 WhatsApp) |
+| Backend audit              | `npm audit --omit=dev`                                 | 0 vulnerabilities                                               |
+| Frontend lint              | `npm run lint`                                         | 0 errors, 2 pre-existing warnings                               |
+| Frontend tests             | `npx vitest run`                                       | **4 files, 31/31 pass**                                         |
+| Frontend build             | `npm run build` (+ bundle budgets, performance guards) | pass                                                            |
+| Frontend audit             | `npm audit --omit=dev`                                 | 0 vulnerabilities                                               |
+| Load / capacity test       | —                                                      | **Not run**: no staging environment                             |
+| WhatsApp end to end        | —                                                      | **Not run**: no Meta account or template                        |
+| Real devices (iOS/Android) | —                                                      | **Not run**: no devices available                               |
+
+No commits, pushes or deployments were made by this audit. `git status` shows only uncommitted
+working-tree changes.

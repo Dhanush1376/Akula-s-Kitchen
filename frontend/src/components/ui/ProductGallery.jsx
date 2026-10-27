@@ -373,9 +373,9 @@ export function ProductGallery({ images = [], product }) {
                   exit={{ y: '100%', opacity: 0 }}
                   transition={sheetTransition}
                   {...dragProps}
-                  className="fixed inset-x-3 bottom-3 sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-24px)] sm:w-full max-w-[500px] mx-auto"
+                  className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-24px)] sm:w-full max-w-[500px] mx-auto"
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[calc(100dvh-24px)] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-5 pb-3.5 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[75dvh] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
                     {/* Handlebar for bottom sheet feel - moved right to the top rim */}
                     <div
                       className="w-full flex justify-center pt-1 pb-2 cursor-grab select-none"

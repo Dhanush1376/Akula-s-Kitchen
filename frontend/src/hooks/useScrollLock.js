@@ -28,7 +28,10 @@ import { useEffect, useId } from 'react';
 // This is intentionally NOT React state — it must survive re-renders
 // and be shared across the entire component tree.
 const activeLocks = new Set();
+// bg-black/60 composited over the #ffffff surface.
+const OVERLAY_EDGE_COLOR = '#666666';
 let savedHtmlBg = '';
+let savedBodyBg = '';
 let savedHtmlOverflow = '';
 let savedHtmlOverscroll = '';
 let savedBodyOverflow = '';
@@ -39,6 +42,7 @@ function applyLock() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   savedHtmlBg = document.documentElement.style.backgroundColor;
+  savedBodyBg = document.body.style.backgroundColor;
   savedHtmlOverflow = document.documentElement.style.overflow;
   savedHtmlOverscroll = document.documentElement.style.overscrollBehavior;
   savedBodyOverflow = document.body.style.overflow;
@@ -48,8 +52,14 @@ function applyLock() {
   // Prevent background scrolling and bouncing
   document.documentElement.style.overflow = 'hidden';
   document.documentElement.style.overscrollBehavior = 'none';
-  // Ensure the underlying canvas is dark so overscroll bounce reveals dark backdrop, NEVER white canvas
-  document.documentElement.style.backgroundColor = '#121212';
+
+  // iOS Safari stops fixed overlays at the visible viewport edge and paints the strip
+  // under its toolbar / home indicator with the html+body background. The page itself
+  // lives on #root (own background), so tinting html+body only changes that strip:
+  // match it to the standard drawer backdrop (bg-black/60 over the white surface)
+  // instead of showing a white band below the open drawer.
+  document.documentElement.style.backgroundColor = OVERLAY_EDGE_COLOR;
+  document.body.style.backgroundColor = OVERLAY_EDGE_COLOR;
 
   document.body.style.overflow = 'hidden';
   document.body.style.overscrollBehavior = 'none';
@@ -63,6 +73,7 @@ function releaseLock() {
   document.documentElement.style.overflow = savedHtmlOverflow;
   document.documentElement.style.overscrollBehavior = savedHtmlOverscroll;
 
+  document.body.style.backgroundColor = savedBodyBg;
   document.body.style.overflow = savedBodyOverflow;
   document.body.style.overscrollBehavior = savedBodyOverscroll;
   document.body.style.touchAction = savedBodyTouchAction;

@@ -47,6 +47,19 @@ const resolveTtl = (url = '') => {
 
 const buildKey = (url, config) => `${url}?${JSON.stringify(config?.params || {})}`;
 
+/** Public, cacheable GET (same rules as the response cache). */
+export const isCacheableGet = (url) => resolveTtl(url) > 0;
+
+export const buildCacheKey = buildKey;
+
+/**
+ * POSTs that only record telemetry cannot change any cached read, so they must not
+ * wipe the cache (they fire continuously and would force every page to refetch).
+ */
+const TELEMETRY_WRITE_PATHS = ['/analytics/events', '/tracking/', '/search/analytics/track'];
+export const isTelemetryWrite = (url = '') =>
+  TELEMETRY_WRITE_PATHS.some((prefix) => url.split('?')[0].includes(prefix));
+
 export const getCachedGet = (url, config) => {
   const ttl = resolveTtl(url);
   if (!ttl) return null;

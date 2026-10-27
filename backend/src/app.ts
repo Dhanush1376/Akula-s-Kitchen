@@ -2,7 +2,11 @@ import express, { Application, Request, Response } from 'express';
 import path from 'path';
 import os from 'os';
 import mongoose from 'mongoose';
-import { corsMiddleware, corsHandler } from './middleware/corsMiddleware';
+import { corsMiddleware, corsHandler, WHATSAPP_WEBHOOK_PATHS } from './middleware/corsMiddleware';
+import {
+  verifyWhatsAppWebhook,
+  receiveWhatsAppWebhook,
+} from './controllers/notifications/whatsappWebhookController';
 import { securityHeadersMiddleware } from './middleware/helmetMiddleware';
 import compression from 'compression';
 import mongoSanitize from 'express-mongo-sanitize';
@@ -123,6 +127,26 @@ app.post(
       next(err);
     }
   },
+);
+
+// WhatsApp Cloud API webhook (delivery statuses for admin order alerts).
+// Registered before body parsing for the same reason as the Razorpay webhook:
+// X-Hub-Signature-256 is computed over the exact raw bytes.
+app.get(WHATSAPP_WEBHOOK_PATHS, verifyWhatsAppWebhook);
+app.post(
+  WHATSAPP_WEBHOOK_PATHS,
+  express.raw({ type: 'application/json', limit: '1mb' }),
+  (req: Request, res: Response, next) => {
+    const raw = req.body as Buffer;
+    (req as any).rawBody = Buffer.isBuffer(raw) ? raw : Buffer.alloc(0);
+    try {
+      req.body = raw?.length ? JSON.parse(raw.toString('utf8')) : {};
+    } catch {
+      return res.sendStatus(400);
+    }
+    next();
+  },
+  receiveWhatsAppWebhook,
 );
 
 // Request Parsing (MUST be before sanitization)

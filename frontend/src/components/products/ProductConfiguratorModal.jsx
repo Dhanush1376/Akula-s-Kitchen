@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { ProductConfigurator } from './ProductConfigurator';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 /**
  * ProductConfiguratorModal
@@ -15,17 +16,11 @@ export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart
   const [quantity, setQuantity] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Lock background scroll when open
+  // Shared, reference-counted lock: also tints the iOS Safari edge strip under the sheet
+  useScrollLock(isOpen);
+
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      setQuantity(1);
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    if (!isOpen) setQuantity(1);
   }, [isOpen]);
 
   if (!isOpen || !product) return null;
@@ -66,7 +61,7 @@ export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-          className="relative w-full max-h-[calc(100dvh-24px)] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-2xl md:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col z-10 overflow-hidden border border-black/10"
+          className="relative w-full max-h-[75dvh] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-2xl md:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col z-10 overflow-hidden border border-black/10"
           role="dialog"
           aria-modal="true"
           aria-labelledby="configurator-modal-title"

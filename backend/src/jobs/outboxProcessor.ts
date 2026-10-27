@@ -4,6 +4,7 @@ import { withCronLock } from '../utils/cronLock';
 import * as Sentry from '@sentry/node';
 import { TransactionalEmailService } from '../services/TransactionalEmailService';
 import Order from '../models/Order';
+import { WhatsAppAdminAlertService } from '../services/notifications/WhatsAppAdminAlertService';
 
 /**
  * OutboxProcessor — Processes ALL outbox event types.
@@ -98,12 +99,19 @@ export async function processEvent(event: any): Promise<void> {
   try {
     if (eventName === 'ORDER_ORDERCREATED') {
       const order = await Order.findById(event.aggregateId).populate('user');
-      if (order)
-        await TransactionalEmailService.sendOrderPlacedEmails(
-          order,
-          order.user,
-          event._id.toString(),
-        );
+      if (order) {
+        try {
+          await TransactionalEmailService.sendOrderPlacedEmails(
+            order,
+            order.user,
+            event._id.toString(),
+          );
+        } finally {
+          // Independent admin channel: runs even if email fails, never throws, and is
+          // idempotent per order, so outbox retries cannot send duplicates.
+          await WhatsAppAdminAlertService.notifyNewOrder(order);
+        }
+      }
     } else if (eventName === 'ORDER_REFUNDCOMPLETED') {
       const order = await Order.findById(event.aggregateId).populate('user');
       if (order && order.user && (order.user as any).email) {
