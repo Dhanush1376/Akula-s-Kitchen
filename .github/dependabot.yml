@@ -13,7 +13,10 @@ updates:
     commit-message:
       prefix: "fix"
       include: "scope"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # Maintain dependencies for the backend (Node/npm)
   - package-ecosystem: "npm"
@@ -23,10 +26,16 @@ updates:
     commit-message:
       prefix: "fix"
       include: "scope"
-    open-pull-requests-limit: 10
-    
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
   # Maintain GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "trufflesecurity/trufflehog"
+
