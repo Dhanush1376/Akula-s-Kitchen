@@ -177,3 +177,53 @@ curl -sI https://www.akulas.kitchen/api/v1/csrf-token
 ```
 
 It must show `__Secure-akula_csrf` and `Secure`.
+
+## 10. Product image migration to Cloudinary (2026-10-27, 23:12 IST)
+
+The owner corrected `CLOUDINARY_API_SECRET` in `backend/.env.local`; the Cloudinary ping returned `200 ok`.
+
+| Step                                                                        | Result                                                                                                                                                      |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dry run                                                                     | 14 products with local paths: 11 recoverable, 3 files lost                                                                                                  |
+| `--apply`                                                                   | **11 files uploaded, 11 product fields updated, 0 errors.** Old → new mapping saved in `backend/ops/recovery/image-migration-2026-10-27.log` (for rollback) |
+| Direct check of each Cloudinary URL                                         | 11/11 HTTP 200; every file is byte-identical in size to its original                                                                                        |
+| Database (read-only count)                                                  | 11 Cloudinary, 3 local                                                                                                                                      |
+| Live API `GET /api/v1/products?page=1&limit=50&sort=newest`                 | 14 products: 11 Cloudinary, 3 local                                                                                                                         |
+| **Live storefront** (Chromium, 375 px, `/collections`, scrolled to the end) | **11 unique Cloudinary images rendered, 11 requests, 0 failed, 0 broken**                                                                                   |
+
+**Still to do**
+
+- **Re-upload photos** in Admin → Products for the 3 products whose files were permanently lost:
+  - **Coconut Chutney** (`6ad92300fbb82e5f798e5d80`)
+  - **Ginger Chutney** (`6ad923a3fbb82e5f798e5da5`)
+  - **Tomato Chutney** (`6ad92523fbb82e5f798e5df6`)
+- **Put the same corrected secret on Render** (backend service → Environment). Admin uploads on the live site use Render's copy, not `.env.local`.
+- **Responsive delivery is not yet active.** The storefront requests the original files (about 180–290 KB each, no Cloudinary width/format transformation in the URL). A follow-up should make product cards request a width-limited `f_auto,q_auto` variant.
+- **Returning visitors may briefly see an old image** from the saved catalog cache in their browser (`akula_query_cache_v4`) before fresh data replaces it on the same visit.
+
+## 11. Responsive product images (branch `release/cookie-hardening`)
+
+**Cause:** `ProductCard` passed `quality="original"` to `CloudinaryImage`. That made `getOptimizedUrl`
+strip every transformation and made every `srcset` candidate the same raw file. Separately, `getSrcSet`
+labelled each candidate with the requested width rather than the width actually served (for example, a
+"320w" entry pointed to a 400 px file) and listed some URLs twice.
+
+**Fix:** product cards use the default delivery: width-limited (`c_limit`), `f_auto`, `q_auto:good`,
+metadata stripped, immutable caching. `srcset` labels now match the served width and contain no duplicates.
+Product images that are not on Cloudinary are unaffected.
+
+**Measured on the live catalog** (production build served against the live API, Chromium, 375 px phone
+viewport at 2× density, whole `/collections` page scrolled, encoded bytes of all Cloudinary images):
+
+|                 | Live today                    | With this change                                      |
+| --------------- | ----------------------------- | ----------------------------------------------------- |
+| Images rendered | 11                            | 11                                                    |
+| Broken images   | 0                             | 0                                                     |
+| Image bytes     | **2,498 KB** (original files) | **349 KB** (`w_400`, WebP or JPEG chosen by `f_auto`) |
+| Saving          | —                             | **86%**                                               |
+
+A direct CDN check of all 11 photos at 640 px (what a 3× phone selects) gives 782 KB, 69% less than the
+originals.
+
+**Tests:** `frontend/src/utils/__tests__/imageUtils.test.js` (4). Frontend 35/35, lint 0 errors, build and
+bundle budgets pass.
