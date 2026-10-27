@@ -19,12 +19,13 @@ Companion documents:
 The code is in good shape. The live system still has P0 failures that only the owner can resolve:
 
 1. **Production mode is not enabled.** The live cookie is `akula_csrf; HttpOnly; SameSite=Lax`, with no
-   `Secure` and no `__Secure-` prefix.
+   `Secure` and no `__Secure-` prefix. _Code fix ready on branch `release/cookie-hardening` (§9); setting
+   `NODE_ENV=production` is still recommended for the remaining production-only behaviour._
 2. **Product images are not durable.** Cloudinary credentials are rejected, 14/14 product references are
    local paths, and `9607c278…` still returns 404 live.
 3. **Database backups and restore are unverified.**
-4. **The live code can still oversell stock.** The fix in this pass is not deployed, and all 14 live products
-   have limited stock (49–50 units).
+4. ~~The live code can still oversell stock.~~ **Resolved in production:** deployed in V2 (`38614ea`);
+   see §9.
 5. **The admin 2FA bypass fix is deployed but unverified live.** An automated probe of the production
    admin endpoint was not permitted in this session. The checklist (E4) has the exact one-line check.
 6. **No sandbox payment, real-device login or production-like load test has been run.**
@@ -147,3 +148,32 @@ See `PRODUCTION_LAUNCH_CHECKLIST.md` for exact commands.
   dominate. Plan for **≤ 100 concurrent active shoppers and ≤ 5 simultaneous checkouts** until a
   production-like staging test (same region, same instance, real Atlas tier) says otherwise.
 - **Not claimed:** any figure for 500 or 1,000 simultaneous shoppers.
+
+## 9. Next phase — V2 live verification and cookie hardening (2026-10-27, evening)
+
+**V2 (`38614ea`) is deployed.** Evidence: `/api/readiness` now includes the new `redisRequired` field, and
+the server uptime had reset to 209 s at the time of checking. Live as a result:
+
+- The atomic stock check (oversell fix, D-21).
+- The 409 for conflicting checkouts (D-22).
+- The `zlib` MongoDB compressor (D-23); the database stays connected at a 197 ms ping.
+- Readiness that honours `REQUIRE_REDIS` (D-24). It is currently `false` in production, so the site
+  reports ready.
+
+**New fix on branch `release/cookie-hardening` (not deployed until merged into `main`):**
+
+| ID   | Severity | Defect                                                                                                                                                                         | Fix                                                                                                                                                                  | Regression test                                                          |
+| ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| D-26 | P1       | Live auth and CSRF cookies lack `Secure` and the `__Secure-` prefix because `NODE_ENV` is not `production` on Render                                                           | Any hosted deployment gets production cookie hardening (`Secure`, `__Secure-`, `SameSite=None`), as already done for error masking                                   | `tests/integration/cookieHardening.test.ts`                              |
+| D-27 | P1       | Renaming cookies would have left a pre-deploy session alive after logout: logout revoked only the token under the current cookie name, while refresh also accepts the old name | Logout, logout-all and admin logout revoke **every** refresh token the browser holds (both naming styles, plus a body token) and clear all four refresh cookie names | Same file: a session under the old name cannot be refreshed after logout |
+
+Gate on the branch: backend **252/252** (32 files), typecheck, lint and build pass; frontend 31/31.
+
+**Expected behaviour after merging:** nobody is logged out. The first refresh reads the old cookie and
+issues the new `__Secure-` one. Verify with checklist B1/E6:
+
+```
+curl -sI https://www.akulas.kitchen/api/v1/csrf-token
+```
+
+It must show `__Secure-akula_csrf` and `Secure`.

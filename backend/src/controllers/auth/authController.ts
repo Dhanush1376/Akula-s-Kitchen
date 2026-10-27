@@ -22,10 +22,10 @@ import {
 import { checkOtpSendAllowed, isOtpVerifyBlocked } from '../../utils/security/otpRateLimit';
 import {
   setCustomerRefreshCookie,
-  clearCustomerRefreshCookie,
   CUSTOMER_REFRESH_COOKIE,
   ADMIN_REFRESH_COOKIE,
-  clearAdminRefreshCookie,
+  collectRefreshTokensFromCookies,
+  clearAllRefreshCookies,
   setAdminRefreshCookie,
   refreshTokenForResponseBody,
 } from '../../utils/security/authCookies';
@@ -199,13 +199,12 @@ export const refreshSession = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  const refreshToken = String(
-    req.cookies?.[CUSTOMER_REFRESH_COOKIE] ||
-      req.cookies?.[ADMIN_REFRESH_COOKIE] ||
-      req.body?.refreshToken ||
-      req.headers['x-refresh-token'] ||
-      '',
-  ).trim();
+  // Revoke every refresh token the browser holds (current and legacy cookie names),
+  // plus a body/header token from cookie-less clients.
+  const bodyToken = String(req.body?.refreshToken || req.headers['x-refresh-token'] || '').trim();
+  const refreshTokens = [
+    ...new Set([...collectRefreshTokensFromCookies(req), bodyToken].filter(Boolean)),
+  ];
   const userId = (req as any).user?.id;
 
   let accessToken;
@@ -227,14 +226,13 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
     await blacklistToken(accessToken, expiresIn);
   }
 
-  if (refreshToken) {
-    await SessionAuthService.revokeSession(refreshToken);
+  for (const token of refreshTokens) {
+    await SessionAuthService.revokeSession(token);
   }
   if (userId) {
     await invalidateUserSessionCaches(String(userId));
   }
-  clearCustomerRefreshCookie(res);
-  clearAdminRefreshCookie(res);
+  clearAllRefreshCookies(res);
   clearCsrfCookie(res);
 
   res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
@@ -267,8 +265,7 @@ export const logoutAllDevices = asyncHandler(async (req: Request, res: Response)
     await SessionAuthService.revokeAllSessions(String(userId));
     await invalidateUserSessionCaches(String(userId));
   }
-  clearCustomerRefreshCookie(res);
-  clearAdminRefreshCookie(res);
+  clearAllRefreshCookies(res);
   clearCsrfCookie(res);
 
   res.setHeader('Clear-Site-Data', '"cache", "cookies", "storage"');
