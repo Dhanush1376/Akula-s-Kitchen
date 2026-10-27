@@ -159,4 +159,34 @@
       <image:title>Sambar Masala</image:title>
     </image:image>
   </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ad92300fbb82e5f798e5d80</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/afbfbe1f-2816-4c86-8818-8bd214e4252c-jpg-d037_jnnqa.webp</image:loc>
+      <image:title>Coconut Chutney</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ad923a3fbb82e5f798e5da5</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/359c1754-e63a-43ae-bd27-3a0faeea1f1d-jpg-9562_87qw4.webp</image:loc>
+      <image:title>Ginger Chutney</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://akulas.kitchen/product/6ad92523fbb82e5f798e5df6</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>/uploads/akulas-kitchen/products/9607c278-08c1-4fed-aabb-e68508e92f29-jpg-674a_tig4f.webp</image:loc>
+      <image:title>Tomato Chutney</image:title>
+    </image:image>
+  </url>
 </urlset>
