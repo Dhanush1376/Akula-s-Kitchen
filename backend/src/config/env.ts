@@ -1,5 +1,6 @@
 import logger from './logger';
 import { collectMissingEnvVars } from './envValidation';
+import { isMisconfiguredHostedEnv } from './runtimeEnv';
 
 const validateEnv = () => {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -8,6 +9,14 @@ const validateEnv = () => {
   if (jwtExpiry && !/^\d+[smhd]$/.test(jwtExpiry)) {
     logger.warn(
       `[ENV WARNING] JWT_EXPIRES_IN="${jwtExpiry}" may not be a valid time string. Expected format: 15m, 1h, 7d, etc.`,
+    );
+  }
+
+  if (isMisconfiguredHostedEnv()) {
+    logger.error(
+      `[CRITICAL CONFIG] Running on a hosting platform with NODE_ENV="${process.env.NODE_ENV || ''}". ` +
+        'Set NODE_ENV=production. Security guards are forced on, but cookie hardening ' +
+        '(Secure/__Secure- prefix) and production logging remain disabled until it is set.',
     );
   }
 

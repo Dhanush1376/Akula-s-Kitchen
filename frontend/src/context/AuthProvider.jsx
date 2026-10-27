@@ -19,6 +19,7 @@ import {
   setSessionMarker,
   clearAuthStorage,
   setFallbackRefreshToken,
+  clearFallbackRefreshToken,
 } from '../utils/auth/authStorage';
 import { AuthContext } from './AuthContext';
 import { CACHE_KEY } from '../utils/performance/queryPersister';
@@ -316,7 +317,9 @@ export function AuthProvider({ children }) {
 
       setAccessToken(accessToken);
       setSessionMarker();
-      setFallbackRefreshToken(refreshToken);
+      // Only present when the server could not use cookies for this browser.
+      if (refreshToken) setFallbackRefreshToken(refreshToken);
+      else clearFallbackRefreshToken();
 
       setUser(userData);
       setIsAuthenticated(true);

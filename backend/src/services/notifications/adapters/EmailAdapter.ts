@@ -3,6 +3,7 @@ import { EmailSendOptions, IEmailProvider } from '../types';
 import { BrevoProvider } from '../providers/email/BrevoProvider';
 import { SMTPProvider } from '../providers/email/SMTPProvider';
 import nodemailer from 'nodemailer';
+import { isLocalDevelopment } from '../../../config/runtimeEnv';
 
 export class EmailAdapter {
   private providers: IEmailProvider[] = [];
@@ -47,8 +48,9 @@ export class EmailAdapter {
       }
     }
 
-    // Fallback to Ethereal if not in production and no provider worked
-    if (process.env.NODE_ENV !== 'production') {
+    // Fallback to Ethereal only on a local developer machine when no provider worked.
+    // Never on a hosted deploy: it would deliver real OTPs to a public test inbox and report success.
+    if (isLocalDevelopment()) {
       logger.warn('[EMAIL ADAPTER] No configured providers succeeded. Falling back to Ethereal.');
       try {
         const testAccount = await nodemailer.createTestAccount();

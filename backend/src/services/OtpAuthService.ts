@@ -25,6 +25,7 @@ import { getSmsProvider, maskPhone } from './SmsProviderService';
 import { PhoneAuthService } from './PhoneAuthService';
 import { SecurityAuditService } from './SecurityAuditService';
 import { isAdministrativeRole } from '../config/adminConfig';
+import { isLocalDevelopment } from '../config/runtimeEnv';
 
 class OtpAuthService {
   static normalizeOtpInput(otp: string): string {
@@ -58,7 +59,7 @@ class OtpAuthService {
 
     const isTestRateLimit = process.env.TEST_RATE_LIMIT === 'true';
 
-    if (!isTestRateLimit && process.env.NODE_ENV !== 'development') {
+    if (!isTestRateLimit && !isLocalDevelopment()) {
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       const ipRequestCount = await OtpRequestLog.countDocuments({
         ip,
@@ -159,7 +160,7 @@ class OtpAuthService {
       challengeId,
     });
 
-    if (process.env.NODE_ENV === 'development') {
+    if (isLocalDevelopment()) {
       logger.info(`[DEV AUTH OTP] Verification code for ${cleanEmail}: ${otp}`);
     }
 
@@ -181,26 +182,27 @@ class OtpAuthService {
       throw new ApiError(400, 'Verification code must be exactly 6 digits');
     }
 
-    const challenge = await OtpChallenge.findOneAndUpdate(
-      { challengeId },
-      { $inc: { attempts: 1 } },
-      { new: true },
-    );
+    const isTestRateLimit = process.env.TEST_RATE_LIMIT === 'true';
+    const enforceIpFailLimit = !isTestRateLimit && !isLocalDevelopment();
+
+    // Independent reads run concurrently: each DB round trip costs ~200ms in production.
+    const [challenge, failedAttemptsCount] = await Promise.all([
+      OtpChallenge.findOneAndUpdate({ challengeId }, { $inc: { attempts: 1 } }, { new: true }),
+      enforceIpFailLimit
+        ? OtpRequestLog.countDocuments({
+            ip,
+            action: 'verify_fail',
+            createdAt: { $gte: new Date(Date.now() - 15 * 60 * 1000) },
+          })
+        : Promise.resolve(0),
+    ]);
     if (!challenge) {
       throw new ApiError(400, 'Invalid or expired verification session');
     }
 
     const cleanEmail = canonicalizeEmail(challenge.identifier);
 
-    const isTestRateLimit = process.env.TEST_RATE_LIMIT === 'true';
-    if (!isTestRateLimit && process.env.NODE_ENV !== 'development') {
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-      const failedAttemptsCount = await OtpRequestLog.countDocuments({
-        ip,
-        action: 'verify_fail',
-        createdAt: { $gte: fifteenMinutesAgo },
-      });
-
+    if (enforceIpFailLimit) {
       if (failedAttemptsCount >= 5) {
         throw new ApiError(
           429,
@@ -274,13 +276,18 @@ class OtpAuthService {
       throw new ApiError(400, 'This verification code has already been used');
     }
 
-    await OtpChallenge.deleteMany({
-      identifier: cleanEmail,
-      purpose: challenge.purpose,
-      _id: { $ne: challenge._id },
-    });
-
-    await OtpRequestLog.create({ ip, identifier: cleanEmail, action: 'verify' });
+    // Bookkeeping only (sibling challenges were already marked exhausted when this one was
+    // issued, and expire via TTL), so keep it off the login response path.
+    Promise.all([
+      OtpChallenge.deleteMany({
+        identifier: cleanEmail,
+        purpose: challenge.purpose,
+        _id: { $ne: challenge._id },
+      }),
+      OtpRequestLog.create({ ip, identifier: cleanEmail, action: 'verify' }),
+    ]).catch((err) =>
+      logger.warn('[OtpAuthService] Post-verify bookkeeping failed', { error: err?.message }),
+    );
 
     SecurityAuditService.log({
       eventType: 'OTP_VERIFIED',
@@ -640,7 +647,7 @@ class OtpAuthService {
         expiresAt,
       });
 
-      if (process.env.NODE_ENV === 'development') {
+      if (isLocalDevelopment()) {
         logger.info(`[DEV COD OTP] Email verification code for ${cleanEmail}: ${otp}`);
       }
 
@@ -733,7 +740,7 @@ class OtpAuthService {
       expiresAt,
     });
 
-    if (process.env.NODE_ENV === 'development') {
+    if (isLocalDevelopment()) {
       logger.info(`[DEV COD OTP] Verification code for ${normalizedPhone}: ${otp}`);
     }
 

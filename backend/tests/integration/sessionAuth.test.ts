@@ -1,5 +1,5 @@
 import './setup';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import SessionAuthService from '../../src/services/SessionAuthService';
 import RefreshToken from '../../src/models/RefreshToken';
@@ -75,6 +75,59 @@ describe('SessionAuthService refresh-token rotation (integration)', () => {
     expect(await RefreshToken.findOne({ tokenHash: rotatedHash })).toBeNull();
   });
 
+  it('a replay on one device leaves the customer signed in on other devices', async () => {
+    const user = await seedUser();
+    const { refreshToken: phone } = await SessionAuthService.createSession(user as any, 'phone');
+    const { refreshToken: laptop } = await SessionAuthService.createSession(user as any, 'laptop');
+
+    // Phone rotates, but (say) the response is lost on a flaky network.
+    await SessionAuthService.refreshSession(phone);
+    await UsedRefreshToken.collection.updateOne(
+      { tokenHash: SessionAuthService.hashRefreshToken(phone) },
+      { $set: { createdAt: new Date(Date.now() - 150_000) } },
+    );
+
+    await expect(SessionAuthService.refreshSession(phone)).rejects.toMatchObject({
+      statusCode: 401,
+    });
+
+    // Only the phone's chain is revoked; the laptop session still refreshes.
+    const remaining = await RefreshToken.find({ userId: user._id }).lean();
+    expect(remaining.map((s: any) => s.userAgent)).toEqual(['laptop']);
+    await expect(SessionAuthService.refreshSession(laptop)).resolves.toBeTruthy();
+  });
+
+  it('keeps one family id across rotations', async () => {
+    const user = await seedUser();
+    const first = await SessionAuthService.createSession(user as any);
+    const second = await SessionAuthService.refreshSession(first.refreshToken);
+    const third = await SessionAuthService.refreshSession(second.refreshToken);
+
+    const used = await UsedRefreshToken.find({ userId: user._id }).lean();
+    const live = await RefreshToken.findOne({
+      tokenHash: SessionAuthService.hashRefreshToken(third.refreshToken),
+    }).lean();
+    const families = new Set([...used.map((u: any) => u.familyId), (live as any)?.familyId]);
+    expect(families.size).toBe(1);
+    expect([...families][0]).toBeTruthy();
+  });
+
+  it('falls back to revoking every session for legacy tokens without a family', async () => {
+    const user = await seedUser();
+    const { refreshToken: legacy } = await SessionAuthService.createSession(user as any, 'old');
+    await SessionAuthService.createSession(user as any, 'other');
+    await SessionAuthService.refreshSession(legacy);
+    await UsedRefreshToken.collection.updateOne(
+      { tokenHash: SessionAuthService.hashRefreshToken(legacy) },
+      { $unset: { familyId: '' }, $set: { createdAt: new Date(Date.now() - 150_000) } },
+    );
+
+    await expect(SessionAuthService.refreshSession(legacy)).rejects.toMatchObject({
+      statusCode: 401,
+    });
+    expect(await RefreshToken.countDocuments({ userId: user._id })).toBe(0);
+  });
+
   it('returns 409 (not revocation) when the same token is replayed within the grace window', async () => {
     const user = await seedUser();
     const { refreshToken: original } = await SessionAuthService.createSession(user as any);
@@ -121,7 +174,16 @@ describe('SessionAuthService refresh-token rotation (integration)', () => {
     for (let i = 0; i < 12; i++) {
       await SessionAuthService.createSession(user as any, `device-${i}`);
     }
-    expect(await RefreshToken.countDocuments({ userId: user._id })).toBe(10);
+    // Pruning runs off the login response path, so wait for it to converge.
+    await vi.waitFor(
+      async () => expect(await RefreshToken.countDocuments({ userId: user._id })).toBe(10),
+      { timeout: 5000, interval: 50 },
+    );
+    const remaining = await RefreshToken.find({ userId: user._id }).select('userAgent').lean();
+    const agents = remaining.map((s: any) => s.userAgent);
+    expect(agents).not.toContain('device-0');
+    expect(agents).not.toContain('device-1');
+    expect(agents).toContain('device-11');
   });
 
   it('rejects an expired session token', async () => {

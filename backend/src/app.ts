@@ -38,6 +38,7 @@ import { noCacheMiddleware } from './middleware/noCacheMiddleware';
 import { requestTimeout } from './middleware/queryTimeout';
 import { getDbMetrics } from './config/db';
 import { cacheHeadersMiddleware } from './middleware/cacheHeaders';
+import { clientIpResolver } from './middleware/clientIpResolver';
 
 const app: Application = express();
 
@@ -55,6 +56,9 @@ PrometheusService.initialize();
 
 // Production: redirect HTTP → HTTPS with host validation (prevents open-redirect via header injection)
 app.use(enforceHttps);
+
+// Resolve the customer IP behind Vercel → Cloudflare → Render before anything keys on req.ip
+app.use(clientIpResolver);
 
 // Boot Request Tracker AsyncLocalStorage context as early as possible
 app.use(requestTrackerMiddleware);

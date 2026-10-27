@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import ApiError from '../utils/ApiError';
 import logger from '../config/logger';
 import { requestContextStorage } from './requestTracker';
+import { isHostedDeployment } from '../config/runtimeEnv';
 /**
  * Global Error Handling Middleware
  *
@@ -151,7 +152,7 @@ const errorMiddleware = (err: any, req: Request, res: Response, _next: NextFunct
   }
 
   // Production Error Masking: Prevent structural system detail leaks for unhandled exceptions
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === 'production' || isHostedDeployment();
   if (isProduction && statusCode === 500 && !(err instanceof ApiError)) {
     message = 'An unexpected error occurred. Please try again later.';
   }

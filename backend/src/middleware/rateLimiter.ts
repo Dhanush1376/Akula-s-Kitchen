@@ -3,12 +3,13 @@ import rateLimit, { Options, ipKeyGenerator } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import redisClient from '../utils/cache/redis';
 import logger from '../config/logger';
+import { isLocalDevelopment } from '../config/runtimeEnv';
 
 // Standard rate limit bypass for local development or health checks
 export const skipRateLimit = (req: Request) => {
   if (process.env.TEST_RATE_LIMIT === 'true') return false;
 
-  if (process.env.NODE_ENV === 'development') {
+  if (isLocalDevelopment()) {
     // In development mode, skip rate limiting for all IPs to avoid 429s when using Docker or LAN
     return true;
   }

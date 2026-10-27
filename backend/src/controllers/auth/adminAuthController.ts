@@ -16,6 +16,7 @@ import {
   setAdminRefreshCookie,
   clearAdminRefreshCookie,
   setCustomerRefreshCookie,
+  refreshTokenForResponseBody,
 } from '../../utils/security/authCookies';
 import { regenerateCsrfToken, clearCsrfCookie } from '../../middleware/csrfMiddleware';
 import { getFrontendUrl } from '../../utils/getFrontendUrl';
@@ -39,7 +40,7 @@ const issueAdminSession = async (req: Request, res: Response, userId: string) =>
     new ApiResponse(true, 'Admin authenticated successfully', {
       user: session.user,
       accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
+      refreshToken: refreshTokenForResponseBody(req, session.refreshToken),
       csrfToken,
     }),
   );

@@ -73,6 +73,10 @@ const applyRefreshPayload = (payload) => {
       // Server only echoes a refresh token when the request was not
       // authenticated via the HttpOnly cookie (cookie-blocked browsers).
       setFallbackRefreshToken(refreshToken);
+    } else {
+      // Cookie rotation succeeded; a stored copy would now be a spent token, and
+      // replaying it later trips refresh-token reuse detection.
+      clearFallbackRefreshToken();
     }
   }
   return token;

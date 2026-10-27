@@ -21,6 +21,7 @@
 import logger from '../config/logger';
 import dns from 'dns';
 import { resolveSender } from '../config/emailSender';
+import { isLocalDevelopment } from '../config/runtimeEnv';
 
 // Force Node.js >= 17 to prefer IPv4 first (fixes ENETUNREACH on IPv6 to Gmail SMTP)
 if (dns.setDefaultResultOrder) {
@@ -290,7 +291,7 @@ export const sendEmail = async (
     }
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (isLocalDevelopment()) {
     logger.warn('[EMAIL] No real email provider configured. Using Ethereal test mail...');
     const nodemailer = require('nodemailer');
     const testAccount = await nodemailer.createTestAccount();

@@ -47,16 +47,22 @@ export const validateTotals = asyncHandler(async (req: Request, res: Response) =
   res.status(200).json(new ApiResponse(true, 'Checkout calculations validated securely', result));
 });
 
+/** Owner-or-staff check shared by every order read keyed on an order id. */
+export const assertCanViewOrder = (order: { user?: unknown }, user?: Request['user']) => {
+  if (!user) throw new ApiError(401, 'Authentication required');
+  if (
+    String(order.user) !== String(user.id) &&
+    !(STAFF_ROLES as readonly string[]).includes(user.role)
+  ) {
+    throw new ApiError(403, 'You are not authorized to view this order');
+  }
+};
+
 export const getOrderById = asyncHandler(async (req: Request, res: Response) => {
   const order = await Order.findById(req.params.id).populate('items.productId');
   if (!order) throw new ApiError(404, 'Order not found');
 
-  if (
-    order.user.toString() !== req.user!.id &&
-    !(STAFF_ROLES as readonly string[]).includes(req.user!.role)
-  ) {
-    throw new ApiError(403, 'You are not authorized to view this order');
-  }
+  assertCanViewOrder(order, req.user);
 
   res.status(200).json(new ApiResponse(true, 'Order fetched successfully', order));
 });
@@ -119,6 +125,7 @@ export const getOrderPublicTrack = asyncHandler(async (req: Request, res: Respon
   } else if ((req as any).user) {
     order = await Order.findById(orderId);
     if (!order) throw new ApiError(404, 'Order not found');
+    assertCanViewOrder(order, req.user);
   } else {
     throw new ApiError(401, 'Valid tracking token is required');
   }
@@ -261,6 +268,10 @@ export const verifyCodOtp = asyncHandler(async (req: Request, res: Response) => 
 
 export const getOrderTimeline = asyncHandler(async (req: Request, res: Response) => {
   const orderId = req.params.id as string;
+  const order = await Order.findById(orderId).select('user').lean();
+  if (!order) throw new ApiError(404, 'Order not found');
+  assertCanViewOrder(order, req.user);
+
   const timeline = await OrderTimelineService.getOrderTimeline(orderId);
   res.status(200).json(new ApiResponse(true, 'Order timeline fetched successfully', timeline));
 });

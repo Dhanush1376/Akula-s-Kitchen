@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { HealthController } from '../../controllers/system/healthController';
 import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
+import { requireMetricsKey } from '../../middleware/metricsAuth';
 
 const router = Router();
 
@@ -12,7 +13,7 @@ router.get('/ready', HealthController.readiness);
 router.get('/deep', requireAuth, requireAdmin, HealthController.deepHealth);
 
 // Prometheus Metrics
-router.get('/metrics', HealthController.metrics);
+router.get('/metrics', requireMetricsKey, HealthController.metrics);
 
 // Sentry Debug
 router.get('/sentry-debug', requireAuth, requireAdmin, (_req: Request, _res: Response) => {

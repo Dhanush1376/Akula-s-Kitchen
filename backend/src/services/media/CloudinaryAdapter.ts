@@ -2,6 +2,7 @@ import { UploadApiOptions } from 'cloudinary';
 import getCloudinary from '../../config/cloudinary';
 import { cloudinaryCircuitBreaker } from '../../utils/CircuitBreaker';
 import logger from '../../config/logger';
+import ApiError from '../../utils/ApiError';
 import crypto from 'crypto';
 
 export interface CloudinaryUploadResult {
@@ -18,6 +19,16 @@ export interface CloudinaryUploadResult {
 }
 
 export class CloudinaryAdapter {
+  /**
+   * Local-disk fallback is never allowed in production and is opt-in elsewhere,
+   * because development machines may share the production database.
+   */
+  static isLocalFallbackAllowed(): boolean {
+    return (
+      process.env.NODE_ENV !== 'production' && process.env.ALLOW_LOCAL_MEDIA_FALLBACK === 'true'
+    );
+  }
+
   /**
    * Generates a readable public ID for Cloudinary to prevent collision and aid debugging.
    * e.g., 'Modern Chair White.jpg' -> 'modern-chair-white-a3b8'
@@ -94,11 +105,25 @@ export class CloudinaryAdapter {
         uploadErr?.message?.includes('credentials') ||
         uploadErr?.message?.includes('Invalid Signature');
 
+      // Local-disk storage is per-instance and ephemeral on the hosting platform, and a
+      // relative /uploads URL written into the shared database is unreachable from every
+      // other server and device. Only fall back when a developer explicitly opts in.
+      if (!CloudinaryAdapter.isLocalFallbackAllowed()) {
+        logger.error(
+          `[CloudinaryAdapter] Cloudinary upload failed (${uploadErr?.http_code || ''} ${uploadErr?.message || 'unknown'}). ` +
+            (isAuthOrConfigError
+              ? 'Check CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET.'
+              : 'Upload rejected; no durable storage available.'),
+        );
+        throw new ApiError(
+          503,
+          'Image storage is temporarily unavailable. The image was not saved — please try again.',
+        );
+      }
+
       logger.warn(
         `[CloudinaryAdapter] Cloudinary upload failed (${uploadErr?.http_code || ''} ${uploadErr?.message || 'unknown'}). ` +
-          (isAuthOrConfigError
-            ? 'Check CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET. Saving locally as fallback.'
-            : 'Saving locally as fallback.'),
+          'ALLOW_LOCAL_MEDIA_FALLBACK is enabled: saving to local disk (development only, not durable).',
       );
 
       const fs = await import('fs');

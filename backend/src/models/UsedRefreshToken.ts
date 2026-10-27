@@ -5,6 +5,7 @@ export interface IUsedRefreshToken extends Document {
   userId: mongoose.Types.ObjectId;
   expiresAt: Date;
   userAgent?: string;
+  familyId?: string;
   createdAt: Date;
 }
 
@@ -14,6 +15,7 @@ const UsedRefreshTokenSchema: Schema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     expiresAt: { type: Date, required: true },
     userAgent: { type: String },
+    familyId: { type: String },
   },
   { timestamps: true },
 );

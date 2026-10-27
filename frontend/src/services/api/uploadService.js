@@ -15,9 +15,11 @@ export const uploadService = {
       for (const file of files) {
         if (file instanceof File || file instanceof Blob) {
           const res = await mediaLibraryService.uploadMedia(file, targetFolder, [], 'v1');
-          if (res.images && res.images.length > 0) {
-            results.push(res.images[0]);
+          if (!res?.images?.length) {
+            // Never report success for a file the server did not store.
+            throw new Error(res?.message || `Upload failed for ${file.name || 'image'}`);
           }
+          results.push(res.images[0]);
         }
       }
 

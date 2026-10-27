@@ -27,11 +27,13 @@ import {
   ADMIN_REFRESH_COOKIE,
   clearAdminRefreshCookie,
   setAdminRefreshCookie,
+  refreshTokenForResponseBody,
 } from '../../utils/security/authCookies';
 import { regenerateCsrfToken, clearCsrfCookie } from '../../middleware/csrfMiddleware';
 import { blacklistToken } from '../../utils/security/jwtBlacklist';
 import jwt from 'jsonwebtoken';
 import storeSettingsService from '../../services/StoreSettingsService';
+import { isLocalDevelopment } from '../../config/runtimeEnv';
 
 export const requestUnifiedOtp = asyncHandler(async (req: Request, res: Response) => {
   const { identifier } = req.body;
@@ -95,7 +97,7 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
 
   const clientIp = req.ip || '127.0.0.1';
 
-  if (process.env.NODE_ENV !== 'development' && (await isOtpVerifyBlocked(clientIp))) {
+  if (!isLocalDevelopment() && (await isOtpVerifyBlocked(clientIp))) {
     throw new ApiError(429, 'Too many failed verification attempts. Please try again later.');
   }
 
@@ -142,7 +144,7 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
   const payload: Record<string, unknown> = {
     user: result.user,
     accessToken: result.accessToken,
-    refreshToken: result.refreshToken,
+    refreshToken: refreshTokenForResponseBody(req, result.refreshToken),
     csrfToken,
   };
 
@@ -191,7 +193,7 @@ export const refreshSession = asyncHandler(async (req: Request, res: Response) =
     new ApiResponse(true, 'Session refreshed', {
       user: result.user,
       accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      refreshToken: refreshTokenForResponseBody(req, result.refreshToken, Boolean(cookieToken)),
     }),
   );
 });
@@ -357,7 +359,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
   const payload: Record<string, unknown> = {
     user: r.user,
     accessToken: r.accessToken,
-    refreshToken: result.refreshToken,
+    refreshToken: refreshTokenForResponseBody(req, r.refreshToken),
     csrfToken,
   };
 

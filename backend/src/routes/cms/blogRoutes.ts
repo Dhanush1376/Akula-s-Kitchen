@@ -6,13 +6,16 @@ import {
   updateBlog,
   deleteBlog,
 } from '../../controllers/cms/blogController';
-import { requireAdmin } from '../../middleware/authMiddleware';
+import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
 
 const router = Router();
 
-router.route('/').get(getBlogs).post(requireAdmin, createBlog);
+router.route('/').get(getBlogs).post(requireAuth, requireAdmin, createBlog);
 
-router.route('/:id').put(requireAdmin, updateBlog).delete(requireAdmin, deleteBlog);
+router
+  .route('/:id')
+  .put(requireAuth, requireAdmin, updateBlog)
+  .delete(requireAuth, requireAdmin, deleteBlog);
 
 router.route('/slug/:slug').get(getBlogBySlug);
 

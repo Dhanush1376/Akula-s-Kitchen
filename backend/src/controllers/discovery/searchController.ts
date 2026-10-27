@@ -216,7 +216,7 @@ export const relatedSearches = async (req: Request, res: Response) => {
 export const enterpriseSearch = async (req: Request, res: Response) => {
   try {
     const query = (req.query.q as string) || '';
-    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const limit = Math.min(parseInt(req.query.limit as string, 10) || 10, 50);
 
     if (query.trim().length < 2) {
       return res

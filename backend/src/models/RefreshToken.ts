@@ -5,6 +5,8 @@ export interface IRefreshToken extends Document {
   tokenHash: string;
   expiresAt: Date;
   userAgent?: string;
+  /** Rotation chain id: every token rotated from one login shares it. */
+  familyId?: string;
   createdAt: Date;
 }
 
@@ -14,6 +16,7 @@ const RefreshTokenSchema: Schema = new Schema(
     tokenHash: { type: String, required: true, unique: true, index: true },
     expiresAt: { type: Date, required: true }, // TTL index below — auto-deletes when expiresAt passes
     userAgent: { type: String, default: '' },
+    familyId: { type: String, index: true },
   },
   { timestamps: true },
 );

@@ -1,11 +1,12 @@
 import { CorsOptions } from 'cors';
 import logger from './logger';
+import { isHostedDeployment } from './runtimeEnv';
 
 const getDynamicOrigins = (): Set<string> => {
   const origins = new Set<string>();
 
   // Base dev origins
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' && !isHostedDeployment()) {
     origins.add('http://localhost:3000');
     origins.add('http://localhost:5173');
   }
@@ -45,7 +46,11 @@ export const isOriginAllowed = (origin: string): boolean => {
     const _hostname = parsedUrl.hostname;
 
     // Allow all origins for mobile testing in development
-    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      process.env.NODE_ENV !== 'test' &&
+      !isHostedDeployment()
+    ) {
       return true;
     }
 

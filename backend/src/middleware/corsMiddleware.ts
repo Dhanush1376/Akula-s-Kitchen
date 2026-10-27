@@ -1,3 +1,4 @@
+import { isLocalDevOrTest } from '../config/runtimeEnv';
 import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 import { corsOptions } from '../config/corsConfig';
@@ -26,27 +27,23 @@ export const strictOriginBlocker = (req: Request, res: Response, next: NextFunct
   }
 
   const mutatingMethod = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
-  
-  if (!mutatingMethod || process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+
+  if (!mutatingMethod || isLocalDevOrTest()) {
     return next();
   }
 
   const origin = req.headers.origin;
-  
+
   // If no origin and trying to mutate, block it
   if (!origin) {
-     logger.warn(`[CORS BLOCKED] Mutating request without origin header to ${req.path}`);
-     return res.status(403).json({
-       success: false,
-       message: 'Direct API access for mutating methods is restricted.',
-     });
+    logger.warn(`[CORS BLOCKED] Mutating request without origin header to ${req.path}`);
+    return res.status(403).json({
+      success: false,
+      message: 'Direct API access for mutating methods is restricted.',
+    });
   }
 
   next();
 };
 
-export const corsMiddleware = [
-  corsHandler,
-  corsErrorHandler,
-  strictOriginBlocker
-];
+export const corsMiddleware = [corsHandler, corsErrorHandler, strictOriginBlocker];
