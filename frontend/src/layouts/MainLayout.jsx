@@ -28,6 +28,10 @@ const AdminInviteModal = lazy(() =>
   import('../components/auth/AdminInviteModal').then((m) => ({ default: m.AdminInviteModal })),
 );
 
+const InstallAppDrawer = lazy(() =>
+  import('../components/pwa/InstallAppDrawer').then((m) => ({ default: m.InstallAppDrawer })),
+);
+
 export function MainLayout() {
   const { pathname } = useLocation();
   const { isStoreClosed } = useConfig();
@@ -91,6 +95,9 @@ export function MainLayout() {
       </Suspense>
       <Suspense fallback={null}>
         <AdminInviteModal />
+      </Suspense>
+      <Suspense fallback={null}>
+        <InstallAppDrawer />
       </Suspense>
     </div>
   );

@@ -64,10 +64,10 @@ window.addEventListener(
       if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
         sessionStorage.setItem('akula_chunk_reload_time', String(now));
 
-        // Unregister service workers first to bypass PWA cache
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then((registrations) => {
-            registrations.forEach((registration) => registration.unregister());
+        // Invalidate stale caches to bypass corrupted/outdated chunk cache
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => caches.delete(name));
           });
         }
 

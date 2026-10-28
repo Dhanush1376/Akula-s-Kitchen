@@ -134,6 +134,24 @@
   }
 }
 
+@keyframes button-reflection-sheen {
+  0% {
+    transform: translateX(-160%) skewX(-25deg);
+  }
+
+  100% {
+    transform: translateX(260%) skewX(-25deg);
+  }
+}
+
+@utility animate-reflection-sheen {
+  animation: button-reflection-sheen 2.4s linear infinite;
+}
+
+.animate-reflection-sheen {
+  animation: button-reflection-sheen 2.4s linear infinite;
+}
+
 @utility animate-slow-spin {
   animation: slow-spin 120s linear infinite;
 }

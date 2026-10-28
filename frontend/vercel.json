@@ -81,6 +81,15 @@
       ]
     },
     {
+      "source": "/(sw\\.js|manifest\\.json)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/(.*)\\.(png|jpg|jpeg|gif|webp|svg|woff2)",
       "headers": [
         {

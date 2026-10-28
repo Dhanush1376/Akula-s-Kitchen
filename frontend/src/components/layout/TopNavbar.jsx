@@ -11,6 +11,7 @@ import {
   ChevronRight,
   X,
   LayoutGrid,
+  Download,
 } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
 import { BrandLogo } from '../ui/BrandLogo';
@@ -30,6 +31,7 @@ import { productService } from '../../services/api/productService';
 import api from '../../services/api';
 import { lazyWithRetry as lazy } from '../../utils/performance/lazyWithRetry';
 import { useConfig } from '../../context/ConfigContext';
+import { usePwa } from '../../context/PwaContext';
 
 const IntelligentSearchOverlay = lazy(() =>
   import('../search/IntelligentSearchOverlay').then((m) => ({
@@ -53,6 +55,7 @@ export function TopNavbar() {
   const location = useLocation();
   const { cartCount, setIsCartOpen } = useCart();
   const { user, isAuthenticated, isAuthInitialized, logout, openAuthModal } = useAuth();
+  const { openInstallDrawer, isStandalone, isInstalled, redirectToInstalledApp } = usePwa();
 
   let wishlistCount = 0;
   try {
@@ -64,8 +67,34 @@ export function TopNavbar() {
 
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = React.useRef(null);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(() => {
+    if (configCategories && configCategories.length > 0) return configCategories;
+    try {
+      const cached =
+        typeof window !== 'undefined' ? localStorage.getItem('akula_cached_categories') : null;
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_e) {}
+    return [
+      { name: 'Batters', slug: 'batters' },
+      { name: 'Chutneys', slug: 'chutneys' },
+      { name: 'Pickles', slug: 'pickles' },
+      { name: 'Masala', slug: 'masala' },
+      { name: 'Namkeen', slug: 'namkeen' },
+      { name: 'Snacks', slug: 'snacks' },
+      { name: 'Sweets', slug: 'sweets' },
+    ];
+  });
   const [openAccordion, setOpenAccordion] = useState(null);
+
+  // Sync when config categories are updated
+  useEffect(() => {
+    if (configCategories && configCategories.length > 0) {
+      setCategories(configCategories);
+    }
+  }, [configCategories]);
 
   useEffect(() => {
     let active = true;
@@ -74,6 +103,9 @@ export function TopNavbar() {
       .then((res) => {
         if (active && res?.data?.success && Array.isArray(res.data.data)) {
           setCategories(res.data.data);
+          try {
+            localStorage.setItem('akula_cached_categories', JSON.stringify(res.data.data));
+          } catch (_e) {}
         }
       })
       .catch(() => {
@@ -83,6 +115,9 @@ export function TopNavbar() {
           .then((res) => {
             if (active && res?.success && res.data) {
               setCategories(res.data);
+              try {
+                localStorage.setItem('akula_cached_categories', JSON.stringify(res.data));
+              } catch (_e) {}
             }
           })
           .catch(() => {});
@@ -307,13 +342,19 @@ export function TopNavbar() {
     });
   }, []);
 
-  // Real, dynamic categories only — no hardcoded fallbacks
+  // Dynamic categories with instant 0ms cached loading
   const displayCategories = useMemo(() => {
-    return categories && categories.length > 0
-      ? categories
-      : configCategories && configCategories.length > 0
-        ? configCategories
-        : [];
+    if (categories && categories.length > 0) return categories;
+    if (configCategories && configCategories.length > 0) return configCategories;
+    return [
+      { name: 'Batters', slug: 'batters' },
+      { name: 'Chutneys', slug: 'chutneys' },
+      { name: 'Pickles', slug: 'pickles' },
+      { name: 'Masala', slug: 'masala' },
+      { name: 'Namkeen', slug: 'namkeen' },
+      { name: 'Snacks', slug: 'snacks' },
+      { name: 'Sweets', slug: 'sweets' },
+    ];
   }, [categories, configCategories]);
 
   const categoriesScrollRef = React.useRef(null);
@@ -380,7 +421,7 @@ export function TopNavbar() {
         style={{ zIndex: 'var(--z-sticky)' }}
       >
         <div className="max-w-[1400px] lg:max-w-[1280px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 lg:pt-4 pb-1.5 sm:pb-2 pointer-events-auto">
-          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 lg:pl-3 lg:pr-3 lg:py-2.5 lg:rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
+          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 lg:pl-3 lg:pr-3 lg:py-2.5 lg:rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
             {/* Big Circular Logo spanning full height on left */}
             <Link to="/" className="shrink-0 flex items-center self-center group pl-0.5 sm:pl-1">
               <BrandLogo
@@ -400,8 +441,41 @@ export function TopNavbar() {
                   <SearchTrigger onOpen={search.handleOpen} />
                 </div>
 
-                {/* Right Action Group: Cart & Profile (Laptop/Desktop) / Log In Button */}
+                {/* Right Action Group: Wishlist, My Orders, Cart & Profile (Laptop/Desktop) / Log In Button */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 lg:order-3">
+                  {/* Wishlist Circle Button (Laptop/Desktop) */}
+                  <Link
+                    to="/wishlist"
+                    id="wishlist-nav-btn"
+                    className="hidden md:flex w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400 items-center justify-center text-neutral-900 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all relative cursor-pointer shrink-0"
+                    aria-label="Wishlist"
+                    title="My Wishlist"
+                  >
+                    <Heart size={19} strokeWidth={1.8} />
+                    {wishlistCount > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 min-w-[19px] h-[19px] sm:min-w-[20px] sm:h-[20px] px-1 bg-[#f7bb0e] text-neutral-950 text-[10px] sm:text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-2xs"
+                      >
+                        {wishlistCount}
+                      </motion.span>
+                    )}
+                  </Link>
+
+                  {/* My Orders Circle Button (Laptop/Desktop - When Authenticated) */}
+                  {isAuthenticated && (
+                    <Link
+                      to="/dashboard/orders"
+                      id="orders-nav-btn"
+                      className="hidden md:flex w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400 items-center justify-center text-neutral-900 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all relative cursor-pointer shrink-0"
+                      aria-label="My Orders"
+                      title="My Orders"
+                    >
+                      <ShoppingBag size={19} strokeWidth={1.8} />
+                    </Link>
+                  )}
+
                   {/* Cart Circle Button */}
                   <motion.button
                     type="button"
@@ -427,6 +501,22 @@ export function TopNavbar() {
                       </motion.span>
                     )}
                   </motion.button>
+
+                  {/* Admin Portal Circle Button (Laptop/Desktop - When Admin) */}
+                  {isAuthenticated && adminRoles.includes(user?.role) && (
+                    <Link
+                      to="/admin"
+                      id="admin-nav-btn"
+                      className="hidden md:flex w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-[#fff9e6] border border-amber-300/80 hover:border-[#f7bb0e] items-center justify-center text-[#a37200] hover:text-[#7d5700] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all relative cursor-pointer shrink-0"
+                      aria-label="Admin Portal"
+                      title="Admin Portal"
+                    >
+                      <LayoutGrid size={19} strokeWidth={1.9} />
+                      {hasPendingInvite && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white ring-1 ring-rose-400/50" />
+                      )}
+                    </Link>
+                  )}
 
                   {/* Laptop/Desktop Profile Button & Dropdown (When logged in) / Log In Button (When logged out) */}
                   {isAuthenticated ? (
@@ -481,35 +571,6 @@ export function TopNavbar() {
                               >
                                 <User size={16} strokeWidth={2} className="text-neutral-500" />
                                 <span>My Profile</span>
-                              </Link>
-
-                              <Link
-                                to="/dashboard/orders"
-                                onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
-                              >
-                                <ShoppingBag
-                                  size={16}
-                                  strokeWidth={2}
-                                  className="text-neutral-500"
-                                />
-                                <span>My Orders</span>
-                              </Link>
-
-                              <Link
-                                to="/wishlist"
-                                onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
-                              >
-                                <span className="flex items-center gap-2.5">
-                                  <Heart size={16} strokeWidth={2} className="text-neutral-500" />
-                                  <span>Wishlist</span>
-                                </span>
-                                {wishlistCount > 0 && (
-                                  <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#f7bb0e] text-[#283618] text-[10px] font-extrabold flex items-center justify-center shadow-xs">
-                                    {wishlistCount}
-                                  </span>
-                                )}
                               </Link>
 
                               {adminRoles.includes(user?.role) && (
@@ -832,6 +893,47 @@ export function TopNavbar() {
                       )}
                     </ul>
                   </div>
+
+                  {/* Persistent Install App CTA Button inside Mobile Drawer */}
+                  {!isStandalone && !isInstalled && (
+                    <div className="w-full mt-3 mb-2 px-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          openInstallDrawer();
+                        }}
+                        className="relative w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#F7BB0E] via-[#FFCB36] to-[#F7BB0E] border border-amber-300/70 shadow-[0_4px_16px_rgba(247,187,14,0.32)] hover:shadow-[0_6px_22px_rgba(247,187,14,0.45)] active:scale-[0.98] transition-all flex items-center justify-between gap-3 overflow-hidden cursor-pointer group text-neutral-950"
+                      >
+                        {/* Specular Sliding Reflection Sheen */}
+                        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl z-0">
+                          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/55 to-transparent -skew-x-25 animate-reflection-sheen" />
+                        </div>
+
+                        {/* App Icon Tile & Title */}
+                        <div className="relative z-10 flex items-center gap-2.5 min-w-0">
+                          <div className="w-10 h-10 rounded-[22%] bg-white shadow-md ring-1 ring-black/10 p-0.5 flex items-center justify-center shrink-0 overflow-hidden relative">
+                            <img
+                              src="/MainLogo.png"
+                              alt="Akula's Kitchen"
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-black/[0.04] pointer-events-none rounded-[22%]" />
+                          </div>
+                          <span className="font-sans font-extrabold text-[13.5px] sm:text-sm text-neutral-950 leading-tight truncate">
+                            Install Akula's Kitchen
+                          </span>
+                        </div>
+
+                        {/* Native Action Glyph Badge */}
+                        <div className="relative z-10 shrink-0 w-8 h-8 rounded-full bg-neutral-950 text-[#F7BB0E] flex items-center justify-center shadow-xs group-hover:scale-105 active:scale-95 transition-transform">
+                          <Download size={14} strokeWidth={2.6} />
+                        </div>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Bottom Quick Actions Footer */}
                   <motion.div

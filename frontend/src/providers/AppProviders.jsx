@@ -13,6 +13,8 @@ import { queryClient } from '../config/queryClient';
 import { BrowserRouter } from 'react-router-dom';
 import { ProviderComposer } from './ProviderComposer';
 
+import { PwaProvider } from '../context/PwaContext';
+
 export function AppProviders({ children }) {
   return (
     <ProviderComposer
@@ -28,6 +30,7 @@ export function AppProviders({ children }) {
         <UserSocketProvider />,
         <QuickViewProvider />,
         <ConfirmProvider />,
+        <PwaProvider />,
       ]}
     >
       {children}

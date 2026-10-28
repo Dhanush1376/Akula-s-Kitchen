@@ -9,9 +9,31 @@ import { BRAND, formatPhoneWithCountryCode } from '../config/brand';
 
 const ConfigContext = createContext(null);
 
+const DEFAULT_STORE_CATEGORIES = [
+  { name: 'Batters', slug: 'batters' },
+  { name: 'Chutneys', slug: 'chutneys' },
+  { name: 'Pickles', slug: 'pickles' },
+  { name: 'Masala', slug: 'masala' },
+  { name: 'Namkeen', slug: 'namkeen' },
+  { name: 'Snacks', slug: 'snacks' },
+  { name: 'Sweets', slug: 'sweets' },
+];
+
+const getInitialCategories = () => {
+  try {
+    const cached =
+      typeof window !== 'undefined' ? localStorage.getItem('akula_cached_categories') : null;
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (_e) {}
+  return DEFAULT_STORE_CATEGORIES;
+};
+
 export const ConfigProvider = ({ children }) => {
   const [config, setConfig] = useState({});
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(getInitialCategories);
   const [storeSettings, setStoreSettings] = useState(() => {
     try {
       const cached = localStorage.getItem('akula_public_settings');
@@ -34,7 +56,16 @@ export const ConfigProvider = ({ children }) => {
       if (!isMounted) return;
 
       if (categoriesResult.status === 'fulfilled') {
-        if (categoriesResult.value?.data?.success) setCategories(categoriesResult.value.data.data);
+        if (
+          categoriesResult.value?.data?.success &&
+          Array.isArray(categoriesResult.value.data.data)
+        ) {
+          const freshCats = categoriesResult.value.data.data;
+          setCategories(freshCats);
+          try {
+            localStorage.setItem('akula_cached_categories', JSON.stringify(freshCats));
+          } catch (_e) {}
+        }
       } else {
         logger.error('Failed to fetch categories', categoriesResult.reason);
       }

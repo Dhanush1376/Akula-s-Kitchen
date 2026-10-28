@@ -1,4 +1,4 @@
-import { Phone, Mail, ArrowUpRight } from 'lucide-react';
+import { Phone, Mail, ArrowUpRight, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../ui/BrandLogo';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
@@ -10,6 +10,7 @@ import { policyService } from '../../services/domainServices';
 import { useConfig } from '../../context/ConfigContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { BRAND, formatPhoneWithCountryCode, cleanPhoneDigits } from '../../config/brand';
+import { usePwa } from '../../context/PwaContext';
 
 export function Footer() {
   const {
@@ -21,6 +22,7 @@ export function Footer() {
     alternatePhone: configAltPhone,
     storeSettings,
   } = useConfig();
+  const { openInstallDrawer, isStandalone, isInstalled } = usePwa();
   const { contact, footer, navigation } = useWebsiteContent();
   const { data: settings } = useQuery({
     queryKey: ['storeSettings', 'public'],
@@ -132,21 +134,38 @@ export function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 pb-5 sm:pb-8 lg:pb-12 border-b border-white/10">
           {/* Brand Info Column */}
           <div className="lg:col-span-4 flex flex-col items-start gap-2 sm:gap-4">
-            <Link to="/" className="inline-flex items-center gap-2.5 sm:gap-3.5 group">
-              <BrandLogo
-                size={isMobile ? '36px' : '50px'}
-                className="drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
-                variant="default"
-              />
-              <div className="flex flex-col">
-                <span className="font-extrabold text-[15px] sm:text-[17px] tracking-tight text-white group-hover:text-[#f7bb0e] transition-colors leading-tight">
-                  {logoText}
-                </span>
-                <span className="text-[9.5px] sm:text-[10px] text-white/60 tracking-wider uppercase font-semibold">
-                  Fresh · Tasty · Healthy
-                </span>
-              </div>
-            </Link>
+            <div className="w-full flex items-center justify-between gap-3">
+              <Link to="/" className="inline-flex items-center gap-2.5 sm:gap-3.5 group shrink-0">
+                <BrandLogo
+                  size={isMobile ? '36px' : '50px'}
+                  className="drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+                  variant="default"
+                />
+                <div className="flex flex-col">
+                  <span className="font-extrabold text-[15px] sm:text-[17px] tracking-tight text-white group-hover:text-[#f7bb0e] transition-colors leading-tight">
+                    {logoText}
+                  </span>
+                  <span className="text-[9.5px] sm:text-[10px] text-white/60 tracking-wider uppercase font-semibold">
+                    Fresh · Tasty · Healthy
+                  </span>
+                </div>
+              </Link>
+
+              {/* Compact Install App Button aligned at the End */}
+              {!isStandalone && !isInstalled && (
+                <button
+                  type="button"
+                  onClick={openInstallDrawer}
+                  className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.08] hover:bg-[#F7BB0E] text-neutral-200 hover:text-black border border-white/15 hover:border-[#F7BB0E] text-[11px] font-bold transition-all duration-200 cursor-pointer shadow-xs shrink-0 ml-auto"
+                >
+                  <Smartphone
+                    size={12}
+                    className="text-[#F7BB0E] group-hover:text-black transition-colors shrink-0"
+                  />
+                  <span>Install App</span>
+                </button>
+              )}
+            </div>
 
             <p className="text-[11.5px] sm:text-[13px] text-neutral-300 leading-snug sm:leading-relaxed max-w-sm font-normal line-clamp-2 sm:line-clamp-none">
               {footer?.description ||

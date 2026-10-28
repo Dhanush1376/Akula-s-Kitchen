@@ -61,8 +61,15 @@ export class CategoryService {
         typeof cat.imageSrc === 'string' &&
         (cat.imageSrc.startsWith('http://') || cat.imageSrc.startsWith('https://'));
       if (!hasValidRemoteImage) {
-        cat.imageSrc = '';
-        neededCatIds.push(cat._id);
+        const slug = String(cat.slug || cat.name || '')
+          .toLowerCase()
+          .trim();
+        if (this.DEFAULT_CATEGORY_IMAGES[slug]) {
+          cat.imageSrc = this.DEFAULT_CATEGORY_IMAGES[slug];
+        } else {
+          cat.imageSrc = '';
+          neededCatIds.push(cat._id);
+        }
       }
     });
 

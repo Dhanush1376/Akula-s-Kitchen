@@ -9,12 +9,15 @@ import {
   Heart,
   Package,
   Phone,
+  Smartphone,
+  Download,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDashboard } from '../../context/DashboardContext';
 import { OptimizedImage } from '../ui';
 import { useState, useEffect } from 'react';
+import { usePwa } from '../../context/PwaContext';
 
 export function Sidebar() {
   const navigate = useNavigate();
@@ -36,6 +39,7 @@ export function Sidebar() {
     setMobileShowContent,
     hasRecentOrderUpdates,
   } = useDashboard();
+  const { openInstallDrawer, isStandalone, isInstalled } = usePwa();
 
   const path = location.pathname;
   const searchParams = new URLSearchParams(location.search);
@@ -354,6 +358,20 @@ export function Sidebar() {
         </motion.button>
 
         <div className="border-t border-neutral-200/60" />
+
+        {/* Install Mobile App */}
+        {!isStandalone && !isInstalled && (
+          <button
+            onClick={openInstallDrawer}
+            className="w-full text-left px-4 py-3 text-[12.5px] text-neutral-800 font-bold flex items-center justify-between hover:bg-neutral-50 transition-colors cursor-pointer outline-none"
+          >
+            <div className="flex items-center gap-2.5">
+              <Smartphone className="w-4 h-4 text-[#F7BB0E]" strokeWidth={2.2} />
+              <span>Install Mobile App</span>
+            </div>
+            <Download className="w-3.5 h-3.5 text-neutral-400" />
+          </button>
+        )}
 
         {/* Logout */}
         <button
