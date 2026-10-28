@@ -20,6 +20,7 @@
 
 import logger from '../config/logger';
 import dns from 'dns';
+import nodemailer from 'nodemailer';
 import { resolveSender } from '../config/emailSender';
 import { isLocalDevelopment } from '../config/runtimeEnv';
 
@@ -150,7 +151,7 @@ export const sendViaSMTP = async (payload: EmailPayload): Promise<{ messageId: s
       connectionTimeout: 8000,
       greetingTimeout: 8000,
       socketTimeout: 12000,
-    });
+    } as any);
   }
 
   const transporter = cachedTransporter;
