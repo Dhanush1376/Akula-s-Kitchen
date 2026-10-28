@@ -56,6 +56,12 @@ export function AddAddressModal({
 
   const formContainerRef = useRef(null);
 
+  // Helper to update fields and immediately clear step error
+  const updateAddressField = (field, value) => {
+    if (stepError) setStepError(null);
+    setNewAddress((prev) => ({ ...prev, [field]: value }));
+  };
+
   // Smoothly scroll focused input into clear visible area when mobile keyboard opens
   const handleFocusCapture = (e) => {
     const target = e.target;
@@ -64,18 +70,8 @@ export function AddAddressModal({
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
       setTimeout(() => {
         if (!target || !formContainerRef.current) return;
-        const targetRect = target.getBoundingClientRect();
-        const containerRect = formContainerRef.current.getBoundingClientRect();
-
-        const isObscured =
-          targetRect.bottom > containerRect.bottom - 20 ||
-          targetRect.top < containerRect.top + 20 ||
-          (window.visualViewport && targetRect.bottom > window.visualViewport.height - 50);
-
-        if (isObscured) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 300);
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 350);
     }
   };
 
@@ -228,14 +224,14 @@ export function AddAddressModal({
   return createPortal(
     <AnimatePresence>
       {isAddingNewAddress && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-0 sm:p-6 md:p-8">
           {/* Dark blurred background overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsAddingNewAddress(false)}
-            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
+            className="fixed inset-0 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
           />
 
           {/* Bottom Sheet on Mobile / Centered Card on Desktop */}
@@ -247,7 +243,7 @@ export function AddAddressModal({
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[510px] md:max-w-[535px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-5 pb-4 sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col h-[78dvh] sm:h-auto max-h-[78dvh] sm:max-h-[88dvh] overflow-hidden font-body">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl pt-2 px-4 pb-3 sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col h-auto max-h-[92dvh] sm:max-h-[88dvh] overflow-hidden font-body">
               {/* Gentle wind-blown corner foliage accents */}
               <AuthCornerLeaves />
 
@@ -270,14 +266,14 @@ export function AddAddressModal({
               </button>
 
               {/* Modal Headings in AuthModal serif style */}
-              <div className="relative z-10 text-left mb-3 space-y-0.5 pt-1">
+              <div className="relative z-10 text-left mb-2.5 space-y-0.5 pt-1 shrink-0">
                 <h2
-                  className="font-serif-heading text-[20px] sm:text-[22px] leading-tight text-neutral-950 font-bold tracking-tight"
+                  className="font-serif-heading text-[19px] sm:text-[22px] leading-tight text-neutral-950 font-bold tracking-tight"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {newAddress?.id ? 'Edit Address' : 'Add New Address'}
                 </h2>
-                <p className="text-neutral-500 text-[12px] sm:text-[12.5px] font-normal leading-relaxed">
+                <p className="text-neutral-500 text-[11.5px] sm:text-[12.5px] font-normal leading-relaxed">
                   {currentStep === 1
                     ? 'Step 1 of 2: Set your delivery address and location'
                     : 'Step 2 of 2: Provide recipient contact information'}
@@ -288,8 +284,33 @@ export function AddAddressModal({
               <div
                 ref={formContainerRef}
                 onFocusCapture={handleFocusCapture}
-                className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pr-0.5 space-y-3 pb-1"
+                className="relative z-10 flex-1 min-h-[160px] sm:min-h-0 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pr-0.5 space-y-3 pb-2"
               >
+                {/* Error Banner inside scrollable container so footer never squishes form */}
+                {(stepError || addressError) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2 p-2.5 bg-red-50 text-red-600 rounded-xl text-[12px] shadow-2xs border border-red-100 mb-1"
+                  >
+                    <AlertTriangle
+                      className="w-4 h-4 shrink-0 text-red-600 mt-0.5"
+                      aria-hidden="true"
+                    />
+                    <span className="font-bold flex-1 leading-snug">
+                      {stepError || addressError}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setStepError(null)}
+                      className="text-red-400 hover:text-red-700 p-0.5 cursor-pointer ml-auto"
+                      aria-label="Dismiss error"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </motion.div>
+                )}
+
                 <form id="address-form" onSubmit={handleFormSubmit}>
                   {currentStep === 1 && (
                     <div className="space-y-3">
@@ -308,9 +329,7 @@ export function AddAddressModal({
                           {isLocating ? 'progress_activity' : 'near_me'}
                         </span>
                         <span>
-                          {isLocating
-                            ? 'Detecting your location...'
-                            : 'Auto-Fill Current Location (GPS)'}
+                          {isLocating ? 'Detecting your location...' : 'Auto-Fill Location'}
                         </span>
                       </button>
 
@@ -328,6 +347,7 @@ export function AddAddressModal({
                             placeholder="Enter 6-digit pincode"
                             value={newAddress.pincode}
                             onChange={(e) => {
+                              if (stepError) setStepError(null);
                               const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                               setNewAddress((prev) => ({ ...prev, pincode: val }));
                               if (val.length === 6) {
@@ -356,7 +376,7 @@ export function AddAddressModal({
                                   });
                               }
                             }}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
@@ -369,10 +389,8 @@ export function AddAddressModal({
                             required
                             placeholder="Locality, area, or sector"
                             value={newAddress.locality}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, locality: e.target.value }))
-                            }
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            onChange={(e) => updateAddressField('locality', e.target.value)}
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -385,10 +403,8 @@ export function AddAddressModal({
                           required
                           placeholder="Building name, street, road, or area details"
                           value={newAddress.address}
-                          onChange={(e) =>
-                            setNewAddress((prev) => ({ ...prev, address: e.target.value }))
-                          }
-                          className="w-full rounded-lg border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium p-3.5 shadow-2xs outline-none transition-all min-h-[70px] resize-none"
+                          onChange={(e) => updateAddressField('address', e.target.value)}
+                          className="w-full rounded-lg border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium p-3 shadow-2xs outline-none transition-all min-h-[64px] resize-none"
                         />
                       </div>
 
@@ -401,10 +417,8 @@ export function AddAddressModal({
                           required
                           placeholder="Flat / house no., floor, or nearby landmark"
                           value={newAddress.landmark}
-                          onChange={(e) =>
-                            setNewAddress((prev) => ({ ...prev, landmark: e.target.value }))
-                          }
-                          className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                          onChange={(e) => updateAddressField('landmark', e.target.value)}
+                          className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                         />
                       </div>
 
@@ -418,10 +432,8 @@ export function AddAddressModal({
                             required
                             placeholder="City or district"
                             value={newAddress.city}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, city: e.target.value }))
-                            }
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            onChange={(e) => updateAddressField('city', e.target.value)}
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
@@ -434,10 +446,8 @@ export function AddAddressModal({
                             required
                             placeholder="State"
                             value={newAddress.state}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, state: e.target.value }))
-                            }
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
+                            onChange={(e) => updateAddressField('state', e.target.value)}
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
                           />
                         </div>
                       </div>
@@ -456,12 +466,13 @@ export function AddAddressModal({
                               <button
                                 key={type}
                                 type="button"
-                                onClick={() =>
+                                onClick={() => {
+                                  if (stepError) setStepError(null);
                                   setNewAddress((prev) => ({
                                     ...prev,
                                     tag: type === 'Other' ? 'Warehouse' : type,
-                                  }))
-                                }
+                                  }));
+                                }}
                                 className={`flex items-center justify-center gap-1.5 h-10 rounded-full text-[12px] font-bold tracking-wide transition-all cursor-pointer select-none border ${
                                   isSelected
                                     ? 'bg-[#283618] text-white border-[#283618] shadow-xs ring-2 ring-[#283618]/15'
@@ -498,10 +509,8 @@ export function AddAddressModal({
                             required
                             placeholder="Full name"
                             value={newAddress.name}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, name: e.target.value }))
-                            }
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            onChange={(e) => updateAddressField('name', e.target.value)}
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
@@ -514,10 +523,8 @@ export function AddAddressModal({
                             type="email"
                             placeholder="Email address"
                             value={newAddress.email}
-                            onChange={(e) =>
-                              setNewAddress((prev) => ({ ...prev, email: e.target.value }))
-                            }
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            onChange={(e) => updateAddressField('email', e.target.value)}
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -543,17 +550,17 @@ export function AddAddressModal({
                               value={newAddress.phone}
                               onChange={(e) => {
                                 const cleaned = sanitizePhoneNumber(e.target.value);
-                                setNewAddress((prev) => ({ ...prev, phone: cleaned }));
+                                updateAddressField('phone', cleaned);
                               }}
                               onPaste={(e) => {
                                 const pasted = e.clipboardData?.getData('text');
                                 if (pasted) {
                                   e.preventDefault();
                                   const cleaned = sanitizePhoneNumber(pasted);
-                                  setNewAddress((prev) => ({ ...prev, phone: cleaned }));
+                                  updateAddressField('phone', cleaned);
                                 }
                               }}
-                              className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium !pl-18 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
+                              className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium !pl-18 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
                             />
                           </div>
                         </div>
@@ -561,7 +568,7 @@ export function AddAddressModal({
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                             <Phone className="w-3 h-3 text-neutral-600" />
-                            Alternate Number*
+                            Alternate Number
                           </label>
                           <input
                             type="tel"
@@ -571,17 +578,17 @@ export function AddAddressModal({
                             value={newAddress.alternatePhone}
                             onChange={(e) => {
                               const cleaned = sanitizePhoneNumber(e.target.value);
-                              setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
+                              updateAddressField('alternatePhone', cleaned);
                             }}
                             onPaste={(e) => {
                               const pasted = e.clipboardData?.getData('text');
                               if (pasted) {
                                 e.preventDefault();
                                 const cleaned = sanitizePhoneNumber(pasted);
-                                setNewAddress((prev) => ({ ...prev, alternatePhone: cleaned }));
+                                updateAddressField('alternatePhone', cleaned);
                               }
                             }}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
@@ -595,12 +602,9 @@ export function AddAddressModal({
                           placeholder="Delivery instructions (e.g. Leave with security, call before delivery)"
                           value={newAddress.deliveryInstructions}
                           onChange={(e) =>
-                            setNewAddress((prev) => ({
-                              ...prev,
-                              deliveryInstructions: e.target.value,
-                            }))
+                            updateAddressField('deliveryInstructions', e.target.value)
                           }
-                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[13px] font-medium p-3.5 shadow-2xs outline-none transition-all min-h-[64px] resize-none"
+                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium p-3 shadow-2xs outline-none transition-all min-h-[56px] resize-none"
                         />
                       </div>
 
@@ -608,9 +612,7 @@ export function AddAddressModal({
                         <input
                           type="checkbox"
                           checked={newAddress.isDefault || false}
-                          onChange={(e) =>
-                            setNewAddress((prev) => ({ ...prev, isDefault: e.target.checked }))
-                          }
+                          onChange={(e) => updateAddressField('isDefault', e.target.checked)}
                           className="w-4 h-4 rounded border-black/20 text-[#283618] focus:ring-[#283618] cursor-pointer"
                         />
                         <span className="text-[12px] text-neutral-700 font-medium">
@@ -624,29 +626,13 @@ export function AddAddressModal({
 
               {/* Modal Footer: Styled cleanly like AuthModal */}
               <div
-                className="relative z-10 pt-3 border-t border-black/[0.08] shrink-0 mt-2"
+                className="relative z-10 pt-2.5 border-t border-black/[0.08] shrink-0"
                 style={{
                   paddingBottom: isMobile
                     ? 'calc(0.5rem + env(safe-area-inset-bottom, 0px))'
                     : undefined,
                 }}
               >
-                {(stepError || addressError) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-2.5 p-2.5 bg-red-50 text-red-600 rounded-2xl text-[11px] mb-2.5 shadow-2xs border border-red-100"
-                  >
-                    <AlertTriangle
-                      className="w-4 h-4 shrink-0 text-red-600 mt-0.5"
-                      aria-hidden="true"
-                    />
-                    <span className="font-bold flex-1 leading-snug">
-                      {stepError || addressError}
-                    </span>
-                  </motion.div>
-                )}
-
                 {currentStep === 1 ? (
                   <div key="step-1-actions" className="w-full flex items-center gap-2.5 sm:gap-3">
                     <button
@@ -667,7 +653,7 @@ export function AddAddressModal({
                       }}
                       className="flex-1 h-11 pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer select-none"
                     >
-                      <span className="truncate">Next: Contact Details</span>
+                      <span className="truncate">Contact Details</span>
                       <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
                         <ArrowRight
                           className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"

@@ -72,14 +72,16 @@ export const requestUnifiedOtp = asyncHandler(async (req: Request, res: Response
         'Mobile phone login is currently disabled by store settings. Please log in using your email address.',
       );
     }
+    let cleanPhone: string;
     try {
-      const cleanPhone = PhoneAuthService.normalizePhone(identifier);
-      logger.info(`[AUTH] OTP send requested for phone ${cleanPhone} from ${clientIp}`);
-      const result = await PhoneAuthService.requestOtp(cleanPhone, clientIp);
-      challengeId = result.challengeId;
-    } catch (_err) {
-      throw new ApiError(400, 'Please enter a valid email address or phone number');
+      cleanPhone = PhoneAuthService.normalizePhone(identifier);
+    } catch (_normalizeErr) {
+      throw new ApiError(400, 'Please enter a valid email address or 10-digit mobile phone number');
     }
+
+    logger.info(`[AUTH] OTP send requested for phone ${cleanPhone} from ${clientIp}`);
+    const result = await PhoneAuthService.requestOtp(cleanPhone, clientIp);
+    challengeId = result.challengeId;
   }
 
   res.status(200).json(

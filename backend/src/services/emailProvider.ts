@@ -94,12 +94,20 @@ export const sendViaBrevo = async (payload: EmailPayload): Promise<{ messageId: 
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'api-key': apiKey },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(10000), // 10s timeout
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Brevo API error (${response.status}): ${errorText}`);
+    let parsedMessage = errorText;
+    try {
+      const parsed = JSON.parse(errorText);
+      parsedMessage = parsed.message || parsed.code || errorText;
+    } catch {
+      // Use raw text
+    }
+    logger.error(`[BREVO ERROR] Brevo API error (${response.status}): ${parsedMessage}`);
+    throw new Error(`Brevo API error (${response.status}): ${parsedMessage}`);
   }
 
   const result: any = await response.json();
@@ -113,10 +121,13 @@ export const sendViaBrevo = async (payload: EmailPayload): Promise<{ messageId: 
 let cachedTransporter: any = null;
 
 export const sendViaSMTP = async (payload: EmailPayload): Promise<{ messageId: string }> => {
-  const nodemailer = require('nodemailer');
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const brevoKey = process.env.BREVO_API_KEY;
+  const isBrevoSmtp = Boolean(brevoKey?.startsWith('xsmtpsib-'));
+  const smtpUser =
+    process.env.SMTP_USER || (isBrevoSmtp ? process.env.BREVO_SENDER_EMAIL : undefined);
+  const smtpPass = process.env.SMTP_PASS || (isBrevoSmtp ? brevoKey : undefined);
+  const smtpHost =
+    process.env.SMTP_HOST || (isBrevoSmtp ? 'smtp-relay.brevo.com' : 'smtp.gmail.com');
   const configuredPort = Number(process.env.SMTP_PORT);
   // Default to 587 (STARTTLS) because cloud hosts like Render often restrict or drop raw port 465
   const smtpPort = configuredPort || 587;
@@ -278,16 +289,29 @@ export const sendEmail = async (
     }
   } else if (brevoKey?.startsWith('xsmtpsib-')) {
     logger.warn(
-      `[EMAIL PROVIDER] BREVO_API_KEY starts with "xsmtpsib-" (SMTP key). Bypassing Brevo HTTP API (which requires "xkeysib-") to prevent 401 Unauthorized delays. Using SMTP directly.`,
+      `[EMAIL PROVIDER] BREVO_API_KEY starts with "xsmtpsib-" (SMTP key). Bypassing Brevo HTTP API (which requires "xkeysib-"). Attempting SMTP relay.`,
     );
   }
 
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  // Check if SMTP credentials exist (either standard SMTP_USER/PASS or Brevo SMTP relay key)
+  const effectiveSmtpUser =
+    process.env.SMTP_USER ||
+    (brevoKey?.startsWith('xsmtpsib-') ? process.env.BREVO_SENDER_EMAIL : null);
+  const effectiveSmtpPass =
+    process.env.SMTP_PASS || (brevoKey?.startsWith('xsmtpsib-') ? brevoKey : null);
+
+  if (effectiveSmtpUser && effectiveSmtpPass) {
     try {
       return await sendViaSMTP(payload);
     } catch (err: any) {
-      logger.error(`SMTP failed: ${err.message}`);
-      errors.push(`SMTP: ${err.message}`);
+      const isTimeout = /timeout|timedout|econnrefused|enetunreach|ehostunreach/i.test(
+        err.message || '',
+      );
+      const diagnostic = isTimeout
+        ? ' (Outbound SMTP ports 25, 465, 587 are frequently blocked by cloud hosting firewalls like Render. Use Brevo REST API key "xkeysib-..." on HTTPS port 443).'
+        : '';
+      logger.error(`SMTP delivery failed: ${err.message}${diagnostic}`);
+      errors.push(`SMTP: ${err.message}${diagnostic}`);
     }
   }
 

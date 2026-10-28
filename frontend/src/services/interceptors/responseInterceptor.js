@@ -46,6 +46,7 @@ export const createResponseInterceptor = ({
 
     const method = originalRequest?.method?.toLowerCase() || 'get';
     const isGet = method === 'get';
+    const status = error.response?.status;
     const isDatabaseDown =
       status === 503 &&
       (error.response?.data?.message?.includes('Database') ||

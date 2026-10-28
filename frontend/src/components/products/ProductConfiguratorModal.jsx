@@ -61,7 +61,7 @@ export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-          className="relative w-full max-h-[75dvh] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-2xl md:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col z-10 overflow-hidden border border-black/10"
+          className="relative w-full max-h-[92dvh] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-2xl md:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col z-10 overflow-hidden border border-black/10"
           role="dialog"
           aria-modal="true"
           aria-labelledby="configurator-modal-title"

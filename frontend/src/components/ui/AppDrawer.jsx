@@ -40,7 +40,7 @@ export function AppDrawer({
             transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
             className={`fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-24px)] sm:w-full ${maxWidth || 'max-w-[500px]'} mx-auto`}
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-5 sm:p-6 pb-5 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[75dvh] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-5 sm:p-6 pb-5 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[92dvh] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
               {/* Handlebar */}
               <div
                 onClick={onClose}

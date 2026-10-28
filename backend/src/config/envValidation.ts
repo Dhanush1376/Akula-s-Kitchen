@@ -29,10 +29,20 @@ export const collectMissingEnvVars = (options?: { ciMode?: boolean }): string[] 
   const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
   if (isProduction || options?.ciMode) {
-    const hasBrevo = !!process.env.BREVO_API_KEY;
+    const brevoKey = process.env.BREVO_API_KEY?.trim();
+    const hasBrevo = Boolean(brevoKey);
     const hasSmtp = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
     if (!hasBrevo && !hasSmtp) {
       missingVars.push('BREVO_API_KEY (or SMTP_USER + SMTP_PASS)');
+    } else if (brevoKey?.startsWith('xsmtpsib-')) {
+      process.stdout.write(
+        '\x1b[33m⚠️ WARNING: BREVO_API_KEY starts with "xsmtpsib-" (SMTP key). Cloud hosts like Render block SMTP ports. Generate a Brevo REST API key ("xkeysib-...") for port 443 delivery.\x1b[0m\n',
+      );
+    }
+
+    const smsProvider = (process.env.SMS_PROVIDER || '').trim().toLowerCase();
+    if (smsProvider === 'fast2sms' && !process.env.FAST2SMS_API_KEY) {
+      missingVars.push('FAST2SMS_API_KEY (required when SMS_PROVIDER is set to fast2sms)');
     }
   }
 

@@ -53,6 +53,8 @@ export function useAuthFlow(loginSuccess, isAuthModalOpen) {
 
     isSubmittingRef.current = true;
     setIsLoading(true);
+    setError(false);
+    setErrorMsg('');
 
     try {
       const response = await authService.requestOTP(target);
@@ -68,7 +70,14 @@ export function useAuthFlow(loginSuccess, isAuthModalOpen) {
         if (otpRefs.current[0]) otpRefs.current[0].focus();
       }, 300);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send verification code');
+      const serverMsg = err.response?.data?.message || err.response?.data?.error;
+      const normalizedMsg = err.normalized?.message;
+      const fallbackMsg = err.message || 'Unable to send verification code. Please try again.';
+      const errorMessage = serverMsg || normalizedMsg || fallbackMsg;
+
+      toast.error(errorMessage);
+      setError(true);
+      setErrorMsg(errorMessage);
     } finally {
       isSubmittingRef.current = false;
       setIsLoading(false);

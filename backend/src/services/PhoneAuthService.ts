@@ -103,7 +103,16 @@ export class PhoneAuthService {
     if (!smsResult.success) {
       logger.error(`[PhoneAuthService] SMS Dispatch Error: ${smsResult.error}`);
       await OtpChallenge.updateOne({ _id: otpRecord._id }, { $set: { exhausted: true } });
-      throw new ApiError(500, 'Failed to send SMS code. Please try again.');
+      const isConfigError =
+        smsResult.error?.includes('Configuration Error') ||
+        smsResult.error?.includes('not configured');
+      if (isConfigError) {
+        throw new ApiError(
+          503,
+          'Mobile SMS verification is temporarily unavailable. Please sign in using your email address.',
+        );
+      }
+      throw new ApiError(500, smsResult.error || 'Failed to send SMS code. Please try again.');
     }
 
     SecurityAuditService.log({

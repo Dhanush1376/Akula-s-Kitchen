@@ -30,6 +30,8 @@ export const createRequestInterceptor =
       path.includes('/auth/register') ||
       path.includes('/auth/logout') ||
       path.includes('/auth/google') ||
+      path.includes('/auth/request-otp') ||
+      path.includes('/auth/verify-otp') ||
       path.includes('/csrf-token') ||
       config._skipAuthRetry === true;
 

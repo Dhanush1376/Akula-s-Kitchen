@@ -305,7 +305,7 @@ export function AuthModal() {
                                 errorMsg={errorMsg}
                                 isLoading={isLoading}
                                 timer={timer}
-                                sendOTP={requestOTP}
+                                sendOTP={() => requestOTP(null, identifier)}
                               />
                             </motion.div>
                           )}

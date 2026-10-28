@@ -212,7 +212,7 @@ export function InvoiceModal({
             {...(isMobile ? dragProps : {})}
             className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[500px] md:max-w-[530px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3 sm:p-4.5 pb-4 sm:pb-4.5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[75dvh] sm:max-h-[92vh] overflow-hidden">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3 sm:p-4.5 pb-4 sm:pb-4.5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[92dvh] sm:max-h-[92vh] overflow-hidden">
               {/* Decorative signature corner leaves */}
               <AuthCornerLeaves />
 

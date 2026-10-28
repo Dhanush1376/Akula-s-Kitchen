@@ -3,6 +3,7 @@ import User from '../models/User';
 import AuthIdentity from '../models/AuthIdentity';
 import OtpChallenge from '../models/OtpChallenge';
 import ApiError from '../utils/ApiError';
+import logger from '../config/logger';
 import { PhoneAuthService } from './PhoneAuthService';
 import GoogleAuthService from './GoogleAuthService';
 import { SecurityAuditService } from './SecurityAuditService';
@@ -142,9 +143,21 @@ export class AccountLinkingService {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    getSmsProvider()
-      .sendOtp(normalizedPhone, otp)
-      .catch(() => {});
+    const smsResult = await getSmsProvider().sendOtp(normalizedPhone, otp);
+    if (!smsResult.success) {
+      logger.error(`[AccountLinkingService] SMS Dispatch Error: ${smsResult.error}`);
+      await OtpChallenge.updateOne({ challengeId }, { $set: { exhausted: true } });
+      const isConfigError =
+        smsResult.error?.includes('Configuration Error') ||
+        smsResult.error?.includes('not configured');
+      if (isConfigError) {
+        throw new ApiError(
+          503,
+          'SMS verification service is currently unavailable. Please try again later.',
+        );
+      }
+      throw new ApiError(500, smsResult.error || 'Failed to send SMS code. Please try again.');
+    }
 
     SecurityAuditService.log({
       userId,

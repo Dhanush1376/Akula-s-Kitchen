@@ -6,6 +6,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
     overflow-x: clip;
     background: var(--color-surface);
@@ -37,6 +39,27 @@
     overscroll-behavior-y: none; /* Prevents native pull-to-refresh on mobile browsers */
     font-family: var(--font-body);
     font-variant-numeric: lining-nums tabular-nums;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Prevent mobile Android Chrome & iOS Safari from inflating fonts or zooming inputs */
+  input,
+  textarea,
+  select,
+  button {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  @media screen and (max-width: 640px) {
+    /* 16px base threshold prevents mobile browsers from auto-zooming and distorting layout on input focus */
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
+    textarea,
+    select {
+      font-size: 16px;
+    }
   }
 
   #root {

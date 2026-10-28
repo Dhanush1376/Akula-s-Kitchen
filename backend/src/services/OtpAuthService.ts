@@ -135,20 +135,26 @@ class OtpAuthService {
       action: 'request',
     });
 
-    // Dispatch OTP email asynchronously in the background so the HTTP response is instantaneous
-    // and network latency or cloud SMTP firewall issues never stall the user experience.
-    sendDirectEmailProcessor({
-      email: cleanEmail,
-      subject: `${otp} is your Akula's Kitchen verification code`,
-      customHtml: getOtpEmailTemplate(otp, expiryMinutes),
-      type: 'security',
-      action: 'otp_auth',
-    }).catch(async (err: any) => {
+    // Dispatch OTP email synchronously so the API only confirms success after provider acceptance
+    try {
+      await sendDirectEmailProcessor({
+        email: cleanEmail,
+        subject: `${otp} is your Akula's Kitchen verification code`,
+        customHtml: getOtpEmailTemplate(otp, expiryMinutes),
+        type: 'security',
+        action: 'otp_auth',
+      });
+    } catch (err: any) {
       logger.error(
         `[OTP EMAIL ERROR] Background delivery failed for ${SecurityAuditService.hashIdentifier(cleanEmail)}:`,
         err?.message || err,
       );
-    });
+      await OtpChallenge.updateOne({ _id: (otpRecord as any)._id }, { $set: { exhausted: true } });
+      throw new ApiError(
+        502,
+        'Unable to deliver verification code to your email address. Please check your email or try again shortly.',
+      );
+    }
 
     SecurityAuditService.log({
       eventType: 'OTP_REQUESTED',
@@ -651,19 +657,29 @@ class OtpAuthService {
         logger.info(`[DEV COD OTP] Email verification code for ${cleanEmail}: ${otp}`);
       }
 
-      // Dispatch COD OTP email asynchronously in the background so order checkout is snappy
-      sendDirectEmailProcessor({
-        email: cleanEmail,
-        subject: `${otp} is your COD Order Verification Code`,
-        customHtml: getCodOtpEmailTemplate(otp, expiryMinutes),
-        type: 'security',
-        action: 'cod_otp',
-      }).catch(async (err: any) => {
+      // Dispatch COD OTP email synchronously so order checkout only confirms after provider acceptance
+      try {
+        await sendDirectEmailProcessor({
+          email: cleanEmail,
+          subject: `${otp} is your COD Order Verification Code`,
+          customHtml: getCodOtpEmailTemplate(otp, expiryMinutes),
+          type: 'security',
+          action: 'cod_otp',
+        });
+      } catch (err: any) {
         logger.error(
           `[COD OTP EMAIL ERROR] Background delivery failed for ${SecurityAuditService.hashIdentifier(cleanEmail)}:`,
           err?.message || err,
         );
-      });
+        await OtpChallenge.updateOne(
+          { _id: (_otpRecord as any)._id },
+          { $set: { exhausted: true } },
+        );
+        throw new ApiError(
+          502,
+          'Unable to deliver verification code to your email address. Please check your email or try again.',
+        );
+      }
 
       SecurityAuditService.log({
         eventType: 'OTP_REQUESTED',
@@ -746,8 +762,17 @@ class OtpAuthService {
 
     const smsResult = await getSmsProvider().sendOtp(normalizedPhone, otp);
     if (!smsResult.success) {
-      logger.error(`[COD OTP ERROR] Failed to send SMS via Fast2SMS: ${smsResult.error}`);
+      logger.error(`[COD OTP ERROR] Failed to send SMS via provider: ${smsResult.error}`);
       await OtpChallenge.updateOne({ _id: (otpRecord as any)._id }, { $set: { exhausted: true } });
+      const isConfigError =
+        smsResult.error?.includes('Configuration Error') ||
+        smsResult.error?.includes('not configured');
+      if (isConfigError) {
+        throw new ApiError(
+          503,
+          'Mobile SMS verification is temporarily unavailable. Please verify via Email OTP.',
+        );
+      }
       throw new ApiError(500, 'Failed to send SMS verification code. Please try again.');
     }
 

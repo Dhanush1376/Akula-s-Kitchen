@@ -66,8 +66,10 @@ describe('SmsProviderService', () => {
       expect(result.error).toContain('Invalid recipient phone number');
     });
 
-    it('successfully calls Fast2SMS API with Quick route and valid payload', async () => {
+    it('successfully calls Fast2SMS API with dedicated OTP route and valid payload', async () => {
       process.env.FAST2SMS_API_KEY = 'mock_valid_key';
+      delete process.env.FAST2SMS_DLT_TEMPLATE_ID;
+      delete process.env.FAST2SMS_SENDER_ID;
       const provider = new Fast2SmsProvider();
 
       const fetchMock = vi.fn().mockResolvedValue({
@@ -92,15 +94,42 @@ describe('SmsProviderService', () => {
       expect(options.headers.authorization).toBe('mock_valid_key');
 
       const parsedBody = JSON.parse(options.body);
-      expect(parsedBody.route).toBe('q');
-      expect(parsedBody.numbers).toBe('9876543210');
-      expect(parsedBody.message).toContain('654321');
-      expect(parsedBody.language).toBeUndefined();
-      expect(parsedBody.flash).toBeUndefined();
       expect(parsedBody).toEqual({
-        route: 'q',
+        route: 'otp',
+        variables_values: '654321',
         numbers: '9876543210',
-        message: expect.stringContaining('654321'),
+      });
+    });
+
+    it('uses DLT route when FAST2SMS_DLT_TEMPLATE_ID and FAST2SMS_SENDER_ID are configured', async () => {
+      process.env.FAST2SMS_API_KEY = 'mock_valid_key';
+      process.env.FAST2SMS_DLT_TEMPLATE_ID = '1207161728394051';
+      process.env.FAST2SMS_SENDER_ID = 'AKULAK';
+      const provider = new Fast2SmsProvider();
+
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          return: true,
+          request_id: 'req_dlt_456',
+          message: ['SMS sent successfully.'],
+        }),
+      });
+      global.fetch = fetchMock;
+
+      const result = await provider.sendOtp('+919876543210', '998877');
+
+      expect(result.success).toBe(true);
+      expect(result.messageId).toBe('req_dlt_456');
+
+      const [, options] = fetchMock.mock.calls[0];
+      const parsedBody = JSON.parse(options.body);
+      expect(parsedBody).toEqual({
+        route: 'dlt',
+        sender_id: 'AKULAK',
+        message: '1207161728394051',
+        variables_values: '998877',
+        numbers: '9876543210',
       });
     });
 
@@ -121,6 +150,45 @@ describe('SmsProviderService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid Numbers');
+    });
+
+    it('handles Fast2SMS 401/403 authorization failures with clear config error', async () => {
+      process.env.FAST2SMS_API_KEY = 'invalid_key';
+      const provider = new Fast2SmsProvider();
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          return: false,
+          status_code: 401,
+          message: 'Invalid API Key',
+        }),
+      });
+
+      const result = await provider.sendOtp('+919876543210', '654321');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Configuration Error');
+    });
+
+    it('handles string format error messages from Fast2SMS', async () => {
+      process.env.FAST2SMS_API_KEY = 'mock_valid_key';
+      const provider = new Fast2SmsProvider();
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          return: false,
+          status_code: 400,
+          message: 'Account balance insufficient',
+        }),
+      });
+
+      const result = await provider.sendOtp('+919876543210', '654321');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Account balance insufficient');
     });
 
     it('handles network failure gracefully', async () => {

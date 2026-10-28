@@ -148,7 +148,7 @@ export default function CheckoutSidebar() {
           <div className="mt-4 pt-3.5 border-t border-neutral-200 grid grid-cols-2 gap-2 text-[11px] text-neutral-600">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span className="truncate">100% Authentic Quality</span>
+              <span className="truncate">100% Quality</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
@@ -156,7 +156,7 @@ export default function CheckoutSidebar() {
             </div>
             <div className="flex items-center gap-1.5">
               <Truck className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-              <span className="truncate">Safe Kitchen Delivery</span>
+              <span className="truncate">Delivery within Time</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />

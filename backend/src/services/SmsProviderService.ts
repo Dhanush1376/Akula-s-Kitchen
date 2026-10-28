@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import logger from '../config/logger';
+import { isLocalDevelopment } from '../config/runtimeEnv';
 
 export interface SmsResult {
   success: boolean;
@@ -51,7 +52,10 @@ export class Fast2SmsProvider implements SmsProvider {
 
     if (!apiKey || apiKey === 'your_fast2sms_api_key_here') {
       logger.error('[SMS_PROVIDER] FAST2SMS_API_KEY missing or unconfigured in environment');
-      return { success: false, error: 'SMS Gateway Configuration Error' };
+      return {
+        success: false,
+        error: 'SMS Gateway Configuration Error: FAST2SMS_API_KEY is not configured',
+      };
     }
 
     const normalizedPhone = normalizeIndianPhone(phone);
@@ -61,18 +65,47 @@ export class Fast2SmsProvider implements SmsProvider {
     }
 
     try {
-      const message = `Your OTP for Akula's Kitchen is ${otp}. Valid for 5 minutes. Please do not share this code.`;
+      // Determine effective route:
+      // 1. 'dlt': If DLT template ID is supplied or FAST2SMS_ROUTE is 'dlt'
+      // 2. 'q': If FAST2SMS_ROUTE is explicitly 'q' (Quick SMS)
+      // 3. 'otp': Default standard Quick OTP API (works 24/7 across DND numbers)
+      const configuredRoute = (process.env.FAST2SMS_ROUTE || '').trim().toLowerCase();
+      const dltTemplateId = process.env.FAST2SMS_DLT_TEMPLATE_ID?.trim();
+      const senderId = process.env.FAST2SMS_SENDER_ID?.trim() || 'FSTSMS';
+
+      let requestBody: Record<string, any>;
+
+      if (dltTemplateId || configuredRoute === 'dlt') {
+        requestBody = {
+          route: 'dlt',
+          sender_id: senderId,
+          message: dltTemplateId,
+          variables_values: otp,
+          numbers: normalizedPhone,
+        };
+      } else if (configuredRoute === 'q') {
+        const message = `Your OTP for Akula's Kitchen is ${otp}. Valid for 5 minutes. Please do not share this code.`;
+        requestBody = {
+          route: 'q',
+          message,
+          numbers: normalizedPhone,
+        };
+      } else {
+        // Fast2SMS Quick OTP Route (Recommended default for OTP delivery without mandatory DLT header)
+        requestBody = {
+          route: 'otp',
+          variables_values: otp,
+          numbers: normalizedPhone,
+        };
+      }
+
       const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           authorization: apiKey,
         },
-        body: JSON.stringify({
-          route: 'q',
-          message,
-          numbers: normalizedPhone,
-        }),
+        body: JSON.stringify(requestBody),
         signal: AbortSignal.timeout(10000), // 10s timeout
       });
 
@@ -83,6 +116,9 @@ export class Fast2SmsProvider implements SmsProvider {
           ? data.message.join(', ')
           : data?.message || `HTTP ${response.status}`;
         logger.error(`[SMS_PROVIDER] Fast2SMS HTTP error ${response.status}: ${errMsg}`);
+        if (response.status === 401 || response.status === 403) {
+          return { success: false, error: 'SMS Gateway Configuration Error: Invalid API Key' };
+        }
         return { success: false, error: errMsg };
       }
 
@@ -91,7 +127,7 @@ export class Fast2SmsProvider implements SmsProvider {
           data?.request_id ||
           (Array.isArray(data?.message) ? data.message[0] : `fast2sms-${Date.now()}`);
         logger.info(
-          `[SMS_PROVIDER] OTP successfully dispatched via Fast2SMS to ${maskPhone(phone)}`,
+          `[SMS_PROVIDER] OTP successfully dispatched via Fast2SMS (${requestBody.route}) to ${maskPhone(phone)}`,
         );
         return { success: true, messageId: String(messageId) };
       } else {
@@ -130,7 +166,7 @@ export function getSmsProvider(): SmsProvider {
 
   if (configuredProvider === 'fast2sms') {
     if (
-      process.env.NODE_ENV === 'development' &&
+      isLocalDevelopment() &&
       (!process.env.FAST2SMS_API_KEY || process.env.FAST2SMS_API_KEY.trim() === '')
     ) {
       return new MockSmsProvider();
@@ -156,7 +192,7 @@ export function getSmsProvider(): SmsProvider {
     return new Fast2SmsProvider();
   }
 
-  if (process.env.NODE_ENV === 'development') {
+  if (isLocalDevelopment()) {
     return new MockSmsProvider();
   }
 

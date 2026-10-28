@@ -6,6 +6,11 @@ import MaintenanceAuditLog from '../../models/MaintenanceAuditLog';
 import SessionAuthService from '../../services/SessionAuthService';
 import logger from '../../config/logger';
 
+import { sendDirectEmailProcessor } from '../../services/notificationService';
+import { getOtpEmailTemplate } from '../../utils/email/emailTemplates';
+import ApiError from '../../utils/ApiError';
+import { isLocalDevelopment } from '../../config/runtimeEnv';
+
 export const authenticateGateway = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
@@ -17,8 +22,28 @@ export const authenticateGateway = async (req: Request, res: Response, next: Nex
 
     const otp = await MaintenanceService.generateMaintenanceOTP(email, { ip, userAgent });
 
-    if (process.env.NODE_ENV === 'development') {
+    if (isLocalDevelopment()) {
       logger.info(`[DEV ONLY] Maintenance OTP for ${email}: ${otp}`);
+    }
+
+    // Dispatch maintenance OTP email synchronously so access response reflects actual provider status
+    try {
+      await sendDirectEmailProcessor({
+        email,
+        subject: `${otp} is your Akula's Kitchen Maintenance Gateway Passcode`,
+        customHtml: getOtpEmailTemplate(otp, 5),
+        type: 'security',
+        action: 'maintenance_otp',
+      });
+    } catch (err: any) {
+      logger.error(
+        `[MAINTENANCE OTP EMAIL ERROR] Failed delivery to ${email}:`,
+        err?.message || err,
+      );
+      throw new ApiError(
+        502,
+        'Unable to deliver verification code to your email address. Please check your email configuration or try again.',
+      );
     }
 
     res.status(200).json({
