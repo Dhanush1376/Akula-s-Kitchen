@@ -2,11 +2,15 @@ import { m as motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency, fadeUp } from '../AdminUIKit';
 
-export function AdminDashboardStats({ dashboardStats, pendingOrders, customers }) {
+export function AdminDashboardStats({ dashboardStats, pendingOrders, customers, periodSales }) {
   const navigate = useNavigate();
 
   const totalSales =
-    dashboardStats?.stats?.totalSales !== undefined ? dashboardStats.stats.totalSales : 0;
+    periodSales !== undefined
+      ? periodSales
+      : dashboardStats?.stats?.totalSales !== undefined
+        ? dashboardStats.stats.totalSales
+        : 0;
   const revenueChange = dashboardStats?.stats?.revenueChange;
   const ordersPending =
     dashboardStats?.stats?.pendingOrders !== undefined
@@ -48,7 +52,9 @@ export function AdminDashboardStats({ dashboardStats, pendingOrders, customers }
             {formatCurrency(totalSales)}
           </p>
           <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-[var(--admin-text-secondary)] mt-0.5 sm:mt-1">
-            <span className="truncate">Gross earnings</span>
+            <span className="truncate">
+              {totalSales === 0 ? 'No sales recorded' : 'Gross earnings'}
+            </span>
             {revenueChange !== undefined && revenueChange !== null && (
               <span
                 className={`font-bold shrink-0 ml-1 inline-flex items-center gap-0.5 ${
@@ -122,7 +128,9 @@ export function AdminDashboardStats({ dashboardStats, pendingOrders, customers }
             {totalCustomers.toLocaleString()}
           </p>
           <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-[var(--admin-text-secondary)] mt-0.5 sm:mt-1">
-            <span className="truncate">Client profiles</span>
+            <span className="truncate">
+              {totalCustomers === 0 ? 'No customers yet' : 'Client profiles'}
+            </span>
             {customersChange !== undefined && customersChange !== null ? (
               <span
                 className={`font-bold shrink-0 ml-1 inline-flex items-center gap-0.5 ${

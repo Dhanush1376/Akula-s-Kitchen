@@ -54,17 +54,25 @@ export const normalizeApiError = (error) => {
 
   let message = serverMessage || 'Something went wrong. Please try again.';
   if (isTimeout) {
-    message = 'The server is taking longer than usual. Please wait a moment and try again.';
+    message = 'Request timed out. Please retry.';
   } else if (!error.response) {
-    message = 'Unable to reach the server. Check your connection or try again shortly.';
+    message = 'Cannot connect. Check your internet.';
   } else if (status === 401) {
-    message = serverMessage || 'Your session has expired. Please sign in again.';
+    message = serverMessage || 'Session expired. Please sign in.';
   } else if (status === 403) {
-    message = serverMessage || 'You do not have permission to perform this action.';
+    message = serverMessage || 'Access denied.';
   } else if (status === 404) {
-    message = serverMessage || 'The requested resource was not found.';
+    message = serverMessage || 'Item not found.';
   } else if (status === 429) {
-    message = serverMessage || 'Too many requests. Please wait and try again.';
+    message = serverMessage || 'Too many attempts. Please wait.';
+  } else if (status === 502) {
+    const isGenericGateway =
+      !serverMessage ||
+      /bad gateway|status code 502/i.test(serverMessage) ||
+      typeof error.response?.data === 'string';
+    message = isGenericGateway ? 'Server waking up. Try again shortly.' : serverMessage;
+  } else if (status === 503) {
+    message = serverMessage || 'Server busy. Please try again shortly.';
   }
 
   return {

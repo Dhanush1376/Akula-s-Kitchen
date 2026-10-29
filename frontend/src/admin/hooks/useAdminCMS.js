@@ -249,107 +249,111 @@ export function useAdminCMS({
     [autoPublish, publishContent],
   );
 
-  const publishAllContent = useCallback(async () => {
-    try {
-      if (setGlobalActionLoading) {
-        setGlobalActionMessage('Publishing all changes...');
-        setGlobalActionLoading(true);
-      }
+  const publishAllContent = useCallback(
+    async (contentOverride) => {
+      try {
+        if (setGlobalActionLoading) {
+          setGlobalActionMessage('Publishing all changes...');
+          setGlobalActionLoading(true);
+        }
 
-      const sectionsToPublish = Object.entries(websiteContent).filter(
-        ([, val]) => val?.status === 'modified',
-      );
+        const source = contentOverride || websiteContent;
+        const sectionsToPublish = Object.entries(source).filter(
+          ([, val]) => val?.status === 'modified',
+        );
 
-      const { PendingUploadRegistry } = await import('../components/ImageUpload');
-      const { uploadService } = await import('../../services/domainServices');
+        const { PendingUploadRegistry } = await import('../components/ImageUpload');
+        const { uploadService } = await import('../../services/domainServices');
 
-      let contentString = JSON.stringify(sectionsToPublish);
-      const activeBlobUrls = Array.from(PendingUploadRegistry.keys()).filter((url) =>
-        contentString.includes(url),
-      );
+        let contentString = JSON.stringify(sectionsToPublish);
+        const activeBlobUrls = Array.from(PendingUploadRegistry.keys()).filter((url) =>
+          contentString.includes(url),
+        );
 
-      if (activeBlobUrls.length > 0) {
-        toast.loading('Uploading pending CMS images...', { id: 'cms-upload' });
-        for (const url of activeBlobUrls) {
-          const pending = PendingUploadRegistry.get(url);
-          if (pending && pending.file) {
-            const fd = new FormData();
-            fd.append('file', pending.file);
-            const res = await uploadService.uploadCMS(fd);
-            if (res && res.success && res.data && res.data.url) {
-              contentString = contentString.replaceAll(url, res.data.url);
-              PendingUploadRegistry.delete(url);
+        if (activeBlobUrls.length > 0) {
+          toast.loading('Uploading pending CMS images...', { id: 'cms-upload' });
+          for (const url of activeBlobUrls) {
+            const pending = PendingUploadRegistry.get(url);
+            if (pending && pending.file) {
+              const fd = new FormData();
+              fd.append('file', pending.file);
+              const res = await uploadService.uploadCMS(fd);
+              if (res && res.success && res.data && res.data.url) {
+                contentString = contentString.replaceAll(url, res.data.url);
+                PendingUploadRegistry.delete(url);
+              }
             }
           }
+          toast.dismiss('cms-upload');
         }
-        toast.dismiss('cms-upload');
-      }
 
-      const updatedSectionsToPublish = JSON.parse(contentString);
+        const updatedSectionsToPublish = JSON.parse(contentString);
 
-      const results = await Promise.allSettled(
-        updatedSectionsToPublish.map(([key, data]) => cmsService.updateSection(key, data)),
-      );
+        const results = await Promise.allSettled(
+          updatedSectionsToPublish.map(([key, data]) => cmsService.updateSection(key, data)),
+        );
 
-      const failedSections = [];
-      results.forEach((result, idx) => {
-        if (result.status === 'rejected') {
-          failedSections.push(sectionsToPublish[idx][0]);
-        }
-      });
-
-      await cmsService.publishAll();
-
-      setWebsiteContent((prev) => {
-        const updated = { ...prev };
-        Object.keys(updated).forEach((key) => {
-          if (updated[key]?.status && !failedSections.includes(key)) {
-            if (Array.isArray(updated[key])) {
-              const copy = [...updated[key]];
-              copy.status = 'published';
-              updated[key] = copy;
-            } else {
-              updated[key] = { ...updated[key], status: 'published' };
-            }
+        const failedSections = [];
+        results.forEach((result, idx) => {
+          if (result.status === 'rejected') {
+            failedSections.push(sectionsToPublish[idx][0]);
           }
         });
-        return updated;
-      });
-      setLastSaved(new Date());
-      setHasUnsavedContent(false);
 
-      await refreshWebsiteContent();
+        await cmsService.publishAll();
 
-      if (failedSections.length > 0) {
-        toast.error(`Failed to publish: ${failedSections.join(',')}`);
+        setWebsiteContent((prev) => {
+          const updated = { ...(contentOverride || prev) };
+          Object.keys(updated).forEach((key) => {
+            if (updated[key]?.status && !failedSections.includes(key)) {
+              if (Array.isArray(updated[key])) {
+                const copy = [...updated[key]];
+                copy.status = 'published';
+                updated[key] = copy;
+              } else {
+                updated[key] = { ...updated[key], status: 'published' };
+              }
+            }
+          });
+          return updated;
+        });
+        setLastSaved(new Date());
+        setHasUnsavedContent(false);
+
+        await refreshWebsiteContent();
+
+        if (failedSections.length > 0) {
+          toast.error(`Failed to publish: ${failedSections.join(',')}`);
+          if (setGlobalActionLoading) {
+            setGlobalActionLoading(false);
+            setGlobalActionMessage('');
+          }
+        } else {
+          setPublishToast('All content published!');
+          if (setGlobalActionLoading && typeof setGlobalActionSuccess === 'function') {
+            setGlobalActionSuccess(true);
+            setGlobalActionMessage('Published successfully!');
+            setTimeout(() => {
+              setGlobalActionSuccess(false);
+              setGlobalActionLoading(false);
+              setGlobalActionMessage('');
+            }, 1500);
+          } else if (setGlobalActionLoading) {
+            setGlobalActionLoading(false);
+            setGlobalActionMessage('');
+          }
+        }
+        setTimeout(() => setPublishToast(null), 3000);
+      } catch (_err) {
+        toast.error('Failed to publish all content');
         if (setGlobalActionLoading) {
           setGlobalActionLoading(false);
           setGlobalActionMessage('');
         }
-      } else {
-        setPublishToast('All content published!');
-        if (setGlobalActionLoading && typeof setGlobalActionSuccess === 'function') {
-          setGlobalActionSuccess(true);
-          setGlobalActionMessage('Published successfully!');
-          setTimeout(() => {
-            setGlobalActionSuccess(false);
-            setGlobalActionLoading(false);
-            setGlobalActionMessage('');
-          }, 1500);
-        } else if (setGlobalActionLoading) {
-          setGlobalActionLoading(false);
-          setGlobalActionMessage('');
-        }
       }
-      setTimeout(() => setPublishToast(null), 3000);
-    } catch (_err) {
-      toast.error('Failed to publish all content');
-      if (setGlobalActionLoading) {
-        setGlobalActionLoading(false);
-        setGlobalActionMessage('');
-      }
-    }
-  }, [websiteContent, setGlobalActionLoading, setGlobalActionMessage, setGlobalActionSuccess]);
+    },
+    [websiteContent, setGlobalActionLoading, setGlobalActionMessage, setGlobalActionSuccess],
+  );
 
   const resetContent = useCallback((section) => {
     setWebsiteContent((prev) => ({

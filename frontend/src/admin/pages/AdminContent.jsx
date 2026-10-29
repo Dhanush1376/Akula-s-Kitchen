@@ -3,12 +3,14 @@ import { DraftStatusIndicator } from '../components/DraftStatusIndicator';
 import { DraftRestoreModal } from '../components/DraftRestoreModal';
 import { UnsavedChangesGuard } from '../components/UnsavedChangesGuard';
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 
 import { useDraft } from '../hooks/useDraft';
 import { AdminContentSkeleton, PublishBar, PageHeader } from '../components/AdminUIKit';
 import { HomePageControllerEditor } from '../components/cms/HomePageControllerEditor';
 import { ShopPageEditor } from '../components/cms/ShopPageEditor';
+import { MenuPageEditor } from '../components/cms/MenuPageEditor';
 import { ContactInfoEditor } from '../components/cms/ContactInfoEditor';
 import { SEOCenterEditor } from '../components/cms/SEOCenterEditor';
 import { NavigationFooterEditor } from '../components/cms/NavigationFooterEditor';
@@ -46,6 +48,11 @@ const CMS_SIDEBAR = [
         id: 'shop-page',
         label: 'Shop Page',
         icon: 'storefront',
+      },
+      {
+        id: 'menu-page',
+        label: 'Menu Page',
+        icon: 'restaurant_menu',
       },
       {
         id: 'contact',
@@ -89,10 +96,32 @@ export function AdminContent() {
     dataLoading,
   } = useAdmin();
 
-  const [activeSection, setActiveSection] = useState('home');
-  const [mobileSectionOpen, setMobileSectionOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sectionFromUrl = searchParams.get('section');
+  const [activeSection, setActiveSection] = useState(sectionFromUrl || 'home');
+  const [mobileSectionOpen, setMobileSectionOpen] = useState(
+    Boolean(sectionFromUrl && sectionFromUrl !== 'home'),
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
+
+  useEffect(() => {
+    if (sectionFromUrl) {
+      setActiveSection(sectionFromUrl);
+    }
+  }, [sectionFromUrl]);
+
+  const selectSection = (id) => {
+    setActiveSection(id);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('section', id);
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   const {
     formData: draftWebsiteContent,
@@ -148,7 +177,7 @@ export function AdminContent() {
   const handlePublishAll = async () => {
     try {
       setIsPublishing(true);
-      await publishAllContent();
+      await publishAllContent(activeContent);
       await deleteDraft();
     } finally {
       setIsPublishing(false);
@@ -221,8 +250,9 @@ export function AdminContent() {
       {/* Top Page Header matching Products & Orders style */}
       <PageHeader
         title="Edit Website"
+        actionRowMobile
         subtitle={
-          <div className="flex flex-wrap items-center gap-2 text-[13px]">
+          <div className="flex flex-wrap items-center gap-2 text-[12.5px] sm:text-[13px]">
             <span className="font-semibold text-[var(--admin-text-primary)]">
               {totalSectionsCount} Storefront Sections
             </span>
@@ -230,7 +260,6 @@ export function AdminContent() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Live Sync Active
             </span>
-            <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} />
             {currentActiveItem && (
               <span className="hidden sm:inline-flex items-center gap-1 font-medium text-[var(--admin-text-tertiary)]">
                 &bull; Editing{' '}
@@ -240,6 +269,9 @@ export function AdminContent() {
               </span>
             )}
           </div>
+        }
+        headerAction={
+          <DraftStatusIndicator status={draftStatus} lastSavedAt={lastSavedAt} compact />
         }
       />
 
@@ -273,18 +305,7 @@ export function AdminContent() {
             )}
           </div>
 
-          {/* Action Buttons in the same line */}
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-[42px] min-h-[42px] max-h-[42px] px-3 sm:px-3.5 text-[12px] font-semibold rounded-[4px] border border-[var(--admin-border)] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-muted)] text-[var(--admin-text-primary)] inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
-            title="Preview Live Storefront"
-          >
-            <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-            <span className="hidden sm:inline">Preview</span>
-          </a>
-
+          {/* Action Button */}
           <button
             type="button"
             onClick={handlePublishAll}
@@ -324,18 +345,8 @@ export function AdminContent() {
               </span>
             </button>
 
-            {/* Right: Actions (Preview & Publish Live) */}
+            {/* Right: Action (Publish Live) */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-8 px-2 text-[11.5px] font-semibold rounded-[4px] border border-[var(--admin-border)] bg-[var(--admin-surface)] hover:bg-[var(--admin-surface-muted)] text-[var(--admin-text-primary)] inline-flex items-center justify-center gap-1 transition-all shadow-2xs cursor-pointer"
-                title="Preview Live Storefront"
-              >
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-              </a>
-
               <button
                 type="button"
                 onClick={handlePublishAll}
@@ -375,7 +386,7 @@ export function AdminContent() {
                   key={item.id}
                   type="button"
                   onClick={() => {
-                    setActiveSection(item.id);
+                    selectSection(item.id);
                     setMobileSectionOpen(true);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
@@ -450,7 +461,7 @@ export function AdminContent() {
                             <button
                               key={item.id}
                               type="button"
-                              onClick={() => setActiveSection(item.id)}
+                              onClick={() => selectSection(item.id)}
                               className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[4px] text-left cursor-pointer transition-all box-border ${
                                 isActive
                                   ? 'bg-[var(--admin-accent)]/10 text-[var(--admin-accent)] font-bold border-l-2 border-[var(--admin-accent)] shadow-2xs'
@@ -512,6 +523,9 @@ export function AdminContent() {
               )}
               {activeSection === 'shop-page' && (
                 <ShopPageEditor content={activeContent.shopPage} onUpdate={handleUpdateContent} />
+              )}
+              {activeSection === 'menu-page' && (
+                <MenuPageEditor content={activeContent} onUpdate={handleUpdateContent} />
               )}
               {activeSection === 'contact' && (
                 <ContactInfoEditor content={activeContent.contact} onUpdate={handleUpdateContent} />

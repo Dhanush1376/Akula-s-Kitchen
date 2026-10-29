@@ -60,14 +60,17 @@ export function AdminDashboardCharts({
             </div>
           </div>
 
-          {orders.length === 0 ? (
-            <div className="h-[280px] flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)]">
-              <span className="material-symbols-outlined text-[32px] text-[var(--admin-text-tertiary)] mb-2">
-                analytics
+          {orders.length === 0 || revenueChartData.length === 0 ? (
+            <div className="h-[280px] flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-6 text-center">
+              <div className="w-10 h-10 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-tertiary)] mb-2.5 shadow-2xs">
+                <span className="material-symbols-outlined text-[22px]">analytics</span>
+              </div>
+              <span className="text-[12px] font-bold text-[var(--admin-text-primary)]">
+                No Data Available
               </span>
-              <span className="text-[11px] uppercase font-bold text-[var(--admin-text-secondary)] tracking-wider">
-                No Sales Trends Recorded
-              </span>
+              <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 max-w-xs">
+                No sales or revenue data available for this period yet.
+              </p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={isMobile ? 220 : 280}>
@@ -134,13 +137,16 @@ export function AdminDashboardCharts({
           </div>
 
           {categoryChartData.length === 0 ? (
-            <div className="h-[240px] flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)]">
-              <span className="material-symbols-outlined text-[32px] text-[var(--admin-text-tertiary)] mb-2">
-                pie_chart
+            <div className="h-[240px] flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-6 text-center">
+              <div className="w-10 h-10 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-tertiary)] mb-2.5 shadow-2xs">
+                <span className="material-symbols-outlined text-[22px]">pie_chart</span>
+              </div>
+              <span className="text-[12px] font-bold text-[var(--admin-text-primary)]">
+                No Data Available
               </span>
-              <span className="text-[11px] uppercase font-bold text-[var(--admin-text-secondary)] tracking-wider">
-                No Sales Recorded
-              </span>
+              <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 max-w-xs">
+                No category sales distribution available yet.
+              </p>
             </div>
           ) : (
             <>
@@ -209,36 +215,56 @@ export function AdminDashboardCharts({
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={isMobile ? 180 : 210}>
-          <BarChart
-            data={weeklyOrderStats}
-            barGap={isMobile ? 4 : 6}
-            margin={{ top: 10, right: 10, left: isMobile ? -20 : -10, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--admin-border-subtle)"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="day"
-              tick={{ fontSize: 10.5, fill: 'var(--admin-text-tertiary)' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              hide={isMobile}
-              allowDecimals={false}
-              tick={{ fontSize: 10.5, fill: 'var(--admin-text-tertiary)' }}
-              axisLine={false}
-              tickLine={false}
-              width={25}
-            />
-            <Tooltip content={<ChartTooltip />} />
-            <Bar dataKey="ordersCount" fill="#5a7d9a" radius={[3, 3, 0, 0]} name="Orders Placed" />
-            <Bar dataKey="itemsCount" fill="#D4A41C" radius={[3, 3, 0, 0]} name="Products Sold" />
-          </BarChart>
-        </ResponsiveContainer>
+        {orders.length === 0 ||
+        weeklyOrderStats.every((d) => (d.ordersCount || 0) === 0 && (d.itemsCount || 0) === 0) ? (
+          <div className="h-[180px] sm:h-[210px] flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-6 text-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-tertiary)] mb-2.5 shadow-2xs">
+              <span className="material-symbols-outlined text-[22px]">bar_chart</span>
+            </div>
+            <span className="text-[12px] font-bold text-[var(--admin-text-primary)]">
+              No Data Available
+            </span>
+            <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 max-w-xs">
+              No customer orders or product volume recorded in the last 7 days.
+            </p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={isMobile ? 180 : 210}>
+            <BarChart
+              data={weeklyOrderStats}
+              barGap={isMobile ? 4 : 6}
+              margin={{ top: 10, right: 10, left: isMobile ? -20 : -10, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--admin-border-subtle)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 10.5, fill: 'var(--admin-text-tertiary)' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                hide={isMobile}
+                allowDecimals={false}
+                tick={{ fontSize: 10.5, fill: 'var(--admin-text-tertiary)' }}
+                axisLine={false}
+                tickLine={false}
+                width={25}
+              />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar
+                dataKey="ordersCount"
+                fill="#5a7d9a"
+                radius={[3, 3, 0, 0]}
+                name="Orders Placed"
+              />
+              <Bar dataKey="itemsCount" fill="#D4A41C" radius={[3, 3, 0, 0]} name="Products Sold" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </>
   );

@@ -67,14 +67,10 @@ export function PwaUpdatePrompt() {
             <button
               type="button"
               onClick={applyUpdate}
-              className="relative overflow-hidden bg-gradient-to-r from-[#F7BB0E] via-[#FFCB36] to-[#F7BB0E] hover:brightness-105 active:scale-95 text-neutral-950 font-extrabold text-xs px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full shadow-[0_2px_10px_rgba(247,187,14,0.35)] flex items-center gap-1.5 transition-all cursor-pointer border border-amber-300/50"
+              className="bg-[#F7BB0E] hover:bg-[#eab30c] active:scale-95 text-neutral-950 font-extrabold text-xs px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full shadow-xs flex items-center gap-1.5 transition-all cursor-pointer border border-amber-400/40"
             >
-              {/* Continuous Reflection Sheen */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full z-0">
-                <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/55 to-transparent -skew-x-25 animate-reflection-sheen" />
-              </div>
-              <RefreshCw className="w-3.5 h-3.5 stroke-[2.5] relative z-10" />
-              <span className="relative z-10">Update</span>
+              <RefreshCw className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Update</span>
             </button>
 
             <button

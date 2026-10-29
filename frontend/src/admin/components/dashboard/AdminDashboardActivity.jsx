@@ -74,12 +74,15 @@ export function AdminDashboardActivity({ quickActions, dynamicRecentActivity, pr
 
         {dynamicRecentActivity.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-6 text-center">
-            <span className="material-symbols-outlined text-[28px] text-[var(--admin-text-tertiary)] mb-2">
-              history
+            <div className="w-10 h-10 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-tertiary)] mb-2.5 shadow-2xs">
+              <span className="material-symbols-outlined text-[22px]">history</span>
+            </div>
+            <span className="text-[12px] font-bold text-[var(--admin-text-primary)]">
+              No Data Available
             </span>
-            <span className="text-[11px] uppercase font-bold text-[var(--admin-text-secondary)] tracking-wider">
-              No Recent Activity
-            </span>
+            <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 max-w-xs">
+              No live operational activity or events recorded yet.
+            </p>
           </div>
         ) : (
           <div className="relative pl-1 space-y-3.5">

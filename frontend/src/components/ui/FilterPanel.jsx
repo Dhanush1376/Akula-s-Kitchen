@@ -1,16 +1,24 @@
 import { Check, X, RotateCcw } from 'lucide-react';
 import { m as motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useMobileDrawerEngine, DrawerDragHandle } from './drawer';
+import { useCategories } from '../../hooks/useProductQueries';
 
-const FilterSection = ({ title, id, children, activeSections, onToggle }) => (
+const FilterSection = ({ title, id, children, activeSections, onToggle, badge }) => (
   <div className="mb-2 border-b border-black/[0.06] pb-2 last:border-0 last:pb-0">
     <button
       onClick={() => onToggle(id)}
       className="w-full flex justify-between items-center py-1 text-left font-sans text-[12px] sm:text-[13px] text-neutral-900 hover:text-black transition-colors group min-h-0 cursor-pointer"
     >
-      <span className="uppercase tracking-wider font-bold">{title}</span>
+      <div className="flex items-center gap-2">
+        <span className="uppercase tracking-wider font-bold">{title}</span>
+        {badge && (
+          <span className="text-[10px] bg-[#283618]/10 text-[#283618] font-bold px-2 py-0.5 rounded-full">
+            {badge}
+          </span>
+        )}
+      </div>
       <span
         className={`material-symbols-outlined text-neutral-500 text-[18px] transition-transform duration-300 ${activeSections[id] ? 'rotate-180 text-black' : ''}`}
       >
@@ -33,8 +41,49 @@ const FilterSection = ({ title, id, children, activeSections, onToggle }) => (
   </div>
 );
 
+const isWeightString = (str) => {
+  if (!str || typeof str !== 'string') return false;
+  const s = str.trim().toLowerCase();
+  return (
+    /^(\d+(?:\.\d+)?)\s*(g|gm|gms|gram|grams|kg|kgs|kilo|kilos|ml|l|ltr|litre|litres|oz|lb|lbs)$/i.test(
+      s,
+    ) ||
+    /^(half|quarter)\s*(kg|kilo|litre|liter)$/i.test(s) ||
+    /^\d+\s*x\s*\d+\s*(g|gm|kg|ml)$/i.test(s)
+  );
+};
+
+const parseWeightGrams = (str) => {
+  if (!str || typeof str !== 'string') return 0;
+  const match = str
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+(?:\.\d+)?)\s*([a-z]+)$/);
+  if (!match) return 0;
+  const num = parseFloat(match[1]);
+  const unit = match[2];
+  if (unit.startsWith('k')) return num * 1000;
+  if (unit.startsWith('g')) return num;
+  if (unit.startsWith('l')) return num * 1000;
+  if (unit.startsWith('m')) return num;
+  return num;
+};
+
 const Checkbox = ({ label, count, type, currentFilters, onToggleFilter, isChild = false }) => {
-  const isChecked = currentFilters[type]?.includes(label);
+  const isChecked =
+    currentFilters[type]?.includes(label) ||
+    (type === 'weight' && currentFilters['tags']?.includes(label)) ||
+    (type === 'tags' && currentFilters['weight']?.includes(label));
+
+  const handleChange = () => {
+    onToggleFilter(type, label);
+    if (type === 'weight' && currentFilters['tags']?.includes(label)) {
+      onToggleFilter('tags', label);
+    } else if (type === 'tags' && currentFilters['weight']?.includes(label)) {
+      onToggleFilter('weight', label);
+    }
+  };
+
   return (
     <label
       className={`flex items-center justify-between cursor-pointer group py-1 px-1.5 hover:bg-neutral-100/70 rounded-lg transition-all duration-200 ${isChild ? 'ml-4 border-l-2 border-neutral-200 pl-2' : ''}`}
@@ -44,7 +93,7 @@ const Checkbox = ({ label, count, type, currentFilters, onToggleFilter, isChild 
           <input
             type="checkbox"
             checked={isChecked}
-            onChange={() => onToggleFilter(type, label)}
+            onChange={handleChange}
             className="peer appearance-none h-4 w-4 border border-neutral-300 rounded-md bg-white checked:bg-[#283618] checked:border-[#283618] transition-all cursor-pointer focus:ring-2 focus:ring-[#283618]/20"
           />
           <Check
@@ -291,6 +340,137 @@ const PriceRangeSlider = ({
   );
 };
 
+const HorizontalCategoryFilter = ({
+  categories = [],
+  activeCategory = 'All',
+  onSelectCategory,
+  categoryCounts = new Map(),
+}) => {
+  const scrollRef = useRef(null);
+  const activePillRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 2);
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth - 2);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const handleResize = () => checkScroll();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [categories, checkScroll]);
+
+  // Center or scroll active pill into view smoothly
+  useEffect(() => {
+    if (activePillRef.current && scrollRef.current) {
+      const container = scrollRef.current;
+      const pill = activePillRef.current;
+      const scrollPos = pill.offsetLeft - 8;
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
+      } else {
+        container.scrollLeft = Math.max(0, scrollPos);
+      }
+      checkScroll();
+    }
+  }, [activeCategory, checkScroll]);
+
+  const handleWheel = (e) => {
+    if (scrollRef.current && e.deltaY && !e.deltaX) {
+      scrollRef.current.scrollLeft += e.deltaY;
+      checkScroll();
+    }
+  };
+
+  const scrollByAmount = (offset) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+      setTimeout(checkScroll, 200);
+    }
+  };
+
+  if (!categories || categories.length <= 1) return null;
+
+  return (
+    <div className="relative w-full py-1">
+      {/* Scroll Left Button */}
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(-120)}
+          aria-label="Scroll categories left"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white/95 shadow-md border border-black/10 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer hidden sm:flex"
+        >
+          <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+        </button>
+      )}
+
+      {/* Horizontal Category Strip */}
+      <div
+        ref={scrollRef}
+        onScroll={checkScroll}
+        onWheel={handleWheel}
+        className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-0.5 touch-pan-x"
+        role="tablist"
+        aria-label="Category filters"
+      >
+        {categories.map((cat) => {
+          const isActive =
+            cat.toLowerCase() === activeCategory.toLowerCase() ||
+            (cat.toLowerCase() === 'all' &&
+              (!activeCategory || activeCategory.toLowerCase() === 'all'));
+          const count = categoryCounts.get(cat.toLowerCase());
+
+          return (
+            <button
+              key={cat}
+              ref={isActive ? activePillRef : null}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => onSelectCategory?.(cat)}
+              className={`whitespace-nowrap shrink-0 px-3 py-1.5 rounded-full font-sans text-[12px] font-semibold transition-all duration-200 cursor-pointer select-none flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-[#283618] text-white shadow-xs font-bold scale-[1.02]'
+                  : 'bg-neutral-100 hover:bg-neutral-200/80 text-neutral-700 hover:text-black active:scale-95'
+              }`}
+            >
+              <span>{cat}</span>
+              {typeof count === 'number' && count > 0 && (
+                <span
+                  className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-full leading-none transition-colors ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-black/[0.06] text-neutral-600'
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Scroll Right Button */}
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(120)}
+          aria-label="Scroll categories right"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-white/95 shadow-md border border-black/10 flex items-center justify-center text-neutral-700 hover:text-black transition-all cursor-pointer hidden sm:flex"
+        >
+          <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+        </button>
+      )}
+    </div>
+  );
+};
+
 export function FilterPanel({
   filterGroups = [],
   currentFilters = {},
@@ -303,16 +483,119 @@ export function FilterPanel({
   sortBy,
   onSortChange,
   products = [],
+  categories = [],
+  selectedCategory = 'All',
+  onSelectCategory,
   mobileSubtitle = 'Refine Collection',
 }) {
   // All sections open by default
   const [activeSections, setActiveSections] = useState({
+    category: true,
     sort: true,
     priceRange: true,
+    weight: true,
   });
 
   const [cumulativeOptions, setCumulativeOptions] = useState({});
   const [cumulativeGroups, setCumulativeGroups] = useState([]);
+
+  const shouldFetchCategories = !categories || categories.length === 0;
+  const { data: fetchedCategories = [] } = useCategories({
+    enabled: shouldFetchCategories,
+  });
+
+  const resolvedCategories = useMemo(() => {
+    const rawList = categories && categories.length > 0 ? categories : fetchedCategories;
+    const items = Array.isArray(rawList) ? rawList : [];
+
+    const stringNames = items
+      .map((item) => {
+        if (typeof item === 'string') return item.trim();
+        return (item?.name || item?.label || item?.title || '').trim();
+      })
+      .filter(Boolean);
+
+    let unique = Array.from(new Set(stringNames.filter((c) => c.toLowerCase() !== 'all')));
+
+    if (unique.length === 0) {
+      const catGroup = (filterGroups || []).find(
+        (g) => g.id?.toLowerCase() === 'category' || g.label?.toLowerCase() === 'category',
+      );
+      if (catGroup?.options) {
+        unique = catGroup.options
+          .map((o) => (o.value || o.label || '').trim())
+          .filter((c) => c && c.toLowerCase() !== 'all');
+      }
+    }
+
+    if (unique.length === 0 && Array.isArray(products) && products.length > 0) {
+      const fromProducts = new Set();
+      products.forEach((p) => {
+        const cat = p?.primaryCategory?.name || p?.category?.name || p?.category;
+        if (typeof cat === 'string' && cat.trim() && cat.trim().toLowerCase() !== 'all') {
+          fromProducts.add(cat.trim());
+        }
+      });
+      unique = Array.from(fromProducts);
+    }
+
+    return ['All', ...unique];
+  }, [categories, fetchedCategories, filterGroups, products]);
+
+  const activeCategory =
+    selectedCategory || (currentFilters?.category && currentFilters.category[0]) || 'All';
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map();
+    const categoryGroup = (filterGroups || []).find(
+      (g) => g.id?.toLowerCase() === 'category' || g.label?.toLowerCase() === 'category',
+    );
+    if (categoryGroup?.options) {
+      categoryGroup.options.forEach((opt) => {
+        if (opt.value && typeof opt.count === 'number') {
+          counts.set(String(opt.value).toLowerCase(), opt.count);
+          counts.set(String(opt.label || opt.value).toLowerCase(), opt.count);
+        }
+      });
+    }
+
+    if (Array.isArray(products) && products.length > 0) {
+      const pCounts = new Map();
+      products.forEach((p) => {
+        const cat = p?.primaryCategory?.name || p?.category?.name || p?.category;
+        if (typeof cat === 'string' && cat.trim()) {
+          const key = cat.trim().toLowerCase();
+          pCounts.set(key, (pCounts.get(key) || 0) + 1);
+        }
+      });
+      if (counts.size === 0) {
+        pCounts.forEach((val, key) => counts.set(key, val));
+      }
+      counts.set('all', products.length);
+    }
+
+    return counts;
+  }, [filterGroups, products]);
+
+  const handleSelectCategory = useCallback(
+    (cat) => {
+      if (onSelectCategory) {
+        onSelectCategory(cat);
+      } else if (onSetFilterValue) {
+        onSetFilterValue('category', cat === 'All' ? [] : [cat]);
+      } else if (onToggleFilter) {
+        onToggleFilter('category', cat);
+      }
+    },
+    [onSelectCategory, onSetFilterValue, onToggleFilter],
+  );
+
+  const handleClearAll = useCallback(() => {
+    if (onClearAll) onClearAll();
+    if (onSelectCategory && activeCategory !== 'All') {
+      onSelectCategory('All');
+    }
+  }, [onClearAll, onSelectCategory, activeCategory]);
 
   // Initialize active sections for dynamic filters and build cumulative options
   useEffect(() => {
@@ -325,7 +608,100 @@ export function FilterPanel({
     const derivedMax =
       productPrices.length > 0 ? Math.ceil(Math.max(...productPrices) / 25) * 25 : 1000;
 
-    const baseGroups = [...filterGroups];
+    // Separate weight tags from tags group into a dedicated "weight" group
+    const baseGroups = [];
+    let extractedWeightOptions = [];
+
+    (filterGroups || []).forEach((fg) => {
+      const isTagsGroup =
+        fg.id?.toLowerCase().includes('tag') || fg.label?.toLowerCase().includes('tag');
+      const isWeightGroup =
+        fg.id?.toLowerCase() === 'weight' || fg.label?.toLowerCase() === 'weight';
+
+      if (isWeightGroup) {
+        if (fg.options) {
+          extractedWeightOptions.push(...fg.options);
+        }
+        return;
+      }
+
+      if (isTagsGroup && Array.isArray(fg.options)) {
+        const nonWeightOptions = [];
+        fg.options.forEach((opt) => {
+          if (isWeightString(opt.value || opt.label)) {
+            extractedWeightOptions.push(opt);
+          } else {
+            nonWeightOptions.push(opt);
+          }
+        });
+
+        if (nonWeightOptions.length > 0) {
+          baseGroups.push({
+            ...fg,
+            options: nonWeightOptions,
+          });
+        }
+      } else {
+        baseGroups.push({ ...fg });
+      }
+    });
+
+    // Also check if products have weight options if extractedWeightOptions is empty
+    if (extractedWeightOptions.length === 0 && Array.isArray(products) && products.length > 0) {
+      const weightCounts = new Map();
+      products.forEach((p) => {
+        (p.tags || []).forEach((t) => {
+          if (isWeightString(t)) {
+            weightCounts.set(t, (weightCounts.get(t) || 0) + 1);
+          }
+        });
+        (p.optionGroups || []).forEach((og) => {
+          if (/weight|size|pack/i.test(og.name || '')) {
+            (og.options || []).forEach((o) => {
+              const val = o.label || o.value;
+              if (val && isWeightString(val)) {
+                weightCounts.set(val, (weightCounts.get(val) || 0) + 1);
+              }
+            });
+          }
+        });
+      });
+
+      if (weightCounts.size > 0) {
+        extractedWeightOptions.push(
+          ...Array.from(weightCounts.entries()).map(([val, count]) => ({
+            value: val,
+            label: val,
+            count,
+          })),
+        );
+      }
+    }
+
+    if (extractedWeightOptions.length > 0) {
+      const uniqueWeights = new Map();
+      extractedWeightOptions.forEach((opt) => {
+        const key = opt.value || opt.label;
+        if (!uniqueWeights.has(key)) {
+          uniqueWeights.set(key, { ...opt });
+        } else {
+          uniqueWeights.get(key).count = Math.max(uniqueWeights.get(key).count, opt.count);
+        }
+      });
+
+      const sortedWeights = Array.from(uniqueWeights.values()).sort(
+        (a, b) => parseWeightGrams(a.value) - parseWeightGrams(b.value),
+      );
+
+      // Add as separate Weight group
+      baseGroups.push({
+        id: 'weight',
+        label: 'Weight',
+        type: 'checkbox',
+        options: sortedWeights,
+      });
+    }
+
     const existingPriceGroup = baseGroups.find((g) => g.id === 'priceRange');
 
     if (!existingPriceGroup) {
@@ -340,7 +716,7 @@ export function FilterPanel({
 
     // Make ALL sections open by default
     setActiveSections((prev) => {
-      const next = { ...prev, sort: true, priceRange: true };
+      const next = { ...prev, category: true, sort: true, priceRange: true, weight: true };
       baseGroups.forEach((group) => {
         if (next[group.id] === undefined) {
           next[group.id] = true;
@@ -433,7 +809,7 @@ export function FilterPanel({
           )}
         </div>
         <button
-          onClick={onClearAll}
+          onClick={handleClearAll}
           className="font-sans text-[11px] uppercase tracking-wider text-neutral-500 hover:text-black transition-colors font-bold cursor-pointer underline underline-offset-4"
         >
           Clear All
@@ -441,6 +817,24 @@ export function FilterPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pr-0.5 space-y-0.5">
+        {/* Horizontal Category Filter Section */}
+        {resolvedCategories.length > 1 && (
+          <FilterSection
+            title="Category"
+            id="category"
+            activeSections={activeSections}
+            onToggle={toggleSection}
+            badge={activeCategory !== 'All' ? activeCategory : null}
+          >
+            <HorizontalCategoryFilter
+              categories={resolvedCategories}
+              activeCategory={activeCategory}
+              onSelectCategory={handleSelectCategory}
+              categoryCounts={categoryCounts}
+            />
+          </FilterSection>
+        )}
+
         {/* Sort By section */}
         <FilterSection
           title="Sort By"
@@ -475,6 +869,24 @@ export function FilterPanel({
 
         {cumulativeGroups.length > 0
           ? cumulativeGroups.map((group) => {
+              const gid = (group.id || '').toLowerCase();
+              const glabel = (group.label || '').toLowerCase();
+
+              // Suppress Category (already in horizontal category strip)
+              if (gid === 'category' || glabel === 'category') {
+                return null;
+              }
+
+              // Suppress other tags from filters as requested ("not necessary not required")
+              if (gid.includes('tag') || glabel.includes('tag')) {
+                return null;
+              }
+
+              // Suppress non-food variants
+              if (['color', 'colour', 'finish', 'style', 'size', 'material'].includes(gid)) {
+                return null;
+              }
+
               // Use cumulative options to prevent items from disappearing when their count drops to 0
               const cumulativeGroupOptions = cumulativeOptions[group.id]
                 ? Array.from(cumulativeOptions[group.id].values())
@@ -610,7 +1022,7 @@ export function FilterPanel({
                   {...dragProps}
                   className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-24px)] sm:w-full max-w-[480px] mx-auto"
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-5 pb-5 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[92dvh] sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-5 pb-5 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col h-[75dvh] max-h-[75dvh] sm:h-auto sm:max-h-[88dvh] overflow-hidden border border-black/[0.08]">
                     {/* Handlebar for bottom sheet feel */}
                     <DrawerDragHandle
                       onClick={onClose}

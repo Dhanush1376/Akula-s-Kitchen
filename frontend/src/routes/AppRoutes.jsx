@@ -302,6 +302,7 @@ export function AppRoutes() {
 
               <Route path="notifications" element={<AdminNotifications />} />
               <Route path="content" element={<AdminContent />} />
+              <Route path="homepage" element={<AdminContent />} />
               <Route path="team" element={<AdminTeam />} />
 
               <Route path="reviews" element={<AdminReviews />} />

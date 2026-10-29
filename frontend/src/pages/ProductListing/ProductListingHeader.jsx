@@ -6,7 +6,7 @@ export const ProductListingHeader = ({ searchParam, shopContent }) => {
   const title = searchParam ? 'Search' : hero.title || 'Shop';
   const description = searchParam
     ? `Showing results for "${searchParam}"`
-    : hero.description || 'Batters, chutneys, pickles, podis and more, made fresh in our kitchen.';
+    : hero.description || 'Authentic delicacies and handcrafted kitchen specials, made fresh.';
 
   return (
     <section

@@ -56,7 +56,14 @@ export const createResponseInterceptor = ({
 
     // Auto-retry database/service 503 unavailability errors with backoff
     const dbRetryCount = originalRequest?._dbRetryCount || 0;
-    if ((isDatabaseDown || status === 503) && dbRetryCount < 3) {
+    const retryDisabled = originalRequest?._disableRetry === true;
+    if (
+      (isDatabaseDown || status === 503) &&
+      dbRetryCount < 3 &&
+      !isAuthRefresh &&
+      !isAuthLogout &&
+      !retryDisabled
+    ) {
       originalRequest._dbRetryCount = dbRetryCount + 1;
       const baseDelay = error.response?.data?.retryAfterMs || 1500;
       const retryDelay = Math.min(Math.round(baseDelay * Math.pow(1.5, dbRetryCount)), 5000);
@@ -78,7 +85,6 @@ export const createResponseInterceptor = ({
     const hasRetryAttemptsLeft =
       originalRequest && (!originalRequest._retryCount || originalRequest._retryCount < maxRetries);
     const isAuthRoute = isAuthRefresh ? false : pathIncludesAuth(originalRequest?.url);
-    const retryDisabled = originalRequest?._disableRetry === true;
     const isPaymentOrOrderMutation =
       originalRequest?.url?.includes('/orders') ||
       originalRequest?.url?.includes('/verify-payment') ||

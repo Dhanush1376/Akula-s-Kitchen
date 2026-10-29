@@ -9,16 +9,6 @@ import { BRAND, formatPhoneWithCountryCode } from '../config/brand';
 
 const ConfigContext = createContext(null);
 
-const DEFAULT_STORE_CATEGORIES = [
-  { name: 'Batters', slug: 'batters' },
-  { name: 'Chutneys', slug: 'chutneys' },
-  { name: 'Pickles', slug: 'pickles' },
-  { name: 'Masala', slug: 'masala' },
-  { name: 'Namkeen', slug: 'namkeen' },
-  { name: 'Snacks', slug: 'snacks' },
-  { name: 'Sweets', slug: 'sweets' },
-];
-
 const getInitialCategories = () => {
   try {
     const cached =
@@ -28,7 +18,7 @@ const getInitialCategories = () => {
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (_e) {}
-  return DEFAULT_STORE_CATEGORIES;
+  return [];
 };
 
 export const ConfigProvider = ({ children }) => {

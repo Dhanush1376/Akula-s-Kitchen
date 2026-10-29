@@ -32,13 +32,14 @@ export function RecommendationSystem({
   const [shouldFetch, setShouldFetch] = useState(false);
   const { data: categoriesData = [] } = useCategories();
 
-  // Progressive rendering: defer execution slightly to allow main page content to render first
+  // Progressive rendering: defer execution slightly to allow main page content to render first, but instant when compact
   useEffect(() => {
+    if (compact) return;
     const timer = setTimeout(() => {
       setShouldFetch(true);
     }, 400);
     return () => clearTimeout(timer);
-  }, []);
+  }, [compact]);
 
   const cleanProductId = currentProductId ? String(currentProductId).split('___')[0] : null;
 
@@ -129,8 +130,12 @@ export function RecommendationSystem({
   const activeList = getActiveList();
 
   if (!shouldFetch) {
-    // Return empty placeholder with correct height to prevent layout shifts
-    return <div className="py-8 min-h-[300px] bg-transparent" />;
+    // Return placeholder matching compact or full height
+    return (
+      <div className={compact ? 'w-full' : 'py-8 min-h-[300px] bg-transparent'}>
+        <RecommendationSkeleton horizontal={horizontalScroll} compact={compact} />
+      </div>
+    );
   }
 
   if (!loading && activeList.length === 0) {
@@ -139,7 +144,7 @@ export function RecommendationSystem({
 
   return (
     <section
-      className={`${compact ? 'pt-1 pb-0 lg:py-2' : 'pt-6 pb-4 lg:pt-10 lg:pb-6'} bg-transparent relative overflow-hidden`}
+      className={`${compact ? 'pt-0 pb-0' : 'pt-6 pb-4 lg:pt-10 lg:pb-6'} bg-transparent relative overflow-hidden`}
     >
       {/* Subtle Warm Glow Accent */}
       <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-[#f7bb0e]/5 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none z-0" />
@@ -177,7 +182,7 @@ export function RecommendationSystem({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <RecommendationSkeleton horizontal={horizontalScroll} />
+              <RecommendationSkeleton horizontal={horizontalScroll} compact={compact} />
             </motion.div>
           ) : activeList.length > 0 ? (
             <motion.div
@@ -187,7 +192,7 @@ export function RecommendationSystem({
               exit={{ opacity: 0 }}
               className={
                 horizontalScroll
-                  ? `flex gap-4 lg:gap-6 ${compact ? 'pb-2' : 'pb-4'} overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar touch-pan-x`
+                  ? `flex gap-2.5 sm:gap-3.5 ${compact ? 'pb-1' : 'pb-4'} overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar touch-pan-x`
                   : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2 sm:gap-x-4 lg:gap-x-6 gap-y-6 sm:gap-y-8 lg:gap-y-10 pb-6'
               }
             >
@@ -212,7 +217,7 @@ export function RecommendationSystem({
                     {...motionProps}
                     className={
                       horizontalScroll
-                        ? `${compact ? 'w-[140px] sm:w-[160px]' : 'w-[200px] sm:w-[240px] lg:w-[280px]'} flex-shrink-0 snap-start`
+                        ? `${compact ? 'w-[160px] sm:w-[175px]' : 'w-[200px] sm:w-[240px] lg:w-[280px]'} flex-shrink-0 snap-start`
                         : 'w-full'
                     }
                   >

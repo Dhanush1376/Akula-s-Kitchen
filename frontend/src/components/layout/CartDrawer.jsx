@@ -164,7 +164,7 @@ export function CartDrawer({ isOpen, onClose }) {
                 <div className="h-full flex items-center justify-center">
                   <EmptyState
                     title="Your bag is empty"
-                    description="Batters, chutneys, pickles, podis and more, made fresh in our kitchen."
+                    description="Authentic delicacies and handcrafted kitchen specials, made fresh."
                     icon="shopping_bag"
                     actionLabel="Explore Collections"
                     onAction={() => {

@@ -71,9 +71,15 @@ export function useAuthFlow(loginSuccess, isAuthModalOpen) {
       }, 300);
     } catch (err) {
       const serverMsg = err.response?.data?.message || err.response?.data?.error;
+      const isBadGatewayMsg =
+        typeof serverMsg === 'string' && /bad gateway|status code 502/i.test(serverMsg);
+      const cleanServerMsg = isBadGatewayMsg ? null : serverMsg;
       const normalizedMsg = err.normalized?.message;
-      const fallbackMsg = err.message || 'Unable to send verification code. Please try again.';
-      const errorMessage = serverMsg || normalizedMsg || fallbackMsg;
+      const fallbackMsg = err.message || 'Could not send code. Please retry.';
+      const errorMessage =
+        cleanServerMsg ||
+        normalizedMsg ||
+        (err.response?.status === 502 ? 'Server waking up. Try again shortly.' : fallbackMsg);
 
       toast.error(errorMessage);
       setError(true);

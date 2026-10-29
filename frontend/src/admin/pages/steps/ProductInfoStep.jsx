@@ -22,7 +22,7 @@ export function ProductInfoStep({
         <div className="flex-1 min-w-0 pr-1 sm:pr-2">
           <h2 className="text-[11px] font-bold text-[var(--admin-text-primary)]">Product Info</h2>
           <p className="text-[10px] sm:text-[11px] text-[var(--admin-text-secondary)] mt-0.5">
-            Detail product info, category, and ingredients.
+            Detail product info and primary category.
           </p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -142,19 +142,6 @@ export function ProductInfoStep({
         </div>
 
         <div className="col-span-2 sm:col-span-1">
-          <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-            Ingredients
-          </label>
-          <input
-            type="text"
-            value={formData.material}
-            onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-            placeholder="e.g. Rice, Urad Dal, Red Chilli, Ghee"
-            className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
-          />
-        </div>
-
-        <div className="col-span-2 sm:col-span-1">
           <div className="flex justify-between items-center h-5 mb-1.5">
             <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider block">
               Primary Category <span className="text-error">*</span>
@@ -179,7 +166,7 @@ export function ProductInfoStep({
               required
               value={formData.primaryCategory}
               onChange={(e) => setFormData({ ...formData, primaryCategory: e.target.value })}
-              placeholder="e.g. Pickles, Podis, Batters, Snacks, Sweets"
+              placeholder="Enter category name"
               className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all"
             />
           ) : (

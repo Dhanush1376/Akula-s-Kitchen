@@ -57,10 +57,12 @@ export function NetworkProvider({ children }) {
         return;
       }
 
-      // Map Effective Connection Type (ECT)
-      if (conn.effectiveType === '2g' || conn.effectiveType === '3g' || conn.rtt > 2000) {
+      // Map Effective Connection Type (ECT) with hysteresis
+      if (conn.effectiveType === '2g' || conn.effectiveType === '3g') {
         setConnectionQuality('poor');
-      } else {
+      } else if (conn.rtt > 2500) {
+        setConnectionQuality('poor');
+      } else if (conn.rtt < 1500) {
         setConnectionQuality('good');
       }
     };
@@ -101,15 +103,20 @@ export function NetworkProvider({ children }) {
         setIsBooting(false);
         toast.dismiss('backend-cold-start');
 
-        if (rtt > 2000 || (navigator.connection && navigator.connection.rtt > 2000)) {
-          setConnectionQuality('poor');
-        } else {
-          setConnectionQuality('good');
-        }
+        setConnectionQuality((prevQuality) => {
+          const navRtt = navigator.connection?.rtt || 0;
+          const effectiveRtt = Math.max(rtt, navRtt);
+          if (prevQuality === 'poor') {
+            return effectiveRtt < 1500 ? 'good' : 'poor';
+          }
+          return effectiveRtt > 2500 ? 'poor' : 'good';
+        });
         return true;
       }
     } catch (error) {
-      logger.warn('[Network Check] API Health check failed:', error.message);
+      if (error?.name !== 'AbortError') {
+        logger.warn('[Network Check] API Health check failed:', error.message);
+      }
     } finally {
       clearTimeout(timeoutId);
     }
@@ -121,7 +128,7 @@ export function NetworkProvider({ children }) {
     if (isBootingRef.current) {
       // Show a friendly loading toast on second failure if it's during initial boot to avoid false positives on fast local refresh
       if (failedPingsRef.current === 2 && !import.meta.env.DEV) {
-        toast.loading('Warming up the server. This might take a moment on cold start...', {
+        toast.loading('Warming up server…', {
           id: 'backend-cold-start',
           duration: 12000,
         });
@@ -192,8 +199,8 @@ export function NetworkProvider({ children }) {
       return updated;
     });
 
-    toast.success(`Action saved offline: ${newQueueItem.description}`, {
-      duration: 5000,
+    toast.success('Action saved offline.', {
+      duration: 3000,
     });
 
     return newQueueItem;
@@ -217,7 +224,7 @@ export function NetworkProvider({ children }) {
     const apiModule = await import('../services/api');
     const api = apiModule.default;
 
-    toast.loading(`Synchronizing ${currentQueue.length} offline action(s)...`, {
+    toast.loading('Syncing offline actions…', {
       id: 'sync-toast',
     });
 
@@ -233,7 +240,7 @@ export function NetworkProvider({ children }) {
           // Re-verify connection first
           const online = await checkConnection();
           if (!online) {
-            toast.error('Sync suspended: Connection lost.', { id: 'sync-toast' });
+            toast.error('Sync paused: Offline.', { id: 'sync-toast' });
             setIsSyncing(false);
             return;
           }
@@ -282,14 +289,14 @@ export function NetworkProvider({ children }) {
 
     setIsSyncing(false);
     if (successCount > 0) {
-      toast.success(`Successfully synchronized ${successCount} offline action(s)!`, {
+      toast.success('Offline actions synced!', {
         id: 'sync-toast',
-        duration: 5000,
+        duration: 3000,
       });
     } else if (failedCount > 0) {
-      toast.error(`Sync completed with ${failedCount} failure(s).`, {
+      toast.error('Sync failed.', {
         id: 'sync-toast',
-        duration: 4000,
+        duration: 3000,
       });
     } else {
       toast.dismiss('sync-toast');
@@ -301,9 +308,9 @@ export function NetworkProvider({ children }) {
     // navigator.onLine fires, we should trigger a fast health check immediately
     const isReallyOnline = await checkConnection();
     if (isReallyOnline && syncQueueRef.current.length > 0) {
-      toast.success('Back online! Reconnecting to services...', {
+      toast.success('Back online!', {
         id: 'network-status',
-        duration: 4000,
+        duration: 3000,
       });
       syncQueue();
     }

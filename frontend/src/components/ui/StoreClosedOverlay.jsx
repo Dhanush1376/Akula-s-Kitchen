@@ -4,20 +4,12 @@ import { ArrowRight, User, X, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useNavigate } from 'react-router-dom';
-import { BrandLogo } from './BrandLogo';
 import { BRAND, cleanPhoneDigits } from '../../config/brand';
 
 export function StoreClosedOverlay({ isOpen, onClose }) {
-  const { openAuthModal, isAuthenticated, user } = useAuth();
-  const {
-    storeSettings,
-    storeName,
-    supportEmail,
-    supportPhone,
-    alternatePhone,
-    whatsappNumber,
-    whatsappUrl,
-  } = useConfig();
+  const { openAuthModal, isAuthenticated } = useAuth();
+  const { storeSettings, storeName, supportEmail, supportPhone, alternatePhone, whatsappNumber } =
+    useConfig();
   const navigate = useNavigate();
 
   const contactPhone =
@@ -38,7 +30,6 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
     supportEmail ||
     BRAND.email;
 
-  const cleanPhone = cleanPhoneDigits(activeWhatsappNumber);
   const cleanCallPhone = cleanPhoneDigits(contactPhone);
   const cleanAltCallPhone = cleanPhoneDigits(contactAltPhone);
 
@@ -61,11 +52,10 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="fixed inset-0 z-[9990] bg-black/70 backdrop-blur-2xl flex flex-col justify-between items-center p-6 sm:p-10 md:p-12 overflow-y-auto"
+          className="fixed inset-0 z-[9990] bg-black/75 backdrop-blur-2xl flex flex-col justify-between items-center p-6 sm:p-10 md:p-12 overflow-y-auto"
         >
-          {/* Top Bar with Brand Logo and Exit Button */}
-          <div className="w-full max-w-4xl flex items-center justify-between shrink-0">
-            <BrandLogo size="42px" variant="white" />
+          {/* Top Bar with Exit Button */}
+          <div className="w-full max-w-4xl flex items-center justify-end shrink-0">
             <button
               onClick={onClose}
               aria-label="Close notice"
@@ -75,7 +65,7 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
             </button>
           </div>
 
-          {/* Main Hero Content - Freed Entirely on Screen */}
+          {/* Main Hero Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -84,22 +74,12 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
             className="max-w-xl w-full mx-auto my-auto flex flex-col items-center text-center py-6 sm:py-8"
           >
             {/* Display title in crisp white */}
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-white font-normal leading-[1.15] tracking-tight mb-4">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-white font-normal leading-[1.15] tracking-tight mb-6">
               {storeName} is Temporarily Closed
             </h1>
 
-            {/* Delicate White Divider */}
-            <div className="w-20 h-[1.5px] bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-5" />
-
-            {/* Polite Notice in Soft Clean White */}
-            <p className="font-body text-white/85 text-sm sm:text-base md:text-[17px] leading-relaxed max-w-lg mx-auto font-light">
-              {storeName} is temporarily closed and orders cannot be placed at this time. You can
-              freely view our complete collection as a guest.
-            </p>
-
-            {/* White Themed Actions with Generous Breathing Room */}
-            <div className="w-full max-w-sm flex flex-col items-center gap-3.5 mt-8 sm:mt-10 mb-8">
-              {/* Primary Luxury White Button */}
+            {/* Actions */}
+            <div className="w-full max-w-sm flex flex-col items-center gap-3.5 mb-2">
               <button
                 onClick={handleExplore}
                 className="group relative w-full sm:w-auto sm:min-w-[260px] py-3.5 px-6 sm:px-8 rounded-full bg-white hover:bg-white/95 text-[#111] text-xs sm:text-sm font-semibold tracking-[0.16em] uppercase shadow-[0_4px_24px_rgba(0,0,0,0.35)] hover:shadow-[0_6px_28px_rgba(255,255,255,0.18)] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer border border-white"
@@ -111,7 +91,6 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
                 />
               </button>
 
-              {/* Secondary Sign-In for Guests */}
               {!isAuthenticated && (
                 <button
                   onClick={handleSignIn}
@@ -124,28 +103,51 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
             </div>
           </motion.div>
 
-          {/* Bottom Inquiries Bar in White Theme */}
-          <div className="w-full max-w-xl text-center pt-6 border-t border-white/15 shrink-0">
-            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.22em] text-white/60 mb-3">
+          {/* Left-Aligned 1-by-1 Contact Inquiries List */}
+          <div className="w-full max-w-md mx-auto pt-6 border-t border-white/15 shrink-0 text-left">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60 mb-3 text-left">
               Need Assistance or Inquiries?
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm">
+            <div className="flex flex-col gap-2.5 w-full">
               <a
                 href={`tel:${cleanCallPhone}`}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all backdrop-blur-md font-medium active:scale-95"
+                className="group flex items-center justify-between w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/12 border border-white/10 hover:border-white/25 text-white transition-all backdrop-blur-md active:scale-[0.99]"
               >
-                <Phone className="w-3.5 h-3.5 text-white" />
-                <span>Call Us</span>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-black transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/60">
+                      Call Us
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-white truncate">
+                      {contactPhone}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 ml-2" />
               </a>
 
               {cleanAltCallPhone && cleanAltCallPhone !== cleanCallPhone && (
                 <a
                   href={`tel:${cleanAltCallPhone}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 transition-all backdrop-blur-md font-medium active:scale-95"
-                  title="Alternate Support Line"
+                  className="group flex items-center justify-between w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/12 border border-white/10 hover:border-white/25 text-white transition-all backdrop-blur-md active:scale-[0.99]"
                 >
-                  <Phone className="w-3.5 h-3.5 text-white/80" />
-                  <span>Alt Phone</span>
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-black transition-colors">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-white/60">
+                        Alternate Phone
+                      </p>
+                      <p className="text-xs sm:text-sm font-medium text-white truncate">
+                        {contactAltPhone}
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 ml-2" />
                 </a>
               )}
 
@@ -153,30 +155,53 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
                 href={BRAND.getWhatsAppUrl(null, activeWhatsappNumber)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all backdrop-blur-md font-medium active:scale-95"
+                className="group flex items-center justify-between w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/12 border border-white/10 hover:border-white/25 text-white transition-all backdrop-blur-md active:scale-[0.99]"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="15"
-                  height="15"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-white"
-                >
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                </svg>
-                <span>WhatsApp</span>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg>
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/60">
+                      WhatsApp
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-white truncate">
+                      {activeWhatsappNumber}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 ml-2" />
               </a>
 
               <a
                 href={`mailto:${activeSupportEmail}`}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all backdrop-blur-md font-medium active:scale-95"
+                className="group flex items-center justify-between w-full px-4 py-3 rounded-xl bg-white/5 hover:bg-white/12 border border-white/10 hover:border-white/25 text-white transition-all backdrop-blur-md active:scale-[0.99]"
               >
-                <Mail className="w-4 h-4 text-white" />
-                <span>Email Support</span>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-black transition-colors">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-white/60">
+                      Email Support
+                    </p>
+                    <p className="text-xs sm:text-sm font-medium text-white truncate">
+                      {activeSupportEmail}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 ml-2" />
               </a>
             </div>
           </div>

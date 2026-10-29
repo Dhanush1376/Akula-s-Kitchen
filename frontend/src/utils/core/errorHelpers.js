@@ -1,18 +1,18 @@
 const HUMAN_ERROR_MAP = {
-  'Network Error': 'Please check your internet connection.',
-  timeout: 'The request timed out. Please try again.',
-  ECONNREFUSED: 'Our servers are temporarily unreachable.',
-  401: 'Please log in again to continue.',
-  403: 'You do not have permission for this action.',
-  404: 'We could not find what you were looking for.',
-  429: 'You are doing that too fast. Please slow down.',
-  500: 'Our servers are taking a quick break. Try again shortly.',
-  502: 'Our servers are taking a quick break. Try again shortly.',
-  503: 'Our servers are taking a quick break. Try again shortly.',
-  504: 'Our servers are taking a quick break. Try again shortly.',
-  'duplicate key': 'This information is already in use.',
-  'invalid token': 'Your session has expired.',
-  'jwt expired': 'Your session has expired. Please log in again.',
+  'Network Error': 'Check your internet connection.',
+  timeout: 'Request timed out. Please retry.',
+  ECONNREFUSED: 'Server unreachable. Try again shortly.',
+  401: 'Session expired. Please sign in.',
+  403: 'Access denied.',
+  404: 'Item not found.',
+  429: 'Please wait a moment.',
+  500: 'Server busy. Try again shortly.',
+  502: 'Server waking up. Try again shortly.',
+  503: 'Server busy. Try again shortly.',
+  504: 'Server timed out. Please retry.',
+  'duplicate key': 'Already in use.',
+  'invalid token': 'Session expired. Please sign in.',
+  'jwt expired': 'Session expired. Please sign in.',
 };
 
 /**
@@ -112,13 +112,40 @@ export const getErrorMessage = (err, fallback = 'Something went wrong. Please tr
 
 import toast from 'react-hot-toast';
 
+const recentToastCalls = new Map();
+
+const isToastThrottled = (msg, id) => {
+  if (id) return false;
+  const key =
+    typeof msg === 'string'
+      ? msg.trim()
+      : typeof msg === 'object' && msg?.props?.children
+        ? String(msg.props.children).trim()
+        : '';
+  if (!key) return false;
+  const now = Date.now();
+  const lastTime = recentToastCalls.get(key);
+  if (lastTime && now - lastTime < 2500) {
+    return true; // Duplicate call suppressed
+  }
+  recentToastCalls.set(key, now);
+  if (recentToastCalls.size > 50) {
+    for (const [k, t] of recentToastCalls.entries()) {
+      if (now - t > 10000) recentToastCalls.delete(k);
+    }
+  }
+  return false;
+};
+
 export const patchToastError = () => {
   const originalError = toast.error;
-  toast.error = (msg, options) => {
+  const originalSuccess = toast.success;
+
+  toast.error = (msg, options = {}) => {
     let sanitizedMsg = msg;
 
     // If msg is an Error or AxiosError object
-    if (typeof msg === 'object' && msg !== null) {
+    if (typeof msg === 'object' && msg !== null && !msg.$$typeof) {
       sanitizedMsg = getErrorMessage(msg, 'An unexpected error occurred.');
     }
     // If it's a string, sanitize it using our logic
@@ -126,6 +153,17 @@ export const patchToastError = () => {
       sanitizedMsg = getErrorMessage({ message: msg }, 'An unexpected error occurred.');
     }
 
+    if (isToastThrottled(sanitizedMsg, options?.id)) {
+      return options?.id || '';
+    }
+
     return originalError(sanitizedMsg, options);
+  };
+
+  toast.success = (msg, options = {}) => {
+    if (isToastThrottled(msg, options?.id)) {
+      return options?.id || '';
+    }
+    return originalSuccess(msg, options);
   };
 };

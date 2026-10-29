@@ -1,22 +1,46 @@
 import React, { useState } from 'react';
 import { AdminField, AdminInput, AdminToggle } from '../AdminUIKit';
 import { useAdmin } from '../../context/AdminContext';
+import { useActiveCategories } from '../../../hooks/useProductQueries';
+import { WeeklyMenuCalendarEditor } from './WeeklyMenuCalendarEditor';
 
 export function HomePageControllerEditor({ content, onUpdate }) {
-  const [activeTab, setActiveTab] = useState('layout');
-  const [heroSubTab, setHeroSubTab] = useState('products');
+  const [activeTab, setActiveTab] = useState('hero');
   const { products, _productsError } = useAdmin();
+  const { data: dbCategories = [] } = useActiveCategories();
 
   const uniqueCategories = React.useMemo(() => {
-    const cats = new Set(products?.map((p) => p.category));
-    return [...cats].filter(Boolean);
-  }, [products]);
-
-  // HTML5 Drag & Drop State
-  const [draggedIdx, setDraggedIdx] = useState(null);
+    const activeFromDb = Array.isArray(dbCategories)
+      ? dbCategories.map((c) => c?.name).filter(Boolean)
+      : [];
+    const fromProducts = Array.isArray(products)
+      ? products.map((p) => p?.category).filter(Boolean)
+      : [];
+    return Array.from(new Set([...activeFromDb, ...fromProducts]));
+  }, [dbCategories, products]);
 
   const updateSectionState = (sectionId, field, value) => {
-    onUpdate(sectionId, { ...(content[sectionId] || {}), [field]: value });
+    if (typeof field === 'object' && field !== null && value === undefined) {
+      const updated = { ...(content[sectionId] || {}), ...field };
+      onUpdate(sectionId, updated);
+      if (sectionId === 'hero') {
+        // Only sync calendar scheduling properties (weeklySchedule, productIds, cutoffTime)
+        // NEVER overwrite menuPage's own title or copy!
+        const schedulePatch = {};
+        if (field.weeklySchedule !== undefined) schedulePatch.weeklySchedule = field.weeklySchedule;
+        if (field.productIds !== undefined) schedulePatch.productIds = field.productIds;
+        if (field.cutoffTime !== undefined) schedulePatch.cutoffTime = field.cutoffTime;
+        if (Object.keys(schedulePatch).length > 0) {
+          onUpdate('menuPage', { ...(content.menuPage || {}), ...schedulePatch });
+        }
+      }
+    } else {
+      const updated = { ...(content[sectionId] || {}), [field]: value };
+      onUpdate(sectionId, updated);
+      if (sectionId === 'hero' && ['weeklySchedule', 'productIds', 'cutoffTime'].includes(field)) {
+        onUpdate('menuPage', { ...(content.menuPage || {}), [field]: value });
+      }
+    }
   };
 
   const renderProductSelector = (sectionId) => {
@@ -106,80 +130,8 @@ export function HomePageControllerEditor({ content, onUpdate }) {
 
   const homepageSections = content.homepageSections || defaultSections;
 
-  const moveSection = (idx, dir) => {
-    const newSections = [...homepageSections];
-    if (dir === -1 && idx > 0) {
-      [newSections[idx], newSections[idx - 1]] = [newSections[idx - 1], newSections[idx]];
-    } else if (dir === 1 && idx < newSections.length - 1) {
-      [newSections[idx], newSections[idx + 1]] = [newSections[idx + 1], newSections[idx]];
-    }
-    onUpdate('homepageSections', newSections);
-  };
-
-  const toggleSectionVis = (idx) => {
-    const newSections = [...homepageSections];
-    newSections[idx] = {
-      ...newSections[idx],
-      isVisible: newSections[idx].isVisible === false ? true : false,
-    };
-    onUpdate('homepageSections', newSections);
-  };
-
-  const handleDragStart = (e, idx) => {
-    setDraggedIdx(idx);
-    e.dataTransfer.effectAllowed = 'move';
-    // Transparent image for drag ghost if preferred
-  };
-
-  const handleDragOver = (e, idx) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e, idx) => {
-    e.preventDefault();
-    if (draggedIdx === null || draggedIdx === idx) return;
-
-    const newSections = [...homepageSections];
-    const draggedItem = newSections[draggedIdx];
-    newSections.splice(draggedIdx, 1);
-    newSections.splice(idx, 0, draggedItem);
-
-    onUpdate('homepageSections', newSections);
-    setDraggedIdx(null);
-  };
-
-  const SECTION_CONFIG = {
-    hero: {
-      title: 'Hero Banner',
-      icon: 'view_carousel',
-      tabKey: 'hero',
-    },
-    categoryGrid: {
-      title: 'Category Grid',
-      icon: 'grid_view',
-      tabKey: 'categories',
-    },
-    trendingProducts: {
-      title: 'Trending Products',
-      icon: 'trending_up',
-      tabKey: 'trending',
-    },
-    featuredProducts: {
-      title: 'Featured Collection',
-      icon: 'star',
-      tabKey: 'featured',
-    },
-    recommendedProducts: {
-      title: 'Smart Recommendations',
-      icon: 'recommend',
-      tabKey: 'recommended',
-    },
-  };
-
   const HOMEPAGE_TABS = [
-    { id: 'layout', label: 'Layout & Order', icon: 'view_agenda' },
-    { id: 'hero', label: 'Hero Banner', icon: 'view_carousel' },
+    { id: 'hero', label: "Today's Kitchen", icon: 'soup_kitchen' },
     { id: 'categories', label: 'Categories', icon: 'grid_view' },
     { id: 'trending', label: 'Trending', icon: 'trending_up' },
     { id: 'featured', label: 'Featured', icon: 'star' },
@@ -237,261 +189,178 @@ export function HomePageControllerEditor({ content, onUpdate }) {
         })}
       </div>
 
-      {/* Layout & Order Workspace */}
-      {activeTab === 'layout' && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between pb-1">
-            <div>
-              <span className="text-[13px] font-semibold text-[var(--admin-text-primary)] block">
-                Section Ordering & Visibility
-              </span>
-              <span className="text-[11px] text-[var(--admin-text-tertiary)] block sm:hidden">
-                Drag or use arrows to reorder homepage sections
-              </span>
+      {/* Today's Kitchen Tab */}
+      {activeTab === 'hero' && (
+        <div className="space-y-6">
+          {/* Header & Copy Settings — injected with actual live data */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <AdminField label="Section Title">
+              <AdminInput
+                placeholder="Today's Kitchen"
+                value={
+                  content.hero?.title !== undefined && content.hero?.title !== ''
+                    ? content.hero.title
+                    : "Today's Kitchen"
+                }
+                onChange={(e) => updateSectionState('hero', 'title', e.target.value)}
+              />
+            </AdminField>
+
+            <AdminField label="'See All' Button Text">
+              <AdminInput
+                placeholder="See all"
+                value={
+                  content.hero?.seeAllText !== undefined && content.hero?.seeAllText !== ''
+                    ? content.hero.seeAllText
+                    : 'See all'
+                }
+                onChange={(e) => updateSectionState('hero', 'seeAllText', e.target.value)}
+              />
+            </AdminField>
+          </div>
+
+          {/* Mode Selector Toggle: Align with Daily Menu vs Manual Selection */}
+          <div className="pt-3 border-t border-[var(--admin-border-subtle)]">
+            <div className="p-3 sm:p-3.5 rounded-[4px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent)] shrink-0">
+                    {content.hero?.useDailyMenuSchedule !== false ? 'sync' : 'tune'}
+                  </span>
+                  <span className="text-[13px] font-bold text-[var(--admin-text-primary)]">
+                    {content.hero?.useDailyMenuSchedule !== false
+                      ? 'Align with Daily Rotating Menu'
+                      : 'Manual Dish Selection'}
+                  </span>
+                </div>
+                <p className="text-[11.5px] text-[var(--admin-text-secondary)]">
+                  {content.hero?.useDailyMenuSchedule !== false ? '' : ''}
+                </p>
+              </div>
+              <AdminToggle
+                checked={content.hero?.useDailyMenuSchedule !== false}
+                onChange={() =>
+                  updateSectionState(
+                    'hero',
+                    'useDailyMenuSchedule',
+                    !(content.hero?.useDailyMenuSchedule !== false),
+                  )
+                }
+              />
             </div>
           </div>
 
-          <div className="space-y-2.5 sm:space-y-2">
-            {homepageSections.map((sec, idx) => {
-              const baseId = sec.id.split('_')[0];
-              const meta = SECTION_CONFIG[baseId] || {
-                title: baseId.charAt(0).toUpperCase() + baseId.slice(1),
-                icon: 'view_agenda',
-                tabKey: baseId.toLowerCase(),
-              };
-              const isVisible = sec.isVisible !== false;
-
-              return (
-                <div
-                  key={sec.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, idx)}
-                  onDragOver={(e) => handleDragOver(e, idx)}
-                  onDrop={(e) => handleDrop(e, idx)}
-                  className={`group relative p-3 sm:px-3.5 sm:py-2.5 rounded-[4px] border transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 ${
-                    draggedIdx === idx
-                      ? 'opacity-40 border-[var(--admin-accent)] bg-[var(--admin-surface-muted)]'
-                      : 'bg-[var(--admin-surface)] border-[var(--admin-border)] hover:border-[var(--admin-border-strong)] hover:shadow-2xs'
-                  }`}
-                >
-                  {/* Row 1 on Mobile / Left Side on Desktop */}
-                  <div className="flex items-center justify-between gap-2 min-w-0 w-full sm:w-auto">
-                    <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-                      <button
-                        type="button"
-                        className="text-[var(--admin-text-tertiary)] group-hover:text-[var(--admin-text-primary)] cursor-grab active:cursor-grabbing p-1 -ml-1 rounded hover:bg-[var(--admin-surface-muted)] transition-colors shrink-0"
-                        title="Drag to reorder"
-                      >
-                        <span className="material-symbols-outlined text-[18px] block">
-                          drag_indicator
-                        </span>
-                      </button>
-
-                      <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-[3px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] text-[11px] sm:text-[11.5px] font-semibold text-[var(--admin-text-secondary)] flex items-center justify-center shrink-0">
-                        {idx + 1}
-                      </span>
-
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[4px] bg-[var(--admin-accent)]/10 text-[var(--admin-accent)] flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[17px] sm:text-[18px]">
-                          {meta.icon}
-                        </span>
-                      </div>
-
-                      <span className="font-semibold sm:font-medium text-[13px] text-[var(--admin-text-primary)] truncate">
-                        {meta.title}
-                      </span>
-                    </div>
-
-                    {/* Status Badge (Mobile Top-Right) */}
-                    <div className="sm:hidden shrink-0">
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-[4px] border ${
-                          isVisible
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60'
-                            : 'bg-stone-100 text-stone-500 border-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-700'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            isVisible ? 'bg-emerald-500' : 'bg-stone-400'
-                          }`}
-                        />
-                        {isVisible ? 'Live' : 'Hidden'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Row 2 on Mobile / Right Side on Desktop */}
-                  <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t border-[var(--admin-border-subtle)] sm:border-0 shrink-0">
-                    {/* Visibility Toggle */}
-                    <div
-                      className="flex items-center gap-2 cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSectionVis(idx);
-                      }}
-                    >
-                      <AdminToggle
-                        checked={isVisible}
-                        onChange={() => toggleSectionVis(idx)}
-                        aria-label={`Toggle visibility of ${meta.title}`}
-                      />
-                      <span className="text-[12px] font-medium text-[var(--admin-text-secondary)] sm:hidden">
-                        {isVisible ? 'Visible' : 'Hidden'}
-                      </span>
-                    </div>
-
-                    {/* Actions: Desktop Status Badge, Edit Button, Reorder Steppers */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Live Status Badge (Desktop only) */}
-                      <span
-                        className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-[4px] border ${
-                          isVisible
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60'
-                            : 'bg-stone-100 text-stone-500 border-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-700'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            isVisible ? 'bg-emerald-500' : 'bg-stone-400'
-                          }`}
-                        />
-                        {isVisible ? 'Live' : 'Hidden'}
-                      </span>
-
-                      {/* Edit Button */}
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab(meta.tabKey)}
-                        className="h-[32px] px-2.5 sm:px-3 rounded-[4px] border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] hover:bg-[var(--admin-surface)] text-[var(--admin-text-primary)] text-[12px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs hover:border-[var(--admin-border-strong)]"
-                        title={`Edit ${meta.title}`}
-                      >
-                        <span className="material-symbols-outlined text-[15px]">edit</span>
-                        <span>Edit</span>
-                      </button>
-
-                      {/* Stepper Buttons (Up / Down) */}
-                      <div className="flex items-center gap-0.5 bg-[var(--admin-surface-muted)] p-0.5 rounded-[4px] border border-[var(--admin-border)]">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => moveSection(idx, -1)}
-                          className="w-7 h-7 rounded-[3px] flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                          title="Move Up"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">
-                            arrow_upward
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          disabled={idx === homepageSections.length - 1}
-                          onClick={() => moveSection(idx, 1)}
-                          className="w-7 h-7 rounded-[3px] flex items-center justify-center text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                          title="Move Down"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">
-                            arrow_downward
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+          {/* Conditional View: Rotating Calendar Planner OR Manual Fixed Dish Selector */}
+          {content.hero?.useDailyMenuSchedule !== false ? (
+            <div className="pt-2 border-t border-[var(--admin-border-subtle)]">
+              <WeeklyMenuCalendarEditor
+                sectionKey="hero"
+                sectionData={content.hero || {}}
+                onUpdate={updateSectionState}
+                title="Weekly Dishes Planner"
+              />
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-[var(--admin-border-subtle)] space-y-3">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border-subtle)]">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-bold text-[var(--admin-text-primary)]">
+                    Featured Homepage Dishes
+                  </span>
+                  <span className="text-[11px] font-semibold text-[var(--admin-text-secondary)] bg-[var(--admin-surface)] border border-[var(--admin-border)] px-1.5 py-0.5 rounded-[3px]">
+                    {(content.hero?.productIds || []).length} selected
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                {(content.hero?.productIds || []).length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => updateSectionState('hero', 'productIds', [])}
+                    className="text-[11px] font-medium text-rose-600 hover:underline cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
 
-      {/* Hero Tab */}
-      {activeTab === 'hero' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border mb-4 w-fit">
-            <button
-              onClick={() => setHeroSubTab('products')}
-              className={`h-[32px] min-h-[32px] max-h-[32px] px-3.5 rounded-[3px] box-border text-[12.5px] font-medium flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-all ${
-                heroSubTab === 'products'
-                  ? 'bg-white dark:bg-stone-800 text-[var(--admin-accent)] shadow-xs font-semibold'
-                  : 'text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[15px]">inventory_2</span>
-              <span>
-                Products ({content.hero?.productIds?.length || 0}/{products ? products.length : '0'}
-                )
-              </span>
-            </button>
-          </div>
-
-          {heroSubTab === 'products' && (
-            <div>
-              <span className="text-[13px] font-semibold text-[var(--admin-text-primary)] block mb-4 pb-2">
-                Select Hero Products
-              </span>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto p-1 pr-2 scrollbar-thin">
+              {/* Manual Dish Cards Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3 max-h-[460px] overflow-y-auto p-1 pr-1.5 scrollbar-thin">
                 {!products || products.length === 0 ? (
-                  <div className="col-span-full p-4 text-center text-[var(--admin-text-secondary)] text-[12px] bg-[var(--admin-surface-muted)] rounded-md border border-[var(--admin-border)]">
-                    No products available to select. Check if products exist in the catalog or if
-                    the API failed.
+                  <div className="col-span-full p-8 text-center text-[var(--admin-text-secondary)] text-[12px] bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)]">
+                    No dishes found in product catalog.
                   </div>
                 ) : (
-                  [...products]
-                    .sort((a, b) => {
-                      const aSelected = (content.hero?.productIds || []).includes(a.id || a._id);
-                      const bSelected = (content.hero?.productIds || []).includes(b.id || b._id);
-                      return (bSelected ? 1 : 0) - (aSelected ? 1 : 0);
-                    })
-                    .map((prd) => {
-                      const isSelected = (content.hero?.productIds || []).includes(
-                        prd.id || prd._id,
-                      );
-                      return (
-                        <div
-                          key={prd.id}
-                          onClick={() => {
-                            const currentIds = content.hero?.productIds || [];
-                            let newIds;
-                            if (isSelected) {
-                              newIds = currentIds.filter((id) => id !== prd.id);
-                            } else {
-                              newIds = [...currentIds, prd.id];
-                            }
-                            updateSectionState('hero', 'productIds', newIds);
-                          }}
-                          className={`relative p-3 rounded-md border cursor-pointer transition-all duration-300 flex flex-col gap-3 group ${
-                            isSelected
-                              ? 'bg-[var(--admin-surface)] border-[var(--admin-accent)] ring-1 ring-[var(--admin-accent)] shadow-[var(--admin-shadow-sm)]'
-                              : 'bg-[var(--admin-surface)] border-[var(--admin-border)] opacity-70 hover:opacity-100 hover:border-[var(--admin-accent)]/50 shadow-[var(--admin-shadow-xs)]'
-                          }`}
-                        >
-                          <div
-                            className={`absolute top-2 right-2 w-6 h-6 rounded-sm flex items-center justify-center z-10 transition-colors ${
-                              isSelected
-                                ? 'bg-[var(--admin-accent)] text-[var(--admin-text-inverse)]'
-                                : 'bg-[var(--admin-surface-muted)] border border-[var(--admin-border-strong)] text-transparent group-hover:border-[var(--admin-accent)]/50'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[14px] font-bold">
-                              check
-                            </span>
-                          </div>
-                          <img
-                            src={prd.image}
-                            alt={prd.name}
-                            className="w-full aspect-square object-cover rounded shadow-inner border border-[var(--admin-border-subtle)]"
-                          />
-                          <div className="space-y-1">
-                            <span className="text-[11px] font-bold text-[var(--admin-text-primary)] block line-clamp-1">
-                              {prd.name}
-                            </span>
-                            <span className="text-[10px] font-semibold text-[var(--admin-accent)] uppercase tracking-wider block">
-                              {prd.category}
-                            </span>
+                  products.map((p) => {
+                    const pId = p.id || p._id;
+                    const isSelected = (content.hero?.productIds || []).includes(pId);
+                    const pImg =
+                      p.image ||
+                      p.imageSrc ||
+                      (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null);
+
+                    return (
+                      <div
+                        key={pId}
+                        onClick={() => {
+                          const currentIds = content.hero?.productIds || [];
+                          const newIds = isSelected
+                            ? currentIds.filter((id) => id !== pId)
+                            : [...currentIds, pId];
+                          updateSectionState('hero', 'productIds', newIds);
+                        }}
+                        className={`relative rounded-[6px] border p-2 cursor-pointer transition-all duration-150 flex flex-col gap-1.5 select-none group ${
+                          isSelected
+                            ? 'bg-white dark:bg-stone-800 border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/30 shadow-xs'
+                            : 'bg-[var(--admin-surface-muted)] border-[var(--admin-border)] opacity-65 hover:opacity-100 hover:border-[var(--admin-accent)]/50'
+                        }`}
+                      >
+                        <div className="aspect-square w-full rounded-[4px] overflow-hidden bg-black/5 relative">
+                          {pImg ? (
+                            <img
+                              src={pImg}
+                              alt={p.name || p.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[var(--admin-text-tertiary)]">
+                              <span className="material-symbols-outlined text-[24px]">
+                                restaurant
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="absolute top-1 right-1">
+                            {isSelected ? (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-[3px] bg-[var(--admin-accent)] text-white text-[9.5px] font-bold shadow-xs">
+                                <span className="material-symbols-outlined text-[12px]">check</span>
+                                <span>ON</span>
+                              </span>
+                            ) : (
+                              <span className="w-5 h-5 rounded-full bg-black/40 text-white/80 group-hover:bg-[var(--admin-accent)] group-hover:text-white flex items-center justify-center text-[11px] font-bold transition-colors">
+                                +
+                              </span>
+                            )}
                           </div>
                         </div>
-                      );
-                    })
+
+                        <div className="min-w-0">
+                          <span className="text-[11.5px] font-bold text-[var(--admin-text-primary)] block truncate">
+                            {p.name || p.title}
+                          </span>
+                          <div className="flex items-center justify-between text-[10px] mt-0.5">
+                            <span className="text-[var(--admin-text-tertiary)] font-medium truncate">
+                              {p.category || 'Dishes'}
+                            </span>
+                            {p.price && (
+                              <span className="font-bold text-[var(--admin-text-primary)]">
+                                ₹{p.price}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -501,22 +370,12 @@ export function HomePageControllerEditor({ content, onUpdate }) {
 
       {activeTab === 'categories' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <AdminField label="Section Title">
-              <AdminInput
-                value={content.categoryGrid?.sectionTitle || ''}
-                onChange={(e) => updateSectionState('categoryGrid', 'sectionTitle', e.target.value)}
-              />
-            </AdminField>
-            <AdminField label="Section Subtitle">
-              <AdminInput
-                value={content.categoryGrid?.sectionSubtitle || ''}
-                onChange={(e) =>
-                  updateSectionState('categoryGrid', 'sectionSubtitle', e.target.value)
-                }
-              />
-            </AdminField>
-          </div>
+          <AdminField label="Section Title">
+            <AdminInput
+              value={content.categoryGrid?.sectionTitle || ''}
+              onChange={(e) => updateSectionState('categoryGrid', 'sectionTitle', e.target.value)}
+            />
+          </AdminField>
 
           <div className="pt-4 border-t border-[var(--admin-border-subtle)] space-y-4">
             <div className="flex justify-between items-center">
@@ -525,7 +384,7 @@ export function HomePageControllerEditor({ content, onUpdate }) {
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
               {uniqueCategories.map((categoryName) => {
                 const isSelected = (content.categoryGrid?.categories || []).some(
                   (c) => c.title === categoryName,
@@ -550,15 +409,15 @@ export function HomePageControllerEditor({ content, onUpdate }) {
                       }
                       updateSectionState('categoryGrid', 'categories', cats);
                     }}
-                    className={`px-4 py-2 rounded-md text-[12px] font-bold flex items-center transition-all ${
+                    className={`h-[38px] px-2 sm:px-3 rounded-[4px] text-[11.5px] sm:text-[12.5px] font-bold flex items-center justify-center transition-all min-w-0 cursor-pointer ${
                       isSelected
-                        ? 'bg-[var(--admin-accent)] text-[var(--admin-text-inverse)] shadow-sm'
+                        ? 'bg-[var(--admin-accent)] text-[var(--admin-text-inverse)] shadow-xs'
                         : 'bg-[var(--admin-surface-muted)] text-[var(--admin-text-secondary)] hover:bg-[var(--admin-border)]'
                     }`}
                   >
-                    {categoryName}
+                    <span className="truncate">{categoryName}</span>
                     {isSelected && (
-                      <span className="ml-1.5 material-symbols-outlined text-[14px] font-bold">
+                      <span className="ml-1 sm:ml-1.5 material-symbols-outlined text-[14px] sm:text-[15px] font-bold shrink-0">
                         check
                       </span>
                     )}
@@ -566,7 +425,7 @@ export function HomePageControllerEditor({ content, onUpdate }) {
                 );
               })}
               {uniqueCategories.length === 0 && (
-                <div className="text-[12px] text-[var(--admin-text-tertiary)] italic">
+                <div className="col-span-3 text-[12px] text-[var(--admin-text-tertiary)] italic text-center py-2">
                   No categories found in product catalog.
                 </div>
               )}
@@ -710,72 +569,42 @@ export function HomePageControllerEditor({ content, onUpdate }) {
 
       {activeTab === 'trending' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <AdminField label="Section Title">
-              <AdminInput
-                value={content.trendingProducts?.sectionTitle || ''}
-                onChange={(e) =>
-                  updateSectionState('trendingProducts', 'sectionTitle', e.target.value)
-                }
-              />
-            </AdminField>
-            <AdminField label="Section Subtitle">
-              <AdminInput
-                value={content.trendingProducts?.sectionSubtitle || ''}
-                onChange={(e) =>
-                  updateSectionState('trendingProducts', 'sectionSubtitle', e.target.value)
-                }
-              />
-            </AdminField>
-          </div>
+          <AdminField label="Section Title">
+            <AdminInput
+              value={content.trendingProducts?.sectionTitle || ''}
+              onChange={(e) =>
+                updateSectionState('trendingProducts', 'sectionTitle', e.target.value)
+              }
+            />
+          </AdminField>
           {renderProductSelector('trendingProducts')}
         </div>
       )}
 
       {activeTab === 'featured' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <AdminField label="Section Title">
-              <AdminInput
-                value={content.featuredProducts?.sectionTitle || ''}
-                onChange={(e) =>
-                  updateSectionState('featuredProducts', 'sectionTitle', e.target.value)
-                }
-              />
-            </AdminField>
-            <AdminField label="Section Subtitle">
-              <AdminInput
-                value={content.featuredProducts?.sectionSubtitle || ''}
-                onChange={(e) =>
-                  updateSectionState('featuredProducts', 'sectionSubtitle', e.target.value)
-                }
-              />
-            </AdminField>
-          </div>
+          <AdminField label="Section Title">
+            <AdminInput
+              value={content.featuredProducts?.sectionTitle || ''}
+              onChange={(e) =>
+                updateSectionState('featuredProducts', 'sectionTitle', e.target.value)
+              }
+            />
+          </AdminField>
           {renderProductSelector('featuredProducts')}
         </div>
       )}
 
       {activeTab === 'recommended' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <AdminField label="Section Title">
-              <AdminInput
-                value={content.recommendedProducts?.sectionTitle || ''}
-                onChange={(e) =>
-                  updateSectionState('recommendedProducts', 'sectionTitle', e.target.value)
-                }
-              />
-            </AdminField>
-            <AdminField label="Section Subtitle">
-              <AdminInput
-                value={content.recommendedProducts?.sectionSubtitle || ''}
-                onChange={(e) =>
-                  updateSectionState('recommendedProducts', 'sectionSubtitle', e.target.value)
-                }
-              />
-            </AdminField>
-          </div>
+          <AdminField label="Section Title">
+            <AdminInput
+              value={content.recommendedProducts?.sectionTitle || ''}
+              onChange={(e) =>
+                updateSectionState('recommendedProducts', 'sectionTitle', e.target.value)
+              }
+            />
+          </AdminField>
           {renderProductSelector('recommendedProducts')}
         </div>
       )}

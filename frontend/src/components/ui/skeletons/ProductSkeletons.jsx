@@ -160,7 +160,26 @@ export function CategorySkeleton() {
   );
 }
 
-export function RecommendationSkeleton({ horizontal = false }) {
+export function RecommendationSkeleton({ horizontal = false, compact = false }) {
+  if (compact) {
+    return (
+      <div className="flex gap-2.5 sm:gap-3.5 overflow-x-hidden w-full pb-1">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="w-[160px] sm:w-[175px] flex-shrink-0">
+            <div className="flex flex-col gap-2 w-full">
+              <Skeleton className="aspect-[4/5] w-full rounded-[14px]" />
+              <div className="space-y-1.5 pt-1 px-1">
+                <Skeleton className="h-2.5 w-1/3 rounded" />
+                <Skeleton className="h-3.5 w-4/5 rounded" />
+                <Skeleton className="h-3.5 w-1/2 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       className={

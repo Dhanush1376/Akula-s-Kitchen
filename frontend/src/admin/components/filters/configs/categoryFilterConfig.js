@@ -17,18 +17,7 @@ export const categoryFilterConfig = {
   },
 
   fields: {
-    // 1. Scope / Type Filter
-    type: {
-      label: 'Scope / Type',
-      defaultValue: 'All',
-      isDefault: (val) => val === 'All' || !val,
-      predicate: (c, val) => {
-        return (c.type || '').toLowerCase() === val.toLowerCase();
-      },
-      getChipLabel: (val) => `Scope: ${val.charAt(0).toUpperCase() + val.slice(1)}`,
-    },
-
-    // 2. Status (Active vs Inactive)
+    // 1. Status (Active vs Inactive)
     status: {
       label: 'Status',
       defaultValue: 'All',

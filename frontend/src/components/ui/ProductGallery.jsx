@@ -9,6 +9,8 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useMobileDrawerEngine } from './drawer';
 
+import { RecommendationSkeleton } from './Skeleton';
+
 const RecommendationSystem = React.lazy(() =>
   import('../sections/RecommendationSystem').then((m) => ({ default: m.RecommendationSystem })),
 );
@@ -373,12 +375,12 @@ export function ProductGallery({ images = [], product }) {
                   exit={{ y: '100%', opacity: 0 }}
                   transition={sheetTransition}
                   {...dragProps}
-                  className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 sm:left-4 sm:right-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-24px)] sm:w-full max-w-[500px] mx-auto"
+                  className="fixed inset-x-2 sm:inset-x-4 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-16px)] sm:w-full max-w-[540px] mx-auto"
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-5 pb-3.5 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[92dvh] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-3 pb-3 sm:px-4 sm:pb-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[92dvh] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
                     {/* Handlebar for bottom sheet feel - moved right to the top rim */}
                     <div
-                      className="w-full flex justify-center pt-1 pb-2 cursor-grab select-none"
+                      className="w-full flex justify-center pt-1 pb-1.5 cursor-grab select-none"
                       onClick={() => setIsSimilarOpen(false)}
                     >
                       <div className="w-9 h-1 rounded-full bg-neutral-300" />
@@ -387,14 +389,14 @@ export function ProductGallery({ images = [], product }) {
                     {/* Circular close button */}
                     <button
                       onClick={() => setIsSimilarOpen(false)}
-                      className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-10 cursor-pointer"
+                      className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-10 cursor-pointer"
                       aria-label="Close similar delights"
                     >
                       <X className="w-3.5 h-3.5 text-black" strokeWidth={2} />
                     </button>
 
                     {/* Header */}
-                    <div className="flex items-center justify-between pb-3 pr-10 border-b border-black/[0.06]">
+                    <div className="flex items-center justify-between pb-2 pr-10 border-b border-black/[0.06] mb-1">
                       <h3
                         className="font-sans text-[15px] sm:text-[16px] font-semibold text-neutral-900 leading-tight"
                         style={{
@@ -408,13 +410,9 @@ export function ProductGallery({ images = [], product }) {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-3">
+                    <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1">
                       <React.Suspense
-                        fallback={
-                          <div className="h-44 flex items-center justify-center text-sm text-neutral-500">
-                            Discovering...
-                          </div>
-                        }
+                        fallback={<RecommendationSkeleton horizontal={true} compact={true} />}
                       >
                         <RecommendationSystem
                           category={product.category}
@@ -422,6 +420,7 @@ export function ProductGallery({ images = [], product }) {
                           compact={true}
                           horizontalScroll={true}
                           hideHeader={true}
+                          containerClassName="px-0 w-full"
                         />
                       </React.Suspense>
                     </div>

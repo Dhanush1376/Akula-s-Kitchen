@@ -223,32 +223,42 @@ export class FilterService {
         })
         .filter((t: any) => t.count >= 2); // Minimum threshold
 
-      if (tagOptions.length > 15) {
-        // Group by taxonomy
-        const taxonomyGroups = tagOptions.reduce((acc: any, curr: any) => {
-          if (!acc[curr.taxonomy]) acc[curr.taxonomy] = [];
-          acc[curr.taxonomy].push(curr);
-          return acc;
-        }, {});
+      const isWeight = (str: string) => {
+        if (!str || typeof str !== 'string') return false;
+        return (
+          /^(\d+(?:\.\d+)?)\s*(g|gm|gms|gram|grams|kg|kgs|kilo|kilos|ml|l|ltr|litre|litres|oz|lb|lbs)$/i.test(
+            str.trim(),
+          ) || /^(half|quarter)\s*(kg|kilo|litre|liter)$/i.test(str.trim())
+        );
+      };
 
-        Object.keys(taxonomyGroups).forEach((taxonomy) => {
-          if (taxonomyGroups[taxonomy].length > 0) {
-            filterGroups.push({
-              id: `tags_${taxonomy}`,
-              label: taxonomy === 'Other' ? 'Other Tags' : taxonomy,
-              type: 'checkbox',
-              options: taxonomyGroups[taxonomy]
-                .sort((a: any, b: any) => b.sortOrder - a.sortOrder)
-                .slice(0, 15),
-            });
-          }
-        });
-      } else {
+      const parseWeightGrams = (str: string) => {
+        const match = str
+          .trim()
+          .toLowerCase()
+          .match(/^(\d+(?:\.\d+)?)\s*([a-z]+)$/);
+        if (!match) return 0;
+        const num = parseFloat(match[1]);
+        const unit = match[2];
+        if (unit.startsWith('k')) return num * 1000;
+        if (unit.startsWith('g')) return num;
+        if (unit.startsWith('l')) return num * 1000;
+        if (unit.startsWith('m')) return num;
+        return num;
+      };
+
+      const weightTagOptions = tagOptions.filter((t: any) => isWeight(t.value || t.label));
+      const nonWeightTagOptions = tagOptions.filter((t: any) => !isWeight(t.value || t.label));
+
+      // 1. Separate Weight Tag Filter Group
+      if (weightTagOptions.length > 0) {
         filterGroups.push({
-          id: 'tags',
-          label: 'Product Tags',
+          id: 'weight',
+          label: 'Weight',
           type: 'checkbox',
-          options: tagOptions.sort((a: any, b: any) => b.sortOrder - a.sortOrder).slice(0, 12),
+          options: weightTagOptions.sort(
+            (a: any, b: any) => parseWeightGrams(a.value) - parseWeightGrams(b.value),
+          ),
         });
       }
     }

@@ -220,9 +220,7 @@ export function AdminProducts() {
     }
   };
 
-  const filteredCategories = categories.filter(
-    (c) => categoryTypeFilter === 'All' || c.type === categoryTypeFilter,
-  );
+  const filteredCategories = categories;
 
   // ─── Products Helpers ───
   const getIsHeroProduct = (productId) => {
@@ -364,23 +362,8 @@ export function AdminProducts() {
             <div className="admin-card p-0 overflow-hidden">
               {/* Category Filters Header */}
               <div className="p-3 flex items-center justify-between gap-3 border-b border-[var(--admin-border-subtle)]">
-                <div className="flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] min-w-0 box-border">
-                  {['All', 'product', 'global'].map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setCategoryTypeFilter(t)}
-                      className={`px-2.5 py-1 rounded-[3px] text-[11px] font-bold cursor-pointer transition-all capitalize whitespace-nowrap shrink-0 box-border ${
-                        categoryTypeFilter === t
-                          ? 'bg-white dark:bg-stone-800 text-[var(--admin-accent)] shadow-xs font-bold'
-                          : 'text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]'
-                      }`}
-                    >
-                      {t === 'All' ? 'All Types' : t}
-                    </button>
-                  ))}
-                </div>
-                <span className="text-[11px] text-[var(--admin-text-tertiary)] font-medium shrink-0 whitespace-nowrap">
-                  {filteredCategories.length} categories
+                <span className="text-[12px] text-[var(--admin-text-secondary)] font-semibold shrink-0 whitespace-nowrap">
+                  {filteredCategories.length} Categories Total
                 </span>
               </div>
 
@@ -458,7 +441,7 @@ export function AdminProducts() {
                       </th>
                       <th>Category Name</th>
                       <th>Slug / URL Path</th>
-                      <th>Type Scope</th>
+                      <th className="text-center min-w-[110px]">Products</th>
                       <th>Status</th>
                       <th className="text-right pr-6">Actions</th>
                     </tr>
@@ -493,9 +476,15 @@ export function AdminProducts() {
                             {cat.slug}
                           </span>
                         </td>
-                        <td>
-                          <span className="admin-badge admin-badge-neutral text-[9px] font-bold tracking-wider uppercase">
-                            {cat.type}
+                        <td className="text-center">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-[4px] bg-[var(--admin-surface-muted)] text-[var(--admin-text-secondary)] border border-[var(--admin-border-subtle)]">
+                            <span className="material-symbols-outlined text-[13px] text-[var(--admin-text-tertiary)]">
+                              inventory_2
+                            </span>
+                            <span>
+                              {cat.productCount ?? 0}{' '}
+                              {(cat.productCount ?? 0) === 1 ? 'product' : 'products'}
+                            </span>
                           </span>
                         </td>
                         <td>

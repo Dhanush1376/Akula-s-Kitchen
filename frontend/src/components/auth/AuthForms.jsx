@@ -413,15 +413,15 @@ export function AuthSuccessScreen({ isNewUser }) {
           initial={{ scale: 0.4, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', damping: 15, delay: 0.2 }}
-          className="mb-4 relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-50 border border-emerald-200"
+          className="mb-4 relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-50 border border-emerald-200/80 ring-4 ring-emerald-500/10 shadow-xs"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', damping: 12, delay: 0.4 }}
-            className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black text-[#f7bb0e] shadow-sm"
+            className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/30"
           >
-            <Check className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={3} />
+            <Check className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.8} />
           </motion.div>
         </motion.div>
 

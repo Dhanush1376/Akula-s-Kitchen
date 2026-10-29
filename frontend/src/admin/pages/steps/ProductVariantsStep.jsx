@@ -25,15 +25,6 @@ const DIETARY_FILTER_PRESETS = [
   'Sweet & Tangy',
 ];
 
-const MEAL_AND_CUISINE_PRESETS = [
-  'Breakfast',
-  'Lunch',
-  'Dinner',
-  'Festive',
-  'Snack',
-  'Andhra Style',
-];
-
 // Clean normalizer to prevent any whitespace or casing duplicates (e.g. "1 kg" vs "1kg")
 const normalizeTag = (tag) => (tag || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -171,32 +162,19 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
 
   const deduplicatedDietary = useMemo(() => {
     return DIETARY_FILTER_PRESETS.filter(
-      (d) =>
-        !configuredAttributes.some((c) => normalizeTag(c.label) === normalizeTag(d)) &&
-        !BADGE_PRESETS.some((b) => normalizeTag(b) === normalizeTag(d)),
+      (d) => !BADGE_PRESETS.some((b) => normalizeTag(b) === normalizeTag(d)),
     );
-  }, [configuredAttributes]);
-
-  const deduplicatedMeals = useMemo(() => {
-    return MEAL_AND_CUISINE_PRESETS.filter(
-      (m) =>
-        !configuredAttributes.some((c) => normalizeTag(c.label) === normalizeTag(m)) &&
-        !BADGE_PRESETS.some((b) => normalizeTag(b) === normalizeTag(m)) &&
-        !DIETARY_FILTER_PRESETS.some((d) => normalizeTag(d) === normalizeTag(m)),
-    );
-  }, [configuredAttributes]);
+  }, []);
 
   const customTags = useMemo(() => {
     return parsedTags.filter((tag) => {
       const norm = normalizeTag(tag);
       return (
         !BADGE_PRESETS.some((b) => normalizeTag(b) === norm) &&
-        !DIETARY_FILTER_PRESETS.some((d) => normalizeTag(d) === norm) &&
-        !MEAL_AND_CUISINE_PRESETS.some((m) => normalizeTag(m) === norm) &&
-        !configuredAttributes.some((c) => normalizeTag(c.label) === norm)
+        !DIETARY_FILTER_PRESETS.some((d) => normalizeTag(d) === norm)
       );
     });
-  }, [parsedTags, configuredAttributes]);
+  }, [parsedTags]);
 
   // ─── Actions for Tags & Filters ───
 
@@ -259,35 +237,39 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
   };
 
   // Automatically ensure configured portion/weight options from Pricing are active in tags
-  useEffect(() => {
-    if (configuredAttributes.length === 0) return;
-
-    setFormData((prev) => {
-      const currentTags = Array.isArray(prev.tags)
-        ? prev.tags
-        : typeof prev.tags === 'string'
-          ? prev.tags
-              .split(',')
-              .map((t) => t.trim())
-              .filter(Boolean)
-          : [];
-
-      const currentNorms = new Set(currentTags.map((t) => normalizeTag(t)));
-      const toAdd = configuredAttributes
-        .map((c) => c.label.trim())
-        .filter((label) => label && !currentNorms.has(normalizeTag(label)));
-
-      if (toAdd.length === 0) return prev;
-
-      return {
-        ...prev,
-        tags: [...currentTags, ...toAdd].join(', '),
-      };
-    });
-  }, [configuredAttributes, setFormData]);
-
   return (
     <div className="space-y-5">
+      {/* ─── INGREDIENTS SECTION ─── */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b border-[var(--admin-border-subtle)]">
+          <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent,#800000)]">
+            nutrition
+          </span>
+          <h2 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider whitespace-nowrap">
+            Ingredients
+          </h2>
+          <span className="text-[10px] text-[var(--admin-text-secondary)] font-medium bg-[var(--admin-surface-muted)] px-2 py-0.5 rounded-full border border-[var(--admin-border)] whitespace-nowrap">
+            Recipe
+          </span>
+        </div>
+
+        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs space-y-2">
+          <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1 block">
+            Product Ingredients
+          </label>
+          <input
+            type="text"
+            value={formData.material || ''}
+            onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+            placeholder="e.g. Rice, Urad Dal, Red Chilli, Ghee, Fenugreek, Cumin"
+            className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all placeholder:text-[var(--admin-text-tertiary)] font-medium"
+          />
+          <p className="text-[10.5px] text-[var(--admin-text-tertiary)]">
+            Comma-separated ingredients shown on the storefront dish details and recipe summary.
+          </p>
+        </div>
+      </div>
+
       {/* ─── UNIFIED DISCOVERY FILTERS & STOREFRONT TAGS ─── */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--admin-border-subtle)]">
@@ -318,29 +300,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
 
         {/* ── Main Unified Filters Card ── */}
         <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs divide-y divide-[var(--admin-border-subtle)] space-y-3.5 [&>*:not(:first-child)]:pt-3.5">
-          {/* ── 1. Portion & Weight Filters from Configured Attributes ── */}
-          {configuredAttributes.length > 0 && (
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
-                <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
-                  scale
-                </span>
-                <span>Portion & Weight Filters:</span>
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {configuredAttributes.map((attr) => (
-                  <FilterToggleChip
-                    key={`cfg-${attr.label}`}
-                    label={attr.label}
-                    active={isTagActive(attr.label)}
-                    onToggle={handleToggleTag}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── 2. Storefront Badges & Merchandising ── */}
+          {/* ── 1. Storefront Badges & Merchandising ── */}
           {deduplicatedBadges.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
@@ -362,7 +322,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
             </div>
           )}
 
-          {/* ── 3. Dietary, Taste & Recipe Filters ── */}
+          {/* ── 2. Dietary, Taste & Recipe Filters ── */}
           {deduplicatedDietary.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
@@ -384,29 +344,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
             </div>
           )}
 
-          {/* ── 4. Meal & Occasion Tags ── */}
-          {deduplicatedMeals.length > 0 && (
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">
-                <span className="material-symbols-outlined text-[13px] text-[var(--admin-accent,#800000)]">
-                  restaurant
-                </span>
-                <span>Meal & Occasion Filters:</span>
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {deduplicatedMeals.map((meal) => (
-                  <FilterToggleChip
-                    key={meal}
-                    label={meal}
-                    active={isTagActive(meal)}
-                    onToggle={handleToggleTag}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── 5. Custom Keyword Tags ── */}
+          {/* ── 3. Custom Keyword Tags ── */}
           {customTags.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider flex items-center gap-1">

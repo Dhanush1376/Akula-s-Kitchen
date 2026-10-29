@@ -18,12 +18,7 @@ const defaultSections = [
 const categoryGridData = {
   sectionTitle: 'Shop by category',
   sectionSubtitle: 'Authentic Andhra & South Indian Delicacies',
-  categories: [
-    { name: 'Batters', link: '/collections?category=Batters' },
-    { name: 'Pickles', link: '/collections?category=Pickles' },
-    { name: 'Chutneys', link: '/collections?category=Chutneys' },
-    { name: 'Podis', link: '/collections?category=Podis' },
-  ],
+  categories: [],
   isVisible: true,
   status: 'published',
 };

@@ -9,6 +9,25 @@ export const initialWebsiteContent = {
   homePageController: {
     status: 'published',
   },
+  hero: {
+    title: "Today's Kitchen",
+    subtitle: 'Handcrafted fresh daily in small batches',
+    badgeText: "Today's special",
+    seeAllText: 'See all',
+    useDailyMenuSchedule: true,
+    cutoffTime: '18:00',
+    productIds: [],
+    weeklySchedule: {
+      monday: { productIds: [], badgeText: "Monday's Special" },
+      tuesday: { productIds: [], badgeText: "Tuesday's Special" },
+      wednesday: { productIds: [], badgeText: "Wednesday's Special" },
+      thursday: { productIds: [], badgeText: "Thursday's Special" },
+      friday: { productIds: [], badgeText: "Friday's Special" },
+      saturday: { productIds: [], badgeText: 'Saturday Special' },
+      sunday: { productIds: [], badgeText: 'Sunday Special' },
+    },
+    status: 'published',
+  },
   homepageSections: [
     { id: 'hero_1', label: 'Hero Banner', isVisible: true },
     { id: 'categoryGrid_1', label: 'Category Grid', isVisible: true },
@@ -19,12 +38,7 @@ export const initialWebsiteContent = {
   categoryGrid: {
     sectionTitle: 'Shop by category',
     sectionSubtitle: 'Authentic Andhra & South Indian Delicacies',
-    categories: [
-      { name: 'Batters', link: '/collections?category=Batters' },
-      { name: 'Pickles', link: '/collections?category=Pickles' },
-      { name: 'Chutneys', link: '/collections?category=Chutneys' },
-      { name: 'Podis', link: '/collections?category=Podis' },
-    ],
+    categories: [],
     isVisible: true,
     status: 'published',
   },
@@ -73,8 +87,29 @@ export const initialWebsiteContent = {
     hero: {
       title: 'Shop',
       subtitle: 'Fresh • Tasty • Healthy',
-      description:
-        "Batters, chutneys, pickles, podis & masalas, namkeen and cashews from Akula's Kitchen.",
+      description: "Authentic delicacies and handcrafted kitchen specials from Akula's Kitchen.",
+    },
+    status: 'published',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // MENU PAGE
+  // ═══════════════════════════════════════════════════════
+  menuPage: {
+    title: 'Our Menu',
+    subtitle: 'Fresh today in small batches',
+    badgeText: "Today's special",
+    seeAllText: 'See all',
+    cutoffTime: '18:00',
+    productIds: [],
+    weeklySchedule: {
+      monday: { productIds: [], badgeText: "Monday's Special" },
+      tuesday: { productIds: [], badgeText: "Tuesday's Special" },
+      wednesday: { productIds: [], badgeText: "Wednesday's Special" },
+      thursday: { productIds: [], badgeText: "Thursday's Special" },
+      friday: { productIds: [], badgeText: "Friday's Special" },
+      saturday: { productIds: [], badgeText: 'Saturday Special' },
+      sunday: { productIds: [], badgeText: 'Sunday Special' },
     },
     status: 'published',
   },
@@ -181,6 +216,27 @@ export const initialWebsiteContent = {
         title: "Contact Us — Akula's Kitchen",
         description: 'Get in touch for orders, bulk enquiries and questions.',
       },
+    },
+    status: 'published',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  // MENU PAGE — Full Menu & Daily Specials
+  // ═══════════════════════════════════════════════════════
+  menuPage: {
+    title: 'Our Menu',
+    subtitle: 'Fresh today in small batches',
+    badgeText: "Today's special",
+    seeAllText: 'See all',
+    productIds: [],
+    weeklySchedule: {
+      monday: { productIds: [], badgeText: "Monday's Special" },
+      tuesday: { productIds: [], badgeText: "Tuesday's Special" },
+      wednesday: { productIds: [], badgeText: "Wednesday's Special" },
+      thursday: { productIds: [], badgeText: "Thursday's Special" },
+      friday: { productIds: [], badgeText: "Friday's Special" },
+      saturday: { productIds: [], badgeText: 'Saturday Special' },
+      sunday: { productIds: [], badgeText: 'Sunday Special' },
     },
     status: 'published',
   },

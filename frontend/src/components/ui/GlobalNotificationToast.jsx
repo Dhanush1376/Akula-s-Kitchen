@@ -22,19 +22,60 @@ const getNotificationImage = (notif) => {
   );
 };
 
+const simplifyNotificationText = (title, message) => {
+  const raw = `${title || ''} ${message || ''}`.toLowerCase();
+
+  // Plain-English status mapping for instant understanding
+  if (raw.includes('delivered')) return 'Order delivered';
+  if (raw.includes('out_for_delivery') || raw.includes('out for delivery'))
+    return 'Out for delivery';
+  if (raw.includes('shipped') || raw.includes('dispatched')) return 'Order shipped';
+  if (
+    raw.includes('setup_in_progress') ||
+    raw.includes('in progress') ||
+    raw.includes('processing')
+  ) {
+    return 'Order in progress';
+  }
+  if (
+    raw.includes('order created') ||
+    raw.includes('order confirmed') ||
+    raw.includes('placed successfully')
+  ) {
+    return 'Order confirmed';
+  }
+  if (raw.includes('cancelled') || raw.includes('canceled')) return 'Order cancelled';
+  if (raw.includes('refund')) return 'Refund processed';
+  if (raw.includes('payment failed')) return 'Payment failed';
+  if (raw.includes('payment captured') || raw.includes('payment successful')) {
+    return 'Payment successful';
+  }
+  if (raw.includes('new order')) return 'New order received';
+
+  // Fallback: clean up raw title into simple readable format
+  let clean = (title || message || 'Notification')
+    .replace(/status is now ([a-z_]+)/gi, (m, p) => `Status: ${p.replace(/_/g, ' ')}`)
+    .replace(/is now ([a-z_]+)/gi, (m, p) => `${p.replace(/_/g, ' ')}`)
+    .replace(/\b[a-z0-9_-]{16,}\b/gi, '') // remove long hashes or mongo IDs
+    .replace(/\(\+\d+\s+more\)/gi, '')
+    .replace(/_/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  if (clean.length > 32) {
+    clean = clean.slice(0, 32).trim() + '…';
+  }
+  return clean;
+};
+
 const formatNotificationMessage = (msg) => {
   if (!msg) return '';
-  return (
-    msg
-      // Remove "EXC-00007", "RET-10004", or any exchange/return ID after request
-      .replace(/\b(exchange|return)\s+request\s+[A-Za-z0-9_-]+\s+/gi, '$1 request ')
-      // Remove order numbers like "#6a9f3fd1410" or "6a9f3fd14102b2f0a356a168"
-      .replace(/\border\s+(#[A-Za-z0-9_-]+|[A-Za-z0-9_-]{8,})\s+/gi, 'order ')
-      // Replace underscores in status strings (e.g. "is now setup_in_progress")
-      .replace(/status is now ([a-z_]+)/gi, (match, p1) => `status is now ${p1.replace(/_/g, ' ')}`)
-      .replace(/\s{2,}/g, ' ')
-      .trim()
-  );
+  return msg
+    .replace(/\b(exchange|return)\s+request\s+[A-Za-z0-9_-]+\s+/gi, '$1 request ')
+    .replace(/\border\s+(#[A-Za-z0-9_-]+|[A-Za-z0-9_-]{8,})\s+/gi, 'order ')
+    .replace(/status is now ([a-z_]+)/gi, (match, p1) => `status is now ${p1.replace(/_/g, ' ')}`)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 };
 
 export function GlobalNotificationToast() {
@@ -48,15 +89,37 @@ export function GlobalNotificationToast() {
 
   const pollingIntervalRef = useRef(null);
   const hideTimeoutRef = useRef(null);
+  const seenNotificationIdsRef = useRef(new Set([localStorage.getItem(STORAGE_KEY)]));
+  const lastTriggerTimeRef = useRef(0);
+  const lastTriggerContentRef = useRef('');
 
   const triggerToast = useCallback((notif) => {
     if (!notif) return;
+    const notifId = notif._id || notif.id;
+    const contentKey = `${notif.title || ''}:${notif.message || ''}`;
+    const now = Date.now();
+
+    // Prevent popping up twice:
+    // 1. By ID check against seen set or localStorage
+    if (notifId) {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === notifId || seenNotificationIdsRef.current.has(notifId)) {
+        return;
+      }
+      seenNotificationIdsRef.current.add(notifId);
+      localStorage.setItem(STORAGE_KEY, notifId);
+    }
+
+    // 2. By content key check within 5 seconds (guards against duplicate socket + polling without IDs)
+    if (now - lastTriggerTimeRef.current < 5000 && lastTriggerContentRef.current === contentKey) {
+      return;
+    }
+
+    lastTriggerTimeRef.current = now;
+    lastTriggerContentRef.current = contentKey;
+
     setLatestNotification(notif);
     setShowToast(true);
-
-    if (notif._id) {
-      localStorage.setItem(STORAGE_KEY, notif._id);
-    }
 
     // Broadcast unread status change to update badges across the app
     window.dispatchEvent(
@@ -65,11 +128,11 @@ export function GlobalNotificationToast() {
       }),
     );
 
-    // Auto-dismiss after 5 seconds
+    // Auto-dismiss after 4.5 seconds
     if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     hideTimeoutRef.current = setTimeout(() => {
       setShowToast(false);
-    }, 5000);
+    }, 4500);
   }, []);
 
   const fetchLatestNotification = useCallback(async () => {
@@ -80,6 +143,7 @@ export function GlobalNotificationToast() {
       const notifications = res?.data || [];
       if (notifications.length > 0) {
         const notif = notifications[0];
+        const notifId = notif._id || notif.id;
         const storedId = localStorage.getItem(STORAGE_KEY);
 
         // Update sidebar/navbar unread badge
@@ -94,7 +158,12 @@ export function GlobalNotificationToast() {
           ? Date.now() - new Date(notif.createdAt).getTime() < 10 * 60 * 1000
           : false;
 
-        if (!notif.read && storedId !== notif._id && isRecent) {
+        if (
+          !notif.read &&
+          storedId !== notifId &&
+          !seenNotificationIdsRef.current.has(notifId) &&
+          isRecent
+        ) {
           triggerToast(notif);
         }
       }
@@ -252,48 +321,48 @@ export function GlobalNotificationToast() {
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0, transition: { duration: 0.3 } }}
-          className="fixed top-6 left-0 right-0 z-[9999999] flex justify-center pointer-events-none px-4"
+          className="fixed top-20 sm:top-6 left-0 right-0 z-[9999999] flex justify-center pointer-events-none px-4"
         >
           <div
             onClick={handleToastClick}
-            className="pointer-events-auto cursor-pointer bg-white dark:bg-zinc-900 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_12px_-2px_rgba(0,0,0,0.1)] border border-neutral-200/90 dark:border-white/10 rounded-[18px] w-full max-w-md p-3.5 pr-5 sm:pr-6 flex items-center gap-3.5 transition-all hover:scale-[1.02] group"
+            className="pointer-events-auto cursor-pointer bg-white dark:bg-zinc-900 shadow-[0_10px_25px_-4px_rgba(0,0,0,0.16),0_3px_8px_-2px_rgba(0,0,0,0.06)] border border-neutral-200/90 dark:border-white/10 rounded-full sm:rounded-[18px] w-auto max-w-[min(348px,calc(100vw-32px))] sm:w-[420px] sm:max-w-md h-[46px] sm:h-[80px] px-3.5 py-1 sm:p-3.5 sm:pr-6 flex items-center gap-2.5 sm:gap-3.5 transition-all hover:scale-[1.02] group box-border overflow-hidden select-none"
           >
             {/* Image or Icon Container */}
-            <div className="w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] rounded-[18px] overflow-hidden bg-neutral-100 dark:bg-zinc-800 flex-shrink-0 flex items-center justify-center border border-black/5 dark:border-white/10 shadow-2xs relative">
+            <div className="w-[30px] h-[30px] sm:w-[76px] sm:h-[76px] rounded-full sm:rounded-[18px] overflow-hidden bg-neutral-100 dark:bg-zinc-800 flex-shrink-0 flex items-center justify-center border border-black/5 dark:border-white/10 shadow-2xs relative">
               {resolvedImage && !imageError ? (
                 <img
                   src={resolvedImage}
                   alt={latestNotification.title || 'Notification Thumbnail'}
-                  className="w-full h-full object-cover rounded-[18px] transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full object-cover rounded-full sm:rounded-[18px] transition-transform duration-300 group-hover:scale-105"
                   onError={() => setImageError(true)}
                   loading="eager"
                 />
               ) : (
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-[18px] bg-primary/10 flex items-center justify-center">
-                  <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary" strokeWidth={1.8} />
+                <div className="w-full h-full sm:w-12 sm:h-12 rounded-full sm:rounded-[18px] bg-primary/10 flex items-center justify-center">
+                  <Bell className="w-3.5 h-3.5 sm:w-6 sm:h-6 text-primary" strokeWidth={1.8} />
                 </div>
               )}
             </div>
 
-            {/* Content Column */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
-              <span className="font-bold text-[14px] text-on-surface truncate tracking-tight">
-                {latestNotification.title}
+            {/* Content Column: Clean, simple, easy-to-understand message with smaller font */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5 overflow-hidden">
+              <span className="font-medium text-[11.5px] sm:text-[13px] text-on-surface truncate whitespace-nowrap overflow-hidden text-ellipsis leading-none tracking-normal">
+                {simplifyNotificationText(latestNotification.title, latestNotification.message)}
               </span>
-              <p className="text-[12px] sm:text-[13px] text-secondary/80 dark:text-white/70 truncate leading-relaxed">
+              <p className="hidden sm:block text-[11px] text-secondary/70 dark:text-white/60 truncate whitespace-nowrap leading-relaxed">
                 {formatNotificationMessage(latestNotification.message)}
               </p>
             </div>
 
             {/* Right Meta Column: Timestamp on top, small arrow below */}
-            <div className="flex flex-col items-end justify-between self-stretch py-0.5 flex-shrink-0">
-              <span className="text-[11px] text-secondary/60 dark:text-white/50 font-medium whitespace-nowrap">
+            <div className="flex items-center gap-1.5 sm:flex-col sm:items-end sm:justify-between sm:self-stretch sm:py-0.5 flex-shrink-0">
+              <span className="text-[11px] text-secondary/60 dark:text-white/50 font-medium whitespace-nowrap leading-none">
                 {getTimeAgo(latestNotification.createdAt)}
               </span>
               <ArrowRight
                 size={13}
                 strokeWidth={2.2}
-                className="text-secondary/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all"
+                className="text-secondary/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 hidden sm:block"
               />
             </div>
           </div>

@@ -49,6 +49,9 @@ export const refreshWebsiteContent = async () => {
       if (response.data.hero) {
         mergedContent.hero = { ...initialWebsiteContent.hero, ...response.data.hero };
       }
+      if (response.data.menuPage) {
+        mergedContent.menuPage = { ...initialWebsiteContent.menuPage, ...response.data.menuPage };
+      }
       try {
         if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
           window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedContent));
@@ -119,6 +122,12 @@ export function useWebsiteContent() {
             const mergedContent = { ...initialWebsiteContent, ...response.data };
             if (response.data.hero) {
               mergedContent.hero = { ...initialWebsiteContent.hero, ...response.data.hero };
+            }
+            if (response.data.menuPage) {
+              mergedContent.menuPage = {
+                ...initialWebsiteContent.menuPage,
+                ...response.data.menuPage,
+              };
             }
             try {
               localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mergedContent));

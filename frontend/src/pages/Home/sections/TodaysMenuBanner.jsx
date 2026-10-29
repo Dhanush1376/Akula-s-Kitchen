@@ -3,26 +3,13 @@ import { useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useProducts } from '../../../hooks/useProductQueries';
 
-const DEFAULT_ITEMS = [
-  { name: 'Idli & Dosa Batter', price: '₹90' },
-  { name: 'Fresh Coconut Chutney', price: '₹60' },
-  { name: 'Traditional Mango Avakaaya', price: '₹180' },
-  { name: 'Tomato Chutney', price: '₹65' },
-  { name: 'Gongura Pickle', price: '₹160' },
-  { name: 'Gunpowder Idli Podi', price: '₹95' },
-  { name: 'Ginger Allam Chutney', price: '₹70' },
-  { name: 'Garlic Pickle', price: '₹150' },
-  { name: 'Ragi Murukulu', price: '₹110' },
-  { name: 'Sambar Masala Podi', price: '₹120' },
-];
-
 export function TodaysMenuBanner() {
   const { data } = useProducts({ limit: 40 });
 
   const menuItems = useMemo(() => {
     const raw = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
     const valid = raw.filter((p) => p && p.isActive !== false);
-    if (!valid.length) return DEFAULT_ITEMS;
+    if (!valid.length) return [];
     return valid.map((p) => {
       const rawImage =
         p.imageSrc || p.image || (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null);
@@ -40,9 +27,15 @@ export function TodaysMenuBanner() {
 
   // Duplicate items for continuous seamless loop
   const displayItems = useMemo(() => {
-    const base = menuItems.length >= 6 ? menuItems : [...menuItems, ...DEFAULT_ITEMS];
+    if (!menuItems.length) return [];
+    let base = [...menuItems];
+    while (base.length < 12) {
+      base = [...base, ...menuItems];
+    }
     return [...base, ...base];
   }, [menuItems]);
+
+  if (!displayItems.length) return null;
 
   return (
     <section

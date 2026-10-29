@@ -53,6 +53,9 @@ export const ProductListingGrid = React.memo(
               sortBy={sortBy}
               onSortChange={setSortBy}
               products={products}
+              categories={categories}
+              selectedCategory={categoryParam}
+              onSelectCategory={handleCategorySelect}
             />
           </aside>
 

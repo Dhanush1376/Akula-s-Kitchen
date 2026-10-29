@@ -239,13 +239,10 @@ export function InstallAppDrawer() {
                         <button
                           type="button"
                           onClick={promptNativeInstall}
-                          className="relative overflow-hidden w-full bg-gradient-to-r from-[#F7BB0E] via-[#FFCB36] to-[#F7BB0E] hover:brightness-105 active:scale-[0.99] text-neutral-950 font-bold py-2.5 sm:py-3 px-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all text-sm sm:text-base cursor-pointer border border-amber-300/50"
+                          className="w-full bg-[#F7BB0E] hover:bg-[#eab30c] active:scale-[0.99] text-neutral-950 font-bold py-2.5 sm:py-3 px-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 shadow-xs transition-all text-sm sm:text-base cursor-pointer border border-amber-400/40"
                         >
-                          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl sm:rounded-2xl z-0">
-                            <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/55 to-transparent -skew-x-25 animate-reflection-sheen" />
-                          </div>
-                          <Download className="w-4 h-4 stroke-[2.5] relative z-10" />
-                          <span className="relative z-10">Install App</span>
+                          <Download className="w-4 h-4 stroke-[2.5]" />
+                          <span>Install App</span>
                         </button>
 
                         <button

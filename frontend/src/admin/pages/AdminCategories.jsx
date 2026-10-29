@@ -212,29 +212,6 @@ export function AdminCategories() {
     return result;
   }, [filteredCategoriesBeforeSort, sortBy]);
 
-  const getScopeBadge = (type) => {
-    switch (type) {
-      case 'product':
-        return {
-          icon: 'inventory_2',
-          label: 'Product',
-          cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-        };
-      case 'global':
-        return {
-          icon: 'public',
-          label: 'Global',
-          cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-        };
-      default:
-        return {
-          icon: 'category',
-          label: type || 'Category',
-          cls: 'bg-stone-500/10 text-stone-600 dark:text-stone-400 border-stone-500/20',
-        };
-    }
-  };
-
   return (
     <motion.div
       initial="hidden"
@@ -296,24 +273,6 @@ export function AdminCategories() {
               )}
             </div>
 
-            {/* Desktop Scope Segmented Pill Switcher */}
-            <div className="hidden sm:flex items-center gap-1 p-1 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] h-[42px] min-h-[42px] max-h-[42px] box-border">
-              {['All', 'product', 'global'].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setFilterValue('type', t)}
-                  className={`h-[32px] min-h-[32px] max-h-[32px] px-2.5 sm:px-3 rounded-[3px] text-[12px] font-semibold cursor-pointer transition-all capitalize whitespace-nowrap flex items-center justify-center box-border ${
-                    (filterState.type || 'All') === t
-                      ? 'bg-white dark:bg-stone-800 text-[var(--admin-accent)] shadow-xs font-bold'
-                      : 'text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]'
-                  }`}
-                >
-                  {t === 'All' ? 'All' : t}
-                </button>
-              ))}
-            </div>
-
             {/* Filters Button */}
             <div className="relative shrink-0">
               <button
@@ -351,22 +310,6 @@ export function AdminCategories() {
                 clearAllLabel="Reset"
                 onApply={() => setShowFiltersMenu(false)}
               >
-                {/* Type Scope */}
-                <div className="block sm:hidden">
-                  <label className="text-[11px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider mb-1.5 block">
-                    Type Scope
-                  </label>
-                  <select
-                    value={filterState.type}
-                    onChange={(e) => setFilterValue('type', e.target.value)}
-                    className="w-full bg-[var(--admin-bg)] border border-[var(--admin-border)] rounded-[4px] px-3 py-2 text-[12px] font-medium outline-none text-[var(--admin-text-primary)] cursor-pointer"
-                  >
-                    <option value="All">All Types</option>
-                    <option value="product">Product</option>
-                    <option value="global">Global</option>
-                  </select>
-                </div>
-
                 {/* Status Filter */}
                 <div>
                   <label className="text-[11px] font-bold text-[var(--admin-text-tertiary)] uppercase tracking-wider mb-1.5 block">
@@ -593,7 +536,6 @@ export function AdminCategories() {
             <div className="md:hidden space-y-2.5">
               {filteredCategories.map((cat) => {
                 const isSelected = selectedCategories.includes(cat._id);
-                const scope = getScopeBadge(cat.type);
 
                 return (
                   <div
@@ -615,11 +557,19 @@ export function AdminCategories() {
                         />
                         <div
                           onClick={() => handleOpenEdit(cat)}
-                          className="w-9 h-9 rounded-[4px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-secondary)] shrink-0 cursor-pointer"
+                          className="w-9 h-9 rounded-[4px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-secondary)] shrink-0 cursor-pointer overflow-hidden"
                         >
-                          <span className="material-symbols-outlined text-[18px]">
-                            {scope.icon}
-                          </span>
+                          {cat.image || cat.imageSrc ? (
+                            <img
+                              src={cat.image || cat.imageSrc}
+                              alt={cat.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="material-symbols-outlined text-[18px] text-[var(--admin-text-tertiary)]">
+                              category
+                            </span>
+                          )}
                         </div>
                         <div
                           className="min-w-0 flex-1 cursor-pointer"
@@ -663,15 +613,16 @@ export function AdminCategories() {
                       </p>
                     )}
 
-                    {/* Footer: Scope Badge + Action Buttons */}
+                    {/* Footer: Products Count + Action Buttons */}
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-[var(--admin-border-subtle)]">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-[4px] border uppercase tracking-wider ${scope.cls}`}
-                      >
-                        <span className="material-symbols-outlined text-[12px] leading-none">
-                          {scope.icon}
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-[4px] bg-[var(--admin-surface-muted)] text-[var(--admin-text-secondary)] border border-[var(--admin-border-subtle)]">
+                        <span className="material-symbols-outlined text-[13px] text-[var(--admin-text-tertiary)]">
+                          inventory_2
                         </span>
-                        <span>{scope.label}</span>
+                        <span>
+                          {cat.productCount ?? 0}{' '}
+                          {(cat.productCount ?? 0) === 1 ? 'product' : 'products'}
+                        </span>
                       </span>
 
                       <div className="flex items-center gap-1.5">
@@ -722,7 +673,7 @@ export function AdminCategories() {
                       </th>
                       <th>Category Name</th>
                       <th>Slug / URL Path</th>
-                      <th className="text-center min-w-[130px]">Type Scope</th>
+                      <th className="text-center min-w-[120px]">Products</th>
                       <th className="text-center min-w-[120px]">Status</th>
                       <th className="text-right pr-6 min-w-[100px]">Actions</th>
                     </tr>
@@ -730,7 +681,6 @@ export function AdminCategories() {
                   <tbody>
                     {filteredCategories.map((cat) => {
                       const isSelected = selectedCategories.includes(cat._id);
-                      const scope = getScopeBadge(cat.type);
 
                       return (
                         <tr
@@ -753,13 +703,21 @@ export function AdminCategories() {
                             />
                           </td>
 
-                          {/* Name with Scope Icon */}
+                          {/* Name with Image / Category Icon */}
                           <td>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-[4px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-secondary)] shrink-0">
-                                <span className="material-symbols-outlined text-[18px]">
-                                  {scope.icon}
-                                </span>
+                              <div className="w-8 h-8 rounded-[4px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-secondary)] shrink-0 overflow-hidden">
+                                {cat.image || cat.imageSrc ? (
+                                  <img
+                                    src={cat.image || cat.imageSrc}
+                                    alt={cat.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="material-symbols-outlined text-[18px] text-[var(--admin-text-tertiary)]">
+                                    category
+                                  </span>
+                                )}
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-[13px] text-[var(--admin-text-primary)] group-hover:text-[var(--admin-accent)] transition-colors truncate">
@@ -781,15 +739,18 @@ export function AdminCategories() {
                             </span>
                           </td>
 
-                          {/* Type Scope */}
-                          <td className="text-center">
-                            <span
-                              className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-[4px] border uppercase tracking-wider ${scope.cls}`}
-                            >
-                              <span className="material-symbols-outlined text-[13px] leading-none">
-                                {scope.icon}
+                          {/* Products Count */}
+                          <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-2.5 py-1 rounded-[4px] bg-[var(--admin-surface-muted)] text-[var(--admin-text-secondary)] border border-[var(--admin-border-subtle)]">
+                              <span className="material-symbols-outlined text-[15px] text-[var(--admin-text-tertiary)]">
+                                inventory_2
                               </span>
-                              <span>{scope.label}</span>
+                              <span>
+                                {cat.productCount ?? 0}{' '}
+                                <span className="text-[11px] font-normal text-[var(--admin-text-tertiary)]">
+                                  {(cat.productCount ?? 0) === 1 ? 'product' : 'products'}
+                                </span>
+                              </span>
                             </span>
                           </td>
 

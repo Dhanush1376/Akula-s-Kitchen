@@ -67,6 +67,13 @@ export const navSections = [
         keywords: 'taxonomy, tags, labels',
         domain: 'products',
       },
+      {
+        label: 'Menu Page (CMS)',
+        icon: 'restaurant_menu',
+        path: '/admin/homepage?section=menu-page',
+        keywords: 'menu, weekly calendar, schedule, daily kitchen, todays dishes',
+        domain: 'products',
+      },
     ],
   },
 

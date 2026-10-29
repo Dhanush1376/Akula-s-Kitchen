@@ -175,7 +175,7 @@ export function CollectionDetail() {
         <SectionWrapper className="!py-12 md:!py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             <aside className="lg:col-span-3 hidden lg:block sticky top-32 h-fit">
-              <FilterPanel />
+              <FilterPanel categories={categories} products={products} />
             </aside>
 
             <div className="lg:col-span-9">

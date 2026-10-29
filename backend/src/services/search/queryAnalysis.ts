@@ -1,3 +1,4 @@
+import Category from '../../models/Category';
 import logger from '../../config/logger';
 import { sanitizePromptInput, validateAIResponse } from '../../utils/security/aiSanitizer';
 import { TRANSLITERATION_MAP, SYNONYM_MAP, CATEGORY_KEYWORDS } from './searchDictionaries';
@@ -7,7 +8,6 @@ import {
   getTransliterationsAndSynonyms,
   getSpellCorrectedQuery,
 } from './queryExpansion';
-
 // ── Query intent analysis: search-mode detection + local and AI-assisted analysis ──
 export interface AIAnalysisResult {
   detectedLanguage: string;
@@ -399,9 +399,18 @@ export async function analyzeQueryWithAI(query: string): Promise<AIAnalysisResul
   }
 
   try {
+    let dynamicCategoryList =
+      '"Batters", "Chutneys", "Pickles", "Podis & Masalas", "Namkeen", "Cashews", "Sweets"';
+    try {
+      const activeCats = await Category.find({ isActive: true, isDeleted: false }, 'name').lean();
+      if (activeCats && activeCats.length > 0) {
+        dynamicCategoryList = activeCats.map((c: any) => `"${c.name}"`).join(', ');
+      }
+    } catch (_err) {}
+
     // Use sanitized input in prompt — never embed raw user input
     const prompt = `
-    You are an advanced search query analyzer and NLP engine for "Akula's Kitchen", a homemade food products store selling batters, chutneys, pickles, podis & masalas, namkeen and cashews.
+    You are an advanced search query analyzer and NLP engine for "Akula's Kitchen", an authentic homemade food products store.
     Many customers search using Telugu, transliterated Telugu (English letters), or mixed Telugu-English.
     Analyze the following user search query and output a structured JSON response.
 
@@ -417,7 +426,7 @@ export async function analyzeQueryWithAI(query: string): Promise<AIAnalysisResul
 
     Extraction Guidelines:
     1. category: Map to one of the following exact categories if matching or relevant:
-       "Batters", "Chutneys", "Pickles", "Podis & Masalas", "Namkeen", "Cashews".
+       ${dynamicCategoryList}.
     2. style: (traditional, modern, luxury, minimalist, simple).
     3. colors: Array of color words if mentioned (e.g. red, yellow, green).
     4. tags: List of keyword tags (e.g. idli, dosa, mango, gongura, podi, murukulu, cashew).
@@ -432,7 +441,7 @@ export async function analyzeQueryWithAI(query: string): Promise<AIAnalysisResul
     {
       "detectedLanguage": "english | telugu | hinglish | mixed",
       "correctedQuery": "clean corrected query",
-      "category": "Batters" | "Chutneys" | "Pickles" | "Podis & Masalas" | "Namkeen" | "Cashews" | null,
+      "category": string | null,
       "style": "traditional" | "modern" | "luxury" | "minimalist" | null,
       "colors": ["color1", "color2"],
       "tags": ["tag1", "tag2"],

@@ -10,7 +10,7 @@
  * - Instant update activation via SKIP_WAITING with safe client claiming.
  */
 
-const SW_VERSION = '1.0.0';
+const SW_VERSION = '1.0.1';
 const CACHE_PREFIX = 'akula';
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${SW_VERSION}`;
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${SW_VERSION}`;
@@ -220,25 +220,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 6. External Web Fonts (Google Fonts, Gstatic)
-  // STRATEGY: Stale-While-Revalidate with caching
+  // Handled natively by browser using standard HTTP disk cache and style-src / font-src CSP directives
   if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
-    event.respondWith(
-      (async () => {
-        const cached = await caches.match(request);
-        const fetchPromise = fetch(request)
-          .then(async (networkResponse) => {
-            if (networkResponse && networkResponse.ok) {
-              const cache = await caches.open(STATIC_CACHE);
-              cache.put(request, networkResponse.clone()).catch(() => {});
-            }
-            return networkResponse;
-          })
-          .catch(() => cached);
-
-        return cached || fetchPromise;
-      })(),
-    );
-    return;
+    return; // Pass through to native browser network/disk cache
   }
 
   // 7. Static Public Media, Logos & PWA Icons
@@ -256,17 +240,19 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         const cached = await caches.match(request);
-        const fetchPromise = fetch(request)
-          .then(async (networkResponse) => {
-            if (networkResponse && networkResponse.ok) {
-              const cache = await caches.open(SHELL_CACHE);
-              cache.put(request, networkResponse.clone()).catch(() => {});
-            }
-            return networkResponse;
-          })
-          .catch(() => cached);
-
-        return cached || fetchPromise;
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse && networkResponse.ok) {
+            const cache = await caches.open(SHELL_CACHE);
+            cache.put(request, networkResponse.clone()).catch(() => {});
+          }
+          return networkResponse;
+        } catch (fetchErr) {
+          if (cached) {
+            return cached;
+          }
+          throw fetchErr;
+        }
       })(),
     );
     return;

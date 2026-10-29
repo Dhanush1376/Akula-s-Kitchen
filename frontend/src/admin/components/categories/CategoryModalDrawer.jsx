@@ -185,7 +185,7 @@ export function CategoryModalDrawer({ isOpen, onClose, category = null, onSucces
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Pickles, Chutneys, Spice Blends"
+                      placeholder="Enter category name..."
                       value={name}
                       onChange={handleNameChange}
                       className="w-full h-10 rounded-lg bg-neutral-50 dark:bg-[#181613] border border-neutral-300 dark:border-neutral-700 focus:border-[#d4a41c] focus:ring-2 focus:ring-[#d4a41c]/20 px-3.5 text-[13.5px] text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 font-medium outline-none transition-all"

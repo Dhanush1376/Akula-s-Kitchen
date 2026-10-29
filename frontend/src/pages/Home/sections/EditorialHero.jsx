@@ -87,28 +87,44 @@ function TodayCard({ item, aspect, index, badge, isLast }) {
   );
 }
 
-function TodayHead({ title, subtitle, count }) {
-  const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+function TodayHead({
+  title,
+  count,
+  seeAllText = 'See all',
+  seeAllLink = '/menu',
+  isTomorrow = false,
+  dateText,
+}) {
+  const displayDate =
+    dateText ||
+    new Date().toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
 
   return (
     <div className="ak-today__head">
       <div className="min-w-0">
         <p className="ak-today__eyebrow">
-          <span className="ak-today__live" aria-hidden="true" />
-          Fresh today · {today}
+          <span
+            className={`ak-today__live ${isTomorrow ? 'bg-amber-500 ring-2 ring-amber-500/30' : ''}`}
+            aria-hidden="true"
+          />
+          {isTomorrow ? `Tomorrow's Kitchen · ${displayDate}` : `Fresh today · ${displayDate}`}
+          {isTomorrow && (
+            <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+              Tomorrow&apos;s Menu
+            </span>
+          )}
         </p>
         <h1 id="ak-today-title" className="ak-today__title">
           {title}
         </h1>
-        {subtitle && <p className="ak-today__subtitle">{subtitle}</p>}
       </div>
-      <Link to="/menu" className="ak-today__all">
+      <Link to={seeAllLink} className="ak-today__all">
         {count > 0 && <span className="ak-today__count">{count}</span>}
-        <span>See all</span>
+        <span>{seeAllText}</span>
         <ArrowRight strokeWidth={2.4} aria-hidden="true" />
       </Link>
     </div>
@@ -147,49 +163,32 @@ function HeroSkeleton({ columns }) {
   );
 }
 
-const FALLBACK_HERO_ITEMS = [
-  {
-    id: '6ac4ba5658b53ac90876a53b',
-    title: 'Tomato Pickle',
-    image:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123121/akulas-kitchen/products/ouv4ci03wehkucl4nrxk.jpg',
-  },
-  {
-    id: '6ac62b733e575188a53b7110',
-    title: 'Idli Dosa Batter',
-    image:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123124/akulas-kitchen/products/ykliysxhqcecv1ipyzjq.jpg',
-  },
-  {
-    id: '6ac4f0f6771f3f0d427c1448',
-    title: 'Mango Avakaaya',
-    image:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123122/akulas-kitchen/products/bmv5h5wodrbnajoolldp.jpg',
-  },
-  {
-    id: '6ac847f213534437d8e18362',
-    title: 'Sambar Masala',
-    image:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
-  },
-  {
-    id: '6ac8444713534437d8e182a8',
-    title: 'Amla Avakaya',
-    image:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
-  },
-  {
-    id: '6ac494ab8c02f506a4f4bd1e',
-    title: 'Coconut Chutney',
-    image: '/uploads/akulas-kitchen/products/rustic-tomato-chutney-jar-jpg-8cd5_b8bea.webp',
-  },
-];
+import { getEffectiveMenuDay } from '../../../utils/ecommerce/menuScheduleUtils';
 
 export function EditorialHero({ previewContent }) {
   const cms = useWebsiteContent({ includeDefaults: false });
   const activeCms = previewContent || cms;
   const heroConfig = activeCms?.hero || {};
-  const productIds = useMemo(() => heroConfig.productIds || [], [heroConfig.productIds]);
+
+  // Resolve current effective day based on admin cutoff time (e.g. 6:00 PM transitions to tomorrow's menu)
+  const effectiveSchedule = useMemo(() => {
+    return getEffectiveMenuDay(heroConfig.cutoffTime || '18:00');
+  }, [heroConfig.cutoffTime]);
+
+  const { effectiveDayKey, isTomorrow, formattedEffectiveDate } = effectiveSchedule;
+  const activeDaySchedule = heroConfig.weeklySchedule?.[effectiveDayKey];
+  const useDailyMenuSchedule = heroConfig.useDailyMenuSchedule !== false;
+
+  // If aligning with daily menu, follow effective day's rotating schedule from weeklySchedule; otherwise use fixed manual selection
+  const productIds = useMemo(() => {
+    if (useDailyMenuSchedule) {
+      if (Array.isArray(activeDaySchedule?.productIds) && activeDaySchedule.productIds.length > 0) {
+        return activeDaySchedule.productIds;
+      }
+    }
+    return Array.isArray(heroConfig.productIds) ? heroConfig.productIds : [];
+  }, [useDailyMenuSchedule, activeDaySchedule, heroConfig.productIds]);
+
   const maxColumns = useColumnCount();
 
   const { data } = useProducts(
@@ -198,6 +197,8 @@ export function EditorialHero({ previewContent }) {
   );
 
   const items = useMemo(() => {
+    if (!productIds || productIds.length === 0) return [];
+
     const raw = Array.isArray(data?.products)
       ? data.products
       : Array.isArray(data?.data?.products)
@@ -213,27 +214,36 @@ export function EditorialHero({ previewContent }) {
     // Keep the admin's chosen order
     const byId = new Map(raw.map((p) => [String(p.id || p._id), p]));
     const ordered = productIds.map((id) => byId.get(String(id))).filter(Boolean);
-    const resolved = (ordered.length ? ordered : raw)
+    return ordered
       .slice(0, MAX_ITEMS)
       .map(toItem)
       .filter((i) => i.id);
-
-    return resolved.length > 0 ? resolved : FALLBACK_HERO_ITEMS;
   }, [data, productIds]);
 
   const columnCount = Math.max(1, Math.min(maxColumns, items.length));
   const columns = useMemo(() => packColumns(items, columnCount), [items, columnCount]);
 
+  if (heroConfig.isVisible === false) return null;
   if (items.length === 0) return null;
 
-  const badge = heroConfig.badgeText || "Today's special";
+  const badge = isTomorrow
+    ? activeDaySchedule?.badgeText || "Tomorrow's Special"
+    : activeDaySchedule?.badgeText || heroConfig.badgeText || null;
+
+  const displayTitle =
+    isTomorrow && (!heroConfig.title || heroConfig.title === "Today's Kitchen")
+      ? "Tomorrow's Kitchen"
+      : heroConfig.title || "Today's Kitchen";
 
   return (
     <section className="ak-today" aria-labelledby="ak-today-title">
       <TodayHead
-        title={heroConfig.title || "Today's Kitchen"}
-        subtitle={heroConfig.subtitle}
+        title={displayTitle}
         count={items.length}
+        seeAllText={heroConfig.seeAllText || 'See all'}
+        seeAllLink={heroConfig.seeAllLink || '/menu'}
+        isTomorrow={isTomorrow}
+        dateText={formattedEffectiveDate}
       />
 
       <div className="ak-today__grid" style={{ '--cols': columnCount }}>

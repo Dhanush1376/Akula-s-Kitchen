@@ -77,15 +77,7 @@ export function TopNavbar() {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (_e) {}
-    return [
-      { name: 'Batters', slug: 'batters' },
-      { name: 'Chutneys', slug: 'chutneys' },
-      { name: 'Pickles', slug: 'pickles' },
-      { name: 'Masala', slug: 'masala' },
-      { name: 'Namkeen', slug: 'namkeen' },
-      { name: 'Snacks', slug: 'snacks' },
-      { name: 'Sweets', slug: 'sweets' },
-    ];
+    return [];
   });
   const [openAccordion, setOpenAccordion] = useState(null);
 
@@ -346,15 +338,7 @@ export function TopNavbar() {
   const displayCategories = useMemo(() => {
     if (categories && categories.length > 0) return categories;
     if (configCategories && configCategories.length > 0) return configCategories;
-    return [
-      { name: 'Batters', slug: 'batters' },
-      { name: 'Chutneys', slug: 'chutneys' },
-      { name: 'Pickles', slug: 'pickles' },
-      { name: 'Masala', slug: 'masala' },
-      { name: 'Namkeen', slug: 'namkeen' },
-      { name: 'Snacks', slug: 'snacks' },
-      { name: 'Sweets', slug: 'sweets' },
-    ];
+    return [];
   }, [categories, configCategories]);
 
   const categoriesScrollRef = React.useRef(null);
@@ -903,16 +887,11 @@ export function TopNavbar() {
                           setIsOpen(false);
                           openInstallDrawer();
                         }}
-                        className="relative w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#F7BB0E] via-[#FFCB36] to-[#F7BB0E] border border-amber-300/70 shadow-[0_4px_16px_rgba(247,187,14,0.32)] hover:shadow-[0_6px_22px_rgba(247,187,14,0.45)] active:scale-[0.98] transition-all flex items-center justify-between gap-3 overflow-hidden cursor-pointer group text-neutral-950"
+                        className="relative w-full p-2.5 rounded-2xl bg-[#F7BB0E] hover:bg-[#eab30c] border border-amber-400/40 shadow-xs active:scale-[0.98] transition-all flex items-center justify-between gap-3 cursor-pointer group text-neutral-950"
                       >
-                        {/* Specular Sliding Reflection Sheen */}
-                        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl z-0">
-                          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/55 to-transparent -skew-x-25 animate-reflection-sheen" />
-                        </div>
-
                         {/* App Icon Tile & Title */}
-                        <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-                          <div className="w-10 h-10 rounded-[22%] bg-white shadow-md ring-1 ring-black/10 p-0.5 flex items-center justify-center shrink-0 overflow-hidden relative">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-white shadow-xs border border-neutral-200/80 p-0.5 flex items-center justify-center shrink-0 overflow-hidden">
                             <img
                               src="/MainLogo.png"
                               alt="Akula's Kitchen"
@@ -920,7 +899,6 @@ export function TopNavbar() {
                               height={40}
                               className="w-full h-full object-contain"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-black/[0.04] pointer-events-none rounded-[22%]" />
                           </div>
                           <span className="font-sans font-extrabold text-[13.5px] sm:text-sm text-neutral-950 leading-tight truncate">
                             Install Akula's Kitchen
@@ -928,7 +906,7 @@ export function TopNavbar() {
                         </div>
 
                         {/* Native Action Glyph Badge */}
-                        <div className="relative z-10 shrink-0 w-8 h-8 rounded-full bg-neutral-950 text-[#F7BB0E] flex items-center justify-center shadow-xs group-hover:scale-105 active:scale-95 transition-transform">
+                        <div className="shrink-0 w-8 h-8 rounded-full bg-neutral-950 text-[#F7BB0E] flex items-center justify-center shadow-xs group-hover:scale-105 active:scale-95 transition-transform">
                           <Download size={14} strokeWidth={2.6} />
                         </div>
                       </button>

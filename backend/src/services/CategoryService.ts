@@ -206,10 +206,70 @@ export class CategoryService {
   }
 
   /**
-   * Retrieves all categories.
+   * Retrieves all categories with product counts.
    */
   static async getAllCategories() {
-    return await Category.find().sort({ displayOrder: 1 }).lean();
+    const categories = await Category.find().sort({ displayOrder: 1 }).lean();
+    const Product = mongoose.models.Product || mongoose.model('Product');
+
+    if (Product && categories.length > 0) {
+      try {
+        const counts = await Product.aggregate([
+          { $match: { isDeleted: { $ne: true } } },
+          {
+            $project: {
+              categories: {
+                $setUnion: [
+                  { $cond: [{ $ifNull: ['$primaryCategory', false] }, ['$primaryCategory'], []] },
+                  { $cond: [{ $ifNull: ['$category', false] }, ['$category'], []] },
+                  { $ifNull: ['$secondaryCategories', []] },
+                ],
+              },
+            },
+          },
+          { $unwind: '$categories' },
+          {
+            $group: {
+              _id: '$categories',
+              count: { $sum: 1 },
+            },
+          },
+        ]);
+
+        const countMap = new Map<string, number>();
+        counts.forEach((c: any) => {
+          if (c._id) {
+            countMap.set(String(c._id).toLowerCase(), c.count);
+          }
+        });
+
+        return categories.map((cat: any) => {
+          const idKey = String(cat._id).toLowerCase();
+          const slugKey = String(cat.slug || '').toLowerCase();
+          const nameKey = String(cat.name || '').toLowerCase();
+          const productCount =
+            countMap.get(idKey) ||
+            (slugKey ? countMap.get(slugKey) : 0) ||
+            (nameKey ? countMap.get(nameKey) : 0) ||
+            0;
+
+          return {
+            ...cat,
+            productCount,
+          };
+        });
+      } catch {
+        return categories.map((cat: any) => ({
+          ...cat,
+          productCount: 0,
+        }));
+      }
+    }
+
+    return categories.map((cat: any) => ({
+      ...cat,
+      productCount: 0,
+    }));
   }
 
   /**

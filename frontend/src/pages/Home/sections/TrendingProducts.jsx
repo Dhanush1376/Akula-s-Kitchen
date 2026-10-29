@@ -16,7 +16,7 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
   const loading = !previewContent && cms?.loading;
   const config = activeCms?.trendingProducts || {};
   const _productIds = config.productIds || [];
-  const isManualMode = config.useAutoFeed === false && _productIds.length > 0;
+  const isManualMode = config.useAutoFeed === false;
 
   const {
     data: manualData,
@@ -25,7 +25,7 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
     refetch: manualRefetch,
   } = useProducts(
     { ids: _productIds.join(','), limit: config.maxDisplay || 10 },
-    { enabled: config.isVisible !== false && isManualMode },
+    { enabled: config.isVisible !== false && isManualMode && _productIds.length > 0 },
   );
 
   const {
@@ -41,26 +41,14 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
     { enabled: config.isVisible !== false && !isManualMode },
   );
 
-  const rawTrending = trendingData?.items || (Array.isArray(trendingData) ? trendingData : []);
-  const needsFallback = !isManualMode && rawTrending.length === 0;
-
-  const { data: fallbackData } = useProducts(
-    { limit: config.maxDisplay || 8 },
-    { enabled: config.isVisible !== false && needsFallback },
-  );
-
   if (config.isVisible === false) return null;
+  if (isManualMode && _productIds.length === 0) return null;
 
   const isPending = isManualMode ? manualPending : trendingPending;
   const isError = isManualMode ? manualError : trendingError;
   const refetch = isManualMode ? manualRefetch : trendingRefetch;
 
-  const fallbackList =
-    fallbackData?.data?.products ||
-    fallbackData?.products ||
-    fallbackData?.data ||
-    fallbackData?.items ||
-    (Array.isArray(fallbackData) ? fallbackData : []);
+  const rawTrending = trendingData?.items || (Array.isArray(trendingData) ? trendingData : []);
 
   const products = isManualMode
     ? manualData?.data?.products ||
@@ -68,9 +56,7 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
       manualData?.data ||
       manualData?.items ||
       (Array.isArray(manualData) ? manualData : [])
-    : rawTrending.length > 0
-      ? rawTrending
-      : fallbackList;
+    : rawTrending;
 
   if (isPending || loading) {
     return (
@@ -110,22 +96,10 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
       ? config.sectionTitle
       : 'Trending Now';
 
-  const rawKicker = config.sectionSubtitle !== undefined ? config.sectionSubtitle : config.kicker;
-  const kicker =
-    rawKicker &&
-    rawKicker.trim().toLowerCase() !== 'trending now' &&
-    rawKicker.trim().toLowerCase() !== headingTitle.trim().toLowerCase()
-      ? rawKicker
-      : null;
-
   return (
     <section className="h1-section !pt-4 lg:!pt-8 !pb-4 lg:!pb-8 relative isolate" id="h1-trending">
       <div className="h1-container relative z-10">
-        <SectionHeader
-          kicker={kicker}
-          title={headingTitle}
-          seeAllLink={config.seeAllLink || '/collections'}
-        />
+        <SectionHeader title={headingTitle} seeAllLink={config.seeAllLink || '/collections'} />
       </div>
       <div className="h1-container--full pl-4 lg:pl-9 relative z-10">
         <CarouselWrapper gap="16px">

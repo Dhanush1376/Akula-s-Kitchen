@@ -13,16 +13,19 @@ export function BestSellers({ previewContent }) {
   const loading = !previewContent && cms?.loading;
   const config = activeCms?.featuredProducts || {};
   const productIds = config.productIds || [];
+  const isAutoMode = config.useAutoFeed === true;
+  const hasManualIds = productIds.length > 0;
 
   const { data, isPending, isError, refetch } = useProducts(
     {
-      ...(productIds.length > 0 ? { ids: productIds.join(',') } : { sort: 'newest' }),
+      ...(hasManualIds ? { ids: productIds.join(',') } : { sort: 'bestSelling' }),
       limit: config.maxDisplay || 10,
     },
-    { enabled: config.isVisible !== false },
+    { enabled: config.isVisible !== false && (isAutoMode || hasManualIds) },
   );
 
   if (config.isVisible === false) return null;
+  if (!isAutoMode && !hasManualIds) return null;
 
   if (isPending || loading) {
     return (
@@ -71,7 +74,6 @@ export function BestSellers({ previewContent }) {
     <section className="h1-section relative isolate" id="h1-new-arrivals">
       <div className="h1-container relative z-10">
         <SectionHeader
-          kicker={config.kicker}
           title={config.sectionTitle || 'Bestsellers'}
           seeAllLink={config.seeAllLink || '/collections'}
         />

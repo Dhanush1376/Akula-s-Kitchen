@@ -225,17 +225,13 @@ export function validateAIResponse(data: any): {
       ? htmlEscapeString(data.correctedQuery.substring(0, MAX_INPUT_LENGTH))
       : '';
 
-  // Validate category against known whitelist
-  const VALID_CATEGORIES = new Set([
-    'Batters',
-    'Chutneys',
-    'Pickles',
-    'Podis & Masalas',
-    'Namkeen',
-    'Cashews',
-  ]);
+  // Validate category: sanitize string to prevent XSS/injection while allowing any dynamic category
   const category =
-    typeof data.category === 'string' && VALID_CATEGORIES.has(data.category) ? data.category : null;
+    typeof data.category === 'string' &&
+    data.category.trim().length > 0 &&
+    data.category.length <= 60
+      ? htmlEscapeString(data.category.trim())
+      : null;
 
   // Validate style against known whitelist
   const VALID_STYLES = new Set([

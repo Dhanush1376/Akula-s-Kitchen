@@ -1,59 +1,49 @@
 import React from 'react';
-import { AdminField, AdminInput, AdminTextarea } from '../AdminUIKit';
+import { AdminField, AdminInput } from '../AdminUIKit';
 
 export function ShopPageEditor({ content, onUpdate }) {
   const sp = content || {};
   const hero = sp.hero || {};
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section Banner */}
-      <div className="p-6 md:p-8 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-md shadow-sm relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6">
-          <span className="material-symbols-outlined text-[150px]">storefront</span>
-        </div>
-        <div className="relative z-10 space-y-6">
-          <span className="text-[14px] sm:text-[15px] font-semibold text-[var(--admin-text-primary)] tracking-tight block border-b border-[var(--admin-border-subtle)] pb-3 mb-6">
-            1. Hero Section Setup
-          </span>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AdminField label="Hero Title" description="The primary main headline of the shop page">
-              <AdminInput
-                value={hero.title || ''}
-                onChange={(e) => onUpdate('shopPage', { hero: { ...hero, title: e.target.value } })}
-                className="w-full !py-3 !text-[13px] bg-[var(--admin-surface-muted)] hover:bg-[var(--admin-surface)] rounded-md shadow-[var(--admin-shadow-xs)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] transition-colors"
-                placeholder="e.g. Heritage Collection"
-              />
-            </AdminField>
-
-            <AdminField label="Hero Subtitle" description="A short tagline or category group text">
-              <AdminInput
-                value={hero.subtitle || ''}
-                onChange={(e) =>
-                  onUpdate('shopPage', { hero: { ...hero, subtitle: e.target.value } })
-                }
-                className="w-full !py-3 !text-[13px] bg-[var(--admin-surface-muted)] hover:bg-[var(--admin-surface)] rounded-md shadow-[var(--admin-shadow-xs)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] transition-colors"
-                placeholder="e.g. Fresh • Tasty • Healthy"
-              />
-            </AdminField>
+    <div className="admin-card p-4 sm:p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[var(--admin-border-subtle)] pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-[4px] bg-[var(--admin-accent)]/10 text-[var(--admin-accent)] flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
           </div>
-
-          <AdminField
-            label="Hero Description"
-            description="Immersive description paragraph detailing the shop collections"
-          >
-            <AdminTextarea
-              value={hero.description || ''}
-              onChange={(e) =>
-                onUpdate('shopPage', { hero: { ...hero, description: e.target.value } })
-              }
-              rows={3}
-              className="w-full !py-3 !text-[13px] bg-[var(--admin-surface-muted)] hover:bg-[var(--admin-surface)] rounded-md shadow-[var(--admin-shadow-xs)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] transition-colors"
-              placeholder="Describe your collections here..."
-            />
-          </AdminField>
+          <h2 className="text-[15px] sm:text-[16px] font-semibold text-[var(--admin-text-primary)]">
+            Shop Page Controller
+          </h2>
         </div>
+        <a
+          href="/collections"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11.5px] font-bold text-[var(--admin-accent)] hover:underline inline-flex items-center gap-1 shrink-0"
+        >
+          <span>View Live</span>
+          <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+        </a>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <AdminField label="Hero Title">
+          <AdminInput
+            value={hero.title || ''}
+            onChange={(e) => onUpdate('shopPage', { hero: { ...hero, title: e.target.value } })}
+            placeholder="e.g. Shop"
+          />
+        </AdminField>
+
+        <AdminField label="Hero Subtitle">
+          <AdminInput
+            value={hero.subtitle || ''}
+            onChange={(e) => onUpdate('shopPage', { hero: { ...hero, subtitle: e.target.value } })}
+            placeholder="e.g. Fresh • Tasty • Healthy"
+          />
+        </AdminField>
       </div>
     </div>
   );

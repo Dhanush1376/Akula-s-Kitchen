@@ -58,13 +58,16 @@ export function AdminDashboardRecents({ orders, trendingProducts }) {
         </div>
 
         {orders.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-4 text-center">
-            <span className="material-symbols-outlined text-[28px] text-[var(--admin-text-tertiary)] mb-2">
-              receipt_long
+          <div className="flex-1 flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-6 text-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-tertiary)] mb-2.5 shadow-2xs">
+              <span className="material-symbols-outlined text-[22px]">receipt_long</span>
+            </div>
+            <span className="text-[12px] font-bold text-[var(--admin-text-primary)]">
+              No Data Available
             </span>
-            <span className="text-[10px] uppercase font-bold text-[var(--admin-text-secondary)] tracking-wider">
-              No Orders Found
-            </span>
+            <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 max-w-xs">
+              No customer orders have been placed in the store yet.
+            </p>
           </div>
         ) : (
           <>
@@ -176,12 +179,15 @@ export function AdminDashboardRecents({ orders, trendingProducts }) {
 
         {trendingProducts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-[var(--admin-surface-muted)] rounded-[4px] border border-dashed border-[var(--admin-border)] p-6 text-center">
-            <span className="material-symbols-outlined text-[28px] text-[var(--admin-text-tertiary)] mb-2">
-              trending_up
+            <div className="w-10 h-10 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-text-tertiary)] mb-2.5 shadow-2xs">
+              <span className="material-symbols-outlined text-[22px]">inventory_2</span>
+            </div>
+            <span className="text-[12px] font-bold text-[var(--admin-text-primary)]">
+              No Data Available
             </span>
-            <span className="text-[11px] uppercase font-bold text-[var(--admin-text-secondary)] tracking-wider">
-              No Products Yet
-            </span>
+            <p className="text-[11px] text-[var(--admin-text-tertiary)] mt-1 max-w-xs">
+              No catalog products available in the store yet.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">

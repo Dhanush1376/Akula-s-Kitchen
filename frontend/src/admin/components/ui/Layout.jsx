@@ -25,7 +25,7 @@ export function PageHeader({
       className={`flex ${mobileRow ? 'flex-row' : 'flex-col sm:flex-row'} justify-between items-start sm:items-center gap-5 sm:gap-6 border-b border-[var(--admin-border-subtle)] pb-4 mb-0 ${className}`}
     >
       <div
-        className={`flex ${actionRowMobile ? 'flex-row items-center' : 'flex-col sm:flex-row items-start sm:items-center'} justify-between gap-3 ${mobileRow ? 'flex-1 min-w-0 pr-2' : 'w-full'}`}
+        className={`flex ${actionRowMobile ? 'flex-row items-start sm:items-center' : 'flex-col sm:flex-row items-start sm:items-center'} justify-between gap-3 ${mobileRow ? 'flex-1 min-w-0 pr-2' : 'w-full'}`}
       >
         <div
           className={`flex items-center gap-3 ${actionRowMobile ? 'min-w-0 flex-1 sm:w-auto' : 'w-full sm:w-auto'}`}
@@ -96,7 +96,7 @@ export function PageHeader({
         </div>
         {headerAction && (
           <div
-            className={`${actionRowMobile ? 'w-auto mt-0' : 'w-full sm:w-auto mt-3 sm:mt-0'} shrink-0 flex items-center justify-end sm:justify-end`}
+            className={`${actionRowMobile ? 'w-auto mt-0.5 sm:mt-0' : 'w-full sm:w-auto mt-3 sm:mt-0'} shrink-0 flex items-center justify-end sm:justify-end`}
           >
             {headerAction}
           </div>

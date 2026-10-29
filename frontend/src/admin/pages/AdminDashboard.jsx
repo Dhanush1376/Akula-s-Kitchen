@@ -1,8 +1,11 @@
 import { m as motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import { useAdmin } from '../context/AdminContext';
+import { useConfig } from '../../context/ConfigContext';
+import storeSettingsService from '../../services/api/storeSettingsService';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import {
   PageHeader,
@@ -27,9 +30,14 @@ export function AdminDashboard() {
     refreshDashboard,
     refreshOrders,
     dataLoading,
+    safetyLock,
+    activeRole,
+    logAdminAction,
   } = useAdmin();
+  const { isStoreClosed } = useConfig();
   const navigate = useNavigate();
   const [chartPeriod, setChartPeriod] = useState('all-time');
+  const [isTogglingStore, setIsTogglingStore] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Auto-refresh dashboard data every 60 seconds
@@ -41,7 +49,93 @@ export function AdminDashboard() {
     return () => clearInterval(interval);
   }, [refreshDashboard, refreshOrders]);
 
-  const pendingOrders = orders.filter((o) => o.status === 'Pending').length;
+  // Toggle Store Status (Open / Close Store)
+  const handleToggleStore = async () => {
+    if (safetyLock) {
+      toast.error('Safety Lock Active: Modifying store status is blocked!');
+      return;
+    }
+    if (activeRole === 'viewer') {
+      toast.error('Viewer Role: Modifying store status is restricted!');
+      return;
+    }
+
+    const nextStoreEnabled = isStoreClosed; // If closed, next state is open (storeEnabled: true)
+    setIsTogglingStore(true);
+    try {
+      await storeSettingsService.updateSection('general', {
+        storeEnabled: nextStoreEnabled,
+      });
+      if (nextStoreEnabled) {
+        toast.success('Store is now OPEN — Customers can place orders');
+      } else {
+        toast.success('Store is now CLOSED — Online ordering paused');
+      }
+      if (typeof logAdminAction === 'function') {
+        logAdminAction(
+          'UPDATE_STORE_STATUS',
+          nextStoreEnabled
+            ? 'Opened storefront for customer orders'
+            : 'Closed storefront and paused orders',
+        );
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update store status');
+    } finally {
+      setIsTogglingStore(false);
+    }
+  };
+
+  // Filter orders by selected timeframe
+  const periodOrders = useMemo(() => {
+    if (chartPeriod === 'all-time') return orders;
+    const now = new Date();
+    return orders.filter((o) => {
+      const dateVal = o.rawOrder?.createdAt || o.timestamp || o.date;
+      if (!dateVal) return false;
+      const orderDate = new Date(dateVal);
+      if (isNaN(orderDate.getTime())) return false;
+      if (chartPeriod === 'today') {
+        return (
+          orderDate.getDate() === now.getDate() &&
+          orderDate.getMonth() === now.getMonth() &&
+          orderDate.getFullYear() === now.getFullYear()
+        );
+      }
+      if (chartPeriod === 'weekly') {
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return orderDate >= sevenDaysAgo;
+      }
+      if (chartPeriod === 'monthly') {
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return orderDate >= thirtyDaysAgo;
+      }
+      return true;
+    });
+  }, [orders, chartPeriod]);
+
+  const pendingOrders = periodOrders.filter((o) => o.status === 'Pending').length;
+
+  const periodSales = useMemo(() => {
+    if (chartPeriod === 'all-time') {
+      return dashboardStats?.stats?.totalSales !== undefined
+        ? dashboardStats.stats.totalSales
+        : orders.reduce((sum, o) => sum + (o.total || 0), 0);
+    }
+    return periodOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  }, [chartPeriod, dashboardStats, orders, periodOrders]);
+
+  // Check if store has no data
+  const hasNoStoreData = useMemo(() => {
+    const hasOrders = orders && orders.length > 0;
+    const hasSales = Boolean(
+      dashboardStats?.stats?.totalSales && dashboardStats.stats.totalSales > 0,
+    );
+    const hasActivity = Boolean(
+      dashboardStats?.recentActivity && dashboardStats.recentActivity.length > 0,
+    );
+    return !hasOrders && !hasSales && !hasActivity;
+  }, [orders, dashboardStats]);
 
   // Prepare Revenue Overview data from backend
   const revenueChartData = useMemo(() => {
@@ -177,6 +271,55 @@ export function AdminDashboard() {
         }
         headerAction={
           <div className="flex items-center justify-end gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto custom-scrollbar pb-1 sm:pb-0 shrink-0 ml-auto">
+            {/* Store Status Toggle Button (Close Store / Open Store) (42px locked height) */}
+            <button
+              type="button"
+              onClick={handleToggleStore}
+              disabled={isTogglingStore}
+              className={`h-[42px] min-h-[42px] max-h-[42px] px-2.5 sm:px-3 rounded-[4px] border shadow-2xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-60 shrink-0 select-none ${
+                isStoreClosed
+                  ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 border-amber-500/30'
+                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 border-emerald-500/30'
+              }`}
+              title={
+                isStoreClosed
+                  ? 'Store is currently CLOSED to online orders. Click to open store.'
+                  : 'Store is currently OPEN to online orders. Click to close store.'
+              }
+            >
+              {/* Status Dot */}
+              <span className="relative flex h-2 w-2 shrink-0">
+                {!isStoreClosed && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${
+                    isStoreClosed ? 'bg-amber-500' : 'bg-emerald-500'
+                  }`}
+                />
+              </span>
+
+              {/* Status Label */}
+              <span className="text-[11.5px] font-bold whitespace-nowrap">
+                <span className="hidden sm:inline">Store </span>
+                {isStoreClosed ? 'Closed' : 'Open'}
+              </span>
+
+              {/* Visual Toggle Pill Switch */}
+              <div
+                className={`w-7 h-3.5 rounded-full p-0.5 transition-colors relative flex items-center shrink-0 ${
+                  isStoreClosed ? 'bg-stone-300 dark:bg-stone-600' : 'bg-emerald-600'
+                }`}
+                aria-hidden="true"
+              >
+                <span
+                  className={`w-2.5 h-2.5 rounded-full bg-white shadow-xs transition-transform transform ${
+                    isStoreClosed ? 'translate-x-0' : 'translate-x-3.5'
+                  } ${isTogglingStore ? 'animate-pulse' : ''}`}
+                />
+              </div>
+            </button>
+
             {/* Period Switcher (42px locked height) */}
             <div className="bg-[var(--admin-surface-muted)] p-1 rounded-[4px] border border-[var(--admin-border)] flex items-center gap-1 h-[42px] min-h-[42px] max-h-[42px] box-border shadow-2xs shrink-0">
               {[
@@ -226,16 +369,81 @@ export function AdminDashboard() {
         }
       />
 
+      {/* ─── Store Closed Notice Banner ─── */}
+      {isStoreClosed && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-500/10 border border-amber-500/30 rounded-[4px] p-3 sm:px-4 flex flex-wrap items-center justify-between gap-3 text-amber-900 dark:text-amber-200"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="material-symbols-outlined text-[20px] text-amber-600 dark:text-amber-400 shrink-0">
+              storefront
+            </span>
+            <div className="text-[12px] min-w-0">
+              <span className="font-bold">Storefront is currently closed.</span>{' '}
+              <span className="text-amber-800/80 dark:text-amber-300/80 hidden sm:inline">
+                Customer checkout and online orders are temporarily paused.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleStore}
+            disabled={isTogglingStore}
+            className="h-[30px] px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-[3px] text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer ml-auto shrink-0 shadow-xs active:scale-95 disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[15px]">lock_open</span>
+            Open Store Now
+          </button>
+        </motion.div>
+      )}
+
+      {/* ─── No Store Data Available Banner ─── */}
+      {hasNoStoreData && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[var(--admin-surface)] border border-dashed border-[var(--admin-border-strong)] rounded-[4px] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs"
+        >
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-[4px] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] flex items-center justify-center text-[var(--admin-accent)] shrink-0">
+              <span className="material-symbols-outlined text-[22px]">bar_chart</span>
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-[var(--admin-text-primary)]">
+                No Store Data Available Yet
+              </p>
+              <p className="text-[11.5px] text-[var(--admin-text-secondary)] mt-0.5">
+                There are no orders or sales recorded yet. Once customer orders are placed, live
+                telemetry and revenue analytics will appear automatically.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => navigate('/admin/products/add')}
+              className="h-[34px] px-3.5 bg-[var(--admin-accent)] hover:opacity-90 text-white text-[11.5px] font-bold rounded-[3px] flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs w-full sm:w-auto"
+            >
+              <span className="material-symbols-outlined text-[16px]">add</span>
+              Add Product
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* ─── 3-Column Connected Financial & Operational Telemetry Ledger ─── */}
       <AdminDashboardStats
         dashboardStats={dashboardStats}
         pendingOrders={pendingOrders}
         customers={customers}
+        periodSales={periodSales}
       />
 
       {/* ─── Charts & Trends Row ─── */}
       <AdminDashboardCharts
-        orders={orders}
+        orders={periodOrders}
         revenueChartData={revenueChartData}
         categoryChartData={categoryChartData}
         weeklyOrderStats={weeklyOrderStats}
@@ -250,7 +458,7 @@ export function AdminDashboard() {
       />
 
       {/* ─── Recents & Catalog Row ─── */}
-      <AdminDashboardRecents orders={orders} trendingProducts={trendingProducts} />
+      <AdminDashboardRecents orders={periodOrders} trendingProducts={trendingProducts} />
     </motion.div>
   );
 }

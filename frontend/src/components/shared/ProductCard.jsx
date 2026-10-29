@@ -1,4 +1,4 @@
-import { Check, ImageOff, Heart, Plus } from 'lucide-react';
+import { Check, ImageOff, Heart, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
@@ -104,9 +104,7 @@ export const ProductCard = React.memo(function ProductCard({
     const width = e.target.offsetWidth;
     if (width > 0) {
       const newIndex = Math.round(scrollLeft / width);
-      if (newIndex !== activeIndex) {
-        setActiveIndex(newIndex);
-      }
+      setActiveIndex((prev) => (prev !== newIndex ? newIndex : prev));
     }
   };
 
@@ -128,6 +126,118 @@ export const ProductCard = React.memo(function ProductCard({
     }
     return imgs;
   }, [imageSrc, hoverImage, gallery, images]);
+
+  const isSwipingRef = React.useRef(false);
+  const touchStartPos = React.useRef({ x: 0, y: 0 });
+
+  const scrollToIndex = React.useCallback(
+    (index) => {
+      if (!scrollContainerRef.current) return;
+      const targetIndex = Math.max(0, Math.min(index, availableImages.length - 1));
+      const width = scrollContainerRef.current.clientWidth;
+      scrollContainerRef.current.scrollTo({
+        left: targetIndex * width,
+        behavior: 'smooth',
+      });
+      setActiveIndex(targetIndex);
+    },
+    [availableImages.length],
+  );
+
+  const handleNextImage = React.useCallback(
+    (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (scrollContainerRef.current) {
+        const width = scrollContainerRef.current.clientWidth;
+        const currentIdx = Math.round(scrollContainerRef.current.scrollLeft / width);
+        if (currentIdx < availableImages.length - 1) {
+          scrollToIndex(currentIdx + 1);
+        }
+      }
+    },
+    [availableImages.length, scrollToIndex],
+  );
+
+  const handlePrevImage = React.useCallback(
+    (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (scrollContainerRef.current) {
+        const width = scrollContainerRef.current.clientWidth;
+        const currentIdx = Math.round(scrollContainerRef.current.scrollLeft / width);
+        if (currentIdx > 0) {
+          scrollToIndex(currentIdx - 1);
+        }
+      }
+    },
+    [scrollToIndex],
+  );
+
+  const handleTouchStart = (e) => {
+    if (availableImages.length <= 1) return;
+    const t = e.touches[0];
+    touchStartPos.current = { x: t.clientX, y: t.clientY };
+    isSwipingRef.current = false;
+  };
+
+  const handleTouchMove = (e) => {
+    if (availableImages.length <= 1) return;
+    const t = e.touches[0];
+    const diffX = Math.abs(t.clientX - touchStartPos.current.x);
+    const diffY = Math.abs(t.clientY - touchStartPos.current.y);
+    if (diffX > 8 && diffX > diffY) {
+      isSwipingRef.current = true;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isSwipingRef.current) {
+      setTimeout(() => {
+        isSwipingRef.current = false;
+      }, 300);
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (availableImages.length <= 1 || e.button !== 0) return;
+    touchStartPos.current = { x: e.clientX, y: e.clientY };
+    isSwipingRef.current = false;
+
+    const onMouseMove = (moveEvent) => {
+      const diffX = Math.abs(moveEvent.clientX - touchStartPos.current.x);
+      if (diffX > 8) {
+        isSwipingRef.current = true;
+      }
+    };
+
+    const onMouseUp = (upEvent) => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      if (isSwipingRef.current) {
+        const deltaX = touchStartPos.current.x - upEvent.clientX;
+        if (Math.abs(deltaX) > 30 && scrollContainerRef.current) {
+          const width = scrollContainerRef.current.clientWidth;
+          const currentIdx = Math.round(scrollContainerRef.current.scrollLeft / width);
+          if (deltaX > 0 && currentIdx < availableImages.length - 1) {
+            scrollToIndex(currentIdx + 1);
+          } else if (deltaX < 0 && currentIdx > 0) {
+            scrollToIndex(currentIdx - 1);
+          }
+        }
+        setTimeout(() => {
+          isSwipingRef.current = false;
+        }, 300);
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   const {
     longPressTriggered,
@@ -199,7 +309,7 @@ export const ProductCard = React.memo(function ProductCard({
   const productRoute = getProductRoute(productId);
 
   const handleCardClick = (e) => {
-    if (longPressTriggered) return;
+    if (longPressTriggered || isSwipingRef.current) return;
     // If the user clicked a button or any interactive element inside a button, don't trigger the card link
     if (e.target.closest('button')) return;
     // Links inside the card already navigate; navigating again here pushed a duplicate
@@ -269,7 +379,7 @@ export const ProductCard = React.memo(function ProductCard({
           // Prevent native context menu on touch devices during long press
           if (window.innerWidth < 1024) e.preventDefault();
         }}
-        className={`group relative flex flex-col cursor-pointer focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-surface z-10 hover:z-40 focus-within:z-40 select-none touch-pan-y ${isRectangular ? 'rounded-md' : 'rounded-[12px]'}`}
+        className={`group relative flex flex-col cursor-pointer focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-surface z-10 hover:z-40 focus-within:z-40 select-none ${isRectangular ? 'rounded-md' : 'rounded-[12px]'}`}
         style={{ WebkitTouchCallout: 'none' }}
       >
         {/* 1. VISUAL CANVAS */}
@@ -281,7 +391,12 @@ export const ProductCard = React.memo(function ProductCard({
             <div
               ref={scrollContainerRef}
               onScroll={handleScroll}
-              className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleMouseDown}
+              style={{ touchAction: 'pan-x pan-y' }}
+              className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar overscroll-x-contain touch-pan-x"
             >
               {availableImages.length > 0 ? (
                 availableImages.map((img, idx) => (
@@ -291,6 +406,12 @@ export const ProductCard = React.memo(function ProductCard({
                   >
                     <Link
                       to={productRoute}
+                      onClick={(e) => {
+                        if (isSwipingRef.current) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }
+                      }}
                       className="block h-full w-full pointer-events-auto"
                       draggable="false"
                       onDragStart={(e) => e.preventDefault()}
@@ -303,7 +424,7 @@ export const ProductCard = React.memo(function ProductCard({
                       <CloudinaryImage
                         src={img}
                         alt={`${title || 'Product'} - view ${idx + 1}`}
-                        className="transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 will-change-transform transform-gpu [backface-visibility:hidden] object-cover w-full h-full"
+                        className="transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 will-change-transform transform-gpu [backface-visibility:hidden] object-cover w-full h-full pointer-events-none select-none"
                         loading={eager && idx === 0 ? 'eager' : 'lazy'}
                         fetchPriority={eager && idx === 0 ? 'high' : 'auto'}
                         width={800}
@@ -327,34 +448,44 @@ export const ProductCard = React.memo(function ProductCard({
 
             {availableImages.length > 1 && (
               <>
+                {/* Desktop Prev Button */}
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  disabled={activeIndex === 0}
+                  className={`hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-md items-center justify-center transition-all duration-200 cursor-pointer opacity-0 group-hover/canvas:opacity-100 ${
+                    activeIndex === 0 ? 'invisible pointer-events-none' : 'pointer-events-auto'
+                  }`}
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Desktop Next Button */}
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  disabled={activeIndex === availableImages.length - 1}
+                  className={`hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-md items-center justify-center transition-all duration-200 cursor-pointer opacity-0 group-hover/canvas:opacity-100 ${
+                    activeIndex === availableImages.length - 1
+                      ? 'invisible pointer-events-none'
+                      : 'pointer-events-auto'
+                  }`}
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
                 {/* Dots Indicator */}
                 <div className="absolute bottom-2.5 left-2.5 sm:bottom-3 sm:left-3 flex items-center gap-1.5 z-20 bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/10 shadow-sm pointer-events-auto">
                   {availableImages.map((_, i) => (
-                    <div
+                    <button
                       key={i}
-                      role="button"
-                      tabIndex={0}
+                      type="button"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (scrollContainerRef.current) {
-                          scrollContainerRef.current.scrollTo({
-                            left: i * scrollContainerRef.current.clientWidth,
-                            behavior: 'smooth',
-                          });
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (scrollContainerRef.current) {
-                            scrollContainerRef.current.scrollTo({
-                              left: i * scrollContainerRef.current.clientWidth,
-                              behavior: 'smooth',
-                            });
-                          }
-                        }
+                        scrollToIndex(i);
                       }}
                       className={`transition-all duration-300 rounded-full shadow-md border border-black/10 outline-none cursor-pointer hover:scale-125 flex-shrink-0 p-0 m-0 ${
                         i === activeIndex

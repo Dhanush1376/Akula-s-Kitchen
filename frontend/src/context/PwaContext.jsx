@@ -116,6 +116,24 @@ export function PwaProvider({ children }) {
     }
   }, []);
 
+  const hasTriggeredInstallToastRef = useRef(false);
+
+  const notifyInstallSuccess = useCallback(() => {
+    if (hasTriggeredInstallToastRef.current) return;
+    hasTriggeredInstallToastRef.current = true;
+    setIsInstalled(true);
+    setIsStandalone(true);
+    setDeferredPrompt(null);
+    localStorage.setItem(INSTALLED_KEY, 'true');
+    toast.success("Akula's Kitchen installed!", {
+      id: 'pwa-install-success',
+      icon: '🎉',
+      duration: 3500,
+    });
+    // Automatically redirect to the installed app
+    redirectToInstalledApp();
+  }, [redirectToInstalledApp]);
+
   // 4. Listen for beforeinstallprompt & appinstalled
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
@@ -126,16 +144,7 @@ export function PwaProvider({ children }) {
 
     const handleAppInstalled = () => {
       logger.info('[PWA] App successfully installed by user');
-      setIsInstalled(true);
-      setIsStandalone(true);
-      setDeferredPrompt(null);
-      localStorage.setItem(INSTALLED_KEY, 'true');
-      toast.success("Akula's Kitchen installed successfully! Opening app...", {
-        icon: '🎉',
-        duration: 4000,
-      });
-      // Automatically redirect to the installed app
-      redirectToInstalledApp();
+      notifyInstallSuccess();
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -145,47 +154,57 @@ export function PwaProvider({ children }) {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [redirectToInstalledApp]);
+  }, [notifyInstallSuccess]);
 
-  // 5. Open prompt EVERY TIME the website is opened if not installed, or redirect if installed
+  // 5. Present install invitation ONLY on initial site entry (initial stage), never nag on route changes
   useEffect(() => {
+    // If running inside the standalone installed PWA, do nothing
     if (checkIsStandalone()) return;
 
-    // Check sensitive routes
-    const isExcludedRoute = EXCLUDED_ROUTES.some((route) => location.pathname.startsWith(route));
-    if (isExcludedRoute) return;
-
-    // If dismissed during this active session, do not re-trigger on internal route changes
-    if (sessionDismissedRef.current) return;
-
+    // Never auto-prompt or auto-redirect if already installed
     const alreadyInstalled =
       checkIsStandalone() ||
       (typeof window !== 'undefined' && localStorage.getItem(INSTALLED_KEY) === 'true');
+    if (alreadyInstalled) return;
 
-    if (alreadyInstalled) {
-      // User has installed the app, but opened regular website in browser:
-      // Redirect to the app directly
-      const timer = setTimeout(() => {
-        setIsInstallDrawerOpen(true);
-        redirectToInstalledApp();
-      }, 900);
-      return () => clearTimeout(timer);
+    // Never auto-prompt on sensitive routes
+    const currentPath =
+      typeof window !== 'undefined' ? window.location.pathname : location.pathname;
+    const isExcludedRoute = EXCLUDED_ROUTES.some((route) => currentPath.startsWith(route));
+    if (isExcludedRoute) return;
+
+    try {
+      if (typeof window !== 'undefined') {
+        // Only at the initial stage of this browsing session
+        if (sessionStorage.getItem('akula_pwa_session_prompted') === 'true') return;
+
+        // Respect previous dismissals and cooldowns
+        const dismissCount = parseInt(localStorage.getItem(DISMISS_COUNT_KEY) || '0', 10);
+        if (dismissCount >= MAX_AUTO_DISMISSALS) return;
+
+        const dismissedUntil = localStorage.getItem(COOLDOWN_KEY);
+        if (dismissedUntil && Date.now() < Number(dismissedUntil)) return;
+
+        // Mark session as prompted so browsing and navigating routes never re-triggers it
+        sessionStorage.setItem('akula_pwa_session_prompted', 'true');
+      }
+    } catch (_e) {
+      return;
     }
 
-    // User has NOT installed the app:
-    // "if the user did not install shooow this pop up one everytime when he opens the website is that clear"
+    // Graceful initial stage delay (3s) so the user experiences the initial page smoothly first
     const timer = setTimeout(() => {
-      if (!checkIsStandalone() && localStorage.getItem(INSTALLED_KEY) !== 'true') {
+      if (!sessionDismissedRef.current && !checkIsStandalone()) {
         setIsInstallDrawerOpen(true);
       }
-    }, 750);
+    }, 3000);
 
     return () => clearTimeout(timer);
-  }, [location.pathname, redirectToInstalledApp]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run ONCE on mount (initial stage), NOT on every route change!
 
   // Open install drawer manually
   const openInstallDrawer = useCallback(() => {
-    sessionDismissedRef.current = false;
     setIsInstallDrawerOpen(true);
   }, []);
 
@@ -193,6 +212,14 @@ export function PwaProvider({ children }) {
   const closeInstallDrawer = useCallback(() => {
     setIsInstallDrawerOpen(false);
     sessionDismissedRef.current = true;
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('akula_pwa_session_prompted', 'true');
+        const currentCount = parseInt(localStorage.getItem(DISMISS_COUNT_KEY) || '0', 10);
+        localStorage.setItem(DISMISS_COUNT_KEY, String(currentCount + 1));
+        localStorage.setItem(COOLDOWN_KEY, String(Date.now() + DISMISS_COOLDOWN_MS));
+      }
+    } catch (_e) {}
   }, []);
 
   // Trigger installation via browser prompt or guide
@@ -203,13 +230,7 @@ export function PwaProvider({ children }) {
         const choice = await deferredPrompt.userChoice;
         logger.info('[PWA] User choice outcome:', choice.outcome);
         if (choice.outcome === 'accepted') {
-          setIsInstalled(true);
-          localStorage.setItem(INSTALLED_KEY, 'true');
-          toast.success("Akula's Kitchen installed successfully! Opening app...", {
-            icon: '🎉',
-            duration: 4000,
-          });
-          redirectToInstalledApp();
+          notifyInstallSuccess();
         }
         setDeferredPrompt(null);
       } catch (err) {
@@ -218,12 +239,13 @@ export function PwaProvider({ children }) {
     } else if (isIosSafari) {
       // Drawer stays open to display iOS Share instructions
     } else {
-      toast("Please use your browser's menu to install Akula's Kitchen.", {
+      toast("Use your browser's menu to install app.", {
+        id: 'pwa-manual-install-hint',
         icon: 'ℹ️',
       });
       setIsInstallDrawerOpen(false);
     }
-  }, [deferredPrompt, isIosSafari, redirectToInstalledApp]);
+  }, [deferredPrompt, isIosSafari, notifyInstallSuccess]);
 
   // Apply service worker update
   const applyUpdate = useCallback(() => {

@@ -4,6 +4,7 @@ import { m as motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { SEO } from '../../components/seo/SEO';
 import { useProducts } from '../../hooks/useProductQueries';
+import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { useConfig } from '../../context/ConfigContext';
 import { getProductRoute } from '../../utils/ecommerce/productRouteUtils';
 import { formatPrice, parseNumericPrice } from '../../utils/ecommerce/priceUtils';
@@ -22,34 +23,20 @@ const categoryOf = (p) => {
   return typeof cat === 'string' && cat.trim() ? cat.trim() : 'More from the kitchen';
 };
 
-// The default pack size, from the product's weight options when it has them
-const packOf = (p) => {
-  const group = p.optionGroups?.find((g) => /weight|size|pack/i.test(g.name || ''));
-  const option = group?.options?.find((o) => o.isDefault || o.default) || group?.options?.[0];
-  return option?.label || '';
-};
-
-// `material` sometimes holds packaging or a stray word ("Glass", "Powder"): only show it
-// when it reads as a list of ingredients
-const ingredientsOf = (p) => {
-  const text = typeof p.material === 'string' ? p.material.trim() : '';
-  return text.split(',').filter((part) => part.trim()).length >= 2 ? text : '';
-};
-
 const slugify = (text) =>
   String(text)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-function useMenuLeaf() {
+function useMenuLeaf({ initialDelay = 2000, strength = 0.8 } = {}) {
   const leafRef = useRef(null);
   const shadowRef = useRef(null);
 
   useEffect(() => {
-    const breeze = windBreeze(leafRef.current, { strength: 0.8 });
+    const breeze = windBreeze(leafRef.current, { strength });
     return () => breeze?.cancel();
-  }, []);
+  }, [strength]);
 
   useEffect(() => {
     if (prefersReducedMotion()) return undefined;
@@ -61,14 +48,14 @@ function useMenuLeaf() {
       return Boolean(r?.width) && r.bottom > 0 && r.top < window.innerHeight;
     };
     const gust = (direction) =>
-      onScreen() && windGust(leaf, { direction, strength: 0.9, shadow: shadowRef.current });
+      onScreen() && windGust(leaf, { direction, strength, shadow: shadowRef.current });
     const schedule = (delay) => {
       timer = window.setTimeout(() => {
         gust(Math.random() < 0.5 ? -1 : 1);
         schedule(9000 + Math.random() * 4000);
       }, delay);
     };
-    schedule(2000);
+    schedule(initialDelay);
     const onScroll = () => {
       const y = window.scrollY;
       if (Math.abs(y - lastY) < 32) return;
@@ -80,7 +67,7 @@ function useMenuLeaf() {
       window.clearTimeout(timer);
       window.removeEventListener('scroll', onScroll);
     };
-  }, []);
+  }, [initialDelay, strength]);
 
   return { leafRef, shadowRef };
 }
@@ -165,8 +152,6 @@ const getValidOriginalImage = (product) => {
 function MenuRow({ product }) {
   const price = parseNumericPrice(product.price);
   const oldPrice = parseNumericPrice(product.oldPrice);
-  const pack = packOf(product);
-  const desc = ingredientsOf(product);
   const soldOut = product.stock === 0;
   const originalImage = getValidOriginalImage(product);
   const [imgFailed, setImgFailed] = useState(false);
@@ -200,11 +185,9 @@ function MenuRow({ product }) {
                 {formatPrice(price)}
               </span>
             </span>
-            {(desc || pack || soldOut) && (
+            {soldOut && (
               <span className="menu-row__meta">
-                {desc && <span className="menu-row__desc">{desc}</span>}
-                {pack && <span className="menu-row__pack">{pack}</span>}
-                {soldOut && <span className="menu-row__pack">Sold out today</span>}
+                <span className="menu-row__pack">Sold out today</span>
               </span>
             )}
           </div>
@@ -225,12 +208,11 @@ function MenuSkeleton() {
               <div key={i} className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-[#283618]/[0.07] animate-pulse shrink-0" />
                 <div className="flex-1">
-                  <div className="flex items-end gap-3 mb-1.5">
+                  <div className="flex items-end gap-3">
                     <div className="h-4 w-1/3 rounded bg-[#283618]/[0.07] animate-pulse" />
-                    <div className="flex-1 border-b-2 border-dotted border-[#283618]/10" />
+                    <div className="flex-1 border-b-2 border-dotted border-[#283618]/25" />
                     <div className="h-4 w-12 rounded bg-[#283618]/[0.07] animate-pulse" />
                   </div>
-                  <div className="h-3 w-1/2 rounded bg-[#283618]/[0.04] animate-pulse" />
                 </div>
               </div>
             ))}
@@ -243,19 +225,64 @@ function MenuSkeleton() {
 
 export function Menu() {
   const { storeName } = useConfig();
-  const { leafRef, shadowRef } = useMenuLeaf();
+  const topLeaf = useMenuLeaf({ initialDelay: 2000, strength: 0.8 });
+  const lowerLeaf = useMenuLeaf({ initialDelay: 3500, strength: 0.7 });
+  const cms = useWebsiteContent();
+  const menuConfig = useMemo(() => {
+    const mp = cms?.menuPage || {};
+    const hr = cms?.hero || {};
+    const hasMpSchedule =
+      mp?.weeklySchedule &&
+      Object.values(mp.weeklySchedule).some(
+        (d) => Array.isArray(d?.productIds) && d.productIds.length > 0,
+      );
+    const hasHrSchedule =
+      hr?.weeklySchedule &&
+      Object.values(hr.weeklySchedule).some(
+        (d) => Array.isArray(d?.productIds) && d.productIds.length > 0,
+      );
+
+    const schedule =
+      hasMpSchedule || (Array.isArray(mp?.productIds) && mp.productIds.length > 0)
+        ? mp.weeklySchedule || {}
+        : hr.weeklySchedule || {};
+
+    const productIds =
+      Array.isArray(mp?.productIds) && mp.productIds.length > 0
+        ? mp.productIds
+        : hr.productIds || [];
+
+    const cutoffTime = mp.cutoffTime || hr.cutoffTime || '18:00';
+    const resolvedTitle = mp.title && mp.title !== "Today's Kitchen" ? mp.title : 'Our Menu';
+    const resolvedSubtitle = mp.subtitle || 'Fresh today in small batches';
+
+    return {
+      ...hr,
+      ...mp,
+      title: resolvedTitle,
+      subtitle: resolvedSubtitle,
+      weeklySchedule: schedule,
+      productIds,
+      cutoffTime,
+    };
+  }, [cms?.menuPage, cms?.hero]);
+
+  const title = menuConfig.title || 'Our Menu';
+  const subtitle = menuConfig.subtitle || 'Fresh today in small batches';
+
   const { data, isPending, isError, refetch } = useProducts({ limit: 200 });
 
   const sections = useMemo(() => {
     const raw = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
+    const activeProducts = raw.filter((p) => p && p.isActive !== false);
+
     const groups = new Map();
-    raw
-      .filter((p) => p && p.isActive !== false)
-      .forEach((p) => {
-        const name = categoryOf(p);
-        if (!groups.has(name)) groups.set(name, []);
-        groups.get(name).push(p);
-      });
+    activeProducts.forEach((p) => {
+      const name = categoryOf(p);
+      if (!groups.has(name)) groups.set(name, []);
+      groups.get(name).push(p);
+    });
+
     return [...groups.entries()].map(([name, items]) => ({
       id: slugify(name),
       name,
@@ -287,17 +314,18 @@ export function Menu() {
       className="policy-page menu-page pt-44 sm:pt-48 lg:pt-52 pb-[calc(var(--bottom-nav-height,65px)+3.5rem)] lg:pb-24 selection:bg-[#f7bb0e]/30 selection:text-[#283618]"
     >
       <SEO
-        title={`Menu | ${storeName || "Akula's Kitchen"}`}
-        description="Batters, pickles, chutneys, podis and snacks from Akula's Kitchen, with prices. Made fresh in small batches."
+        title={`${title} | ${storeName || "Akula's Kitchen"}`}
+        description={`${subtitle}. Handcrafted fresh in small batches.`}
       />
 
       <div className="policy-hero-glow" aria-hidden="true" />
 
+      {/* Top Banana Leaf */}
       <div className="policy-hero-leaf" aria-hidden="true">
         <div className="policy-hero-leaf__frame">
-          <div ref={leafRef} className="policy-hero-leaf__sway">
+          <div ref={topLeaf.leafRef} className="policy-hero-leaf__sway">
             <img
-              ref={shadowRef}
+              ref={topLeaf.shadowRef}
               src="/account/corner-leaf-right.webp"
               alt=""
               className="policy-hero-leaf__shadow"
@@ -315,9 +343,35 @@ export function Menu() {
         </div>
       </div>
 
+      {/* Bottom-Left Banana Leaf (Opposite corner at bottom) */}
+      <div className="menu-leaf-bottom-left" aria-hidden="true">
+        <div className="menu-leaf-bottom-left__frame">
+          <div ref={lowerLeaf.leafRef} className="menu-leaf-bottom-left__sway">
+            <img
+              ref={lowerLeaf.shadowRef}
+              src="/account/corner-leaf-left.webp"
+              alt=""
+              className="menu-leaf-bottom-left__shadow"
+              draggable="false"
+              decoding="async"
+            />
+            <img
+              src="/account/corner-leaf-left.webp"
+              alt=""
+              className="menu-leaf-bottom-left__img"
+              draggable="false"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-        <header id="menu-top" className="mb-6 lg:mb-12">
-          <div className="flex items-start justify-between gap-3">
+        <header
+          id="menu-top"
+          className="mb-6 lg:mb-10 pt-2 sm:pt-4 pb-4 sm:pb-6 border-b border-[#283618]/12"
+        >
+          <div className="flex items-start justify-between gap-4">
             <div>
               <nav
                 aria-label="Breadcrumb"
@@ -330,16 +384,12 @@ export function Menu() {
                 <span className="text-[#283618]/70 font-semibold">Menu</span>
               </nav>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-[#283618] tracking-tight mb-2">
-                Our Menu
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-[#283618] tracking-tight">
+                {title}
               </h1>
-
-              <p className="text-[9.5px] sm:text-[10px] font-sans font-medium uppercase tracking-[0.16em] text-[#283618]/55 select-none">
-                Fresh today{total > 0 && ` · ${total} items`}
-              </p>
             </div>
 
-            {/* Opposite Corner: Redesigned Artisanal Date Stamp */}
+            {/* Artisanal Live Date Stamp */}
             <div className="flex items-center gap-2.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-[#fdfbf7]/90 border border-[#283618]/15 shadow-[0_2px_10px_rgba(40,54,24,0.06)] shrink-0 self-start mt-0.5 backdrop-blur-md select-none group">
               <div className="flex flex-col items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#283618] text-white shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
                 <span className="text-[8px] sm:text-[8.5px] font-sans font-extrabold uppercase tracking-widest text-[#f7bb0e] leading-none pt-0.5">
@@ -375,7 +425,7 @@ export function Menu() {
               <nav className="flex flex-col space-y-1" aria-label="Menu sections">
                 {isPending ? (
                   [1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-9 rounded-xl bg-[#283618]/[0.05] animate-pulse" />
+                    <div key={i} className="h-9 rounded-full bg-[#283618]/[0.05] animate-pulse" />
                   ))
                 ) : (
                   <>
@@ -466,10 +516,13 @@ export function Menu() {
                   </section>
                 ))}
 
-                <p className="menu-note">
-                  Prices are for the default pack. Everything is made fresh in small batches, so
-                  some items may sell out by evening.
-                </p>
+                <div className="menu-note">
+                  <span className="w-2 h-2 rounded-full bg-[#f7bb0e] shrink-0" />
+                  <span>
+                    Everything is made fresh in small batches, so some items may sell out by
+                    evening.
+                  </span>
+                </div>
               </div>
             )}
           </main>

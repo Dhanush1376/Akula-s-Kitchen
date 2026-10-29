@@ -5,8 +5,6 @@ import { SEO } from '../../components/seo/SEO';
 
 import { EditorialHero } from './sections/EditorialHero';
 import { HomeHeroLeaves } from './sections/HomeHeroLeaves';
-import { FreshEveryDay } from './sections/FreshEveryDay';
-import { MadeFreshStrip } from './sections/MadeFreshStrip';
 
 const CategoryGrid = lazy(() =>
   import('./sections/CategoryGrid').then((m) => ({ default: m.CategoryGrid })),
@@ -88,7 +86,6 @@ export function Home({ previewContent }) {
               case 'categoryGrid':
                 return (
                   <div key={section.id}>
-                    <MadeFreshStrip />
                     <Suspense fallback={null}>
                       <CategoryGrid previewContent={activeCms} />
                     </Suspense>
@@ -113,7 +110,6 @@ export function Home({ previewContent }) {
               case 'recommendedProducts':
                 return (
                   <div key={section.id}>
-                    <FreshEveryDay />
                     <Suspense fallback={null}>
                       <RecommendedGrid previewContent={activeCms} />
                     </Suspense>
