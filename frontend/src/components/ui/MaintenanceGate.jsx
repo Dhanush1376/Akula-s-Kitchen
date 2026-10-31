@@ -15,12 +15,13 @@ export function MaintenanceGate() {
     }
   });
 
+  // While public settings load (first visit only — they are cached afterwards), render the
+  // storefront straight away so the page shell, skeletons and data requests start in
+  // parallel. A full-screen spinner here used to hold back every page, including the
+  // homepage code itself, until settings AND categories had both arrived. Maintenance is
+  // also enforced by the backend; this gate only decides what to display.
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-[9999] overflow-hidden bg-surface flex items-center justify-center">
-        <div className="w-16 h-16 rounded-full border-[1px] border-primary/30 border-t-primary animate-spin duration-1000 ease-linear" />
-      </div>
-    );
+    return <Outlet />;
   }
 
   // Hard technical maintenance mode

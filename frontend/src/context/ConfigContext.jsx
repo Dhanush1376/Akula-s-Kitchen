@@ -37,37 +37,33 @@ export const ConfigProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchGlobalData = async () => {
-      // Independent requests run together, and one failing never blocks the other.
-      const [categoriesResult, settingsResult] = await Promise.allSettled([
-        api.get('/categories/active'),
-        storeSettingsService.getPublicSettings(),
-      ]);
-      if (!isMounted) return;
-
-      if (categoriesResult.status === 'fulfilled') {
-        if (
-          categoriesResult.value?.data?.success &&
-          Array.isArray(categoriesResult.value.data.data)
-        ) {
-          const freshCats = categoriesResult.value.data.data;
+    const fetchGlobalData = () => {
+      // Independent requests run together and settle independently: `loading` tracks the
+      // store settings only, so a slow categories request never delays it.
+      api
+        .get('/categories/active')
+        .then((res) => {
+          if (!isMounted || !res?.data?.success || !Array.isArray(res.data.data)) return;
+          const freshCats = res.data.data;
           setCategories(freshCats);
           try {
             localStorage.setItem('akula_cached_categories', JSON.stringify(freshCats));
           } catch (_e) {}
-        }
-      } else {
-        logger.error('Failed to fetch categories', categoriesResult.reason);
-      }
+        })
+        .catch((err) => logger.error('Failed to fetch categories', err));
 
-      if (settingsResult.status === 'fulfilled') {
-        if (settingsResult.value) setStoreSettings(settingsResult.value);
-      } else {
-        logger.error('Failed to fetch store settings', settingsResult.reason);
-        setError(settingsResult.reason);
-      }
-
-      setLoading(false);
+      storeSettingsService
+        .getPublicSettings()
+        .then((settings) => {
+          if (isMounted && settings) setStoreSettings(settings);
+        })
+        .catch((err) => {
+          logger.error('Failed to fetch store settings', err);
+          if (isMounted) setError(err);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
     };
 
     fetchGlobalData();

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { productService } from '../../services/domainServices';
 import toast from 'react-hot-toast';
 import logger from '../../utils/core/logger';
+import { SEO_OVERRIDABLE_FIELDS } from '../pages/steps/ProductSeoStep';
 
 export function useProductSubmission({
   formData,
@@ -219,8 +220,17 @@ export function useProductSubmission({
         description: formData.description,
         dimensions: formData.dimensions || undefined,
         weight: formData.weight || undefined,
-        seoTitle: formData.seoTitle || undefined,
-        seoDescription: formData.seoDescription || undefined,
+        // Custom SEO values are sent as typed; automatic ones are sent empty so the
+        // server regenerates them from the current product data.
+        ...Object.fromEntries(
+          SEO_OVERRIDABLE_FIELDS.map((field) => [
+            field,
+            (formData.seoOverrides || []).includes(field) ? formData[field] || '' : '',
+          ]),
+        ),
+        seoCanonicalUrl: formData.seoCanonicalUrl || '',
+        seoContent: formData.seoContent || '',
+        seoIndexable: formData.seoIndexable !== false,
         featured: Boolean(formData.featured),
         isActive: Boolean(formData.isActive),
         isNonRefundable: !formData.returnSettings?.isReturnable,

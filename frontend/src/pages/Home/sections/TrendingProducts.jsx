@@ -1,4 +1,5 @@
 import { SectionHeader } from '../../../components/shared/SectionHeader';
+import { HomeProductRowSkeleton } from '../../../components/ui/skeletons/HomeSkeleton';
 import { CarouselWrapper } from '../../../components/shared/CarouselWrapper';
 import { ProductCard } from '../../../components/shared/ProductCard';
 import { useTrendingRecommendations } from '../../../hooks/useRecommendationQueries';
@@ -13,7 +14,9 @@ import React from 'react';
 export const TrendingProducts = React.memo(function TrendingProducts({ previewContent }) {
   const cms = useWebsiteContent({ includeDefaults: false });
   const activeCms = previewContent || cms;
-  const loading = !previewContent && cms?.loading;
+  // Home passes its own CMS object as previewContent, so read loading from the active object
+  // (an admin preview has no loading field).
+  const loading = Boolean(activeCms?.loading);
   const config = activeCms?.trendingProducts || {};
   const _productIds = config.productIds || [];
   const isManualMode = config.useAutoFeed === false;
@@ -60,29 +63,10 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
 
   if (isPending || loading) {
     return (
-      <section className="h1-section !pt-4 lg:!pt-8 relative isolate" id="h1-trending">
-        <div className="h1-container relative z-10 animate-pulse">
-          <div className="flex justify-between items-end mb-8 lg:mb-10">
-            <div>
-              <div className="h-3 w-20 lg:w-24 bg-surface-container-high rounded-full mb-2"></div>
-              <div className="h-8 lg:h-10 w-48 lg:w-64 bg-surface-container-high rounded-full"></div>
-            </div>
-            <div className="h-4 w-20 bg-surface-container-high rounded-full hidden lg:block"></div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex flex-col gap-4">
-                <div className="w-full aspect-[3/4] bg-surface-container-high rounded-[24px] lg:rounded-[32px]"></div>
-                <div className="px-1 lg:px-2">
-                  <div className="w-[80%] h-4 bg-surface-container-high rounded-full mb-2"></div>
-                  <div className="w-[60%] h-3 bg-surface-container-high rounded-full mb-3"></div>
-                  <div className="w-[40%] h-5 bg-surface-container-high rounded-full"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomeProductRowSkeleton
+        sectionClassName="h1-section !pt-4 lg:!pt-8 !pb-4 lg:!pb-8"
+        label="Loading trending products"
+      />
     );
   }
 

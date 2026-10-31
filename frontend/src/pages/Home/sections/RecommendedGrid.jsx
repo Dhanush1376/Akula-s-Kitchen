@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react';
+import { HomeProductGridSkeleton } from '../../../components/ui/skeletons/HomeSkeleton';
 import { Link } from 'react-router-dom';
 import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { ProductCard } from '../../../components/shared/ProductCard';
@@ -19,7 +20,7 @@ export function RecommendedGrid({ previewContent }) {
   const isManualMode = config.useAutoFeed === false;
   const hasManualIds = productIds.length > 0;
 
-  const { data, isPending, isError } = useProducts(
+  const { data, isPending, isLoading, isError } = useProducts(
     {
       ...(isManualMode ? { ids: productIds.join(',') } : {}),
       limit: config.maxDisplay || 12,
@@ -40,6 +41,8 @@ export function RecommendedGrid({ previewContent }) {
 
   if (config.isVisible === false) return null;
   if (isManualMode && !hasManualIds) return null;
+  // Skeleton only while actually fetching (a disabled query also reports pending).
+  if (isLoading) return <HomeProductGridSkeleton />;
   if (isPending) return null;
   if (isError || products.length === 0) return null;
 

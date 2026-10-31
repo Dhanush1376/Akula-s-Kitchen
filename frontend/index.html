@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="color-scheme: only light; background-color: #ffffff; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;">
+<html lang="en-IN" style="color-scheme: only light; background-color: #ffffff; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -47,55 +47,22 @@
     <meta name="application-name" content="Akula's Kitchen" />
     <meta name="format-detection" content="telephone=no" />
 
-    <!-- SEO -->
-    <title>
-      Akula's Kitchen | Authentic Flavors & Premium Culinary Experiences
-    </title>
-    
-    <meta
-      name="description"
-      content="Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen."
-    />
-    
-    <meta
-      name="keywords"
-      content="Akula's Kitchen, gourmet, authentic recipes, kitchen, food, culinary"
-    />
-    
+    <!-- SEO defaults. On Vercel, api/seo-render.js replaces everything between the
+         seo:head markers with page-specific tags; the SPA removes [data-seo-ssr]
+         tags on boot and react-helmet-async takes over (see src/main.jsx). -->
+    <!--seo:head-->
+    <title data-seo-ssr>Akula's Kitchen | Homemade Batters, Pickles &amp; Traditional Foods</title>
+    <meta name="description" content="Order fresh idli and dosa batters, homemade pickles and chutneys, traditional podis and masalas, namkeen and cashews online from Akula's Kitchen." data-seo-ssr />
+    <meta property="og:type" content="website" data-seo-ssr />
+    <meta property="og:site_name" content="Akula's Kitchen" data-seo-ssr />
+    <meta property="og:title" content="Akula's Kitchen | Homemade Batters, Pickles &amp; Traditional Foods" data-seo-ssr />
+    <meta property="og:description" content="Order fresh idli and dosa batters, homemade pickles and chutneys, traditional podis and masalas, namkeen and cashews online from Akula's Kitchen." data-seo-ssr />
+    <meta property="og:image" content="https://akulas.kitchen/og-image.png" data-seo-ssr />
+    <meta property="og:image:width" content="1200" data-seo-ssr />
+    <meta property="og:image:height" content="630" data-seo-ssr />
+    <meta name="twitter:card" content="summary_large_image" data-seo-ssr />
+    <!--/seo:head-->
     <meta name="author" content="Akula's Kitchen" />
-    <link rel="canonical" href="https://akulas.kitchen/" />
-
-    <!-- Google Search Console Verification -->
-    <!-- <meta name="google-site-verification" content="GSC_ID" /> -->
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Akula's Kitchen" />
-    <meta
-      property="og:description"
-      content="Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen."
-    />
-    
-    <meta
-      property="og:image"
-      content="https://akulas.kitchen/og-image.png"
-    />
-    
-    <meta property="og:url" content="https://akulas.kitchen" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Akula's Kitchen" />
-    
-    <meta
-      name="twitter:description"
-      content="Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen."
-    />
-    
-    <meta
-      name="twitter:image"
-      content="https://akulas.kitchen/og-image.png"
-    />
 
     <!-- Performance: Preconnect & DNS Prefetch -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -184,6 +151,12 @@
 
 
 
+      /* Server-rendered crawlable shell (replaced by React on mount) */
+      .seo-shell { max-width: 960px; margin: 0 auto; padding: 120px 16px 48px; font-family: Inter, system-ui, sans-serif; color: #283618; line-height: 1.6; }
+      .seo-shell nav ol { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; font-size: 12px; }
+      .seo-shell img { max-width: 280px; height: auto; border-radius: 12px; }
+      .seo-shell a { color: #283618; }
+
       /* Prevent CLS: reserve space for common layout elements */
       #root {
         min-height: 100vh;
@@ -191,16 +164,6 @@
 
     </style>
 
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Akula's Kitchen",
-      "url": "https://akulas.kitchen",
-      "logo": "https://akulas.kitchen/MainLogo.png"
-    }
-    </script>
   </head>
   <body>
     <!-- Noscript fallback for accessibility -->

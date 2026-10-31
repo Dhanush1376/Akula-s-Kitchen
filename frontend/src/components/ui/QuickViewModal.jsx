@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { createPortal } from 'react-dom';
 import { useMobileDrawerEngine } from '../../hooks/useMobileDrawerEngine';
 import { AuthCornerLeaves } from '../auth/AuthCornerLeaves';
+import { getProductRoute } from '../../utils/ecommerce/productRouteUtils';
 import toast from 'react-hot-toast';
 
 /**
@@ -45,7 +46,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
       e?.stopPropagation?.();
       if (isConverting || !product) return;
       setIsConverting(true);
-      const targetRoute = `/product/${productId}`;
+      const targetRoute = getProductRoute(product);
 
       // Smooth cinematic dissolve transition
       setTimeout(() => {
@@ -53,7 +54,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
         navigate(targetRoute, { state: { product, fromQuickView: true } });
       }, 260);
     },
-    [isConverting, product, productId, onClose, navigate],
+    [isConverting, product, onClose, navigate],
   );
 
   const { isMobile, dragProps, sheetTransition } = useMobileDrawerEngine({

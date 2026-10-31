@@ -5,6 +5,7 @@ import { CloudinaryImage } from '../../../components/ui/CloudinaryImage';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
 import { useProducts } from '../../../hooks/useProductQueries';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
+import { HomeHeroSkeleton } from '../../../components/ui/skeletons/HomeSkeleton';
 
 /**
  * Hero — "Today's Kitchen".
@@ -68,7 +69,9 @@ function TodayCard({ item, aspect, index, badge, isLast }) {
           src={item.image}
           alt={item.title}
           eager={eager}
-          fetchPriority={index === 0 ? 'high' : undefined}
+          // Only the first (largest-paint) image is high priority; CloudinaryImage would
+          // otherwise promote every eager image to high and they would compete.
+          fetchPriority={index === 0 ? 'high' : 'auto'}
           loading={eager ? undefined : 'lazy'}
           width={600}
           height={Math.round(600 * aspect)}
@@ -131,38 +134,6 @@ function TodayHead({
   );
 }
 
-function HeroSkeleton({ columns }) {
-  const heights = [
-    [260, 190],
-    [200, 250],
-    [240, 210],
-    [210, 240],
-  ];
-  return (
-    <section className="ak-today" aria-busy="true" aria-label="Loading today's menu">
-      <div className="ak-today__head">
-        <div>
-          <div className="h-3 w-32 rounded-full bg-surface-container-high animate-pulse mb-2" />
-          <div className="h-8 w-52 rounded-lg bg-surface-container-high animate-pulse" />
-        </div>
-      </div>
-      <div className="ak-today__grid" style={{ '--cols': columns }}>
-        {heights.slice(0, columns).map((col, c) => (
-          <div key={c} className="ak-today__col">
-            {col.map((h, i) => (
-              <div
-                key={i}
-                className="rounded-[18px] bg-surface-container-high animate-pulse"
-                style={{ height: h }}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 import { getEffectiveMenuDay } from '../../../utils/ecommerce/menuScheduleUtils';
 
 export function EditorialHero({ previewContent }) {
@@ -191,7 +162,7 @@ export function EditorialHero({ previewContent }) {
 
   const maxColumns = useColumnCount();
 
-  const { data } = useProducts(
+  const { data, isLoading: productsLoading } = useProducts(
     { ids: productIds.join(','), limit: Math.min(productIds.length || 6, MAX_ITEMS) },
     { enabled: productIds.length > 0 },
   );
@@ -224,6 +195,15 @@ export function EditorialHero({ previewContent }) {
   const columns = useMemo(() => packColumns(items, columnCount), [items, columnCount]);
 
   if (heroConfig.isVisible === false) return null;
+
+  // Hold the hero's space with a matching skeleton while its settings or products are
+  // still on the way (previously it rendered nothing, leaving the top of the page blank).
+  // Home passes its own CMS object down as previewContent, so read `loading` from whichever
+  // object is active (an admin preview has no `loading` field and never waits).
+  const cmsPending = Boolean(activeCms?.loading);
+  if (items.length === 0 && (cmsPending || (productIds.length > 0 && productsLoading))) {
+    return <HomeHeroSkeleton columns={maxColumns} />;
+  }
   if (items.length === 0) return null;
 
   const badge = isTomorrow

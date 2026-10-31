@@ -11,6 +11,7 @@
     "check-env": "tsx scripts/validate_env.ts",
     "create-indexes": "tsx scripts/create_indexes.ts",
     "seed:catalog": "tsx scripts/seedCatalogRegistry.ts",
+    "seo:validate": "tsx scripts/seo/validateSeo.ts",
     "lint": "eslint src",
     "test": "vitest run",
     "test:cloudinary": "node scripts/test-cloudinary.js"

@@ -123,20 +123,21 @@ export function ProductInfoStep({
 
         <div className="col-span-2 sm:col-span-1">
           <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1.5 block">
-            Slug (auto-generated from title)
+            URL slug (edit in SEO & Search)
           </label>
           <input
             type="text"
             readOnly
             value={
-              formData.title
+              formData.slug ||
+              (formData.title
                 ? formData.title
                     .toLowerCase()
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/(^-|-$)/g, '')
-                : ''
+                : '')
             }
-            placeholder="vintage-teak-mirror"
+            placeholder="mango-avakaya-pickle"
             className="w-full bg-[var(--admin-bg-subtle)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all border border-[var(--admin-border)] opacity-70 cursor-not-allowed text-[var(--admin-text-primary)] font-medium"
           />
         </div>

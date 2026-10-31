@@ -17,3 +17,4 @@ export { blogService } from './api/blogService';
 export { locationService } from './api/locationService';
 export { customerIntelligenceService } from './api/customerIntelligenceService';
 export { contactService } from './api/contactService';
+export { seoService } from './api/seoService';

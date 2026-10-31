@@ -5,6 +5,7 @@ import { ProductInfoStep } from './steps/ProductInfoStep';
 import { ProductVariantsStep } from './steps/ProductVariantsStep';
 import { ProductPricingStep } from './steps/ProductPricingStep';
 import { ProductReviewStep } from './steps/ProductReviewStep';
+import { ProductSeoStep } from './steps/ProductSeoStep';
 import { SkeletonWizard } from '../components/AdminUIKit';
 import { LivePreviewCard } from '../components/LivePreviewCard';
 import { AiCurationOverlay } from '../components/AiCurationOverlay';
@@ -35,6 +36,7 @@ const WIZARD_STEPS = [
   { id: 'basics', label: 'Basic Info', icon: 'info' },
   { id: 'variants', label: 'Tags & Ingredients', icon: 'sell' },
   { id: 'pricing', label: 'Pricing & Portions', icon: 'payments' },
+  { id: 'seo', label: 'SEO & Search', icon: 'travel_explore' },
   { id: 'review', label: 'Review & Publish', icon: 'publish' },
 ];
 
@@ -495,8 +497,13 @@ export function AdminAddProduct({ editId }) {
                   />
                 )}
 
-                {/* STEP 4: REVIEW & PUBLISH */}
+                {/* STEP 4: SEO & SEARCH */}
                 {currentStep === 4 && (
+                  <ProductSeoStep formData={formData} setFormData={setFormData} />
+                )}
+
+                {/* STEP 5: REVIEW & PUBLISH */}
+                {currentStep === 5 && (
                   <ProductReviewStep formData={formData} setFormData={setFormData} />
                 )}
               </motion.div>

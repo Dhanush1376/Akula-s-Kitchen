@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/write-seo-template.mjs",
     "postbuild": "node scripts/budget-check.js && node scripts/performance-guards.mjs",
-    "build:report": "vite build && node scripts/report-chunk-sizes.mjs",
+    "build:report": "vite build && node scripts/write-seo-template.mjs && node scripts/report-chunk-sizes.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "check-env": "node scripts/check-env.ci.mjs",

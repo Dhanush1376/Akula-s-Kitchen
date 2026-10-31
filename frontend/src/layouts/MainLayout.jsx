@@ -52,7 +52,7 @@ export function MainLayout() {
 
   return (
     <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
-      <SEO />
+      <SEO defaultsOnly />
 
       {!isOrderSuccess && <GlobalAnnouncementBanner />}
       {!isOrderSuccess && <TopNavbar />}
@@ -115,7 +115,7 @@ export function MinimalLayout() {
 
   return (
     <div className="bg-white text-on-surface min-h-screen flex flex-col relative overflow-x-clip">
-      <SEO />
+      <SEO defaultsOnly />
       <CheckoutNavbar />
       <main id="main-content" className="flex-1 relative min-h-[100svh]" tabIndex={-1}>
         <ErrorBoundary>

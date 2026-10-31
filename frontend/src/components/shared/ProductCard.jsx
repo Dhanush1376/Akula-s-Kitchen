@@ -46,6 +46,7 @@ const resolveCategoryName = (primaryCat, cat) => {
 export const ProductCard = React.memo(function ProductCard({
   id,
   _id,
+  slug,
   title,
   teluguTitle,
   nameTE,
@@ -306,7 +307,7 @@ export const ProductCard = React.memo(function ProductCard({
       : null;
 
   const isOutOfStock = false;
-  const productRoute = getProductRoute(productId);
+  const productRoute = getProductRoute(slug ? { slug } : productId);
 
   const handleCardClick = (e) => {
     if (longPressTriggered || isSwipingRef.current) return;

@@ -1,4 +1,4 @@
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { m as motion } from 'framer-motion';
 import { ProductGallery } from '../components/ui/ProductGallery';
 import { ProductInfo } from '../components/ui/ProductInfo';
@@ -14,7 +14,7 @@ import { useRecommendationTracker } from '../hooks/useRecommendationTracker';
 import { useQueryClient } from '@tanstack/react-query';
 import recommendationService from '../services/api/recommendationService';
 import logger from '../utils/core/logger';
-import { useConfig } from '../context/ConfigContext';
+import { getCategoryRoute } from '../utils/ecommerce/productRouteUtils';
 
 const RecommendationSystem = React.lazy(() =>
   import('../components/sections/RecommendationSystem').then((m) => ({
@@ -29,9 +29,9 @@ const LazyProductReviews = React.lazy(() =>
 );
 
 export function ProductDetails() {
-  const { storeName } = useConfig();
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const atcRef = useRef(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -39,7 +39,12 @@ export function ProductDetails() {
   // Use product passed from QuickView if available for instantaneous zero-flicker render
   const initialProduct = useMemo(() => {
     const p = location.state?.product;
-    if (p && ((p._id && String(p._id) === String(id)) || (p.id && String(p.id) === String(id)))) {
+    if (
+      p &&
+      ((p._id && String(p._id) === String(id)) ||
+        (p.id && String(p.id) === String(id)) ||
+        (p.slug && p.slug === id))
+    ) {
       return p;
     }
     return undefined;
@@ -114,33 +119,28 @@ export function ProductDetails() {
     }
   }, [id, location.hash]);
 
+  // One URL per product: /product/<id> and retired slugs move to the current slug.
+  useEffect(() => {
+    if (!product?.slug || product.slug === id) return;
+    const subPath = location.pathname.split(`/product/${id}`)[1] || '';
+    navigate(`/product/${product.slug}${subPath}${location.search}${location.hash}`, {
+      replace: true,
+      state: location.state,
+    });
+  }, [
+    product?.slug,
+    id,
+    location.pathname,
+    location.search,
+    location.hash,
+    location.state,
+    navigate,
+  ]);
+
   const galleryImages = useMemo(() => {
     if (!product) return [];
     return Array.from(new Set([product.imageSrc, ...(product.images || [])].filter(Boolean)));
   }, [product]);
-
-  const productSchema = useMemo(
-    () => ({
-      '@context': 'https://schema.org/',
-      '@type': 'Product',
-      name: product?.title || 'Product',
-      image: galleryImages,
-      description: product?.description || '',
-      sku: `AKULA-${product?.id || product?._id}`,
-      brand: {
-        '@type': 'Brand',
-        name: storeName || "Akula's Kitchen",
-      },
-      offers: {
-        '@type': 'Offer',
-        url: typeof window !== 'undefined' ? window.location.href : '',
-        priceCurrency: 'INR',
-        price: product?.price || 0,
-        availability: 'https://schema.org/InStock',
-      },
-    }),
-    [product, galleryImages, storeName],
-  );
 
   if (loading) {
     return <ProductDetailSkeleton />;
@@ -167,23 +167,42 @@ export function ProductDetails() {
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       className="bg-surface relative min-h-screen"
     >
-      <SEO title={product.title} description={product.description} schema={productSchema} />
+      {product.seo ? (
+        <SEO
+          fullTitle={product.seo.title}
+          description={product.seo.description}
+          keywords={product.seo.keywords}
+          canonicalUrl={product.seo.canonicalUrl}
+          robots={location.pathname.includes('/reviews') ? 'noindex, follow' : product.seo.robots}
+          ogType="product"
+          ogImage={product.seo.ogImage}
+          ogImageWidth={product.seo.ogImageWidth}
+          ogImageHeight={product.seo.ogImageHeight}
+          ogImageAlt={product.seo.imageAlt}
+          schema={product.seo.jsonLd}
+        />
+      ) : (
+        <SEO title={product.title} canonicalUrl={`/product/${product.slug || id}`} />
+      )}
 
       {/* Desktop Breadcrumbs */}
       <div className="hidden lg:block pt-[calc(var(--ak-header-h,144px)+20px)] pb-3.5 max-w-max-width mx-auto px-margin-desktop relative z-10">
-        <nav className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em] text-neutral-400 font-bold overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em] text-neutral-400 font-bold overflow-x-auto no-scrollbar whitespace-nowrap pb-1"
+        >
           <Link to="/" className="hover:text-neutral-950 transition-colors">
             Home
           </Link>
           <span className="text-neutral-300">/</span>
           <Link to="/collections" className="hover:text-neutral-950 transition-colors">
-            Collections
+            Shop
           </Link>
           {(product.primaryCategory?.name || product.category) && (
             <>
               <span className="text-neutral-300">/</span>
               <Link
-                to={`/collections?category=${encodeURIComponent(product.primaryCategory?.name || product.category)}`}
+                to={getCategoryRoute(product.primaryCategory || product.category)}
                 className="hover:text-neutral-950 transition-colors"
               >
                 {product.primaryCategory?.name || product.category}

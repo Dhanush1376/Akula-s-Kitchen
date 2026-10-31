@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { m as motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
-import { SEO } from '../../components/seo/SEO';
+import { PageSEO } from '../../components/seo/PageSEO';
 import { useProducts } from '../../hooks/useProductQueries';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
-import { useConfig } from '../../context/ConfigContext';
-import { getProductRoute } from '../../utils/ecommerce/productRouteUtils';
+import { getCategoryRoute, getProductRoute } from '../../utils/ecommerce/productRouteUtils';
 import { formatPrice, parseNumericPrice } from '../../utils/ecommerce/priceUtils';
 import { prefersReducedMotion, windBreeze, windGust } from '../../components/effects/FallingLeaves';
 import '../../styles/policy.css';
@@ -161,7 +160,7 @@ function MenuRow({ product }) {
   return (
     <li>
       <Link
-        to={getProductRoute(product._id || product.id)}
+        to={getProductRoute(product)}
         className={`menu-row group${soldOut ? ' menu-row--out' : ''}`}
       >
         <div className="menu-row__inner">
@@ -224,7 +223,6 @@ function MenuSkeleton() {
 }
 
 export function Menu() {
-  const { storeName } = useConfig();
   const topLeaf = useMenuLeaf({ initialDelay: 2000, strength: 0.8 });
   const lowerLeaf = useMenuLeaf({ initialDelay: 3500, strength: 0.7 });
   const cms = useWebsiteContent();
@@ -313,9 +311,12 @@ export function Menu() {
       transition={{ duration: 0.35 }}
       className="policy-page menu-page pt-44 sm:pt-48 lg:pt-52 pb-[calc(var(--bottom-nav-height,65px)+3.5rem)] lg:pb-24 selection:bg-[#f7bb0e]/30 selection:text-[#283618]"
     >
-      <SEO
-        title={`${title} | ${storeName || "Akula's Kitchen"}`}
-        description={`${subtitle}. Handcrafted fresh in small batches.`}
+      <PageSEO
+        fallback={{
+          title: 'Menu & Price List: Batters, Pickles, Podis',
+          description: `${subtitle}. See every product grouped by category with current prices.`,
+          canonicalUrl: '/menu',
+        }}
       />
 
       <div className="policy-hero-glow" aria-hidden="true" />
@@ -500,10 +501,7 @@ export function Menu() {
                       <h2 id={`menu-${s.id}-title`} className="menu-section__title">
                         {s.name}
                       </h2>
-                      <Link
-                        to={`/collections?category=${encodeURIComponent(s.name)}`}
-                        className="menu-section__shop"
-                      >
+                      <Link to={getCategoryRoute(s.name)} className="menu-section__shop">
                         Shop {s.name.toLowerCase()}
                         <ArrowUpRight strokeWidth={2.4} aria-hidden="true" />
                       </Link>

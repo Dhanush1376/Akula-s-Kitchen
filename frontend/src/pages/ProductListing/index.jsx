@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, Profiler } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 
-import { SEO } from '../../components/seo/SEO';
+import { PageSEO } from '../../components/seo/PageSEO';
 import { QuickViewModal } from '../../components/ui';
 
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
@@ -153,9 +153,14 @@ export function ProductListing() {
   return (
     <Profiler id="ProductListing" onRender={logRenderMetrics}>
       <div className="bg-surface min-h-screen">
-        <SEO
-          title="Shop"
-          description="Shop fresh batters, chutneys, pickles, podis & masalas, namkeen and cashews."
+        <PageSEO
+          fallback={{
+            title: 'Shop Homemade Pickles, Batters & Podis Online',
+            description:
+              "Browse the full Akula's Kitchen range: idli and dosa batters, homemade pickles, chutneys, podis and masalas, namkeen and cashews, with pack sizes and prices.",
+            canonicalUrl: '/collections',
+            noindex: Boolean(state.searchParam),
+          }}
         />
 
         <ProductListingHeader

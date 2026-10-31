@@ -23,6 +23,19 @@ import {
   normalizeProductAttributes,
 } from './productWriteNormalization';
 import FilterService from './FilterService';
+import { applyProductSeo, buildProductSeoPayload, CategoryContext } from './seo/productSeo';
+import { resolveSlugForWrite } from './seo/productSlugService';
+
+/** Category name/slug used by SEO generation for a resolved primaryCategory id. */
+async function loadCategoryContext(categoryRef: any): Promise<CategoryContext | undefined> {
+  if (!categoryRef) return undefined;
+  if (typeof categoryRef === 'object' && (categoryRef.name || categoryRef.slug)) {
+    return { name: categoryRef.name, slug: categoryRef.slug };
+  }
+  if (!mongoose.Types.ObjectId.isValid(String(categoryRef))) return undefined;
+  const cat = await Category.findById(categoryRef).select('name slug').lean();
+  return cat ? { name: (cat as any).name, slug: (cat as any).slug } : undefined;
+}
 
 ReferenceIntegrityService.register('Product', [
   { targetModel: 'Review', targetField: 'product', action: 'softDelete' },
@@ -380,7 +393,9 @@ class ProductService {
     const [rawProducts, totalCount] = await Promise.all([
       Product.find(filter)
         .select(
-          isAdmin ? '' : '-description -seoTitle -seoDescription -variants -dimensions -weight',
+          isAdmin
+            ? ''
+            : '-description -seoTitle -seoDescription -variants -dimensions -weight -seoKeywords -seoContent -seoOverrides -previousSlugs -seoOgDescription',
         )
         .populate('primaryCategory', 'name slug type')
         .populate('secondaryCategories', 'name slug type')
@@ -447,9 +462,18 @@ class ProductService {
         .populate('primaryCategory', 'name slug type')
         .populate('secondaryCategories', 'name slug type')
         .lean();
+      if (!product) {
+        // Retired slug: still resolve so old links keep working (the storefront
+        // and the SEO renderer redirect to the current slug).
+        product = await Product.findOne({ previousSlugs: idOrSlug.toLowerCase() })
+          .populate('primaryCategory', 'name slug type')
+          .populate('secondaryCategories', 'name slug type')
+          .lean();
+      }
     }
 
     if (!product || !product.isActive) return null;
+    (product as any).seo = buildProductSeoPayload(product);
 
     // Batch view counter updates using Redis to reduce DB write IOPS
     const productIdStr = product._id.toString();
@@ -536,6 +560,8 @@ class ProductService {
       normalizeProductImages(data);
       await resolveCategories(data);
       await normalizeProductAttributes(data);
+      await resolveSlugForWrite(data as any, null);
+      applyProductSeo(data as any, null, await loadCategoryContext(data.primaryCategory));
 
       if (!data.productUuid) {
         data.productUuid = generateProductUuid();
@@ -647,6 +673,12 @@ class ProductService {
       normalizeProductImages(data, oldProduct as IProduct);
       await resolveCategories(data);
       await normalizeProductAttributes(data);
+      await resolveSlugForWrite(data as any, oldProduct as any);
+      applyProductSeo(
+        data as any,
+        oldProduct.toObject(),
+        await loadCategoryContext(data.primaryCategory || oldProduct.primaryCategory),
+      );
 
       const updateData = { ...data };
       delete updateData.__v;

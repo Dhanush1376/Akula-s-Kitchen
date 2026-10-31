@@ -221,9 +221,9 @@
     pointer-events: auto;
   }
 
-  /* Universal Skeleton Component */
+  /* Universal Skeleton Component — cream fill (surface tokens are white, which hid it) */
   .skeleton-box {
-    @apply relative overflow-hidden bg-surface-container-high;
+    @apply relative overflow-hidden bg-[#f3f1ea];
     border-radius: var(--radius-lg);
     contain: layout paint;
   }

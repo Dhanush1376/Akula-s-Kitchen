@@ -89,10 +89,14 @@ export function registerServiceWorker(options = {}) {
     });
   }
 
-  // Reload guard: ensure reload happens once when controller changes
+  // Reload guard: ensure reload happens once when controller changes.
+  // Only reload when an EXISTING worker is replaced (an update). On a first visit the page
+  // starts uncontrolled and sw.js calls clients.claim(), which also fires controllerchange;
+  // reloading then threw away the whole first page load and started it again.
   let refreshing = false;
+  const hadController = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (refreshing) return;
+    if (refreshing || !hadController) return;
     refreshing = true;
     logger.info('[PWA] Controller changed — reloading application safely');
     window.location.reload();

@@ -28,6 +28,10 @@ export function useProductValidation({
       if (!formData.title || !formData.title.trim()) errors.title = 'Product title is required';
       if (!formData.category && !formData.primaryCategory) errors.category = 'Category is required';
     }
+    if (currentStep === 4 && formData._seoSlugError) {
+      // SEO step: the product URL must be valid and unique
+      errors.slug = formData._seoSlugError;
+    }
     if (currentStep === 3) {
       // Pricing step
       if (!formData.price || Number(formData.price) <= 0) errors.price = 'Enter a valid price';

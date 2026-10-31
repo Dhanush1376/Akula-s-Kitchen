@@ -82,6 +82,16 @@ window.addEventListener(
 
 const rootEl = document.getElementById('root');
 
+// Server-rendered SEO tags (api/seo-render.js / index.html defaults) are handed
+// over to react-helmet-async, which re-emits them per route. Removing them
+// first prevents duplicate titles, descriptions, canonicals and JSON-LD.
+document.head.querySelectorAll('[data-seo-ssr]').forEach((el) => el.remove());
+
+// The crawlable content shell is plain HTML, not React output: never hydrate it.
+if (rootEl.querySelector(':scope > [data-seo-shell]')) {
+  rootEl.replaceChildren();
+}
+
 // The raw index.html ships an empty #root, so any markup inside it came from pre-rendering.
 const isPrerendered = rootEl.hasChildNodes();
 

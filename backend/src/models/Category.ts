@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import SoftDeletePlugin, { ISoftDeleted, SoftDeleteModel } from '../utils/SoftDeletePlugin';
 import { AssetLifecyclePlugin } from '../utils/AssetLifecyclePlugin';
+import { bumpSeoCacheVersion } from '../services/seo/seoCache';
 
 export interface ICategory extends ISoftDeleted {
   name: string;
@@ -13,6 +14,9 @@ export interface ICategory extends ISoftDeleted {
   coverProduct?: mongoose.Types.ObjectId;
   displayOrder: number;
   isActive: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoIntro?: string;
   metadata?: any;
 }
 
@@ -33,6 +37,9 @@ const CategorySchema: Schema = new Schema(
     coverProduct: { type: Schema.Types.ObjectId, ref: 'Product', default: null },
     displayOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true, index: true },
+    seoTitle: { type: String, trim: true },
+    seoDescription: { type: String, trim: true },
+    seoIntro: { type: String, trim: true },
     metadata: { type: Schema.Types.Mixed }, // Additional dynamic tags/configs
   },
   { timestamps: true },
@@ -44,6 +51,10 @@ CategorySchema.index(
   { name: 'text', description: 'text' },
   { name: 'CategoryTextIndex', weights: { name: 10, description: 2 } },
 );
+
+// Category changes affect landing pages, breadcrumbs and the sitemap.
+CategorySchema.post('save', () => bumpSeoCacheVersion());
+CategorySchema.post('findOneAndUpdate', () => bumpSeoCacheVersion());
 
 CategorySchema.plugin(SoftDeletePlugin);
 CategorySchema.plugin(AssetLifecyclePlugin, {

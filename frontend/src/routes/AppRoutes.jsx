@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { lazyWithRetry as lazy } from '../utils/performance/lazyWithRetry';
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useParams, Navigate } from 'react-router-dom';
 import { logRouteDiagnostic } from '../utils/core/diagnostics';
 import { RouteSkeleton, getRouteSkeletonVariant } from '../components/ui/RouteSkeleton';
 import { MainLayout, MinimalLayout } from '../layouts/MainLayout';
@@ -52,9 +52,15 @@ const OrderSuccess = lazy(() =>
 const Contact = lazy(() => import('../pages/Contact').then((m) => ({ default: m.Contact })));
 const Menu = lazy(() => import('../pages/Menu/Menu').then((m) => ({ default: m.Menu })));
 const Wishlist = lazy(() => import('../pages/Wishlist').then((m) => ({ default: m.Wishlist })));
-const CollectionDetail = lazy(() =>
-  import('../pages/CollectionDetail').then((m) => ({ default: m.CollectionDetail })),
+const CategoryPage = lazy(() =>
+  import('../pages/CategoryPage').then((m) => ({ default: m.CategoryPage })),
 );
+
+/** Legacy /collection/:id URLs moved permanently to /category/:slug. */
+function LegacyCollectionRedirect() {
+  const { id = '' } = useParams();
+  return <Navigate to={`/category/${id.toLowerCase()}`} replace />;
+}
 const Dashboard = lazy(() => import('../pages/Dashboard').then((m) => ({ default: m.Dashboard })));
 const OrderTrackingPublic = lazy(() =>
   import('../pages/OrderTrackingPublic').then((m) => ({ default: m.OrderTrackingPublic })),
@@ -208,7 +214,9 @@ export function AppRoutes() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/menu" element={<Menu />} />
                 <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/collection/:id" element={<CollectionDetail />} />
+                <Route path="/category/:slug" element={<CategoryPage />} />
+                <Route path="/collection/:id" element={<LegacyCollectionRedirect />} />
+                <Route path="/shop" element={<Navigate to="/collections" replace />} />
                 <Route
                   path="/dashboard/*"
                   element={

@@ -36,6 +36,14 @@ export const registerApiRoutes = (
 ): void => {
   const apiRouter = express.Router();
   apiRouter.use(attachApiVersion(apiVersion));
+  // JSON API responses are never search results; the storefront pages are.
+  apiRouter.use((_req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('X-Robots-Tag', 'noindex');
+    next();
+  });
+
+  // SEO: page descriptors for server-side head rendering, merchant feed, admin helpers
+  apiRouter.use('/seo', lazyRouter('./seo/seoRoutes'));
 
   apiRouter.use('/products', lazyRouter('./products/productRoutes'));
   apiRouter.use('/ai', lazyRouter('./ai/aiRoutes'));

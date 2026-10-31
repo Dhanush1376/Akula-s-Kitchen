@@ -2,175 +2,181 @@ import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { useConfig } from '../../context/ConfigContext';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
-import {
-  SITE_URL,
-  SITE_NAME,
-  OG_IMAGE_URL,
-  CONTACT_PHONE,
-  buildSameAsLinks,
-  TWITTER_HANDLE,
-} from '../../constants/brandEnv';
+import { SITE_URL, SITE_NAME, OG_IMAGE_URL, TWITTER_HANDLE } from '../../constants/brandEnv';
 import { getOptimizedUrl } from '../../utils/media/imageUtils';
 
-const DEFAULT_DESCRIPTION =
-  "Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen.";
-const DEFAULT_TITLE = "Akula's Kitchen — Authentic Flavors & Premium Culinary Experiences";
-const priceValidUntilDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  .toISOString()
-  .split('T')[0];
+export const DEFAULT_TITLE = "Akula's Kitchen | Homemade Batters, Pickles & Traditional Foods";
+export const DEFAULT_DESCRIPTION =
+  "Order fresh idli and dosa batters, homemade pickles and chutneys, traditional podis and masalas, namkeen and cashews online from Akula's Kitchen.";
 
-/**
- * Normalize a URL path: strip trailing slashes (except root "/")
- */
-function normalizeUrl(url) {
-  if (!url || url === '/') return url;
-  return url.replace(/\/+$/, '');
+const INDEX_ROBOTS = 'index, follow, max-image-preview:large';
+const NOINDEX_ROBOTS = 'noindex, follow';
+
+/** Strip trailing slashes (except root) so every page has one canonical form. */
+function normalizePath(path) {
+  if (!path || path === '/') return '/';
+  return path.replace(/\/+$/, '');
+}
+
+const imageTypeOf = (url = '') =>
+  /\.png($|\?)/i.test(url)
+    ? 'image/png'
+    : /\.webp($|\?)/i.test(url)
+      ? 'image/webp'
+      : /f_jpg|\.jpe?g($|\?)/i.test(url)
+        ? 'image/jpeg'
+        : undefined;
+
+function buildSiteSchemas({ siteName, siteUrl, contact }) {
+  const hasAddress = Boolean(contact.city || contact.address);
+  const organization = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+    name: siteName,
+    url: `${siteUrl}/`,
+    logo: `${siteUrl}/akulas-kitchen-logo.png`,
+    ...(contact.email && { email: contact.email }),
+    ...(contact.phone && { telephone: contact.phone }),
+    // Address comes only from the store's own admin settings — never defaulted.
+    ...(hasAddress && {
+      address: {
+        '@type': 'PostalAddress',
+        ...(contact.address && { streetAddress: contact.address }),
+        ...(contact.city && { addressLocality: contact.city }),
+        ...(contact.state && { addressRegion: contact.state }),
+        ...(contact.postalCode && { postalCode: contact.postalCode }),
+        ...(contact.country && {
+          addressCountry: contact.country === 'India' ? 'IN' : contact.country,
+        }),
+      },
+    }),
+    ...((contact.phone || contact.email) && {
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          contactType: 'customer service',
+          ...(contact.phone && { telephone: contact.phone }),
+          ...(contact.email && { email: contact.email }),
+          areaServed: 'IN',
+        },
+      ],
+    }),
+    ...(contact.sameAs.length > 0 && { sameAs: contact.sameAs }),
+  };
+  const website = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${siteUrl}/#website`,
+    name: siteName,
+    url: `${siteUrl}/`,
+    inLanguage: 'en-IN',
+    publisher: { '@id': `${siteUrl}/#organization` },
+  };
+  return [organization, website];
 }
 
 /**
- * Enterprise-grade SEO component with full Open Graph, Twitter Cards,
- * JSON-LD structured data, canonical URLs, and rich snippet support.
+ * Page-level SEO: title, description, canonical, robots, Open Graph, Twitter
+ * and JSON-LD. Pages pass their own values; `defaultsOnly` (used by layouts)
+ * emits just site-wide fallbacks so no route ends up with duplicate canonicals
+ * or JSON-LD. On Vercel the same tags are also server-rendered by
+ * api/seo-render.js for crawlers that do not run JavaScript.
  */
 export function SEO({
   title,
+  fullTitle: fullTitleProp,
   description,
   keywords,
   ogImage,
+  ogImageWidth,
+  ogImageHeight,
+  ogImageAlt,
   preloadImage,
   canonicalUrl,
   schema,
   ogType = 'website',
   noindex = false,
+  robots,
   article,
-  product,
   breadcrumbs,
   faq,
+  defaultsOnly = false,
 }) {
   const location = useLocation();
-  const { footer, contact, seo } = useWebsiteContent();
+  const { seo } = useWebsiteContent();
   const { storeSettings } = useConfig();
 
-  const sameAs = buildSameAsLinks(footer?.socialLinks);
   const siteName = storeSettings?.general?.storeName?.trim() || SITE_NAME || "Akula's Kitchen";
-  const siteUrl = SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+  const siteUrl = (
+    SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+  ).replace(/\/+$/, '');
+  const path = normalizePath(location.pathname);
+  const isHomePage = path === '/';
 
-  const locality = storeSettings?.contact?.city || '';
-  const region = storeSettings?.contact?.state || 'Andhra Pradesh';
-  const postalCode = storeSettings?.contact?.postalCode || '';
-  const country = storeSettings?.contact?.country || 'India';
-  const street = storeSettings?.contact?.address || contact?.address || '';
-  const supportHoursStr = storeSettings?.contact?.supportHours || 'Mon - Sat, 10 AM to 6 PM';
+  const globalTitle = storeSettings?.storefront?.seoTitle || seo?.globalTitle;
+  const globalDescription = storeSettings?.storefront?.seoDescription || seo?.globalDescription;
 
-  const parseOpeningHours = (hours) => {
-    if (!hours) return 'Mo-Sa 10:00-18:00';
-    if (/^[A-Za-z]{2}-[A-Za-z]{2}\s+\d{2}:\d{2}-\d{2}:\d{2}$/.test(hours.trim())) {
-      return hours.trim();
-    }
-    const lower = hours.toLowerCase();
-    let days = 'Mo-Sa';
-    if (lower.includes('mon - sun') || lower.includes('mon-sun') || lower.includes('everyday')) {
-      days = 'Mo-Su';
-    } else if (lower.includes('mon - fri') || lower.includes('mon-fri')) {
-      days = 'Mo-Fr';
-    }
-    return `${days} 10:00-18:00`;
-  };
-
-  const tagline = storeSettings?.general?.tagline?.trim();
-  const defaultDesc = tagline
-    ? `${tagline}. Experience authentic recipes, premium quality, and culinary excellence at ${siteName}.`
-    : `Authentic flavors, premium quality, and exquisite culinary experiences by ${siteName}.`;
-  const defaultTitle = tagline
-    ? `${siteName} — ${tagline}`
-    : `${siteName} — Authentic Flavors & Premium Culinary Experiences`;
-
-  const settingsPhone = storeSettings?.contact?.phone || contact?.phone;
-  const contactPhone = settingsPhone
-    ? `+91-${String(settingsPhone).replace(/^\+91-?/, '')}`
-    : CONTACT_PHONE;
-
-  const globalSeoTitle = storeSettings?.storefront?.seoTitle || seo?.globalTitle;
-  const globalSeoDesc = storeSettings?.storefront?.seoDescription || seo?.globalDescription;
-  const globalSeoKeywords = seo?.globalKeywords;
-  const globalSeoOgImage = seo?.ogImage;
-
-  // Clean title to avoid a duplicated "| <store name>" suffix
+  // Avoid "Name | Akula's Kitchen | Akula's Kitchen" when callers include the brand.
   const escapedSiteName = String(siteName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const cleanTitle = title
-    ? title
-        .replace(new RegExp(`\\s*\\|?\\s*${escapedSiteName}$`, 'i'), '')
-        .replace(/\s*\|\s*Akula's Kitchen$/i, '')
+    ? String(title)
+        .replace(new RegExp(`\\s*[|–-]\\s*${escapedSiteName}$`, 'i'), '')
         .trim()
     : '';
+  const isBareBrand = cleanTitle.toLowerCase() === String(siteName).toLowerCase();
+  const fullTitle =
+    fullTitleProp ||
+    (cleanTitle && !isBareBrand ? `${cleanTitle} | ${siteName}` : globalTitle || DEFAULT_TITLE);
+  const metaDescription = description || globalDescription || DEFAULT_DESCRIPTION;
 
-  const fullTitle = cleanTitle ? `${cleanTitle} | ${siteName}` : globalSeoTitle || defaultTitle;
+  const canonical = canonicalUrl
+    ? /^https?:\/\//i.test(canonicalUrl)
+      ? canonicalUrl
+      : `${siteUrl}${normalizePath(canonicalUrl)}`
+    : `${siteUrl}${path === '/' ? '/' : path}`;
+  const robotsContent = robots || (noindex ? NOINDEX_ROBOTS : INDEX_ROBOTS);
 
-  const metaDescription = description || globalSeoDesc || defaultDesc;
-  const metaKeywords = keywords || globalSeoKeywords || '';
-  const normalizedPath = normalizeUrl(location.pathname);
-  const currentUrl = canonicalUrl || (siteUrl ? `${siteUrl}${normalizedPath}` : normalizedPath);
-  const metaImage = ogImage || globalSeoOgImage || OG_IMAGE_URL;
-  const metaImageType = metaImage.endsWith('.png')
-    ? 'image/png'
-    : metaImage.endsWith('.webp')
-      ? 'image/webp'
-      : 'image/jpeg';
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: siteName,
-    url: siteUrl,
-    logo: siteUrl ? `${siteUrl}/favicon.png` : undefined,
-    description:
-      tagline || 'Authentic flavors, premium recipes, and exquisite culinary experiences.',
-    address: {
-      '@type': 'PostalAddress',
-      ...(street && { streetAddress: street }),
-      addressLocality: locality,
-      addressRegion: region,
-      postalCode: postalCode,
-      addressCountry: country === 'India' ? 'IN' : country,
-    },
-    ...(contactPhone && {
-      contactPoint: {
-        '@type': 'ContactPoint',
-        telephone: contactPhone,
-        contactType: 'customer service',
-        availableLanguage: ['English', 'Telugu', 'Hindi'],
-      },
-    }),
-    ...(sameAs.length > 0 && { sameAs }),
-  };
+  const metaImage = ogImage || seo?.ogImage || OG_IMAGE_URL;
+  const metaImageType = imageTypeOf(metaImage);
+  const isDefaultImage = !ogImage;
+  const imageAlt = ogImageAlt || (cleanTitle ? `${cleanTitle} — ${siteName}` : siteName);
 
-  const localBusinessSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: siteName,
-    image: OG_IMAGE_URL || metaImage,
-    url: siteUrl,
-    telephone: contactPhone,
-    description:
-      tagline ||
-      "Authentic flavors, premium quality, and exquisite culinary experiences by Akula's Kitchen.",
-    address: {
-      '@type': 'PostalAddress',
-      ...(street && { streetAddress: street }),
-      addressLocality: locality,
-      addressRegion: region,
-      postalCode: postalCode,
-      addressCountry: country === 'India' ? 'IN' : country,
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: 15.5057,
-      longitude: 80.0499,
-    },
-    priceRange: '₹₹',
-    openingHours: parseOpeningHours(supportHoursStr),
-    ...(sameAs.length > 0 && { sameAs }),
-  };
+  if (defaultsOnly) {
+    return (
+      <Helmet>
+        <html lang="en-IN" />
+        <title>{fullTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:site_name" content={siteName} />
+        <meta property="og:locale" content="en_IN" />
+        <meta name="twitter:card" content="summary_large_image" />
+        {TWITTER_HANDLE && <meta name="twitter:site" content={TWITTER_HANDLE} />}
+      </Helmet>
+    );
+  }
 
-  const breadcrumbSchema = breadcrumbs
+  const contact = storeSettings?.contact || {};
+  const siteSchemas = isHomePage
+    ? buildSiteSchemas({
+        siteName,
+        siteUrl,
+        contact: {
+          phone: contact.phone || storeSettings?.general?.phone || '',
+          email: contact.email || storeSettings?.general?.supportEmail || '',
+          address: contact.address || '',
+          city: contact.city || '',
+          state: contact.state || '',
+          postalCode: contact.postalCode || '',
+          country: contact.country || '',
+          sameAs: [contact.instagram, contact.facebook, contact.pinterest, contact.youtube].filter(
+            (u) => typeof u === 'string' && /^https?:\/\//.test(u),
+          ),
+        },
+      })
+    : [];
+
+  const breadcrumbSchema = breadcrumbs?.length
     ? {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -178,190 +184,78 @@ export function SEO({
           '@type': 'ListItem',
           position: index + 1,
           name: item.name,
-          item: item.url && siteUrl ? `${siteUrl}${item.url}` : undefined,
+          item: /^https?:\/\//.test(item.url || item.path || '')
+            ? item.url || item.path
+            : `${siteUrl}${item.url || item.path || ''}`,
         })),
       }
     : null;
 
-  const priceValidUntil = priceValidUntilDate;
-
-  const productSchema = product
-    ? {
-        '@context': 'https://schema.org/',
-        '@type': 'Product',
-        name: product.name,
-        image: product.images || [product.image],
-        description: product.description,
-        sku: product.sku,
-        brand: {
-          '@type': 'Brand',
-          name: siteName,
-        },
-        offers: {
-          '@type': 'Offer',
-          url: currentUrl,
-          priceCurrency: 'INR',
-          price: product.price,
-          priceValidUntil: priceValidUntil,
-          itemCondition: 'https://schema.org/NewCondition',
-          availability: 'https://schema.org/InStock',
-          seller: {
-            '@type': 'Organization',
-            name: siteName,
-          },
-          shippingDetails: {
-            '@type': 'OfferShippingDetails',
-            shippingDestination: {
-              '@type': 'DefinedRegion',
-              addressCountry: 'IN',
-            },
-          },
-        },
-        ...(product.rating && {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: product.rating,
-            reviewCount: product.reviewCount || 1,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }),
-      }
-    : null;
-
-  const faqSchema = faq
+  const faqSchema = faq?.length
     ? {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
         mainEntity: faq.map((item) => ({
           '@type': 'Question',
           name: item.question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: item.answer,
-          },
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
         })),
       }
     : null;
 
-  const websiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: siteName,
-    url: siteUrl,
-    ...(siteUrl && {
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${siteUrl}/collections?search={search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
-    }),
-  };
-
-  const isHomePage = normalizedPath === '' || normalizedPath === '/';
+  const schemas = [
+    ...siteSchemas,
+    ...(Array.isArray(schema) ? schema : schema ? [schema] : []),
+    ...(breadcrumbSchema ? [breadcrumbSchema] : []),
+    ...(faqSchema ? [faqSchema] : []),
+  ];
 
   return (
     <Helmet>
+      <html lang="en-IN" />
       <title>{fullTitle}</title>
       <meta name="description" content={metaDescription} />
-      {metaKeywords && <meta name="keywords" content={metaKeywords} />}
-      {currentUrl && <link rel="canonical" href={currentUrl} />}
-      <meta name="author" content={siteName} />
-
-      {noindex ? (
-        <meta name="robots" content="noindex, follow" />
-      ) : (
-        <meta
-          name="robots"
-          content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
-        />
-      )}
+      {keywords && <meta name="keywords" content={keywords} />}
+      <meta name="robots" content={robotsContent} />
+      <link rel="canonical" href={canonical} />
 
       <meta property="og:type" content={ogType} />
-      {currentUrl && <meta property="og:url" content={currentUrl} />}
+      <meta property="og:url" content={canonical} />
       <meta property="og:site_name" content={siteName} />
+      <meta property="og:locale" content="en_IN" />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={metaDescription} />
       {metaImage && <meta property="og:image" content={metaImage} />}
-      {metaImage && <meta property="og:image:type" content={metaImageType} />}
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta
-        property="og:image:alt"
-        content={
-          title
-            ? `${title} — ${siteName}`
-            : `${siteName} — Authentic Flavors & Premium Culinary Experiences`
-        }
-      />
-      <meta property="og:locale" content="en_IN" />
+      {metaImageType && <meta property="og:image:type" content={metaImageType} />}
+      {(ogImageWidth || isDefaultImage) && (
+        <meta property="og:image:width" content={String(ogImageWidth || 1200)} />
+      )}
+      {(ogImageHeight || isDefaultImage) && (
+        <meta property="og:image:height" content={String(ogImageHeight || 630)} />
+      )}
+      <meta property="og:image:alt" content={imageAlt} />
 
       <meta name="twitter:card" content="summary_large_image" />
       {TWITTER_HANDLE && <meta name="twitter:site" content={TWITTER_HANDLE} />}
-      {TWITTER_HANDLE && <meta name="twitter:creator" content={TWITTER_HANDLE} />}
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={metaDescription} />
       {metaImage && <meta name="twitter:image" content={metaImage} />}
-      <meta
-        name="twitter:image:alt"
-        content={
-          title
-            ? `${title} — ${siteName}`
-            : `${siteName} — Authentic Flavors & Premium Culinary Experiences`
-        }
-      />
+      <meta name="twitter:image:alt" content={imageAlt} />
 
-      {article && (
-        <>
-          <meta property="article:published_time" content={article.publishedTime} />
-          <meta property="article:modified_time" content={article.modifiedTime} />
-          <meta property="article:author" content={article.author || siteName} />
-        </>
+      {article?.publishedTime && (
+        <meta property="article:published_time" content={article.publishedTime} />
+      )}
+      {article?.modifiedTime && (
+        <meta property="article:modified_time" content={article.modifiedTime} />
       )}
 
-      <meta name="theme-color" content="#F7BB0E" />
-      <meta name="msapplication-TileColor" content="#F7BB0E" />
-
-      {currentUrl && <link rel="alternate" hrefLang="en-in" href={currentUrl} />}
-      {currentUrl && <link rel="alternate" hrefLang="x-default" href={currentUrl} />}
       {preloadImage && <link rel="preload" as="image" href={getOptimizedUrl(preloadImage)} />}
 
-      <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
-      <script type="application/ld+json">{JSON.stringify(websiteSchema)}</script>
-      {isHomePage && (
-        <>
-          <script type="application/ld+json">{JSON.stringify(localBusinessSchema)}</script>
-          <script type="application/ld+json">
-            {JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'ItemList',
-              itemListElement: [
-                {
-                  '@type': 'SiteNavigationElement',
-                  position: 1,
-                  name: 'Shop',
-                  url: `${siteUrl}/collections`,
-                },
-                {
-                  '@type': 'SiteNavigationElement',
-                  position: 2,
-                  name: 'Contact',
-                  url: `${siteUrl}/contact`,
-                },
-              ],
-            })}
-          </script>
-        </>
-      )}
-      {schema && <script type="application/ld+json">{JSON.stringify(schema)}</script>}
-      {breadcrumbSchema && (
-        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
-      )}
-      {productSchema && <script type="application/ld+json">{JSON.stringify(productSchema)}</script>}
-      {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
+      {schemas.map((s, i) => (
+        <script key={`ld-${i}`} type="application/ld+json">
+          {JSON.stringify(s)}
+        </script>
+      ))}
     </Helmet>
   );
 }

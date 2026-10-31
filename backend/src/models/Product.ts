@@ -54,6 +54,19 @@ export interface IProduct extends ISoftDeleted {
   weight?: string;
   seoTitle?: string;
   seoDescription?: string;
+  seoFocusKeyword?: string;
+  seoKeywords?: string[];
+  seoOgTitle?: string;
+  seoOgDescription?: string;
+  seoOgImage?: string;
+  seoImageAlt?: string;
+  seoCanonicalUrl?: string;
+  seoContent?: string;
+  seoIndexable?: boolean;
+  /** SEO fields an admin explicitly customised; all others are auto-generated. */
+  seoOverrides?: string[];
+  /** Retired slugs that permanently redirect to the current slug. */
+  previousSlugs?: string[];
   stock: number;
   reservedStock: number;
   inventory?: {
@@ -185,6 +198,17 @@ const ProductSchema: Schema = new Schema(
     weight: { type: String },
     seoTitle: { type: String },
     seoDescription: { type: String },
+    seoFocusKeyword: { type: String, trim: true },
+    seoKeywords: [{ type: String, trim: true }],
+    seoOgTitle: { type: String, trim: true },
+    seoOgDescription: { type: String, trim: true },
+    seoOgImage: { type: String, trim: true },
+    seoImageAlt: { type: String, trim: true },
+    seoCanonicalUrl: { type: String, trim: true },
+    seoContent: { type: String },
+    seoIndexable: { type: Boolean, default: true },
+    seoOverrides: [{ type: String }],
+    previousSlugs: [{ type: String, lowercase: true, trim: true }],
     stock: { type: Number, default: 999999, min: 0 },
     reservedStock: { type: Number, default: 0, min: 0 },
     inventory: {
@@ -280,6 +304,7 @@ ProductSchema.index({ secondaryCategories: 1 });
 ProductSchema.index({ featured: 1 });
 ProductSchema.index({ isActive: 1 });
 ProductSchema.index({ slug: 1, isActive: 1 });
+ProductSchema.index({ previousSlugs: 1 });
 
 // High-Performance Production Compound Indexes
 ProductSchema.index({ isActive: 1, primaryCategory: 1, price: 1 });
@@ -295,6 +320,10 @@ import ForensicAuditPlugin from '../utils/ForensicAuditPlugin';
 import { AssetLifecyclePlugin } from '../utils/AssetLifecyclePlugin';
 
 ProductSchema.post('save', () => {
+  triggerSitemapUpdate();
+});
+
+ProductSchema.post('findOneAndUpdate', () => {
   triggerSitemapUpdate();
 });
 

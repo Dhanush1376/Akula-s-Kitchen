@@ -12,7 +12,7 @@ import {
   Phone,
   Send,
 } from 'lucide-react';
-import { SEO } from '../components/seo/SEO';
+import { PageSEO } from '../components/seo/PageSEO';
 import { ContactSkeleton } from '../components/ui/Skeleton';
 import { useWebsiteContent } from '../hooks/useWebsiteContent';
 import { inquiryService } from '../services/domainServices';
@@ -167,9 +167,12 @@ export function Contact() {
       transition={{ duration: 0.35 }}
       className="min-h-screen pt-44 sm:pt-48 lg:pt-52 pb-[calc(var(--bottom-nav-height,65px)+3.5rem)] lg:pb-24 bg-white text-on-surface selection:bg-[#f7bb0e]/30 selection:text-[#283618] relative"
     >
-      <SEO
-        title={`Contact Us | ${storeName || "Akula's Kitchen"}`}
-        description={`Get in touch with ${storeName || "Akula's Kitchen"} about orders, catering, or culinary queries. We're happy to help.`}
+      <PageSEO
+        fallback={{
+          title: 'Contact Us | Orders & Customer Support',
+          description: `Contact ${storeName || "Akula's Kitchen"} for help with orders, deliveries and product questions. Find our phone number, email and address, or send us a message.`,
+          canonicalUrl: '/contact',
+        }}
       />
 
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 relative z-10">

@@ -5,6 +5,11 @@ import { SEO } from '../../components/seo/SEO';
 
 import { EditorialHero } from './sections/EditorialHero';
 import { HomeHeroLeaves } from './sections/HomeHeroLeaves';
+import {
+  HomeCategorySkeleton,
+  HomeProductRowSkeleton,
+  HomeProductGridSkeleton,
+} from '../../components/ui/skeletons/HomeSkeleton';
 
 const CategoryGrid = lazy(() =>
   import('./sections/CategoryGrid').then((m) => ({ default: m.CategoryGrid })),
@@ -86,7 +91,7 @@ export function Home({ previewContent }) {
               case 'categoryGrid':
                 return (
                   <div key={section.id}>
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<HomeCategorySkeleton />}>
                       <CategoryGrid previewContent={activeCms} />
                     </Suspense>
                   </div>
@@ -94,7 +99,11 @@ export function Home({ previewContent }) {
               case 'trendingProducts':
                 return (
                   <div key={section.id}>
-                    <Suspense fallback={null}>
+                    <Suspense
+                      fallback={
+                        <HomeProductRowSkeleton sectionClassName="h1-section !pt-4 lg:!pt-8 !pb-4 lg:!pb-8" />
+                      }
+                    >
                       <TrendingProducts previewContent={activeCms} />
                     </Suspense>
                   </div>
@@ -102,7 +111,7 @@ export function Home({ previewContent }) {
               case 'featuredProducts':
                 return (
                   <div key={section.id}>
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<HomeProductRowSkeleton />}>
                       <BestSellers previewContent={activeCms} />
                     </Suspense>
                   </div>
@@ -110,7 +119,7 @@ export function Home({ previewContent }) {
               case 'recommendedProducts':
                 return (
                   <div key={section.id}>
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<HomeProductGridSkeleton />}>
                       <RecommendedGrid previewContent={activeCms} />
                     </Suspense>
                   </div>
@@ -123,77 +132,6 @@ export function Home({ previewContent }) {
       </div>
     </>
   );
-}
-
-function HomeSkeleton() {
-  return (
-    <div className="h1-page relative bg-surface-bright overflow-hidden">
-      {/* Hero Skeleton */}
-      <div className="ak-today animate-pulse">
-        <div className="ak-today__head">
-          <div>
-            <div className="h-3 w-32 rounded-full bg-surface-container-high mb-2" />
-            <div className="h-8 w-52 rounded-lg bg-surface-container-high" />
-          </div>
-        </div>
-        <div className="ak-today__grid">
-          {[
-            [260, 190],
-            [200, 250],
-          ].map((col, c) => (
-            <div key={c} className="ak-today__col">
-              {col.map((h, i) => (
-                <div
-                  key={i}
-                  className="rounded-[18px] bg-surface-container-high"
-                  style={{ height: h }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Category Grid Skeleton */}
-      <div className="ak-cats h1-container animate-pulse">
-        <div className="h-7 w-52 bg-surface-container-high rounded-full mb-4" />
-        <div className="ak-cats__grid">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="ak-cats__cell">
-              <div className="ak-cats__tile bg-surface-container-high" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Trending Products Skeleton */}
-      <div className="max-w-[1400px] mx-auto px-6 mt-20 lg:mt-32 animate-pulse">
-        <div className="flex justify-between items-end mb-8 lg:mb-10">
-          <div>
-            <div className="h-3 w-20 lg:w-24 bg-surface-container-high rounded-full mb-2"></div>
-            <div className="h-8 lg:h-10 w-48 lg:w-64 bg-surface-container-high rounded-full"></div>
-          </div>
-          <div className="h-4 w-20 bg-surface-container-high rounded-full hidden lg:block"></div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex flex-col gap-4">
-              <div className="w-full aspect-[3/4] bg-surface-container-high rounded-[24px] lg:rounded-[32px]"></div>
-              <div className="px-1 lg:px-2">
-                <div className="w-[80%] h-4 bg-surface-container-high rounded-full mb-2"></div>
-                <div className="w-[60%] h-3 bg-surface-container-high rounded-full mb-3"></div>
-                <div className="w-[40%] h-5 bg-surface-container-high rounded-full"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SectionFallback() {
-  return <div className="w-full min-h-[160px]" />;
 }
 
 function HomepageEmptyState() {

@@ -1,5 +1,8 @@
 import { PageLoader } from './PageLoader';
 import { Skeleton } from './SkeletonBase';
+// Static: the homepage is the most common first page, and a lazy skeleton would arrive no
+// sooner than the page it stands in for. It only depends on SkeletonBase (~2 KB).
+import { HomeSkeleton } from './skeletons/HomeSkeleton';
 import { lazy, Suspense } from 'react';
 
 export function getRouteSkeletonVariant(path) {
@@ -37,7 +40,6 @@ export function getRouteSkeletonVariant(path) {
 }
 
 const LazySkeletons = {
-  home: lazy(() => import('./Skeleton').then((m) => ({ default: m.HomeSkeleton }))),
   'product-list': lazy(() =>
     import('./Skeleton').then((m) => ({ default: m.ProductListSkeleton })),
   ),
@@ -69,6 +71,8 @@ const LazySkeletons = {
 
 /** Lightweight route transition skeleton — avoids blank screens during lazy route loads. */
 export function RouteSkeleton({ variant = 'page' }) {
+  if (variant === 'home') return <HomeSkeleton />;
+
   if (variant === 'page' || variant === 'policy') {
     return (
       <>

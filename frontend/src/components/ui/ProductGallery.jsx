@@ -16,6 +16,10 @@ const RecommendationSystem = React.lazy(() =>
 );
 
 export function ProductGallery({ images = [], product }) {
+  // Descriptive, per-image alt text (generated server-side; admin can override the primary).
+  const altFor = (idx) =>
+    product?.seo?.imageAlts?.[idx] ||
+    (product?.title ? `${product.title}, photo ${idx + 1}` : `Product photo ${idx + 1}`);
   const { toggleItem, isWishlisted } = useWishlist();
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -125,6 +129,8 @@ export function ProductGallery({ images = [], product }) {
           {images.map((img, idx) => (
             <button
               key={idx}
+              type="button"
+              aria-label={`Show ${altFor(idx)}`}
               onClick={() => handleThumbnailClick(idx)}
               className={`shrink-0 w-12 sm:w-14 lg:w-16 lg:w-[60px] aspect-square rounded-[14px] sm:rounded-[16px] overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] relative group cursor-pointer ${
                 selectedIdx === idx
@@ -134,7 +140,7 @@ export function ProductGallery({ images = [], product }) {
             >
               <OptimizedImage
                 src={img}
-                alt={`Thumbnail ${idx + 1}`}
+                alt=""
                 containerClassName="w-full h-full"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[14px] sm:rounded-[16px]"
                 width={100}
@@ -161,7 +167,7 @@ export function ProductGallery({ images = [], product }) {
             >
               <OptimizedImage
                 src={img}
-                alt={`Product Primary View ${idx + 1}`}
+                alt={altFor(idx)}
                 containerClassName="w-full h-full"
                 className="w-full h-full object-cover origin-center select-none transition-transform duration-500"
                 width={800}
@@ -302,7 +308,7 @@ export function ProductGallery({ images = [], product }) {
                     >
                       <OptimizedImage
                         src={img}
-                        alt={`Lightbox view ${idx + 1}`}
+                        alt={altFor(idx)}
                         className="max-w-full max-h-full object-contain rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm"
                         containerClassName="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl sm:rounded-3xl"
                         aspectRatio="auto"
@@ -321,6 +327,8 @@ export function ProductGallery({ images = [], product }) {
                   {images.map((img, idx) => (
                     <button
                       key={idx}
+                      type="button"
+                      aria-label={`Show ${altFor(idx)}`}
                       onClick={() => {
                         setSelectedIdx(idx);
                         if (lightboxScrollRef.current) {
@@ -338,7 +346,7 @@ export function ProductGallery({ images = [], product }) {
                     >
                       <OptimizedImage
                         src={img}
-                        alt={`Thumbnail ${idx + 1}`}
+                        alt=""
                         containerClassName="w-full h-full"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none rounded-[14px] sm:rounded-[16px]"
                         width={100}

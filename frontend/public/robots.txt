@@ -1,9 +1,15 @@
+# Akula's Kitchen
+#
+# Storefront pages, products and categories are crawlable.
+# Private pages (cart, checkout, account, admin) are NOT blocked here on
+# purpose: they answer with "X-Robots-Tag: noindex" and a robots meta tag,
+# and crawlers must be allowed to fetch them to see that directive.
+# /api/ stays crawlable too: Googlebot needs the same-origin product API to
+# render pages; API responses themselves carry "X-Robots-Tag: noindex".
+
 User-agent: *
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /cart/
-Disallow: /checkout/
-Disallow: /wishlist/
-Disallow: /track/
-Disallow: /accept-invite/
+Allow: /
+Disallow: /admin/maintenance-gateway
+Disallow: /admin/maintenance-console
+
 Sitemap: https://akulas.kitchen/sitemap.xml

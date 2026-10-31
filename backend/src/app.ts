@@ -23,7 +23,7 @@ import metricsRoutes from './routes/system/metricsRoutes';
 import { HealthController } from './controllers/system/healthController';
 import logger from './config/logger';
 import { getSocketAdapterMode } from './config/socketState';
-import { generateSitemap } from './utils/sitemapGenerator';
+import { renderSitemap } from './services/seo/sitemapService';
 import { PrometheusService } from './services/PrometheusService';
 import * as Sentry from '@sentry/node';
 import notificationRoutes from './routes/notifications/notificationRoutes';
@@ -294,18 +294,38 @@ app.get(['/api/readiness', '/api/v1/readiness'], noCacheMiddleware, HealthContro
 // Ignore favicon
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
-// Dynamic sitemap.xml endpoint for SEO bots
-app.get('/sitemap.xml', publicEndpointLimiter, async (req: Request, res: Response) => {
-  try {
-    const xml = await generateSitemap();
-    res.setHeader('Content-Type', 'application/xml');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-    res.status(200).send(xml);
-  } catch (err: any) {
-    logger.error(`[APP SITEMAP ROUTE ERROR] ${err.message}`);
-    res.status(500).type('text/plain').send('Error serving dynamic sitemap');
-  }
-});
+// Dynamic sitemap for search engines (proxied at https://<site>/sitemap.xml by Vercel).
+// Large catalogues switch to a sitemap index pointing at /sitemap-<n>.xml chunks.
+app.get(
+  [
+    '/sitemap.xml',
+    '/sitemap-:chunk.xml',
+    '/api/v1/seo/sitemap.xml',
+    '/api/v1/seo/sitemap-:chunk.xml',
+  ],
+  publicEndpointLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const chunkParam = req.params.chunk as string | undefined;
+      const chunk = chunkParam !== undefined ? Number(chunkParam) : undefined;
+      if (chunk !== undefined && !Number.isInteger(chunk)) {
+        return res.status(404).type('text/plain').send('Not found');
+      }
+      const xml = await renderSitemap(chunk);
+      if (!xml) return res.status(404).type('text/plain').send('Not found');
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=900, s-maxage=900, stale-while-revalidate=3600',
+      );
+      res.setHeader('X-Robots-Tag', 'noindex');
+      res.status(200).send(xml);
+    } catch (err: any) {
+      logger.error(`[APP SITEMAP ROUTE ERROR] ${err.message}`);
+      res.status(500).type('text/plain').send('Error serving dynamic sitemap');
+    }
+  },
+);
 
 // Apply per-request timeout guard (30s default — excludes webhooks/uploads automatically)
 app.use(requestTimeout(60000));

@@ -33,7 +33,6 @@ runStartupValidation();
 import app from './src/app';
 import connectDB from './src/config/db';
 import { ensureIndexes } from './src/config/ensureIndexes';
-import { generateSitemap } from './src/utils/sitemapGenerator';
 import { initSocket, getIO, emitAdminNotification, clearBroadcastInterval } from './src/socket';
 import { initJobs } from './src/jobs/cronJobs';
 import { initRedis, closeRedisConnections, setRedisAlertHandler } from './src/utils/cache/redis';
@@ -216,10 +215,7 @@ const initializeNonCriticalServices = async (httpServer: Server) => {
       logger.error(`[STARTUP] Categories seeding error: ${err.message}`);
     }
 
-    // 8. Auto-generate sitemap
-    generateSitemap().catch((err: any) =>
-      logger.error(`[BOOT SITEMAP] Initial sitemap generation failed: ${err.message}`),
-    );
+    // 8. Sitemap is rendered on demand at /sitemap.xml (services/seo/sitemapService.ts)
 
     const bootEndTime = performance.now();
     logger.info(

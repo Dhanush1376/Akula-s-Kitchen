@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
+import { HomeCategorySkeleton } from '../../../components/ui/skeletons/HomeSkeleton';
 import { SectionHeader } from '../../../components/shared/SectionHeader';
 import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
 import React, { useMemo } from 'react';
 import { useActiveCategories } from '../../../hooks/useProductQueries';
 import { MadeFreshStrip } from './MadeFreshStrip';
+import { getOptimizedUrl, getSrcSet } from '../../../utils/media/imageUtils';
 
 const getCategoryImage = (cat) => {
   return cat?.image || cat?.imageSrc || null;
@@ -70,21 +72,7 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
 
   // Only show skeleton if we have zero categories available
   if (categories.length === 0 && (cms.loading || isCategoriesLoading)) {
-    return (
-      <section className="ak-cats py-8 lg:py-12" aria-busy="true">
-        <div className="h1-container animate-pulse">
-          <div className="h-7 w-52 bg-surface-container-high rounded-full mb-6" />
-          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-5">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="aspect-[8/9] sm:aspect-auto sm:h-[210px] md:h-[240px] lg:h-[270px] bg-surface-container-high rounded-lg sm:rounded-xl lg:rounded-2xl"
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return <HomeCategorySkeleton />;
   }
 
   if (config.isVisible === false) return null;
@@ -121,9 +109,13 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
                   {/* Full Bleed Background Image with Error Graceful Degradation */}
                   {imgSrc && (
                     <img
-                      src={imgSrc}
+                      // Width-limited, auto-format variant (Cloudinary); other URLs unchanged
+                      src={getOptimizedUrl(imgSrc, 640)}
+                      srcSet={getSrcSet(imgSrc, 400) || undefined}
+                      sizes="(max-width: 1023px) 50vw, 25vw"
                       alt={category.name}
                       loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
