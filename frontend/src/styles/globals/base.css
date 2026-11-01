@@ -70,10 +70,12 @@
   }
 
   @media screen and (max-width: 640px) {
-    /* 16px base threshold prevents mobile browsers from auto-zooming and distorting layout on input focus */
-    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']),
-    textarea,
-    select {
+    /* 16px base threshold prevents mobile browsers from auto-zooming and distorting layout on input focus, except where smaller text is explicitly styled */
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not(
+        [class*='text-']
+      ),
+    textarea:not([class*='text-']),
+    select:not([class*='text-']) {
       font-size: 16px;
     }
   }

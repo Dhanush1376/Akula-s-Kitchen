@@ -268,12 +268,12 @@ export function AddAddressModal({
               {/* Modal Headings in AuthModal serif style */}
               <div className="relative z-10 text-left mb-2.5 space-y-0.5 pt-1 shrink-0">
                 <h2
-                  className="font-serif-heading text-[19px] sm:text-[22px] leading-tight text-neutral-950 font-bold tracking-tight"
+                  className="font-serif-heading text-[18px] sm:text-[20px] leading-tight text-neutral-950 font-bold tracking-tight"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {newAddress?.id ? 'Edit Address' : 'Add New Address'}
                 </h2>
-                <p className="text-neutral-500 text-[11.5px] sm:text-[12.5px] font-normal leading-relaxed">
+                <p className="text-neutral-500 text-[11px] sm:text-[12px] font-normal leading-relaxed">
                   {currentStep === 1
                     ? 'Step 1 of 2: Set your delivery address and location'
                     : 'Step 2 of 2: Provide recipient contact information'}
@@ -319,10 +319,10 @@ export function AddAddressModal({
                         type="button"
                         disabled={isLocating}
                         onClick={handleLocationClick}
-                        className="w-full h-11 px-5 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mb-2.5 select-none"
+                        className="w-full h-10 sm:h-10.5 px-4 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[11px] sm:text-[11.5px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mb-2 select-none"
                       >
                         <span
-                          className={`material-symbols-outlined text-[17px] text-[#f7bb0e] shrink-0 ${
+                          className={`material-symbols-outlined text-[16px] text-[#f7bb0e] shrink-0 ${
                             isLocating ? 'animate-spin' : ''
                           }`}
                         >
@@ -335,7 +335,7 @@ export function AddAddressModal({
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-neutral-600" />
                             6-Digit Pincode*
                           </label>
@@ -376,12 +376,12 @@ export function AddAddressModal({
                                   });
                               }
                             }}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
                             Locality / Sector*
                           </label>
                           <input
@@ -390,13 +390,13 @@ export function AddAddressModal({
                             placeholder="Locality, area, or sector"
                             value={newAddress.locality}
                             onChange={(e) => updateAddressField('locality', e.target.value)}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                        <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
                           Street Address & Building Details*
                         </label>
                         <textarea
@@ -404,12 +404,12 @@ export function AddAddressModal({
                           placeholder="Building name, street, road, or area details"
                           value={newAddress.address}
                           onChange={(e) => updateAddressField('address', e.target.value)}
-                          className="w-full rounded-lg border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium p-3 shadow-2xs outline-none transition-all min-h-[64px] resize-none"
+                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium p-3 shadow-2xs outline-none transition-all min-h-[64px] resize-none"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                        <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
                           Landmark / Flat No.*
                         </label>
                         <input
@@ -418,13 +418,13 @@ export function AddAddressModal({
                           placeholder="Flat / house no., floor, or nearby landmark"
                           value={newAddress.landmark}
                           onChange={(e) => updateAddressField('landmark', e.target.value)}
-                          className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                          className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                         />
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
                             City / District*
                           </label>
                           <input
@@ -433,12 +433,12 @@ export function AddAddressModal({
                             placeholder="City or district"
                             value={newAddress.city}
                             onChange={(e) => updateAddressField('city', e.target.value)}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
                             State*
                           </label>
                           <input
@@ -447,14 +447,14 @@ export function AddAddressModal({
                             placeholder="State"
                             value={newAddress.state}
                             onChange={(e) => updateAddressField('state', e.target.value)}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all uppercase"
                           />
                         </div>
                       </div>
 
                       {/* Destination Type Pills */}
                       <div className="space-y-1.5 pt-0.5">
-                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">
+                        <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">
                           Address Type
                         </label>
                         <div className="grid grid-cols-3 gap-2 w-full">
@@ -473,13 +473,13 @@ export function AddAddressModal({
                                     tag: type === 'Other' ? 'Warehouse' : type,
                                   }));
                                 }}
-                                className={`flex items-center justify-center gap-1.5 h-10 rounded-full text-[12px] font-bold tracking-wide transition-all cursor-pointer select-none border ${
+                                className={`flex items-center justify-center gap-1.5 h-9 sm:h-9.5 rounded-full text-[11px] sm:text-[11.5px] font-bold tracking-wide transition-all cursor-pointer select-none border ${
                                   isSelected
                                     ? 'bg-[#283618] text-white border-[#283618] shadow-xs ring-2 ring-[#283618]/15'
                                     : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-200/80'
                                 }`}
                               >
-                                <span className="material-symbols-outlined text-[16px] shrink-0">
+                                <span className="material-symbols-outlined text-[15px] shrink-0">
                                   {type === 'Home'
                                     ? 'home'
                                     : type === 'Work'
@@ -500,7 +500,7 @@ export function AddAddressModal({
                       {/* Contact Details Fields */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                             <User className="w-3 h-3 text-neutral-600" />
                             Receiver Full Name*
                           </label>
@@ -510,12 +510,12 @@ export function AddAddressModal({
                             placeholder="Full name"
                             value={newAddress.name}
                             onChange={(e) => updateAddressField('name', e.target.value)}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                             <Mail className="w-3 h-3 text-neutral-600" />
                             Email Address*
                           </label>
@@ -524,19 +524,19 @@ export function AddAddressModal({
                             placeholder="Email address"
                             value={newAddress.email}
                             onChange={(e) => updateAddressField('email', e.target.value)}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                             <Phone className="w-3 h-3 text-neutral-600" />
                             Phone Number*
                           </label>
                           <div className="relative flex items-center">
-                            <div className="absolute left-3.5 flex items-center gap-1 pointer-events-none select-none text-[12px] font-bold text-neutral-800">
+                            <div className="absolute left-3.5 flex items-center gap-1 pointer-events-none select-none text-[11.5px] font-bold text-neutral-800">
                               <span>🇮🇳</span>
                               <span>+91</span>
                               <span className="text-black/15 ml-0.5">|</span>
@@ -560,13 +560,13 @@ export function AddAddressModal({
                                   updateAddressField('phone', cleaned);
                                 }
                               }}
-                              className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium !pl-18 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
+                              className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium !pl-16.5 sm:!pl-17 !pr-4 shadow-2xs outline-none transition-all tracking-wide"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                          <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                             <Phone className="w-3 h-3 text-neutral-600" />
                             Alternate Number
                           </label>
@@ -588,14 +588,14 @@ export function AddAddressModal({
                                 updateAddressField('alternatePhone', cleaned);
                               }
                             }}
-                            className="w-full h-11 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
+                            className="w-full h-10 sm:h-10.5 rounded-full border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium px-4 shadow-2xs outline-none transition-all"
                           />
                         </div>
                       </div>
 
                       {/* Delivery Instructions & Default Option */}
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                        <label className="text-[9.5px] sm:text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
                           Delivery Instructions (Optional)
                         </label>
                         <textarea
@@ -604,7 +604,7 @@ export function AddAddressModal({
                           onChange={(e) =>
                             updateAddressField('deliveryInstructions', e.target.value)
                           }
-                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 text-[16px] sm:text-[13px] font-medium p-3 shadow-2xs outline-none transition-all min-h-[56px] resize-none"
+                          className="w-full rounded-xl border border-neutral-200 focus:border-[#283618] focus:ring-2 focus:ring-[#283618]/15 bg-white text-neutral-900 placeholder:text-neutral-400 !text-[12.5px] sm:!text-[13px] font-medium p-3 shadow-2xs outline-none transition-all min-h-[56px] resize-none"
                         />
                       </div>
 
@@ -615,7 +615,7 @@ export function AddAddressModal({
                           onChange={(e) => updateAddressField('isDefault', e.target.checked)}
                           className="w-4 h-4 rounded border-black/20 text-[#283618] focus:ring-[#283618] cursor-pointer"
                         />
-                        <span className="text-[12px] text-neutral-700 font-medium">
+                        <span className="text-[11.5px] sm:text-[12px] text-neutral-700 font-medium">
                           Make this as my default address
                         </span>
                       </label>
@@ -639,7 +639,7 @@ export function AddAddressModal({
                       key="btn-cancel"
                       type="button"
                       onClick={() => setIsAddingNewAddress(false)}
-                      className="h-11 px-5 rounded-full border border-black/12 hover:bg-neutral-50 text-neutral-800 font-bold uppercase text-[11px] tracking-wider transition-all cursor-pointer active:scale-[0.98]"
+                      className="h-10 sm:h-10.5 px-4 sm:px-5 rounded-full border border-black/12 hover:bg-neutral-50 text-neutral-800 font-bold uppercase text-[10.5px] sm:text-[11px] tracking-wider transition-all cursor-pointer active:scale-[0.98]"
                     >
                       Cancel
                     </button>
@@ -651,12 +651,12 @@ export function AddAddressModal({
                         e.stopPropagation();
                         handleProceedToStep2(e);
                       }}
-                      className="flex-1 h-11 pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer select-none"
+                      className="flex-1 h-10 sm:h-10.5 pl-4 sm:pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[11px] sm:text-[11.5px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer select-none"
                     >
                       <span className="truncate">Contact Details</span>
-                      <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
+                      <span className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
                         <ArrowRight
-                          className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 group-hover:translate-x-0.5"
                           strokeWidth={2.5}
                           aria-hidden="true"
                         />
@@ -674,7 +674,7 @@ export function AddAddressModal({
                         setStepError(null);
                         setCurrentStep(1);
                       }}
-                      className="h-11 px-4 sm:px-5 rounded-full border border-black/12 hover:bg-neutral-50 text-neutral-800 font-bold uppercase text-[11px] tracking-wider transition-all cursor-pointer active:scale-[0.98] flex items-center gap-1.5"
+                      className="h-10 sm:h-10.5 px-4 sm:px-5 rounded-full border border-black/12 hover:bg-neutral-50 text-neutral-800 font-bold uppercase text-[10.5px] sm:text-[11px] tracking-wider transition-all cursor-pointer active:scale-[0.98] flex items-center gap-1.5"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
                       <span>Back</span>
@@ -688,19 +688,19 @@ export function AddAddressModal({
                         e.stopPropagation();
                         handleFormSubmit(e);
                       }}
-                      className="flex-1 h-11 pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer disabled:opacity-60 select-none"
+                      className="flex-1 h-10 sm:h-10.5 pl-4 sm:pl-5 pr-1.5 py-1 rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[11px] sm:text-[11.5px] uppercase tracking-wider transition-all shadow-sm active:scale-[0.98] border border-[#283618] flex items-center justify-between group cursor-pointer disabled:opacity-60 select-none"
                     >
                       <span className="truncate">
                         {isProcessing ? 'Saving Address...' : 'Save Address'}
                       </span>
-                      <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
+                      <span className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105 ml-2">
                         {isProcessing ? (
-                          <span className="material-symbols-outlined text-[16px] animate-spin text-[#283618]">
+                          <span className="material-symbols-outlined text-[15px] animate-spin text-[#283618]">
                             progress_activity
                           </span>
                         ) : (
                           <Check
-                            className="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 group-hover:scale-110"
                             strokeWidth={2.5}
                             aria-hidden="true"
                           />
