@@ -224,42 +224,42 @@ export function AddAddressModal({
   return createPortal(
     <AnimatePresence>
       {isAddingNewAddress && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-0 sm:p-6 md:p-8">
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-6 md:p-8 no-print">
           {/* Dark blurred background overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsAddingNewAddress(false)}
-            className="fixed inset-0 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
           />
 
-          {/* Bottom Sheet on Mobile / Centered Card on Desktop */}
+          {/* Floating Sheet on Mobile / Centered Card on Desktop */}
           <motion.div
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             {...(isMobile ? dragProps : {})}
-            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-full sm:max-w-[510px] md:max-w-[535px] mx-auto"
+            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[480px] sm:max-w-[510px] md:max-w-[535px] mx-auto"
           >
-            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-t-3xl rounded-b-none sm:rounded-3xl pt-2 px-4 pb-3 sm:pt-4 sm:px-6 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col h-auto max-h-[92dvh] sm:max-h-[88dvh] overflow-hidden font-body">
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 pb-4 sm:pb-6 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col h-auto max-h-[88dvh] sm:max-h-[88dvh] overflow-hidden font-body">
               {/* Gentle wind-blown corner foliage accents */}
               <AuthCornerLeaves />
 
               {/* Grab handle for mobile bottom sheet */}
               <div
-                className="sm:hidden w-full flex justify-center pt-1 pb-2 cursor-grab select-none z-20 relative"
+                className="sm:hidden w-full flex justify-center pt-0 pb-2 cursor-grab select-none z-20 relative"
                 onClick={() => setIsAddingNewAddress(false)}
               >
-                <div className="w-9 h-1 rounded-full bg-neutral-300" />
+                <div className="w-10 h-1 rounded-full bg-neutral-300" />
               </div>
 
               {/* Close button */}
               <button
                 type="button"
                 onClick={() => setIsAddingNewAddress(false)}
-                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-50 cursor-pointer"
+                className="absolute top-3.5 right-3.5 w-8.5 h-8.5 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-50 cursor-pointer"
                 aria-label="Close modal"
               >
                 <X className="w-3.5 h-3.5 text-black" strokeWidth={2} />
@@ -625,14 +625,7 @@ export function AddAddressModal({
               </div>
 
               {/* Modal Footer: Styled cleanly like AuthModal */}
-              <div
-                className="relative z-10 pt-2.5 border-t border-black/[0.08] shrink-0"
-                style={{
-                  paddingBottom: isMobile
-                    ? 'calc(0.5rem + env(safe-area-inset-bottom, 0px))'
-                    : undefined,
-                }}
-              >
+              <div className="relative z-10 pt-2.5 border-t border-black/[0.08] shrink-0">
                 {currentStep === 1 ? (
                   <div key="step-1-actions" className="w-full flex items-center gap-2.5 sm:gap-3">
                     <button
