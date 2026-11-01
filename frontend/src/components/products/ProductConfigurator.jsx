@@ -145,8 +145,37 @@ export function ProductConfigurator({
       ];
     }
 
-    return [];
-  }, [product?.optionGroups, product?.variants, product?.weight]);
+    // Fallback 3: Standard Pack / Default Weight
+    const weightLabel = product?.pack || product?.size || product?.unit || 'Standard Pack';
+    return [
+      {
+        groupId: 'grp_default_pack',
+        name: 'Weight / Pack',
+        type: 'SINGLE_SELECT',
+        required: true,
+        displayStyle: 'RADIO_CARDS',
+        options: [
+          {
+            optionId: 'opt_default_pack',
+            label: weightLabel,
+            value: 'standard',
+            priceAdjustment: 0,
+            available: true,
+            isDefault: true,
+            default: true,
+            sortOrder: 0,
+          },
+        ],
+      },
+    ];
+  }, [
+    product?.optionGroups,
+    product?.variants,
+    product?.weight,
+    product?.pack,
+    product?.size,
+    product?.unit,
+  ]);
 
   // Selections state: map of groupId -> array of selected option objects
   const [selections, setSelections] = useState(() =>
@@ -332,6 +361,16 @@ export function ProductConfigurator({
     const finalSig = generateClientSignature(flatFinalOptions);
 
     if (onAddToCart) {
+      const selectedWeightOption = flatFinalOptions.find(
+        (o) =>
+          o.groupName?.toLowerCase() === 'weight' || o.groupId?.toLowerCase().includes('weight'),
+      );
+      const variantLabel =
+        selectedWeightOption?.optionLabel ||
+        flatFinalOptions[0]?.optionLabel ||
+        product?.variant ||
+        'Default';
+
       onAddToCart({
         id: product._id || product.id,
         productId: product._id || product.id,
@@ -341,7 +380,7 @@ export function ProductConfigurator({
         configuredUnitPrice: finalUnitPrice,
         basePrice,
         quantity,
-        variant: 'Default',
+        variant: variantLabel,
         selectedOptions: flatFinalOptions,
         configurationSignature: finalSig,
         isNonRefundable: true,

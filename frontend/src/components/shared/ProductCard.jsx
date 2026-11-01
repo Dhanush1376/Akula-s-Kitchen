@@ -73,6 +73,11 @@ export const ProductCard = React.memo(function ProductCard({
   strikingPrice,
   stock,
   optionGroups = [],
+  variants = [],
+  weight,
+  pack,
+  unit,
+  size,
   selectionMode = false,
   isSelected = false,
   isRectangular = false,
@@ -85,7 +90,6 @@ export const ProductCard = React.memo(function ProductCard({
   const { openQuickView } = useQuickView();
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const hasConfigurableOptions = Array.isArray(optionGroups) && optionGroups.length > 0;
 
   const handleQuickViewAction = (e, data) => {
     if (onQuickView) {
@@ -359,20 +363,8 @@ export const ProductCard = React.memo(function ProductCard({
     e.preventDefault();
     e.stopPropagation();
 
-    attemptAddToCart({
-      id: productId,
-      _id: productId,
-      productId,
-      title,
-      price: numericPrice,
-      imageSrc,
-      quantity: 1,
-      variant: 'Default',
-      isNonRefundable: true,
-      optionGroups,
-    });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    // Open configuration drawer (phones) / modal pop-up (laptops) for quantity & weight selection
+    setIsConfigModalOpen(true);
   };
 
   const handleKeyDown = (e) => {
@@ -695,28 +687,32 @@ export const ProductCard = React.memo(function ProductCard({
         </div>
       </motion.div>
 
-      {hasConfigurableOptions && (
-        <ProductConfiguratorModal
-          isOpen={isConfigModalOpen}
-          onClose={() => setIsConfigModalOpen(false)}
-          product={{
-            id: productId,
-            _id: productId,
-            title,
-            price,
-            imageSrc,
-            images,
-            stock,
-            isNonRefundable,
-            optionGroups,
-          }}
-          onAddToCart={(configuredItem) => {
-            attemptAddToCart(configuredItem);
-            setAdded(true);
-            setTimeout(() => setAdded(false), 2000);
-          }}
-        />
-      )}
+      <ProductConfiguratorModal
+        isOpen={isConfigModalOpen}
+        onClose={() => setIsConfigModalOpen(false)}
+        product={{
+          id: productId,
+          _id: productId,
+          title,
+          price: numericPrice,
+          oldPrice: numericOldPrice,
+          imageSrc,
+          images: availableImages,
+          stock,
+          isNonRefundable,
+          weight,
+          variants,
+          pack,
+          unit,
+          size,
+          optionGroups,
+        }}
+        onAddToCart={(configuredItem) => {
+          attemptAddToCart(configuredItem);
+          setAdded(true);
+          setTimeout(() => setAdded(false), 2000);
+        }}
+      />
     </>
   );
 });
