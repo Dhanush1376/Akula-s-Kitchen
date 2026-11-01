@@ -1,21 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { m as motion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Clock, Sparkles } from 'lucide-react';
 import { PageSEO } from '../../components/seo/PageSEO';
 import { useProducts } from '../../hooks/useProductQueries';
 import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { getCategoryRoute, getProductRoute } from '../../utils/ecommerce/productRouteUtils';
 import { formatPrice, parseNumericPrice } from '../../utils/ecommerce/priceUtils';
+import {
+  DAYS_OF_WEEK,
+  getEffectiveMenuDay,
+  getWeekDates,
+} from '../../utils/ecommerce/menuScheduleUtils';
 import { prefersReducedMotion, windBreeze, windGust } from '../../components/effects/FallingLeaves';
 import '../../styles/policy.css';
 import './menu.css';
 import { MenuListSkeleton } from '../../components/ui/skeletons/MenuSkeleton';
 
 /**
- * The menu: every product, grouped by category and set like a printed menu card, with a
- * dotted leader running from each dish to its price. Shares the policy pages' header,
- * type and swaying banana leaf so it feels like part of the same house.
+ * The menu: daily batch specials synchronized with the weekly menu calendar.
+ * Features a 7-day calendar navigation strip, artisanal live date stamp,
+ * and dotted price leaders.
  */
 
 const categoryOf = (p) => {
@@ -243,14 +248,133 @@ export function Menu() {
   const title = menuConfig.title || 'Our Menu';
   const subtitle = menuConfig.subtitle || 'Fresh today in small batches';
 
+  // Effective rotating menu schedule (handles cutoff time transition)
+  const effectiveSchedule = useMemo(() => {
+    return getEffectiveMenuDay(menuConfig.cutoffTime || '18:00');
+  }, [menuConfig.cutoffTime]);
+
+  // URL search parameter to sync selected day (?day=wednesday)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dayParam = searchParams.get('day')?.toLowerCase();
+
+  const selectedDayKey = useMemo(() => {
+    if (dayParam && DAYS_OF_WEEK.some((d) => d.key === dayParam)) {
+      return dayParam;
+    }
+    return effectiveSchedule.effectiveDayKey;
+  }, [dayParam, effectiveSchedule.effectiveDayKey]);
+
+  const handleSelectDay = (dayKey) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (dayKey === effectiveSchedule.effectiveDayKey) {
+          next.delete('day');
+        } else {
+          next.set('day', dayKey);
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  // 7-day weekly schedule anchored around the active/effective date
+  const weekDays = useMemo(() => {
+    return getWeekDates(effectiveSchedule.effectiveDate);
+  }, [effectiveSchedule.effectiveDate]);
+
+  const selectedDayMeta = useMemo(() => {
+    return weekDays.find((d) => d.key === selectedDayKey) || weekDays[0];
+  }, [weekDays, selectedDayKey]);
+
+  const isSelectedDayLive = selectedDayKey === effectiveSchedule.effectiveDayKey;
+
+  // Selected day's badge text from schedule or fallback
+  const dayBadgeText = useMemo(() => {
+    const customBadge = menuConfig.weeklySchedule?.[selectedDayKey]?.badgeText;
+    if (customBadge && customBadge.trim()) return customBadge.trim();
+    if (isSelectedDayLive) {
+      return effectiveSchedule.isTomorrow ? "Tomorrow's Special" : "Today's Special";
+    }
+    return `${selectedDayMeta?.label || 'Day'}'s Special`;
+  }, [
+    menuConfig.weeklySchedule,
+    selectedDayKey,
+    isSelectedDayLive,
+    effectiveSchedule.isTomorrow,
+    selectedDayMeta?.label,
+  ]);
+
   const { data, isPending, isError, refetch } = useProducts({ limit: 200 });
 
-  const sections = useMemo(() => {
+  const activeProducts = useMemo(() => {
     const raw = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
-    const activeProducts = raw.filter((p) => p && p.isActive !== false);
+    return raw.filter((p) => p && p.isActive !== false);
+  }, [data]);
 
-    const groups = new Map();
+  const productsById = useMemo(() => {
+    const map = new Map();
     activeProducts.forEach((p) => {
+      map.set(String(p._id || p.id), p);
+    });
+    return map;
+  }, [activeProducts]);
+
+  // Scheduled dish count per day for the calendar pills
+  const dayDishCounts = useMemo(() => {
+    const counts = {};
+    DAYS_OF_WEEK.forEach((d) => {
+      const dayConfig = menuConfig.weeklySchedule?.[d.key];
+      const pids = Array.isArray(dayConfig?.productIds)
+        ? dayConfig.productIds
+        : Array.isArray(menuConfig.productIds)
+          ? menuConfig.productIds
+          : [];
+      const validCount = pids.filter((id) => productsById.has(String(id))).length;
+      counts[d.key] = validCount;
+    });
+    return counts;
+  }, [menuConfig.weeklySchedule, menuConfig.productIds, productsById]);
+
+  // Scheduled product IDs for the currently selected day
+  const currentDayProductIds = useMemo(() => {
+    const dayConfig = menuConfig.weeklySchedule?.[selectedDayKey];
+    if (Array.isArray(dayConfig?.productIds) && dayConfig.productIds.length > 0) {
+      return dayConfig.productIds;
+    }
+    if (Array.isArray(menuConfig.productIds) && menuConfig.productIds.length > 0) {
+      return menuConfig.productIds;
+    }
+    return [];
+  }, [menuConfig.weeklySchedule, menuConfig.productIds, selectedDayKey]);
+
+  // Current day's filtered products (strictly synchronized with the menu's calendar)
+  const currentDayProducts = useMemo(() => {
+    if (currentDayProductIds.length === 0) {
+      const hasAnySchedule = Object.values(menuConfig.weeklySchedule || {}).some(
+        (day) => Array.isArray(day?.productIds) && day.productIds.length > 0,
+      );
+      // Fallback only if no calendar items have ever been configured
+      if (!hasAnySchedule && (!menuConfig.productIds || menuConfig.productIds.length === 0)) {
+        return activeProducts;
+      }
+      return [];
+    }
+
+    // Keep the curated order of dishes set in the calendar
+    return currentDayProductIds.map((id) => productsById.get(String(id))).filter(Boolean);
+  }, [
+    currentDayProductIds,
+    productsById,
+    menuConfig.weeklySchedule,
+    menuConfig.productIds,
+    activeProducts,
+  ]);
+
+  const sections = useMemo(() => {
+    const groups = new Map();
+    currentDayProducts.forEach((p) => {
       const name = categoryOf(p);
       if (!groups.has(name)) groups.set(name, []);
       groups.get(name).push(p);
@@ -263,21 +387,41 @@ export function Menu() {
         String(a.title || a.name).localeCompare(String(b.title || b.name)),
       ),
     }));
-  }, [data]);
+  }, [currentDayProducts]);
 
   const ids = useMemo(() => sections.map((s) => s.id), [sections]);
   const [active, setActive] = useActiveSection(ids);
   const total = sections.reduce((n, s) => n + s.items.length, 0);
 
+  // Reset active section chip when changing calendar days
+  useEffect(() => {
+    setActive('all');
+  }, [selectedDayKey, setActive]);
+
   const dateInfo = useMemo(() => {
+    if (selectedDayMeta?.date) {
+      const d = selectedDayMeta.date;
+      return {
+        day: d.getDate(),
+        month: d.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase(),
+        weekday: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+        year: d.getFullYear(),
+        badgeLabel: isSelectedDayLive
+          ? effectiveSchedule.isTomorrow
+            ? 'Tomorrow'
+            : 'Today'
+          : selectedDayMeta.label,
+      };
+    }
     const now = new Date();
     return {
       day: now.getDate(),
       month: now.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase(),
       weekday: now.toLocaleDateString('en-IN', { weekday: 'short' }),
       year: now.getFullYear(),
+      badgeLabel: 'Today',
     };
-  }, []);
+  }, [selectedDayMeta, isSelectedDayLive, effectiveSchedule.isTomorrow]);
 
   return (
     <motion.div
@@ -288,9 +432,9 @@ export function Menu() {
     >
       <PageSEO
         fallback={{
-          title: 'Menu & Price List: Batters, Pickles, Podis',
-          description: `${subtitle}. See every product grouped by category with current prices.`,
-          canonicalUrl: '/menu',
+          title: `${title} (${selectedDayMeta?.label || 'Today'}): Batters, Pickles, Podis`,
+          description: `${subtitle}. Fresh today in small batches. See our daily rotating menu.`,
+          canonicalUrl: `/menu${selectedDayKey !== effectiveSchedule.effectiveDayKey ? `?day=${selectedDayKey}` : ''}`,
         }}
       />
 
@@ -319,7 +463,7 @@ export function Menu() {
         </div>
       </div>
 
-      {/* Bottom-Left Banana Leaf (Opposite corner at bottom) */}
+      {/* Bottom-Left Banana Leaf */}
       <div className="menu-leaf-bottom-left" aria-hidden="true">
         <div className="menu-leaf-bottom-left__frame">
           <div ref={lowerLeaf.leafRef} className="menu-leaf-bottom-left__sway">
@@ -345,9 +489,9 @@ export function Menu() {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
         <header
           id="menu-top"
-          className="mb-6 lg:mb-10 pt-2 sm:pt-4 pb-4 sm:pb-6 border-b border-[#283618]/12"
+          className="mb-6 lg:mb-8 pt-2 sm:pt-4 pb-4 sm:pb-6 border-b border-[#283618]/12"
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
               <nav
                 aria-label="Breadcrumb"
@@ -360,9 +504,19 @@ export function Menu() {
                 <span className="text-[#283618]/70 font-semibold">Menu</span>
               </nav>
 
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-[0.14em] bg-[#f7bb0e]/20 text-[#283618] border border-[#f7bb0e]/40 mb-2">
+                <Sparkles className="w-3 h-3 text-[#c89611]" />
+                {dayBadgeText}
+              </div>
+
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-[#283618] tracking-tight">
                 {title}
               </h1>
+              {subtitle && (
+                <p className="text-xs sm:text-sm text-[#4b5563] mt-1.5 max-w-xl font-normal leading-relaxed">
+                  {subtitle}
+                </p>
+              )}
             </div>
 
             {/* Artisanal Live Date Stamp */}
@@ -377,8 +531,10 @@ export function Menu() {
               </div>
               <div className="text-left pr-0.5">
                 <span className="flex items-center gap-1.5 text-[8.5px] sm:text-[9px] font-sans font-extrabold uppercase tracking-[0.14em] text-[#c89611]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e] shrink-0" />
-                  Today
+                  {isSelectedDayLive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e] shrink-0 animate-pulse" />
+                  )}
+                  {dateInfo.badgeLabel}
                 </span>
                 <span className="block font-display font-bold text-[12px] sm:text-[13px] text-[#283618] leading-tight whitespace-nowrap mt-0.5">
                   {dateInfo.weekday}, {dateInfo.year}
@@ -388,15 +544,125 @@ export function Menu() {
           </div>
         </header>
 
+        {/* Weekly Menu Calendar Navigation Strip */}
+        <section
+          aria-label="Weekly Menu Calendar"
+          className="mb-8 p-3.5 sm:p-4 rounded-2xl bg-[#fdfbf7] border border-[#283618]/12 shadow-xs"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-[#283618]/8 text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#283618]" />
+              <span className="font-display font-bold uppercase tracking-wider text-[#283618]">
+                Weekly Menu Rotation
+              </span>
+              {effectiveSchedule.cutoffDisplay && (
+                <span className="text-[11px] text-[#4b5563] hidden sm:inline">
+                  • Ordering cutoff: {effectiveSchedule.cutoffDisplay}
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] text-[#4b5563]">
+              Select a day to view its daily batch specials
+            </span>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+            {weekDays.map((d) => {
+              const isSelected = d.key === selectedDayKey;
+              const isLiveDay = d.key === effectiveSchedule.effectiveDayKey;
+              const count = dayDishCounts[d.key] ?? 0;
+
+              return (
+                <button
+                  key={d.key}
+                  type="button"
+                  onClick={() => handleSelectDay(d.key)}
+                  aria-pressed={isSelected}
+                  className={`flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl transition-all duration-200 border text-center cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#283618] text-white border-[#283618] shadow-md shadow-[#283618]/20 scale-[1.02]'
+                      : 'bg-white hover:bg-[#f7bb0e]/10 text-[#283618] border-[#283618]/10 hover:border-[#283618]/30'
+                  }`}
+                >
+                  <span
+                    className={`text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-wider ${
+                      isSelected ? 'text-[#f7bb0e]' : 'text-[#4b5563]'
+                    }`}
+                  >
+                    {d.shortName}
+                  </span>
+                  <span className="font-display font-extrabold text-sm sm:text-lg leading-tight my-0.5">
+                    {d.dayNumber}
+                  </span>
+                  <span
+                    className={`text-[8.5px] sm:text-[9.5px] font-sans font-semibold uppercase tracking-tight ${
+                      isSelected ? 'text-white/80' : 'text-[#283618]/60'
+                    }`}
+                  >
+                    {count} {count === 1 ? 'dish' : 'dishes'}
+                  </span>
+                  {isLiveDay && (
+                    <span
+                      className={`mt-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-bold uppercase tracking-wider ${
+                        isSelected
+                          ? 'bg-[#f7bb0e] text-[#283618]'
+                          : 'bg-[#283618]/10 text-[#283618]'
+                      }`}
+                    >
+                      {effectiveSchedule.isTomorrow ? 'Next' : 'Today'}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Section Chips on Mobile */}
+        {sections.length > 1 && (
+          <div className="menu-chips-wrap lg:hidden mb-6">
+            <div className="menu-chips">
+              <button
+                type="button"
+                onClick={() => {
+                  setActive('all');
+                  scrollToSection('all');
+                }}
+                className={`menu-chip${active === 'all' || !active ? ' menu-chip--active' : ''}`}
+              >
+                All ({total})
+              </button>
+              {sections.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setActive(s.id);
+                    scrollToSection(s.id);
+                  }}
+                  className={`menu-chip${active === s.id ? ' menu-chip--active' : ''}`}
+                >
+                  {s.name} ({s.items.length})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Desktop: the sections, in the policy sidebar's card */}
           <aside className="lg:col-span-4 xl:col-span-3 sticky top-48 h-fit hidden lg:block">
             <div className="bg-[#fdfbf7] border border-[#283618]/12 rounded-2xl p-5 shadow-xs">
-              <div className="flex items-center gap-2 pb-4 mb-3 border-b border-[#283618]/10">
-                <span className="w-2 h-2 rounded-full bg-[#283618]" />
-                <h2 className="font-display font-bold text-xs uppercase tracking-wider text-[#283618]">
-                  On the menu
-                </h2>
+              <div className="flex items-center justify-between pb-4 mb-3 border-b border-[#283618]/10">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#283618]" />
+                  <h2 className="font-display font-bold text-xs uppercase tracking-wider text-[#283618]">
+                    {selectedDayMeta?.label || 'Day'} Menu
+                  </h2>
+                </div>
+                <span className="text-[11px] font-semibold text-[#283618]/60">
+                  {total} {total === 1 ? 'item' : 'items'}
+                </span>
               </div>
               <nav className="flex flex-col space-y-1" aria-label="Menu sections">
                 {isPending ? (
@@ -413,7 +679,7 @@ export function Menu() {
                       }}
                       className={`menu-side-link${active === 'all' || !active ? ' menu-side-link--active' : ''}`}
                     >
-                      <span>Our Menu</span>
+                      <span>All Specials</span>
                       <span className="menu-side-link__count">{total}</span>
                     </button>
                     {sections.map((s) => (
@@ -436,7 +702,7 @@ export function Menu() {
             </div>
 
             <Link to="/collections" className="menu-shop-card group">
-              <span className="menu-shop-card__title">Ready to order?</span>
+              <span className="menu-shop-card__title">Shop Full Catalogue</span>
               <span className="menu-shop-card__icon">
                 <ArrowUpRight strokeWidth={2.4} aria-hidden="true" />
               </span>
@@ -457,9 +723,30 @@ export function Menu() {
                 </button>
               </div>
             ) : sections.length === 0 ? (
-              <p className="py-12 text-center text-[#4b5563]">
-                The menu is being updated. Please check back soon.
-              </p>
+              <div className="py-16 px-6 text-center bg-[#fdfbf7] border border-[#283618]/10 rounded-2xl">
+                <div className="w-12 h-12 rounded-full bg-[#f7bb0e]/20 text-[#283618] flex items-center justify-center mx-auto mb-3">
+                  <Sparkles className="w-6 h-6 text-[#c89611]" />
+                </div>
+                <h3 className="font-display font-extrabold text-lg text-[#283618] mb-1">
+                  No Specials Scheduled for {selectedDayMeta?.label || 'This Day'}
+                </h3>
+                <p className="text-sm text-[#4b5563] max-w-md mx-auto mb-5">
+                  We rotate our fresh items throughout the week. Check another day on the calendar
+                  or explore our complete catalogue.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectDay(effectiveSchedule.effectiveDayKey)}
+                    className="ak-btn ak-btn--dark text-xs"
+                  >
+                    View Today&apos;s Menu
+                  </button>
+                  <Link to="/collections" className="ak-btn ak-btn--outline text-xs">
+                    Browse All Dishes
+                  </Link>
+                </div>
+              </div>
             ) : (
               <div className="menu-sections">
                 {sections.map((s, index) => (

@@ -2,15 +2,50 @@ import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useProducts } from '../../../hooks/useProductQueries';
+import { useWebsiteContent } from '../../../hooks/useWebsiteContent';
+import { getEffectiveMenuDay } from '../../../utils/ecommerce/menuScheduleUtils';
 
 export function TodaysMenuBanner() {
   const { data } = useProducts({ limit: 40 });
+  const cms = useWebsiteContent();
+
+  const effectiveSchedule = useMemo(() => {
+    const cutoff = cms?.menuPage?.cutoffTime || cms?.hero?.cutoffTime || '18:00';
+    return getEffectiveMenuDay(cutoff);
+  }, [cms?.menuPage?.cutoffTime, cms?.hero?.cutoffTime]);
+
+  const scheduledProductIds = useMemo(() => {
+    const mp = cms?.menuPage?.weeklySchedule?.[effectiveSchedule.effectiveDayKey];
+    if (Array.isArray(mp?.productIds) && mp.productIds.length > 0) return mp.productIds;
+    const hr = cms?.hero?.weeklySchedule?.[effectiveSchedule.effectiveDayKey];
+    if (Array.isArray(hr?.productIds) && hr.productIds.length > 0) return hr.productIds;
+    if (Array.isArray(cms?.menuPage?.productIds) && cms.menuPage.productIds.length > 0) {
+      return cms.menuPage.productIds;
+    }
+    if (Array.isArray(cms?.hero?.productIds) && cms.hero.productIds.length > 0) {
+      return cms.hero.productIds;
+    }
+    return [];
+  }, [cms?.menuPage, cms?.hero, effectiveSchedule.effectiveDayKey]);
 
   const menuItems = useMemo(() => {
     const raw = data?.data || data?.products || data?.items || (Array.isArray(data) ? data : []);
     const valid = raw.filter((p) => p && p.isActive !== false);
     if (!valid.length) return [];
-    return valid.map((p) => {
+
+    let filtered = valid;
+    if (scheduledProductIds.length > 0) {
+      const byId = new Map();
+      valid.forEach((p) => {
+        byId.set(String(p._id || p.id), p);
+      });
+      const scheduled = scheduledProductIds.map((id) => byId.get(String(id))).filter(Boolean);
+      if (scheduled.length > 0) {
+        filtered = scheduled;
+      }
+    }
+
+    return filtered.map((p) => {
       const rawImage =
         p.imageSrc || p.image || (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null);
       const imageUrl = typeof rawImage === 'string' ? rawImage : rawImage?.url || null;
@@ -23,7 +58,7 @@ export function TodaysMenuBanner() {
         image: imageUrl,
       };
     });
-  }, [data]);
+  }, [data, scheduledProductIds]);
 
   // Duplicate items for continuous seamless loop
   const displayItems = useMemo(() => {
@@ -36,6 +71,9 @@ export function TodaysMenuBanner() {
   }, [menuItems]);
 
   if (!displayItems.length) return null;
+
+  const bannerTitle = effectiveSchedule.isTomorrow ? "Tomorrow's Menu" : "Today's Menu";
+  const badgeText = effectiveSchedule.isTomorrow ? 'Fresh Tomorrow' : 'Fresh Today';
 
   return (
     <section
@@ -50,10 +88,10 @@ export function TodaysMenuBanner() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#f7bb0e]" />
           </span>
           <span className="font-display font-bold text-[13.5px] tracking-tight text-[#283618]">
-            Today&apos;s Menu
+            {bannerTitle}
           </span>
           <span className="text-[10px] font-sans font-medium text-[#7a5400] bg-[#f7bb0e]/15 px-1.5 py-0.5 rounded-full border border-[#f7bb0e]/20">
-            Fresh Today
+            {badgeText}
           </span>
         </div>
         <Link
@@ -75,11 +113,11 @@ export function TodaysMenuBanner() {
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#f7bb0e]" />
             </span>
             <span className="font-display font-bold text-sm md:text-[15px] tracking-tight text-[#283618] whitespace-nowrap">
-              Today&apos;s Menu
+              {bannerTitle}
             </span>
           </div>
           <span className="px-2 py-0.5 rounded-full bg-[#f7bb0e]/15 border border-[#f7bb0e]/25 text-[#7a5400] font-sans text-[11px] font-semibold whitespace-nowrap">
-            Fresh Today
+            {badgeText}
           </span>
         </div>
 

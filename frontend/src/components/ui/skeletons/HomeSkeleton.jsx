@@ -38,18 +38,22 @@ export function HomeHeroSkeleton({ columns }) {
   return (
     <section className="ak-today" aria-busy="true" aria-label="Loading today's menu">
       <div className="ak-today__head">
-        <div>
-          <Skeleton className="h-3 w-32 !rounded-full mb-2" />
-          <Skeleton className="h-8 w-52 !rounded-lg" />
+        <div className="ak-today__eyebrow">
+          <Skeleton className="h-3 w-32 !rounded-full" glassy />
         </div>
-        <Skeleton className="h-4 w-14 !rounded-full" />
+        <div className="ak-today__title">
+          <Skeleton className="h-8 w-44 sm:w-56 !rounded-lg" glassy />
+        </div>
+        <div className="ak-today__all">
+          <Skeleton className="h-8.5 w-24 !rounded-full" glassy />
+        </div>
       </div>
       <div className="ak-today__grid" style={{ '--cols': cols }}>
         {HERO_COLUMN_HEIGHTS.slice(0, cols).map((heights, c) => (
           <div key={c} className="ak-today__col">
             {heights.map((h, i) => (
               <div key={i} style={{ height: h }}>
-                <Skeleton className="!rounded-[18px] w-full h-full" delay={(c + i) * 60} />
+                <Skeleton className="!rounded-[18px] w-full h-full" delay={(c + i) * 60} glassy />
               </div>
             ))}
           </div>

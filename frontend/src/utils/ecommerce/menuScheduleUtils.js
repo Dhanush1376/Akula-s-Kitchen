@@ -163,3 +163,35 @@ export function getEffectiveMenuDay(cutoffTime = '18:00', customDate = null) {
     }),
   };
 }
+
+/**
+ * Returns an array of day objects for the 7-day week (Monday to Sunday)
+ * anchored around the reference date (e.g. today or effective tomorrow).
+ *
+ * @param {Date|string|number} refDate
+ * @returns {Array<{key: string, label: string, short: string, index: number, date: Date, dayNumber: number, monthShort: string, formattedDate: string}>}
+ */
+export function getWeekDates(refDate = new Date()) {
+  const now = refDate instanceof Date ? refDate : new Date(refDate);
+  const currentDayIndex = now.getDay(); // 0 is Sunday, 1 is Monday...
+  // Days from Monday (Monday = 0 offset, Sunday = 6 offset)
+  const mondayOffset = (currentDayIndex + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+
+  return DAYS_OF_WEEK.map((d, i) => {
+    const dayDate = new Date(monday);
+    dayDate.setDate(monday.getDate() + i);
+    return {
+      ...d,
+      date: dayDate,
+      dayNumber: dayDate.getDate(),
+      monthShort: dayDate.toLocaleDateString('en-IN', { month: 'short' }).toUpperCase(),
+      formattedDate: dayDate.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+      }),
+    };
+  });
+}

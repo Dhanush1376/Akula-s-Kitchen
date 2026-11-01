@@ -24,14 +24,14 @@ export const CartEmptyState = () => {
           Your Bag is Empty
         </h2>
         <p className="font-body text-[13px] text-neutral-500 font-medium max-w-[320px] mx-auto leading-relaxed mb-6">
-          Looks like you haven&apos;t added any fresh homemade snacks, pickles, or sweets yet.
+          Looks like you haven&apos;t added any fresh delights.
         </p>
         <div className="flex justify-center">
           <Link
             to="/collections"
             className="inline-flex items-center justify-between gap-4 pl-6 pr-2 py-1.5 rounded-full bg-[#283618] text-white hover:bg-[#1f2b13] border border-[#283618] font-extrabold text-[12px] uppercase tracking-wider shadow-sm transition-all active:scale-[0.98] group cursor-pointer"
           >
-            <span>Explore Kitchen Delights</span>
+            <span>Explore Kitchen </span>
             <span className="w-8 h-8 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0 shadow-xs transition-transform duration-200 group-hover:scale-105">
               <ArrowRight
                 className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"

@@ -230,14 +230,13 @@
   width: min(100% - 24px, var(--spacing-max-width));
   margin: 12px auto 20px;
 }
-/* Phones: date + button share the top row so the title gets the full width.
-   Wider screens: title on the left, button at its bottom right. */
+/* Date eyebrow sits on the top row; title and See All/See Menu button share the row below in the same line */
 .ak-today__head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    'eyebrow cta'
-    'title title';
+    'eyebrow eyebrow'
+    'title cta';
   align-items: center;
   column-gap: 12px;
   row-gap: 6px;
@@ -248,19 +247,21 @@
 }
 .ak-today__head > .ak-today__title {
   grid-area: title;
+  min-width: 0;
 }
 .ak-today__head > .ak-today__all {
   grid-area: cta;
+  align-self: center;
 }
 @media (min-width: 640px) {
   .ak-today__head {
     grid-template-areas:
-      'eyebrow cta'
+      'eyebrow eyebrow'
       'title cta';
     row-gap: 4px;
   }
   .ak-today__head > .ak-today__all {
-    align-self: end;
+    align-self: center;
   }
 }
 .ak-today__eyebrow {

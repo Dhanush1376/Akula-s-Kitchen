@@ -166,7 +166,7 @@ export function CartDrawer({ isOpen, onClose }) {
                     title="Your bag is empty"
                     description="Authentic delicacies and handcrafted kitchen specials, made fresh."
                     icon="shopping_bag"
-                    actionLabel="Explore Collections"
+                    actionLabel="Explore Kitchen"
                     onAction={() => {
                       onClose();
                       navigate('/collections');

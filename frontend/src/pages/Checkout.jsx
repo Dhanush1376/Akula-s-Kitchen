@@ -65,7 +65,7 @@ function CheckoutContent() {
             to="/collections"
             className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full bg-black hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
           >
-            <span>Explore Collections</span>
+            <span>Explore Kitchen</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

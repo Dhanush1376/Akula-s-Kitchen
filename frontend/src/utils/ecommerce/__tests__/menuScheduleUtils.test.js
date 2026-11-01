@@ -3,6 +3,7 @@ import {
   parseCutoffTime,
   formatCutoffTimeDisplay,
   getEffectiveMenuDay,
+  getWeekDates,
 } from '../menuScheduleUtils';
 
 describe('menuScheduleUtils', () => {
@@ -137,6 +138,36 @@ describe('menuScheduleUtils', () => {
       expect(result.effectiveDayKey).toBe('thursday');
       expect(result.isAfterCutoff).toBe(false);
       expect(result.isTomorrow).toBe(false);
+    });
+  });
+
+  describe('getWeekDates', () => {
+    it('returns an array of 7 days starting with Monday and ending with Sunday', () => {
+      // Nov 4, 2026 is a Wednesday
+      const wednesday = new Date(2026, 10, 4, 12, 0, 0);
+      const week = getWeekDates(wednesday);
+
+      expect(week).toHaveLength(7);
+      expect(week[0].key).toBe('monday');
+      expect(week[0].dayNumber).toBe(2);
+      expect(week[1].key).toBe('tuesday');
+      expect(week[1].dayNumber).toBe(3);
+      expect(week[2].key).toBe('wednesday');
+      expect(week[2].dayNumber).toBe(4);
+      expect(week[6].key).toBe('sunday');
+      expect(week[6].dayNumber).toBe(8);
+    });
+
+    it('handles Sunday reference date correctly', () => {
+      // Nov 8, 2026 is a Sunday
+      const sunday = new Date(2026, 10, 8, 14, 0, 0);
+      const week = getWeekDates(sunday);
+
+      expect(week).toHaveLength(7);
+      expect(week[0].key).toBe('monday');
+      expect(week[0].dayNumber).toBe(2);
+      expect(week[6].key).toBe('sunday');
+      expect(week[6].dayNumber).toBe(8);
     });
   });
 });
