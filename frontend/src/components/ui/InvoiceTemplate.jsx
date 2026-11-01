@@ -457,7 +457,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
               {/* Left: Square QR Code */}
               <div className="shrink-0 border border-neutral-200 p-0.5 bg-white">
                 <Suspense
-                  fallback={<div className="w-[36px] h-[36px] bg-neutral-100 animate-pulse" />}
+                  fallback={<div className="w-[36px] h-[36px] bg-[#f2f2f0] animate-pulse" />}
                 >
                   <QRCodeCanvas value={trackingQR} size={36} level="H" includeMargin={false} />
                 </Suspense>
@@ -469,7 +469,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                   SCAN FOR DISPATCH RECORD
                 </span>
                 <div className="w-full flex justify-center overflow-hidden">
-                  <Suspense fallback={<div className="w-32 h-5 bg-neutral-100 animate-pulse" />}>
+                  <Suspense fallback={<div className="w-32 h-5 bg-[#f2f2f0] animate-pulse" />}>
                     <Barcode
                       value={barcodeValue}
                       height={18}

@@ -695,16 +695,15 @@ const SPA_SEGMENTS = new Set([
   'collection',
   'menu',
   'contact',
-  'blog',
   'policy',
 ]);
 /** Public SPA routes rendered client-side without server SEO data. */
-const SPA_ONLY_SEGMENTS = new Set(['blog', 'policy']);
+const SPA_ONLY_SEGMENTS = new Set(['policy']);
 
 /**
  * Entry point: resolve a storefront path (optionally with query string).
  * Returns `null` for routes the SPA owns without SEO data (private pages and
- * blog/policy pages handled client-side), so the renderer serves the plain shell.
+ * policy pages handled client-side), so the renderer serves the plain shell.
  */
 export async function resolvePageSeo(rawPath: string): Promise<PageSeoDescriptor | null> {
   const url = new URL(rawPath || '/', SITE_URL);

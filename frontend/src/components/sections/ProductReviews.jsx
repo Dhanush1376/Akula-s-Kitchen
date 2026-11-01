@@ -1131,14 +1131,14 @@ export function ProductReviews({ productId, productTitle }) {
               className="skeleton-box bg-white rounded-xl border border-black/10 p-4 space-y-2.5 shrink-0 w-[240px] xs:w-[280px] sm:w-[300px] lg:w-[320px] h-[120px]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-neutral-100/50 animate-pulse" />
+                <div className="w-8 h-8 rounded-full bg-[#f2f2f0] animate-pulse" />
                 <div className="space-y-1">
-                  <div className="h-3 w-20 bg-neutral-100/50 rounded animate-pulse" />
-                  <div className="h-2 w-14 bg-neutral-100/50 rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-[#f2f2f0] rounded animate-pulse" />
+                  <div className="h-2 w-14 bg-[#f2f2f0] rounded animate-pulse" />
                 </div>
               </div>
-              <div className="h-2.5 w-16 bg-neutral-100/50 rounded animate-pulse" />
-              <div className="h-3 w-full bg-neutral-100/50 rounded animate-pulse" />
+              <div className="h-2.5 w-16 bg-[#f2f2f0] rounded animate-pulse" />
+              <div className="h-3 w-full bg-[#f2f2f0] rounded animate-pulse" />
             </div>
           ))}
         </div>

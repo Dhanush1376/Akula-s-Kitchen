@@ -945,6 +945,10 @@ export function FilterPanel({
               });
 
               const finalOptions = Array.from(finalOptionsMap.values());
+              // Weights seen in a later category are appended to the map; keep them in size order.
+              if (group.id === 'weight') {
+                finalOptions.sort((a, b) => parseWeightGrams(a.value) - parseWeightGrams(b.value));
+              }
 
               if (group.id === 'priceRange') {
                 const productPrices = (products || [])

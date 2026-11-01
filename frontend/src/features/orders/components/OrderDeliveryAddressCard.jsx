@@ -64,7 +64,7 @@ export default function OrderDeliveryAddressCard({ shippingAddress }) {
         </div>
 
         <div className="relative flex-1 rounded-md bg-neutral-100 overflow-hidden border border-neutral-200 min-h-[120px]">
-          <React.Suspense fallback={<div className="h-full w-full bg-neutral-100 animate-pulse" />}>
+          <React.Suspense fallback={<div className="h-full w-full bg-[#f2f2f0] animate-pulse" />}>
             <GPSMap address={shippingAddress} />
           </React.Suspense>
         </div>

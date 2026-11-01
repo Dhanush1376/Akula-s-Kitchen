@@ -1,7 +1,6 @@
 import Product from '../../models/Product';
 import Category from '../../models/Category';
 import Policy from '../../models/Policy';
-import Blog from '../../models/Blog';
 import { SITE_URL, SITEMAP_CHUNK_SIZE } from '../../config/seoConfig';
 import { getProductImages, isProductIndexable } from './productSeo';
 import { getSeoCacheVersion } from './seoCache';
@@ -75,7 +74,6 @@ export function buildSitemapEntries(input: {
   products: any[];
   categories: any[];
   policies?: any[];
-  blogs?: any[];
 }): SitemapEntry[] {
   const products = input.products.filter(isProductIndexable);
   const newestProduct = latest(...products.map((p) => p.updatedAt));
@@ -119,18 +117,11 @@ export function buildSitemapEntries(input: {
     entries.push({ loc: `${SITE_URL}/policy/${policy.slug}`, lastmod: policy.updatedAt });
   }
 
-  const blogs = (input.blogs || []).filter((b) => b?.slug && !b.isDeleted);
-  if (blogs.length) {
-    entries.push({ loc: `${SITE_URL}/blog`, lastmod: latest(...blogs.map((b) => b.updatedAt)) });
-    for (const b of blogs)
-      entries.push({ loc: `${SITE_URL}/blog/${b.slug}`, lastmod: b.updatedAt });
-  }
-
   return entries;
 }
 
 export async function loadSitemapInput() {
-  const [products, categories, policies, blogs] = await Promise.all([
+  const [products, categories, policies] = await Promise.all([
     Product.find({ isActive: true, seoIndexable: { $ne: false } })
       .select(
         'slug title imageSrc images updatedAt primaryCategory isActive isDeleted seoIndexable',
@@ -138,9 +129,8 @@ export async function loadSitemapInput() {
       .lean(),
     Category.find({ isActive: true }).select('slug name isActive updatedAt').lean(),
     Policy.find({ status: 'published' }).select('slug status updatedAt').lean(),
-    Blog.find({}).select('slug updatedAt').lean(),
   ]);
-  return { products, categories, policies, blogs };
+  return { products, categories, policies };
 }
 
 // Small in-process cache; product/category writes bump the SEO cache version.

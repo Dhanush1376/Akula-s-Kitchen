@@ -112,7 +112,6 @@ export function Footer() {
   ];
 
   const quickLinks = [
-    { label: 'Food Blog', href: '/blog' },
     { label: 'Customer Support', href: '/contact' },
     { label: 'Track Order', href: '/track-order' },
     { label: 'My Orders', href: '/dashboard/orders' },

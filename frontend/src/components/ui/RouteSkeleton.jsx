@@ -7,7 +7,8 @@ import { lazy, Suspense } from 'react';
 
 export function getRouteSkeletonVariant(path) {
   if (path === '/') return 'home';
-  if (path === '/collections') return 'product-list';
+  if (path === '/collections' || path.startsWith('/category/')) return 'product-list';
+  if (path === '/menu') return 'menu';
   if (path.match(/^\/collections\/[^/]+$/)) return 'collection-detail';
   if (path.startsWith('/product')) return 'product-detail';
   if (path.startsWith('/collections') || path.startsWith('/search')) return 'product-list';
@@ -16,8 +17,6 @@ export function getRouteSkeletonVariant(path) {
   if (path.startsWith('/dashboard')) return 'dashboard';
   if (path === '/wishlist') return 'wishlist';
   if (path === '/contact') return 'contact';
-  if (path === '/blog') return 'blog';
-  if (path.startsWith('/blog/')) return 'blog-post';
   if (path.startsWith('/track/')) return 'order-tracking';
   if (path === '/order-success') return 'order-success';
   if (
@@ -49,13 +48,12 @@ const LazySkeletons = {
   'product-detail': lazy(() =>
     import('./Skeleton').then((m) => ({ default: m.ProductDetailSkeleton })),
   ),
+  menu: lazy(() => import('./Skeleton').then((m) => ({ default: m.MenuPageSkeleton }))),
   cart: lazy(() => import('./Skeleton').then((m) => ({ default: m.CartSkeleton }))),
   checkout: lazy(() => import('./Skeleton').then((m) => ({ default: m.CheckoutStepSkeleton }))),
   dashboard: lazy(() => import('./Skeleton').then((m) => ({ default: m.DashboardSkeleton }))),
   wishlist: lazy(() => import('./Skeleton').then((m) => ({ default: m.WishlistPageSkeleton }))),
   contact: lazy(() => import('./Skeleton').then((m) => ({ default: m.ContactSkeleton }))),
-  blog: lazy(() => import('./Skeleton').then((m) => ({ default: m.BlogListingSkeleton }))),
-  'blog-post': lazy(() => import('./Skeleton').then((m) => ({ default: m.BlogPostSkeleton }))),
   'order-success': lazy(() =>
     import('./Skeleton').then((m) => ({ default: m.OrderSuccessSkeleton })),
   ),

@@ -10,6 +10,7 @@ import { formatPrice, parseNumericPrice } from '../../utils/ecommerce/priceUtils
 import { prefersReducedMotion, windBreeze, windGust } from '../../components/effects/FallingLeaves';
 import '../../styles/policy.css';
 import './menu.css';
+import { MenuListSkeleton } from '../../components/ui/skeletons/MenuSkeleton';
 
 /**
  * The menu: every product, grouped by category and set like a printed menu card, with a
@@ -193,32 +194,6 @@ function MenuRow({ product }) {
         </div>
       </Link>
     </li>
-  );
-}
-
-function MenuSkeleton() {
-  return (
-    <div className="space-y-12" aria-busy="true" aria-label="Loading the menu">
-      {[5, 4].map((rows, s) => (
-        <div key={s}>
-          <div className="h-6 w-40 rounded-md bg-[#283618]/[0.07] animate-pulse mb-6" />
-          <div className="space-y-4">
-            {Array.from({ length: rows }, (_, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#283618]/[0.07] animate-pulse shrink-0" />
-                <div className="flex-1">
-                  <div className="flex items-end gap-3">
-                    <div className="h-4 w-1/3 rounded bg-[#283618]/[0.07] animate-pulse" />
-                    <div className="flex-1 border-b-2 border-dotted border-[#283618]/25" />
-                    <div className="h-4 w-12 rounded bg-[#283618]/[0.07] animate-pulse" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -426,7 +401,7 @@ export function Menu() {
               <nav className="flex flex-col space-y-1" aria-label="Menu sections">
                 {isPending ? (
                   [1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-9 rounded-full bg-[#283618]/[0.05] animate-pulse" />
+                    <div key={i} className="h-9 rounded-full bg-[#f2f2f0] animate-pulse" />
                   ))
                 ) : (
                   <>
@@ -470,7 +445,7 @@ export function Menu() {
 
           <main className="lg:col-span-8 xl:col-span-9">
             {isPending ? (
-              <MenuSkeleton />
+              <MenuListSkeleton />
             ) : isError ? (
               <div className="py-12 text-center">
                 <p className="text-red-600 font-semibold mb-2">We couldn&apos;t load the menu.</p>

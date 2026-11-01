@@ -224,8 +224,8 @@ export const CartItemRow = React.memo(function CartItemRow({
               <div className="flex flex-col gap-1">
                 {isProductDataLoading ? (
                   <div className="flex items-center gap-1.5 py-0.5 opacity-60">
-                    <div className="w-3 h-3 rounded-full bg-neutral-200 animate-pulse" />
-                    <div className="w-24 h-2.5 rounded-sm bg-neutral-200 animate-pulse" />
+                    <div className="w-3 h-3 rounded-full bg-[#f2f2f0] animate-pulse" />
+                    <div className="w-24 h-2.5 rounded-sm bg-[#f2f2f0] animate-pulse" />
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-amber-700 font-bold whitespace-nowrap text-[10px]">

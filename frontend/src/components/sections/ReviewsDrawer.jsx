@@ -458,13 +458,13 @@ export function ReviewsDrawer({
                               className="skeleton-box bg-white rounded-xl border border-black/10 p-3.5 space-y-2"
                             >
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-neutral-100 animate-pulse" />
+                                <div className="w-7 h-7 rounded-full bg-[#f2f2f0] animate-pulse" />
                                 <div className="space-y-1">
-                                  <div className="h-2.5 w-20 bg-neutral-100 rounded animate-pulse" />
-                                  <div className="h-2 w-12 bg-neutral-100 rounded animate-pulse" />
+                                  <div className="h-2.5 w-20 bg-[#f2f2f0] rounded animate-pulse" />
+                                  <div className="h-2 w-12 bg-[#f2f2f0] rounded animate-pulse" />
                                 </div>
                               </div>
-                              <div className="h-3 w-full bg-neutral-100 rounded animate-pulse" />
+                              <div className="h-3 w-full bg-[#f2f2f0] rounded animate-pulse" />
                             </div>
                           ))}
                         </div>

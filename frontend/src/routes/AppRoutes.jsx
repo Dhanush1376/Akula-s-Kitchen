@@ -73,10 +73,6 @@ const AcceptInvite = lazy(() =>
   import('../pages/AcceptInvite').then((m) => ({ default: m.AcceptInvite })),
 );
 const NotFound = lazy(() => import('../pages/NotFound').then((m) => ({ default: m.NotFound })));
-const BlogListing = lazy(() =>
-  import('../pages/BlogListing').then((m) => ({ default: m.BlogListing })),
-);
-const BlogPost = lazy(() => import('../pages/BlogPost').then((m) => ({ default: m.BlogPost })));
 
 // ─── Admin Portal (Lazy Loaded) ───
 const AdminLayout = lazy(() =>
@@ -203,8 +199,8 @@ export function AppRoutes() {
             <Route element={<MaintenanceGate />}>
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Home />} />
-                <Route path="/blog" element={<BlogListing />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
+                {/* The blog was removed; old links land on the homepage. */}
+                <Route path="/blog/*" element={<Navigate to="/" replace />} />
                 <Route path="/collections" element={<ProductListing />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews" element={<ProductDetails />} />

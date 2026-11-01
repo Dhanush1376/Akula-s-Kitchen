@@ -309,7 +309,6 @@ export function TopNavbar() {
     { label: 'Home', href: '/', mobileOnly: true },
     { label: 'Menu', href: '/menu', mobileOnly: true },
     { label: 'Shop', href: '/collections', mobileOnly: true },
-    { label: 'Blog', href: '/blog', mobileOnly: true },
     { label: 'My Orders', href: '/dashboard/orders', mobileOnly: true },
     { label: 'Contact Us', href: '/contact', mobileOnly: true },
   ];
@@ -759,10 +758,10 @@ export function TopNavbar() {
                                       openAccordion === accordionId ? null : accordionId,
                                     )
                                   }
-                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-3 rounded-xl min-h-[40px] ${
+                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-3.5 rounded-full min-h-[40px] ${
                                     active || openAccordion === accordionId
-                                      ? 'bg-[#1b2510] text-white shadow-xs'
-                                      : 'text-neutral-800 hover:text-black hover:bg-neutral-100'
+                                      ? 'bg-[#283618] text-white shadow-sm shadow-[#283618]/25'
+                                      : 'text-neutral-800 hover:text-[#283618] hover:bg-[#283618]/10'
                                   }`}
                                 >
                                   <span>{link.label}</span>
@@ -779,10 +778,10 @@ export function TopNavbar() {
                               ) : (
                                 <Link
                                   onClick={() => setIsOpen(false)}
-                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-3 rounded-xl min-h-[40px] ${
+                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-3.5 rounded-full min-h-[40px] ${
                                     active
-                                      ? 'bg-[#1b2510] text-white shadow-xs'
-                                      : 'text-neutral-800 hover:text-black hover:bg-neutral-100'
+                                      ? 'bg-[#283618] text-white shadow-sm shadow-[#283618]/25'
+                                      : 'text-neutral-800 hover:text-[#283618] hover:bg-[#283618]/10'
                                   }`}
                                   to={link.href}
                                 >

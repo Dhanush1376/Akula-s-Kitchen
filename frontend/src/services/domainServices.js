@@ -13,7 +13,6 @@ export { notificationService } from './api/notificationService';
 export { loyaltyService } from './api/loyaltyService';
 export { adminInviteService } from './api/adminInviteService';
 export { homepageService } from './api/homepageService';
-export { blogService } from './api/blogService';
 export { locationService } from './api/locationService';
 export { customerIntelligenceService } from './api/customerIntelligenceService';
 export { contactService } from './api/contactService';

@@ -108,23 +108,17 @@ function TodayHead({
 
   return (
     <div className="ak-today__head">
-      <div className="min-w-0">
-        <p className="ak-today__eyebrow">
-          <span
-            className={`ak-today__live ${isTomorrow ? 'bg-amber-500 ring-2 ring-amber-500/30' : ''}`}
-            aria-hidden="true"
-          />
-          {isTomorrow ? `Tomorrow's Kitchen · ${displayDate}` : `Fresh today · ${displayDate}`}
-          {isTomorrow && (
-            <span className="ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-              Tomorrow&apos;s Menu
-            </span>
-          )}
-        </p>
-        <h1 id="ak-today-title" className="ak-today__title">
-          {title}
-        </h1>
-      </div>
+      {/* The title already says Today's/Tomorrow's Kitchen; the eyebrow only adds the date. */}
+      <p className="ak-today__eyebrow">
+        <span
+          className={`ak-today__live ${isTomorrow ? 'ak-today__live--tomorrow' : ''}`}
+          aria-hidden="true"
+        />
+        {isTomorrow ? `For ${displayDate}` : `Fresh today · ${displayDate}`}
+      </p>
+      <h1 id="ak-today-title" className="ak-today__title">
+        {title}
+      </h1>
       <Link to={seeAllLink} className="ak-today__all">
         {count > 0 && <span className="ak-today__count">{count}</span>}
         <span>{seeAllText}</span>

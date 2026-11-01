@@ -35,12 +35,68 @@ export class FilterService {
       .lean();
     const attributeOrder = attributes.map((a) => a.name);
 
+    // Pack sizes a product is tagged with or sold in (its "Weight" options): the
+    // same places the ?weight= filter looks, so counts equal the filtered results.
+    // Weights are OR-ed together, so their counts ignore the weights already ticked
+    // (otherwise ticking 1kg would hide every other weight).
+    const queryParamsWithoutWeight = Object.fromEntries(
+      Object.entries(queryParams || {}).filter(([key]) => key.toLowerCase() !== 'weight'),
+    );
+    const { filter: filterWithoutWeight } = await ProductService.buildProductFilterQuery(
+      queryParamsWithoutWeight,
+      false,
+    );
+    const weightLabelsPipeline = Product.aggregate([
+      { $match: filterWithoutWeight },
+      {
+        $project: {
+          _id: 0,
+          labels: {
+            $concatArrays: [
+              { $ifNull: ['$tags', []] },
+              {
+                $reduce: {
+                  input: {
+                    $filter: {
+                      input: { $ifNull: ['$optionGroups', []] },
+                      as: 'g',
+                      cond: {
+                        $regexMatch: { input: { $ifNull: ['$$g.name', ''] }, regex: /^weight$/i },
+                      },
+                    },
+                  },
+                  initialValue: [],
+                  in: {
+                    $concatArrays: [
+                      '$$value',
+                      {
+                        $map: {
+                          input: {
+                            $filter: {
+                              input: { $ifNull: ['$$this.options', []] },
+                              as: 'o',
+                              cond: { $ne: ['$$o.available', false] },
+                            },
+                          },
+                          as: 'o',
+                          in: '$$o.label',
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
     // 2. Construct MongoDB $facet pipeline
     const priceConditionStage = filter.price ? [{ $match: { price: filter.price } }] : [];
 
     const facetPipeline: any = {
       categories: [...priceConditionStage, { $sortByCount: '$category' }],
-      tags: [...priceConditionStage, { $unwind: '$tags' }, { $sortByCount: '$tags' }],
       priceStats: [
         {
           $group: {
@@ -62,9 +118,9 @@ export class FilterService {
       ],
     };
 
-    const aggregation = await Product.aggregate([
-      { $match: filterWithoutPrice },
-      { $facet: facetPipeline },
+    const [aggregation, weightLabels] = await Promise.all([
+      Product.aggregate([{ $match: filterWithoutPrice }, { $facet: facetPipeline }]),
+      weightLabelsPipeline,
     ]);
     const result = aggregation[0];
     const filterGroups: any[] = [];
@@ -200,29 +256,26 @@ export class FilterService {
       });
     }
 
-    // Process Tags (only weight tags are surfaced, as their own group)
-    if (result.tags?.length > 0) {
-      // Weight tags get their own group. Spellings of the same weight ("1kg", "1 Kg")
-      // are merged into one canonical option, and the threshold applies to the merged count.
-      const weightCounts = new Map<string, number>();
-      result.tags.forEach((t: any) => {
-        if (!isWeightLabel(t._id)) return;
-        const label = canonicalWeightLabel(t._id);
-        weightCounts.set(label, (weightCounts.get(label) || 0) + t.count);
+    // Process Weights: one option per weight however it is spelled ("1kg", "1 Kg"),
+    // counting each product once.
+    const weightCounts = new Map<string, number>();
+    weightLabels.forEach((doc: any) => {
+      const productWeights = new Set<string>(
+        (doc.labels || [])
+          .filter((l: unknown) => typeof l === 'string' && isWeightLabel(l))
+          .map((l: string) => canonicalWeightLabel(l)),
+      );
+      productWeights.forEach((w) => weightCounts.set(w, (weightCounts.get(w) || 0) + 1));
+    });
+    if (weightCounts.size > 0) {
+      filterGroups.push({
+        id: 'weight',
+        label: 'Weight',
+        type: 'checkbox',
+        options: Array.from(weightCounts.entries())
+          .map(([label, count]) => ({ value: label, label, count }))
+          .sort((a, b) => weightInGrams(a.value) - weightInGrams(b.value)),
       });
-      const weightTagOptions = Array.from(weightCounts.entries())
-        .filter(([, count]) => count >= 2)
-        .map(([label, count]) => ({ value: label, label, count }))
-        .sort((a, b) => weightInGrams(a.value) - weightInGrams(b.value));
-
-      if (weightTagOptions.length > 0) {
-        filterGroups.push({
-          id: 'weight',
-          label: 'Weight',
-          type: 'checkbox',
-          options: weightTagOptions,
-        });
-      }
     }
 
     // Apply CatalogAttribute display ordering

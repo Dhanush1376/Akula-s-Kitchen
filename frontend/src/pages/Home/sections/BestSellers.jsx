@@ -16,24 +16,25 @@ export function BestSellers({ previewContent }) {
   const loading = Boolean(activeCms?.loading);
   const config = activeCms?.featuredProducts || {};
   const productIds = config.productIds || [];
-  const isAutoMode = config.useAutoFeed === true;
+  // Same default as the admin toggle: auto feed unless switched off. With the auto feed
+  // off but nothing picked, fall back to the auto feed rather than hiding the section.
   const hasManualIds = productIds.length > 0;
+  const useManualIds = config.useAutoFeed === false && hasManualIds;
 
-  const { data, isPending, isError, refetch } = useProducts(
+  const { data, isPending, isError } = useProducts(
     {
-      ...(hasManualIds ? { ids: productIds.join(',') } : { sort: 'bestSelling' }),
+      ...(useManualIds ? { ids: productIds.join(',') } : { sort: 'bestSelling' }),
       limit: config.maxDisplay || 10,
     },
-    { enabled: config.isVisible !== false && (isAutoMode || hasManualIds) },
+    { enabled: config.isVisible !== false },
   );
 
   if (config.isVisible === false) return null;
   // Until the CMS arrives the feed mode is unknown; hold the row's space rather than vanish.
-  if (loading) return <HomeProductRowSkeleton label="Loading new arrivals" />;
-  if (!isAutoMode && !hasManualIds) return null;
+  if (loading) return <HomeProductRowSkeleton label="Loading best sellers" />;
 
   if (isPending) {
-    return <HomeProductRowSkeleton label="Loading new arrivals" />;
+    return <HomeProductRowSkeleton label="Loading best sellers" />;
   }
 
   const products = Array.isArray(data?.products)
@@ -52,7 +53,7 @@ export function BestSellers({ previewContent }) {
   }
 
   return (
-    <section className="h1-section relative isolate" id="h1-new-arrivals">
+    <section className="h1-section relative isolate" id="h1-best-sellers">
       <div className="h1-container relative z-10">
         <SectionHeader
           title={config.sectionTitle || 'Bestsellers'}

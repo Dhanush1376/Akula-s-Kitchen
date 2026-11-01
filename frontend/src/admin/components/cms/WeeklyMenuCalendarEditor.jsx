@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import {
   DAYS_OF_WEEK as SCHEDULE_DAYS,
@@ -14,411 +14,545 @@ export function getTodayDayKey() {
   return map[dayIndex] || 'thursday';
 }
 
+const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+
+const productId = (p) => p.id || p._id;
+const productName = (p) => p.name || p.title || 'Untitled dish';
+const productImage = (p) =>
+  p.image ||
+  p.imageSrc ||
+  p.thumbnail ||
+  (Array.isArray(p.images) ? p.images[0]?.url || p.images[0] : null);
+
+function Thumb({ product, size = 'md' }) {
+  const img = product ? productImage(product) : null;
+  const dims = size === 'sm' ? 'w-7 h-7' : 'w-10 h-10';
+  return (
+    <span
+      className={`${dims} rounded-[var(--admin-radius-md,6px)] overflow-hidden bg-[var(--admin-surface-muted)] border border-[var(--admin-border-subtle)] flex items-center justify-center shrink-0`}
+    >
+      {img ? (
+        <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+      ) : (
+        <span className="material-symbols-outlined text-[16px] text-[var(--admin-text-tertiary)]">
+          restaurant
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** "Today", "Tomorrow" or the date of this day's next occurrence ("4 Nov"). */
+function upcomingLabel(dayIndex, now) {
+  const ahead = (dayIndex - now.getDay() + 7) % 7;
+  if (ahead === 0) return 'Today';
+  if (ahead === 1) return 'Tomorrow';
+  const date = new Date(now);
+  date.setDate(now.getDate() + ahead);
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
 export function WeeklyMenuCalendarEditor({
   sectionKey = 'hero',
   sectionData = {},
   onUpdate,
   title = 'Weekly Menu Planner',
-  description = "Choose which dishes are served each day. Today's menu updates automatically!",
 }) {
   const { products } = useAdmin();
   const cutoffTime = sectionData.cutoffTime !== undefined ? sectionData.cutoffTime : '18:00';
-  const effectiveSchedule = useMemo(() => {
-    return getEffectiveMenuDay(cutoffTime);
-  }, [cutoffTime]);
+  const effectiveSchedule = useMemo(() => getEffectiveMenuDay(cutoffTime), [cutoffTime]);
 
   const todayKey = effectiveSchedule.todayKey;
-  const [selectedDayKey, setSelectedDayKey] = useState(
-    effectiveSchedule.effectiveDayKey || todayKey,
-  );
+  const liveDayKey = effectiveSchedule.effectiveDayKey || todayKey;
+  const [selectedDayKey, setSelectedDayKey] = useState(liveDayKey);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [mobilePane, setMobilePane] = useState('menu');
+  const [copyTargets, setCopyTargets] = useState([]);
+  const copyRef = useRef(null);
 
-  const weeklySchedule = useMemo(() => {
-    return sectionData.weeklySchedule || {};
-  }, [sectionData.weeklySchedule]);
+  const weeklySchedule = useMemo(
+    () => sectionData.weeklySchedule || {},
+    [sectionData.weeklySchedule],
+  );
+  const masterProductIds = useMemo(
+    () => (Array.isArray(sectionData.productIds) ? sectionData.productIds : []),
+    [sectionData.productIds],
+  );
 
-  const masterProductIds = useMemo(() => {
-    return Array.isArray(sectionData.productIds) ? sectionData.productIds : [];
-  }, [sectionData.productIds]);
-
-  // Products assigned to the currently selected day
-  const currentDayConfig = weeklySchedule[selectedDayKey] || {};
-  const currentDayProductIds = useMemo(() => {
-    if (Array.isArray(currentDayConfig.productIds)) {
-      return currentDayConfig.productIds;
-    }
-    return masterProductIds;
-  }, [currentDayConfig.productIds, masterProductIds]);
-
-  const updateDaySchedule = (dayKey, patch) => {
-    const updatedWeekly = {
-      ...weeklySchedule,
-      [dayKey]: {
-        ...(weeklySchedule[dayKey] || {}),
-        ...patch,
-      },
-    };
-
-    const updatePayload = {
-      ...sectionData,
-      weeklySchedule: updatedWeekly,
-    };
-
-    // If updating today, keep the top-level productIds in sync for live storefront
-    if (dayKey === todayKey && patch.productIds !== undefined) {
-      updatePayload.productIds = patch.productIds;
-    }
-
-    onUpdate(sectionKey, updatePayload);
-  };
-
-  const toggleProduct = (productId) => {
-    const currentList = [...currentDayProductIds];
-    const isSelected = currentList.includes(productId);
-    const newList = isSelected
-      ? currentList.filter((id) => id !== productId)
-      : [...currentList, productId];
-
-    updateDaySchedule(selectedDayKey, { productIds: newList });
-  };
-
-  const updateCutoffTime = (newCutoff) => {
-    onUpdate(sectionKey, {
-      ...sectionData,
-      cutoffTime: newCutoff,
-    });
-  };
-
-  const selectedDayMeta = DAYS_OF_WEEK.find((d) => d.key === selectedDayKey) || DAYS_OF_WEEK[0];
-
-  // Extract categories for simple filter chips
-  const categories = useMemo(() => {
-    if (!products) return [];
-    const set = new Set();
-    products.forEach((p) => {
-      if (p.category) set.add(p.category);
-    });
-    return Array.from(set);
+  const productsById = useMemo(() => {
+    const map = new Map();
+    (products || []).forEach((p) => map.set(productId(p), p));
+    return map;
   }, [products]);
 
-  // Filter products by search and category
+  // A day without its own list falls back to the default (top-level) list.
+  const dayProductIds = (dayKey) => {
+    const own = weeklySchedule[dayKey]?.productIds;
+    return Array.isArray(own) ? own : masterProductIds;
+  };
+  const hasOwnList = (dayKey) => Array.isArray(weeklySchedule[dayKey]?.productIds);
+
+  const currentDayProductIds = dayProductIds(selectedDayKey);
+  // Dishes deleted from the catalogue can linger in a saved schedule; show only real ones.
+  const currentDayProducts = currentDayProductIds.map((id) => productsById.get(id)).filter(Boolean);
+
+  /** Writes several days in one update so later days don't overwrite earlier ones. */
+  const setDayLists = (listsByDay) => {
+    const updatedWeekly = { ...weeklySchedule };
+    Object.entries(listsByDay).forEach(([dayKey, productIds]) => {
+      updatedWeekly[dayKey] = { ...(weeklySchedule[dayKey] || {}), productIds };
+    });
+    const payload = { ...sectionData, weeklySchedule: updatedWeekly };
+    // Today's list doubles as the top-level list the storefront reads.
+    if (listsByDay[todayKey] !== undefined) payload.productIds = listsByDay[todayKey];
+    onUpdate(sectionKey, payload);
+  };
+
+  const toggleProduct = (id) => {
+    const list = currentDayProductIds;
+    setDayLists({
+      [selectedDayKey]: list.includes(id) ? list.filter((x) => x !== id) : [...list, id],
+    });
+  };
+
+  const clearDay = () => setDayLists({ [selectedDayKey]: [] });
+
+  const applyCopy = () => {
+    if (copyTargets.length === 0) return;
+    const lists = {};
+    copyTargets.forEach((dayKey) => {
+      lists[dayKey] = [...currentDayProductIds];
+    });
+    setDayLists(lists);
+    setCopyOpen(false);
+    setCopyTargets([]);
+  };
+
+  const updateCutoffTime = (newCutoff) =>
+    onUpdate(sectionKey, { ...sectionData, cutoffTime: newCutoff });
+
+  useEffect(() => {
+    if (!copyOpen) return undefined;
+    const close = (e) => {
+      if (copyRef.current && !copyRef.current.contains(e.target)) setCopyOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [copyOpen]);
+
+  const selectedDayMeta = DAYS_OF_WEEK.find((d) => d.key === selectedDayKey) || DAYS_OF_WEEK[0];
+  const otherDays = DAYS_OF_WEEK.filter((d) => d.key !== selectedDayKey);
+
+  const categories = useMemo(() => {
+    const counts = new Map();
+    (products || []).forEach((p) => {
+      if (p.category) counts.set(p.category, (counts.get(p.category) || 0) + 1);
+    });
+    return Array.from(counts.entries());
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter((p) => {
-      const name = (p.name || p.title || '').toLowerCase();
-      const cat = (p.category || '').toLowerCase();
-      const matchesSearch = !searchQuery || name.includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || cat === selectedCategory.toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
+    return (products || []).filter((p) => {
+      const matchesSearch =
+        !q ||
+        productName(p).toLowerCase().includes(q) ||
+        (p.category || '').toLowerCase().includes(q);
+      const matchesCategory =
+        selectedCategory === 'all' ||
+        (p.category || '').toLowerCase() === selectedCategory.toLowerCase();
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
 
-  // Formatted date string for today
-  const formattedToday = useMemo(() => {
-    return new Date().toLocaleDateString('en-IN', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'short',
-    });
-  }, []);
+  const liveMeta = effectiveSchedule.effectiveMeta;
+  const liveCount = dayProductIds(liveDayKey).filter((id) => productsById.has(id)).length;
 
   return (
-    <div className="space-y-4 pt-2">
-      {/* 1. Header with Title & Today Badge — side by side */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[var(--admin-border-subtle)]">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <span className="material-symbols-outlined text-[18px] sm:text-[20px] text-[var(--admin-accent)] shrink-0">
-            calendar_month
+    <div className="space-y-5">
+      {/* ── Live status + cutoff (one line) ─────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3.5 py-2.5 rounded-[var(--admin-radius-lg,8px)] border border-[var(--admin-border)] bg-[var(--admin-surface-muted)]">
+        <p className="flex items-center gap-2 text-[12.5px] text-[var(--admin-text-secondary)] min-w-0">
+          <span className="relative flex w-2 h-2 shrink-0">
+            <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 animate-ping" />
+            <span className="relative w-2 h-2 rounded-full bg-emerald-500" />
           </span>
-          <h3 className="text-[13.5px] sm:text-[15px] font-bold text-[var(--admin-text-primary)] truncate">
-            {title}
-          </h3>
-        </div>
-
-        {/* Live Today Status */}
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[10.5px] sm:text-[11px] text-[var(--admin-text-secondary)] shadow-2xs shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-          <span>
-            Today:{' '}
-            <strong className="text-[var(--admin-text-primary)] font-semibold">
-              {formattedToday}
-            </strong>
+          <span className="truncate">
+            Live now: <strong className="text-[var(--admin-text-primary)]">{liveMeta.label}</strong>{' '}
+            · {liveCount} {liveCount === 1 ? 'dish' : 'dishes'}
           </span>
-        </div>
+        </p>
+        <label className="flex items-center gap-2 text-[12px] text-[var(--admin-text-secondary)] shrink-0">
+          <span className="material-symbols-outlined text-[16px] text-[var(--admin-text-tertiary)]">
+            schedule
+          </span>
+          Next day from
+          <select
+            value={cutoffTime}
+            onChange={(e) => updateCutoffTime(e.target.value)}
+            className="h-[30px] px-2 rounded-[var(--admin-radius-md,6px)] bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[12px] font-semibold text-[var(--admin-text-primary)] focus:outline-none focus:border-[var(--admin-accent)] cursor-pointer"
+          >
+            {CUTOFF_TIME_PRESETS.map((preset) => (
+              <option key={preset.value} value={preset.value}>
+                {preset.value === 'disabled' ? 'Midnight' : preset.label.replace(' (Default)', '')}
+              </option>
+            ))}
+            {!CUTOFF_TIME_PRESETS.some((p) => p.value === cutoffTime) && (
+              <option value={cutoffTime}>{cutoffTime}</option>
+            )}
+          </select>
+          {cutoffTime !== 'disabled' && (
+            <input
+              type="time"
+              value={cutoffTime}
+              onChange={(e) => e.target.value && updateCutoffTime(e.target.value)}
+              aria-label="Custom time"
+              className="hidden sm:block h-[30px] px-2 rounded-[var(--admin-radius-md,6px)] bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[12px] text-[var(--admin-text-primary)] cursor-pointer"
+            />
+          )}
+        </label>
       </div>
 
-      {/* 2. 7-Day Day Selector Strip */}
-      <div>
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 p-1.5 bg-[var(--admin-surface-muted)] rounded-[6px] border border-[var(--admin-border)]">
+      {/* ── Week: compact chips on phones, cards with thumbnails from md ── */}
+      <section aria-label={title}>
+        <div className="flex md:grid md:grid-cols-7 gap-1.5 md:gap-2 overflow-x-auto -mx-1 px-1 pb-1 snap-x scrollbar-none">
           {DAYS_OF_WEEK.map((day) => {
             const isSelected = selectedDayKey === day.key;
-            const isToday = todayKey === day.key;
-            const isTomorrowLive =
-              effectiveSchedule.isTomorrow && day.key === effectiveSchedule.tomorrowKey;
-            const dayProducts = weeklySchedule[day.key]?.productIds || masterProductIds;
-            const count = dayProducts.length;
-
+            const isLive = liveDayKey === day.key;
+            const ids = dayProductIds(day.key).filter((id) => productsById.has(id));
+            const thumbs = ids.slice(0, 3).map((id) => productsById.get(id));
             return (
               <button
                 key={day.key}
                 type="button"
                 onClick={() => setSelectedDayKey(day.key)}
-                className={`flex flex-col items-center justify-center py-2 px-1 rounded-[4px] transition-all cursor-pointer select-none text-center relative ${
+                aria-pressed={isSelected}
+                aria-label={`${day.label}, ${ids.length} dishes${isLive ? ', live now' : ''}`}
+                className={`relative snap-start shrink-0 md:shrink w-[64px] md:w-auto flex flex-col items-center md:items-stretch text-center md:text-left px-2 py-2 md:p-2.5 rounded-[var(--admin-radius-lg,8px)] border transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-white dark:bg-stone-800 text-[var(--admin-accent)] shadow-xs ring-1 ring-[var(--admin-accent)] font-bold'
-                    : 'text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface)] hover:text-[var(--admin-text-primary)]'
+                    ? 'border-[var(--admin-accent)] bg-[var(--admin-surface)] ring-2 ring-[var(--admin-accent)]/20'
+                    : 'border-[var(--admin-border)] bg-[var(--admin-surface-muted)] hover:bg-[var(--admin-surface)]'
                 }`}
               >
-                {/* Day Name */}
-                <span className="text-[12px] sm:text-[13px] font-semibold leading-tight">
-                  <span className="sm:hidden">{day.short}</span>
-                  <span className="hidden sm:inline">{day.label}</span>
-                </span>
-
-                {/* Dish Count Pill */}
+                {isLive && (
+                  <span
+                    className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500"
+                    title="Live now"
+                  />
+                )}
                 <span
-                  className={`mt-1 text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    isSelected
-                      ? 'bg-[var(--admin-accent)] text-white'
-                      : count > 0
-                        ? 'bg-[var(--admin-accent)]/15 text-[var(--admin-accent)]'
-                        : 'bg-[var(--admin-border-subtle)] text-[var(--admin-text-tertiary)]'
-                  }`}
+                  className={`text-[13px] font-bold ${isSelected ? 'text-[var(--admin-accent)]' : 'text-[var(--admin-text-primary)]'}`}
                 >
-                  {count}
+                  <span className="lg:hidden">{day.short}</span>
+                  <span className="hidden lg:inline">{day.label}</span>
                 </span>
-
-                {/* Today Green Dot Indicator */}
-                {isToday && (
-                  <span
-                    className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[var(--admin-surface)] shadow-xs"
-                    title="Actual today"
-                  />
-                )}
-
-                {/* Tomorrow Evening Rollover Indicator */}
-                {isTomorrowLive && (
-                  <span
-                    className="absolute -top-1 -left-1 w-2.5 h-2.5 rounded-full bg-amber-500 border-2 border-[var(--admin-surface)] shadow-xs animate-pulse"
-                    title="Currently active on storefront (evening rollover)"
-                  />
-                )}
+                <span className="hidden md:block text-[10.5px] text-[var(--admin-text-tertiary)]">
+                  {upcomingLabel(day.index, effectiveSchedule.now)}
+                </span>
+                <span className="md:hidden mt-0.5 text-[11px] font-semibold text-[var(--admin-text-tertiary)]">
+                  {ids.length}
+                </span>
+                <span className="hidden md:flex items-center justify-between mt-2 gap-1">
+                  <span className="flex -space-x-1.5">
+                    {thumbs.length > 0 ? (
+                      thumbs.map((p) => (
+                        <span
+                          key={productId(p)}
+                          className="ring-2 ring-[var(--admin-surface)] rounded-[6px]"
+                        >
+                          <Thumb product={p} size="sm" />
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10.5px] text-[var(--admin-text-tertiary)]">Empty</span>
+                    )}
+                  </span>
+                  {ids.length > 0 && (
+                    <span className="text-[11px] font-bold text-[var(--admin-text-secondary)]">
+                      {ids.length}
+                    </span>
+                  )}
+                </span>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* Evening Rollover Cutoff Setting */}
-      <div className="p-3 bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] space-y-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent)] shrink-0">
-              schedule
-            </span>
-            <div className="min-w-0">
-              <span className="text-[12.5px] font-bold text-[var(--admin-text-primary)] block sm:inline">
-                Evening Cutoff Time
-              </span>
-              <span className="text-[11px] text-[var(--admin-text-secondary)] block sm:inline sm:ml-2 truncate">
-                Switches storefront to tomorrow&apos;s menu after this time
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <select
-              value={cutoffTime}
-              onChange={(e) => updateCutoffTime(e.target.value)}
-              className="h-[30px] px-2.5 rounded-[3px] bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[12px] font-semibold text-[var(--admin-text-primary)] focus:outline-none focus:border-[var(--admin-accent)] cursor-pointer"
-            >
-              {CUTOFF_TIME_PRESETS.map((preset) => (
-                <option key={preset.value} value={preset.value}>
-                  {preset.label}
-                </option>
-              ))}
-              {!CUTOFF_TIME_PRESETS.some((p) => p.value === cutoffTime) && (
-                <option value={cutoffTime}>Custom ({cutoffTime})</option>
-              )}
-            </select>
-
-            <input
-              type="time"
-              value={cutoffTime !== 'disabled' ? cutoffTime : '18:00'}
-              onChange={(e) => updateCutoffTime(e.target.value)}
-              disabled={cutoffTime === 'disabled'}
-              className="h-[30px] px-2 rounded-[3px] bg-[var(--admin-surface)] border border-[var(--admin-border)] text-[11.5px] font-medium text-[var(--admin-text-primary)] disabled:opacity-40 cursor-pointer"
-              title="Pick custom cutoff time"
-            />
-          </div>
-        </div>
-
-        {/* Live Status Pill */}
-        <div className="pt-1.5 border-t border-[var(--admin-border-subtle)] text-[11px]">
-          {effectiveSchedule.isAfterCutoff ? (
-            <span className="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-300 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-              <span>
-                Evening Cutoff Active: Storefront is showing Tomorrow (
-                {effectiveSchedule.tomorrowMeta.label}) · Rolls over to Today at 12:00 AM Midnight
-              </span>
-            </span>
-          ) : cutoffTime === 'disabled' ? (
-            <span className="inline-flex items-center gap-1.5 text-[var(--admin-text-secondary)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-stone-400 shrink-0" />
-              <span>Cutoff Disabled: Storefront stays on Today until 12:00 AM Midnight</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-              <span>
-                Currently Live: Today ({effectiveSchedule.todayMeta.label}) · Automatically
-                transitions to Tomorrow at {effectiveSchedule.cutoffDisplay}
-              </span>
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* 3. Search Bar */}
-      <div className="relative w-full max-w-md bg-[var(--admin-surface-muted)] rounded-[6px] border border-[var(--admin-border)] flex items-center px-3 h-[38px] transition-colors focus-within:border-[var(--admin-accent)] focus-within:bg-[var(--admin-surface)]">
-        <span className="material-symbols-outlined text-[18px] text-[var(--admin-text-tertiary)] shrink-0 select-none">
-          search
-        </span>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={`Search dishes for ${selectedDayMeta.label}...`}
-          className="bg-transparent border-none outline-none w-full text-[12.5px] text-[var(--admin-text-primary)] placeholder-[var(--admin-text-tertiary)] font-medium px-2.5 h-full min-w-0"
-        />
-        {searchQuery && (
+      {/* Phones: one panel at a time */}
+      <div className="lg:hidden grid grid-cols-2 p-1 rounded-[var(--admin-radius-lg,8px)] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)]">
+        {[
+          ['menu', `On ${selectedDayMeta.short} (${currentDayProducts.length})`],
+          ['add', 'Add dishes'],
+        ].map(([key, label]) => (
           <button
+            key={key}
             type="button"
-            onClick={() => setSearchQuery('')}
-            className="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)] cursor-pointer p-0.5 flex items-center justify-center shrink-0"
-            title="Clear search"
-          >
-            <span className="material-symbols-outlined text-[16px]">close</span>
-          </button>
-        )}
-      </div>
-
-      {/* 5. Category Filter Chips */}
-      {categories.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('all')}
-            className={`px-2.5 py-1 rounded-[4px] text-[11px] font-semibold transition-colors shrink-0 cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'bg-[var(--admin-accent)] text-white shadow-2xs'
-                : 'bg-[var(--admin-surface-muted)] text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] border border-[var(--admin-border)]'
+            onClick={() => setMobilePane(key)}
+            aria-pressed={mobilePane === key}
+            className={`h-[34px] rounded-[var(--admin-radius-md,6px)] text-[12.5px] font-semibold cursor-pointer transition-colors ${
+              mobilePane === key
+                ? 'bg-[var(--admin-surface)] text-[var(--admin-text-primary)] shadow-[var(--admin-shadow-xs)]'
+                : 'text-[var(--admin-text-secondary)]'
             }`}
           >
-            All ({products?.length || 0})
+            {label}
           </button>
-          {categories.map((cat) => {
-            const count = products?.filter((p) => p.category === cat).length || 0;
-            const isCatActive = selectedCategory.toLowerCase() === cat.toLowerCase();
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-2.5 py-1 rounded-[4px] text-[11px] font-semibold transition-colors shrink-0 cursor-pointer ${
-                  isCatActive
-                    ? 'bg-[var(--admin-accent)] text-white shadow-2xs'
-                    : 'bg-[var(--admin-surface-muted)] text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)] border border-[var(--admin-border)]'
-                }`}
-              >
-                {cat} ({count})
-              </button>
-            );
-          })}
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* 5. Food Dishes Grid (Big Visual Cards with Tap to Add / Remove) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3 max-h-[460px] overflow-y-auto p-1 pr-1.5 scrollbar-thin">
-        {!products || products.length === 0 ? (
-          <div className="col-span-full p-8 text-center text-[var(--admin-text-secondary)] text-[12px] bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)]">
-            No dishes found in product catalog.
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="col-span-full p-8 text-center text-[var(--admin-text-secondary)] text-[12px] bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)]">
-            No dishes match &ldquo;{searchQuery}&rdquo;. Try another search.
-          </div>
-        ) : (
-          filteredProducts.map((prd) => {
-            const pId = prd.id || prd._id;
-            const isSelected = currentDayProductIds.includes(pId);
-            const pImg =
-              prd.image ||
-              prd.imageSrc ||
-              (Array.isArray(prd.images) ? prd.images[0]?.url || prd.images[0] : null);
-
-            return (
-              <div
-                key={pId}
-                onClick={() => toggleProduct(pId)}
-                className={`relative rounded-[6px] border p-2 cursor-pointer transition-all duration-150 flex flex-col gap-1.5 select-none group ${
-                  isSelected
-                    ? 'bg-white dark:bg-stone-800 border-[var(--admin-accent)] ring-2 ring-[var(--admin-accent)]/30 shadow-xs'
-                    : 'bg-[var(--admin-surface-muted)] border-[var(--admin-border)] opacity-65 hover:opacity-100 hover:border-[var(--admin-accent)]/50'
-                }`}
-              >
-                {/* Picture */}
-                <div className="aspect-square w-full rounded-[4px] overflow-hidden bg-black/5 relative">
-                  {pImg ? (
-                    <img
-                      src={pImg}
-                      alt={prd.name || prd.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[var(--admin-text-tertiary)]">
-                      <span className="material-symbols-outlined text-[24px]">restaurant</span>
+      {/* ── Day editor: chosen dishes | catalogue ───────────── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        {/* Selected day's menu */}
+        <section
+          className={`${mobilePane === 'menu' ? 'flex' : 'hidden'} lg:flex min-w-0 rounded-[var(--admin-radius-lg,8px)] border border-[var(--admin-border)] bg-[var(--admin-surface)] flex-col lg:min-h-[320px]`}
+        >
+          <header className="flex items-center justify-end lg:justify-between gap-2 px-4 py-2.5 lg:py-3 border-b border-[var(--admin-border-subtle)]">
+            {/* On phones the "On Mon (4)" tab already names the day and count. */}
+            <div className="hidden lg:block min-w-0">
+              <h4 className="text-[13.5px] font-bold text-[var(--admin-text-primary)] truncate">
+                {selectedDayMeta.label}&apos;s menu
+              </h4>
+              <p className="text-[11px] text-[var(--admin-text-tertiary)]">
+                {currentDayProducts.length} {currentDayProducts.length === 1 ? 'dish' : 'dishes'}
+                {liveDayKey === selectedDayKey && ' · live now'}
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="relative" ref={copyRef}>
+                <button
+                  type="button"
+                  onClick={() => setCopyOpen((o) => !o)}
+                  disabled={currentDayProducts.length === 0}
+                  className="h-[30px] px-2.5 rounded-[var(--admin-radius-md,6px)] border border-[var(--admin-border)] text-[11.5px] font-semibold text-[var(--admin-text-primary)] hover:bg-[var(--admin-surface-muted)] inline-flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-[15px]">content_copy</span>
+                  Copy to…
+                </button>
+                {copyOpen && (
+                  <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-[230px] p-3 rounded-[var(--admin-radius-lg,8px)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[var(--admin-shadow-lg,0_10px_30px_rgba(0,0,0,0.12))]">
+                    <p className="text-[11.5px] font-bold text-[var(--admin-text-primary)] mb-2">
+                      Copy {selectedDayMeta.label}&apos;s dishes to
+                    </p>
+                    <div className="flex gap-1.5 mb-2">
+                      {[
+                        ['Weekdays', WEEKDAY_KEYS.filter((k) => k !== selectedDayKey)],
+                        ['All days', otherDays.map((d) => d.key)],
+                      ].map(([label, keys]) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => setCopyTargets(keys)}
+                          className="px-2 py-1 rounded-full text-[10.5px] font-semibold bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] hover:border-[var(--admin-accent)] cursor-pointer"
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
-                  )}
-
-                  {/* Status Overlay Badge */}
-                  <div className="absolute top-1 right-1">
-                    {isSelected ? (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-[3px] bg-[var(--admin-accent)] text-white text-[9.5px] font-bold shadow-xs">
-                        <span className="material-symbols-outlined text-[12px]">check</span>
-                        <span>ON</span>
-                      </span>
-                    ) : (
-                      <span className="w-5 h-5 rounded-full bg-black/40 text-white/80 group-hover:bg-[var(--admin-accent)] group-hover:text-white flex items-center justify-center text-[11px] font-bold transition-colors">
-                        +
-                      </span>
-                    )}
+                    <div className="space-y-0.5 max-h-[220px] overflow-y-auto">
+                      {otherDays.map((d) => (
+                        <label
+                          key={d.key}
+                          className="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-[var(--admin-surface-muted)] text-[12px] text-[var(--admin-text-primary)] cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={copyTargets.includes(d.key)}
+                            onChange={() =>
+                              setCopyTargets((t) =>
+                                t.includes(d.key) ? t.filter((k) => k !== d.key) : [...t, d.key],
+                              )
+                            }
+                            className="accent-[var(--admin-accent)]"
+                          />
+                          {d.label}
+                          <span className="ml-auto text-[10.5px] text-[var(--admin-text-tertiary)]">
+                            {dayProductIds(d.key).filter((id) => productsById.has(id)).length}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={applyCopy}
+                      disabled={copyTargets.length === 0}
+                      className="mt-2 w-full h-[32px] rounded-[var(--admin-radius-md,6px)] bg-[var(--admin-accent)] text-white text-[12px] font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Copy to {copyTargets.length || ''} {copyTargets.length === 1 ? 'day' : 'days'}
+                    </button>
                   </div>
-                </div>
-
-                {/* Dish Info */}
-                <div className="min-w-0">
-                  <span className="text-[11.5px] font-bold text-[var(--admin-text-primary)] block truncate">
-                    {prd.name || prd.title}
-                  </span>
-                  <div className="flex items-center justify-between text-[10px] mt-0.5">
-                    <span className="text-[var(--admin-text-tertiary)] font-medium truncate">
-                      {prd.category || 'Dishes'}
-                    </span>
-                    {prd.price && (
-                      <span className="font-bold text-[var(--admin-text-primary)]">
-                        ₹{prd.price}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
-            );
-          })
-        )}
+              <button
+                type="button"
+                onClick={clearDay}
+                disabled={currentDayProducts.length === 0}
+                className="h-[30px] px-2.5 rounded-[var(--admin-radius-md,6px)] text-[11.5px] font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Clear
+              </button>
+            </div>
+          </header>
+
+          {currentDayProducts.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-10">
+              <span className="material-symbols-outlined text-[32px] text-[var(--admin-text-tertiary)]">
+                no_meals
+              </span>
+              <p className="text-[12.5px] font-semibold text-[var(--admin-text-primary)] mt-2">
+                Nothing on {selectedDayMeta.label}&apos;s menu yet
+              </p>
+              <p className="hidden lg:block text-[11.5px] text-[var(--admin-text-tertiary)] mt-1">
+                Pick dishes on the right.
+              </p>
+              <button
+                type="button"
+                onClick={() => setMobilePane('add')}
+                className="lg:hidden mt-3 h-[36px] px-4 rounded-full bg-[var(--admin-accent)] text-white text-[12.5px] font-bold inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[17px]">add</span>
+                Add dishes
+              </button>
+            </div>
+          ) : (
+            <ul className="flex-1 lg:overflow-y-auto lg:max-h-[440px] divide-y divide-[var(--admin-border-subtle)]">
+              {currentDayProducts.map((p) => (
+                <li key={productId(p)} className="flex items-center gap-3 px-4 py-2.5 group">
+                  <Thumb product={p} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12.5px] font-semibold text-[var(--admin-text-primary)] truncate">
+                      {productName(p)}
+                    </p>
+                    <p className="text-[11px] text-[var(--admin-text-tertiary)] truncate">
+                      {p.category || 'Dish'}
+                      {p.price ? ` · ₹${p.price}` : ''}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleProduct(productId(p))}
+                    aria-label={`Remove ${productName(p)} from ${selectedDayMeta.label}`}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--admin-text-tertiary)] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer shrink-0"
+                  >
+                    <span className="material-symbols-outlined text-[17px]">close</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Catalogue picker */}
+        <section
+          className={`${mobilePane === 'add' ? 'flex' : 'hidden'} lg:flex min-w-0 rounded-[var(--admin-radius-lg,8px)] border border-[var(--admin-border)] bg-[var(--admin-surface)] flex-col lg:min-h-[320px]`}
+        >
+          <header className="px-4 pt-3 pb-2.5 border-b border-[var(--admin-border-subtle)] space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="hidden lg:block text-[13.5px] font-bold text-[var(--admin-text-primary)]">
+                Add dishes
+              </h4>
+              <span className="text-[11px] text-[var(--admin-text-tertiary)]">
+                {filteredProducts.length} of {products?.length || 0}
+              </span>
+            </div>
+            <div className="flex items-center h-[36px] px-3 rounded-[var(--admin-radius-md,6px)] bg-[var(--admin-surface-muted)] border border-[var(--admin-border)] focus-within:border-[var(--admin-accent)] focus-within:bg-[var(--admin-surface)] transition-colors">
+              <span className="material-symbols-outlined text-[18px] text-[var(--admin-text-tertiary)]">
+                search
+              </span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search dishes or categories"
+                className="flex-1 min-w-0 bg-transparent border-none outline-none px-2 text-[12.5px] text-[var(--admin-text-primary)] placeholder-[var(--admin-text-tertiary)]"
+              />
+            </div>
+            {categories.length > 1 && (
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1">
+                {[['all', products?.length || 0], ...categories].map(([cat, count]) => {
+                  const active = selectedCategory.toLowerCase() === String(cat).toLowerCase();
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer border ${
+                        active
+                          ? 'bg-[var(--admin-accent)] border-[var(--admin-accent)] text-white'
+                          : 'bg-[var(--admin-surface)] border-[var(--admin-border)] text-[var(--admin-text-secondary)] hover:text-[var(--admin-text-primary)]'
+                      }`}
+                    >
+                      {cat === 'all' ? 'All' : cat}
+                      <span
+                        className={active ? 'text-white/75' : 'text-[var(--admin-text-tertiary)]'}
+                      >
+                        {' '}
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </header>
+
+          <div className="flex-1 lg:overflow-y-auto lg:max-h-[440px] p-2">
+            {!products || products.length === 0 ? (
+              <p className="p-8 text-center text-[12px] text-[var(--admin-text-secondary)]">
+                No dishes in the catalogue yet.
+              </p>
+            ) : filteredProducts.length === 0 ? (
+              <p className="p-8 text-center text-[12px] text-[var(--admin-text-secondary)]">
+                No dishes match &ldquo;{searchQuery}&rdquo;.
+              </p>
+            ) : (
+              <ul className="grid gap-1 sm:grid-cols-2">
+                {filteredProducts.map((p) => {
+                  const id = productId(p);
+                  const added = currentDayProductIds.includes(id);
+                  return (
+                    <li key={id}>
+                      <button
+                        type="button"
+                        onClick={() => toggleProduct(id)}
+                        aria-pressed={added}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-[var(--admin-radius-md,6px)] text-left border transition-colors cursor-pointer ${
+                          added
+                            ? 'border-[var(--admin-accent)]/40 bg-[var(--admin-accent)]/[0.06]'
+                            : 'border-transparent hover:bg-[var(--admin-surface-muted)]'
+                        }`}
+                      >
+                        <Thumb product={p} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[12.5px] font-semibold text-[var(--admin-text-primary)] truncate">
+                            {productName(p)}
+                          </span>
+                          <span className="block text-[11px] text-[var(--admin-text-tertiary)] truncate">
+                            {p.category || 'Dish'}
+                            {p.price ? ` · ₹${p.price}` : ''}
+                          </span>
+                        </span>
+                        <span
+                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                            added
+                              ? 'bg-[var(--admin-accent)] text-white'
+                              : 'border border-[var(--admin-border-strong)] text-[var(--admin-text-secondary)]'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            {added ? 'check' : 'add'}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

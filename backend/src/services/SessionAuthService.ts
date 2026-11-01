@@ -60,7 +60,10 @@ class SessionAuthService {
       .lean();
     const cutoff = (boundary[0] as { createdAt?: Date } | undefined)?.createdAt;
     if (cutoff) {
-      await RefreshToken.deleteMany({ userId, createdAt: { $lt: cutoff } });
+      // Scoped to one user's oldest sessions: not a mass delete.
+      await RefreshToken.deleteMany({ userId, createdAt: { $lt: cutoff } }, {
+        bypassDestructionGuard: true,
+      } as any);
     }
   }
 
@@ -100,7 +103,9 @@ class SessionAuthService {
         `[AUTH] Stale refresh token used for userId: ${isUsed.userId} outside grace period (${Math.round(timeSinceUsedMs / 1000)}s).`,
       );
       if (isUsed.familyId) {
-        await RefreshToken.deleteMany({ userId: isUsed.userId, familyId: isUsed.familyId });
+        await RefreshToken.deleteMany({ userId: isUsed.userId, familyId: isUsed.familyId }, {
+          bypassDestructionGuard: true,
+        } as any);
       } else {
         await this.revokeAllSessions(isUsed.userId.toString());
       }

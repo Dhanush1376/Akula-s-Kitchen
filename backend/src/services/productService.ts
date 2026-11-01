@@ -384,6 +384,8 @@ class ProductService {
         if (isSearchQuery) isRelevanceSort = true;
         else sortOptions = { createdAt: -1, _id: 1 };
       } else if (sort === 'rating') sortOptions = { rating: -1, _id: 1 };
+      // Units sold (incremented at checkout/payment); rating breaks ties for new catalogues.
+      else if (sort === 'bestSelling') sortOptions = { sold: -1, rating: -1, _id: 1 };
     } else if (isSearchQuery) {
       isRelevanceSort = true;
     }

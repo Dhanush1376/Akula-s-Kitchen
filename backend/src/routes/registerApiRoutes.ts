@@ -95,7 +95,6 @@ export const registerApiRoutes = (
   apiRouter.use('/social', lazyRouter('./customer/socialRoutes'));
 
   // CMS/Content Routes
-  apiRouter.use('/blogs', lazyRouter('./cms/blogRoutes'));
   apiRouter.use('/locations', lazyRouter('./customer/locationRoutes'));
 
   // Maintenance System Routes

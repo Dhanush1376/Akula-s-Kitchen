@@ -114,7 +114,8 @@ export class CatalogHealthController {
         });
       }
 
-      await CatalogSynonym.deleteMany({ valueId: id });
+      // Only the synonyms of this one value.
+      await CatalogSynonym.deleteMany({ valueId: id }, { bypassDestructionGuard: true } as any);
       await CatalogValue.findByIdAndDelete(id);
 
       FilterService.clearCache();
