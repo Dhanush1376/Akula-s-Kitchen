@@ -5,8 +5,17 @@
   z-index: 2;
   pointer-events: none;
 }
+/* Carries the scroll draft (FallingLeaves.jsx); the piece inside flies its own path */
+.fl-drift {
+  position: absolute;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
 .fl-piece {
   position: absolute;
+  left: 0;
+  top: 0;
   height: auto;
   /* the page-level layer is 0x0, so the global img max-width: 100% would collapse pieces */
   max-width: none;

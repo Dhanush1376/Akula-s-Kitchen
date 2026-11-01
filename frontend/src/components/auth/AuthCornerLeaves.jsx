@@ -22,11 +22,11 @@ const TAU = Math.PI * 2;
 
 function generateFallFrames({ fall, drift, isPetal }) {
   const swings = rand(2.1, 3.7);
-  const swing = rand(16, 34) * (isPetal ? 1.25 : 1);
-  const rock = rand(20, 38);
-  const tilt = rand(-32, 32);
-  const tumble = Math.random() < 0.28 ? randomSign() * rand(130, 270) : 0;
-  const turn = Math.min(rand(24, 48) * (isPetal ? 1.2 : 1), 60);
+  const swing = rand(5, 10) * (isPetal ? 1.15 : 1);
+  const rock = rand(15, 26);
+  const tilt = rand(-22, 22);
+  const tumble = Math.random() < 0.2 ? randomSign() * rand(80, 180) : 0;
+  const turn = Math.min(rand(16, 32) * (isPetal ? 1.1 : 1), 40);
   const phase = rand(0, TAU);
   const ramp = 0.12;
 
@@ -37,7 +37,7 @@ function generateFallFrames({ fall, drift, isPetal }) {
     const p = phase + TAU * swings * t;
     const descent = (t < ramp ? (t * t) / (2 * ramp) : t - ramp / 2) / (1 - ramp / 2);
     const open = Math.min(1, 0.3 + t * 2.5);
-    // Drift carries the leaf naturally across with wind, plus wave sways
+    // Subtle lateral sway so leaves mostly fall straight down
     const x = drift * (1 - (1 - t) ** 2) + swing * open * Math.sin(p);
     const y = fall * descent - 8 * open * Math.sin(p) ** 2;
     const r = tilt + rock * open * Math.cos(p) + tumble * t;
@@ -66,8 +66,8 @@ function createRandomLeaf(id, initialProgress = 0) {
   const startX = rand(-8, 48);
   const startY = rand(-16, 12);
   const fall = rand(300, 440);
-  // Natural wind blows rightwards and downward into the card with slight variations
-  const drift = rand(25, 120);
+  // Gentle lateral drift so leaves mostly fall straight down
+  const drift = rand(4, 15);
   const duration = rand(7.8, 12.2);
   const size = isPetal ? rand(13, 19) : rand(14, 23);
   const frames = generateFallFrames({ fall, drift, isPetal });

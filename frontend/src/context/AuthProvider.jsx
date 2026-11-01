@@ -202,7 +202,7 @@ export function AuthProvider({ children }) {
       }
       return false;
     },
-    [logout, cachedProfile, user],
+    [cachedProfile, user],
   );
 
   useEffect(() => {

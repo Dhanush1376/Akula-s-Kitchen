@@ -3,6 +3,7 @@ import {
   FallingLeavesLayer,
   prefersReducedMotion,
   useFallingLeaves,
+  subscribeScrollWind,
   windBreeze,
   windGust,
 } from '../../../components/effects/FallingLeaves';
@@ -56,6 +57,8 @@ const FEEL = {
     tilt: 1.6, // degrees it leans toward the pointer
     lift: -0.011, // degrees per scrolled px: swings up anticlockwise around its stem
     trail: 0.24, // how far it lags behind the scrolling page
+    windBend: -2.6, // degrees of bend per px/ms of scroll speed (the scroll wind)
+    windSpring: 0.07, // how stiffly it springs back once the scrolling stops
   },
   right: {
     breeze: {
@@ -75,6 +78,8 @@ const FEEL = {
     tilt: 0.9,
     lift: 0.016, // clockwise: leans out toward the screen edge
     trail: 0.15,
+    windBend: 3.4,
+    windSpring: 0.1,
   },
 };
 // Both leaves have unfurled by then (see the entrance delays in homeHeroLeaves.css)
@@ -261,8 +266,12 @@ export function HomeHeroLeaves() {
     if (prefersReducedMotion()) return undefined;
     const target = { x: 0, y: 0, scroll: Math.min(window.scrollY, 600) };
     const current = { left: { ...target }, right: { ...target } };
+    // Scroll wind: each leaf bends with the visitor's scroll speed on a spring, so a fast
+    // flick bows it over and letting go makes it wobble back to rest
+    let windSpeed = 0;
+    const bend = { left: { at: 0, v: 0 }, right: { at: 0, v: 0 } };
+    let lastShed = 0;
     let frame = 0;
-    let lastY = window.scrollY;
     let quietUntil = 0;
 
     const write = () => {
@@ -275,7 +284,7 @@ export function HomeHeroLeaves() {
         el.style.setProperty('--hl-y', `${(at.y * 5 + at.scroll * feel.trail).toFixed(2)}px`);
         el.style.setProperty(
           '--hl-r',
-          `${(at.x * feel.tilt + at.scroll * feel.lift).toFixed(3)}deg`,
+          `${(at.x * feel.tilt + at.scroll * feel.lift + bend[side].at).toFixed(3)}deg`,
         );
       });
     };
@@ -284,6 +293,12 @@ export function HomeHeroLeaves() {
       frame = 0;
       let moving = false;
       SIDES.forEach((side) => {
+        const b = bend[side];
+        const goal = Math.max(-9, Math.min(9, windSpeed * FEEL[side].windBend));
+        b.v += (goal - b.at) * FEEL[side].windSpring;
+        b.v *= 0.86; // air drag on the blade
+        b.at += b.v;
+        if (Math.abs(goal - b.at) > 0.01 || Math.abs(b.v) > 0.01) moving = true;
         const at = current[side];
         Object.keys(target).forEach((key) => {
           const gap = target[key] - at[key];
@@ -309,17 +324,39 @@ export function HomeHeroLeaves() {
       });
 
     const onScroll = () => {
-      const y = window.scrollY;
-      target.scroll = Math.min(y, 600);
+      target.scroll = Math.min(window.scrollY, 600);
       kick();
-      if (Math.abs(y - lastY) < 24) return;
-      const down = y > lastY;
-      lastY = y;
-      const now = Date.now();
-      if (!onScreenRef.current || now < quietUntil) return;
-      quietUntil = now + 3500;
-      crossGust(down ? 1 : -1, { shedCount: Math.random() < 0.5 ? 2 : 0 });
     };
+
+    // The faster the visitor scrolls, the harder the wind: a lazy scroll barely stirs the
+    // leaves, a fling bows them over, sends a gust through both and shakes loose a flurry
+    // that blows the way the page is moving
+    const onWind = ({ velocity }) => {
+      windSpeed = velocity;
+      kick();
+      const speed = Math.abs(velocity);
+      if (!onScreenRef.current || speed < 0.35) return;
+      const direction = velocity > 0 ? 1 : -1;
+      const now = Date.now();
+      if (now >= quietUntil) {
+        quietUntil = now + 2200;
+        crossGust(direction, {
+          strength: Math.min(1.25, 0.45 + speed * 0.35),
+          shedCount: Math.min(4, Math.round(speed * 1.4)),
+        });
+      }
+      // Between gusts, sustained fast scrolling keeps tearing off single pieces
+      if (speed > 0.9 && now - lastShed > Math.max(260, 900 - speed * 160)) {
+        lastShed = now;
+        shed(dripRefs.current.right, {
+          count: speed > 2.2 ? 2 : 1,
+          fallRange: [340, 560],
+          scale: 0.9,
+          wind: direction * Math.min(1.8, 0.5 + speed * 0.4),
+        });
+      }
+    };
+    const unsubscribeWind = subscribeScrollWind(onWind);
 
     const onPointerMove = (e) => {
       if (e.pointerType !== 'mouse' || !onScreenRef.current) return;
@@ -352,13 +389,14 @@ export function HomeHeroLeaves() {
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     return () => {
+      unsubscribeWind();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [crossGust, gustLeaf]);
+  }, [crossGust, gustLeaf, shed]);
 
   return (
     <div ref={stageRef} className="ak-hero-leaves" aria-hidden="true">

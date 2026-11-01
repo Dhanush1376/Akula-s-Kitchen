@@ -108,6 +108,7 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
         };
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Run once on mount to migrate legacy product variants
   }, []);
 
   // Tags helper (handles string or array)

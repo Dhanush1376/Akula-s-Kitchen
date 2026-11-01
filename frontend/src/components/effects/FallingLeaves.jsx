@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './fallingLeaves.css';
 
@@ -35,6 +35,62 @@ const TAU = Math.PI * 2;
 export const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+
+// --- Scroll wind --------------------------------------------------------------
+// One tracker for the whole page turns scrolling into wind: `velocity` is the smoothed
+// scroll speed in px/ms (positive while scrolling down), `delta` the px scrolled since the
+// last frame. Listeners hear about it every animation frame while the page is moving and
+// for a short while after, as the air calms down. Nothing runs while the page is still.
+const windListeners = new Set();
+const wind = { velocity: 0, lastY: 0, lastT: 0, lastEvent: 0, frame: 0 };
+
+function windFrame(now) {
+  const y = window.scrollY;
+  const delta = y - wind.lastY;
+  const dt = Math.max(1, now - wind.lastT);
+  wind.lastY = y;
+  wind.lastT = now;
+  if (delta !== 0) {
+    // Instantaneous speed, capped so one janky frame can't fling everything off screen
+    const instant = Math.max(-6, Math.min(6, delta / dt));
+    wind.velocity += (instant - wind.velocity) * 0.35;
+    wind.lastEvent = now;
+  } else if (now - wind.lastEvent > 40) {
+    wind.velocity *= 0.86; // the air settles once the page stops
+  }
+  const settled = Math.abs(wind.velocity) < 0.004 && now - wind.lastEvent > 120;
+  if (settled) wind.velocity = 0;
+  windListeners.forEach((fn) => fn({ velocity: wind.velocity, delta, dt }));
+  wind.frame = settled ? 0 : requestAnimationFrame(windFrame);
+}
+
+function onWindScroll() {
+  if (wind.frame) return;
+  wind.lastT = performance.now();
+  wind.frame = requestAnimationFrame(windFrame);
+}
+
+/**
+ * Listen to the wind the visitor makes by scrolling. Returns an unsubscribe function.
+ * Does nothing (and never calls back) when motion is reduced.
+ */
+export function subscribeScrollWind(listener) {
+  if (typeof window === 'undefined' || prefersReducedMotion()) return () => {};
+  if (windListeners.size === 0) {
+    wind.lastY = window.scrollY;
+    window.addEventListener('scroll', onWindScroll, { passive: true });
+  }
+  windListeners.add(listener);
+  return () => {
+    windListeners.delete(listener);
+    if (windListeners.size === 0) {
+      window.removeEventListener('scroll', onWindScroll);
+      if (wind.frame) cancelAnimationFrame(wind.frame);
+      wind.frame = 0;
+      wind.velocity = 0;
+    }
+  };
+}
 
 // Time until each leaf may be gusted again. A clock is used rather than the animation's
 // playState so a throttled background tab can never leave a leaf locked.
@@ -189,16 +245,16 @@ function simulateFall({ fall, wind, isPetal }) {
         ? 'tumble'
         : 'spiral';
 
-  const terminal = { flutter: rand(55, 80), tumble: rand(95, 135), spiral: rand(70, 95) }[style]; // px/s
+  const terminal = { flutter: rand(80, 115), tumble: rand(110, 150), spiral: rand(90, 125) }[style]; // px/s
   const period = { flutter: rand(1.1, 1.7), tumble: rand(1.8, 2.6), spiral: rand(1.4, 2.2) }[style]; // s
-  const swing = { flutter: rand(16, 30), tumble: rand(4, 9), spiral: rand(10, 18) }[style]; // px
-  const rock = style === 'flutter' ? rand(28, 45) : 0; // degrees it tilts into each swing
-  const spinRate = style === 'tumble' ? randomSign() * rand(280, 520) : 0; // degrees/s
-  const tilt = rand(-35, 35);
+  const swing = { flutter: rand(6, 12), tumble: rand(2, 5), spiral: rand(3, 7) }[style]; // px: subtle flutter, mostly straight down
+  const rock = style === 'flutter' ? rand(20, 32) : 0; // degrees it tilts into each swing
+  const spinRate = style === 'tumble' ? randomSign() * rand(220, 420) : 0; // degrees/s
+  const tilt = rand(-25, 25);
   const startPhase = rand(0, TAU);
-  // Wind: the gust's push dies away over a second or so, then a gusty drift remains
-  const push = wind * rand(35, 80); // px/s
-  const breeze = wind * rand(8, 26); // px/s
+  // Gentle horizontal wind so leaves mostly fall straight down
+  const push = wind * rand(4, 12); // px/s
+  const breeze = wind * rand(2, 5); // px/s
   const gustRate = rand(0.25, 0.5) * TAU;
   const gustPhase = rand(0, TAU);
 
@@ -212,7 +268,7 @@ function simulateFall({ fall, wind, isPetal }) {
   let spin = 0;
   for (let step = 0; y < fall && t < 14; step += 1) {
     // Gravity against air drag: speed builds over the first fraction of a second
-    vy += 320 * (1 - vy / terminal) * dt;
+    vy += 380 * (1 - vy / terminal) * dt;
     // The flutter only develops once the leaf is moving through the air
     const settled = 1 - Math.exp(-t / 0.45);
     phase += (TAU / period) * dt;
@@ -327,7 +383,7 @@ export function useFallingLeaves({ max = 28 } = {}) {
   return { pieces, shed };
 }
 
-function FallingPiece({ piece }) {
+function FallingPiece({ piece, driftRef }) {
   const ref = useRef(null);
 
   useLayoutEffect(() => {
@@ -342,26 +398,102 @@ function FallingPiece({ piece }) {
     return () => animation.cancel();
   }, [piece]);
 
+  // The flight path animates the image; the wrapper carries what the visitor's scrolling
+  // does to the piece on top of it (see useScrollDraft).
   return (
-    <img
-      ref={ref}
-      src={piece.src}
-      alt=""
-      className="fl-piece"
-      draggable="false"
-      style={{ left: piece.x, top: piece.y, width: piece.size }}
-    />
+    <span ref={driftRef} className="fl-drift" style={{ left: piece.x, top: piece.y }}>
+      <img
+        ref={ref}
+        src={piece.src}
+        alt=""
+        className="fl-piece"
+        draggable="false"
+        style={{ width: piece.size }}
+      />
+    </span>
+  );
+}
+
+/**
+ * Scrolling stirs the air the pieces are falling through. Each piece reacts in its own
+ * way, so a flick never moves them as one:
+ *   - they hang back from the moving page, as if the air held them for a moment, then
+ *     ease back onto their path
+ *   - the draft tosses them sideways and keeps them drifting a while
+ *   - they spin harder the faster the page moves, then calm down
+ */
+function useScrollDraft(pieces) {
+  const nodes = useRef(new Map());
+  const state = useRef(new Map());
+  const hasPieces = pieces.length > 0;
+
+  useEffect(() => {
+    const live = new Set(pieces.map((p) => p.id));
+    for (const id of state.current.keys()) if (!live.has(id)) state.current.delete(id);
+  }, [pieces]);
+
+  useEffect(() => {
+    if (!hasPieces) return undefined;
+    return subscribeScrollWind(({ velocity, delta, dt }) => {
+      const seconds = Math.min(0.05, dt / 1000);
+      const speed = Math.abs(velocity);
+      nodes.current.forEach((node, id) => {
+        let st = state.current.get(id);
+        if (!st) {
+          st = {
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            r: 0,
+            vr: 0,
+            side: randomSign() * rand(0.6, 1.2), // which way the draft catches this one
+            lag: rand(0.35, 0.6), // how strongly the air holds it back
+            spin: randomSign() * rand(0.7, 1.3),
+            wobble: rand(0, TAU),
+          };
+          state.current.set(id, st);
+        }
+        // Hang back: the page (and its coordinates) moved by `delta`; the piece only
+        // partly goes along, then a soft, air-damped spring brings it back to its path
+        st.y += delta * st.lag;
+        st.vy += (-st.y * 5 - st.vy * 3.4) * seconds;
+        st.y += st.vy * seconds;
+        // Sideways toss, fluttering a little as it goes, slowed by the air
+        st.wobble += seconds * (2 + speed * 4);
+        st.vx += (st.side * speed * 260 + Math.sin(st.wobble) * speed * 120) * seconds;
+        st.vx *= Math.exp(-seconds * 1.6);
+        st.x += st.vx * seconds;
+        // Spin picks up with speed and rocks back to rest
+        st.vr += st.spin * speed * 900 * seconds;
+        st.vr += (-st.r * 3 - st.vr * 2.2) * seconds;
+        st.r += st.vr * seconds;
+        // A draft carries a piece; it never throws it off across the page
+        st.x = Math.max(-220, Math.min(220, st.x));
+        st.y = Math.max(-260, Math.min(260, st.y));
+        node.style.transform = `translate3d(${st.x.toFixed(1)}px, ${st.y.toFixed(1)}px, 0) rotate(${st.r.toFixed(1)}deg)`;
+      });
+    });
+  }, [hasPieces]);
+
+  return useCallback(
+    (id) => (el) => {
+      if (el) nodes.current.set(id, el);
+      else nodes.current.delete(id);
+    },
+    [],
   );
 }
 
 export function FallingLeavesLayer({ pieces, portal = false, className = '' }) {
+  const driftRef = useScrollDraft(pieces);
   const layer = (
     <div
       className={`fl-layer${portal ? ' fl-layer--page' : ''}${className ? ` ${className}` : ''}`}
       aria-hidden="true"
     >
       {pieces.map((p) => (
-        <FallingPiece key={p.id} piece={p} />
+        <FallingPiece key={p.id} piece={p} driftRef={driftRef(p.id)} />
       ))}
     </div>
   );

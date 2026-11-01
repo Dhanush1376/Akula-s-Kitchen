@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
   FallingLeavesLayer,
-  prefersReducedMotion,
+  subscribeScrollWind,
   useFallingLeaves,
   windGust,
 } from '../../components/effects/FallingLeaves';
@@ -85,25 +85,20 @@ export const ShopHeroLeaf = () => {
     return () => window.clearTimeout(timer);
   }, [rustle]);
 
-  // Scrolling stirs the leaf while it is on screen, once each gust has settled.
+  // Scrolling stirs the leaf while it is on screen: the faster the scroll, the sooner it
+  // catches the wind again and the more pieces it lets go.
   useEffect(() => {
-    if (prefersReducedMotion()) return undefined;
     let last = 0;
-    let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - lastY) < 24) return;
-      const down = y > lastY;
-      lastY = y;
+    return subscribeScrollWind(({ velocity }) => {
+      const speed = Math.abs(velocity);
+      if (speed < 0.35) return;
       const leaf = imgRef.current?.getBoundingClientRect();
       if (!leaf || leaf.bottom < 0 || leaf.top > window.innerHeight) return;
       const now = Date.now();
-      if (now - last < 3000) return;
+      if (now - last < Math.max(900, 2600 - speed * 700)) return;
       last = now;
-      rustle(Math.round(rand(2, 4)), down ? 1 : -1);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+      rustle(Math.min(6, Math.round(1 + speed * 1.6)), velocity > 0 ? 1 : -1);
+    });
   }, [rustle]);
 
   return (
