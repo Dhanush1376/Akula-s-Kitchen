@@ -282,7 +282,7 @@ export function WeeklyMenuCalendarEditor({
       </div>
 
       {/* 3. Search Bar */}
-      <div className="relative w-full bg-[var(--admin-surface-muted)] rounded-[4px] border border-[var(--admin-border)] flex items-center px-3 h-[38px] transition-colors focus-within:border-[var(--admin-accent)] focus-within:bg-[var(--admin-surface)]">
+      <div className="relative w-full max-w-md bg-[var(--admin-surface-muted)] rounded-[6px] border border-[var(--admin-border)] flex items-center px-3 h-[38px] transition-colors focus-within:border-[var(--admin-accent)] focus-within:bg-[var(--admin-surface)]">
         <span className="material-symbols-outlined text-[18px] text-[var(--admin-text-tertiary)] shrink-0 select-none">
           search
         </span>

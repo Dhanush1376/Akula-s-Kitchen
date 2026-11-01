@@ -46,6 +46,15 @@ function BaseOptimizedImage({
   const imgRef = useRef(null);
   const prevSrcRef = useRef(src);
   const loadStartTime = useRef(Date.now());
+  const retryTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Handle visibility tracking
   useEffect(() => {
@@ -106,11 +115,17 @@ function BaseOptimizedImage({
   const { optimizedUrl, autoSrcSet } = useMemo(() => {
     const target = activeSrc || src;
     const isData = target && (target.startsWith('data:') || target.startsWith('blob:'));
-    let url = isData ? target : target ? getOptimizedUrl(target, width, height, quality) : '';
-    if (retryCount > 0 && url && !isData) {
+    let url = isData
+      ? target
+      : target
+        ? retryCount >= 2
+          ? target
+          : getOptimizedUrl(target, width, height, quality)
+        : '';
+    if (retryCount === 1 && url && !isData) {
       url += (url.includes('?') ? '&' : '?') + `retry=${retryCount}`;
     }
-    const srcSet = isData || !target ? null : getSrcSet(target, width, quality);
+    const srcSet = isData || !target || retryCount >= 2 ? null : getSrcSet(target, width, quality);
     return { optimizedUrl: url, autoSrcSet: srcSet };
   }, [activeSrc, src, width, height, retryCount, quality]);
 
@@ -228,9 +243,20 @@ function BaseOptimizedImage({
                 return;
               }
 
-              // Fallback 2: Standard retry
+              // Fallback 2: Standard retry with 600ms backoff (recovers from network flaps / aborted sockets)
               if (retryCount === 0) {
-                setRetryCount(1);
+                retryTimeoutRef.current = setTimeout(() => {
+                  setRetryCount(1);
+                }, 600);
+                return;
+              }
+
+              // Fallback 3: Fall back to raw original source URL without transformations with 800ms backoff
+              if (retryCount === 1) {
+                retryTimeoutRef.current = setTimeout(() => {
+                  setRetryCount(2);
+                  setActiveSrc(src);
+                }, 800);
                 return;
               }
             }

@@ -11,6 +11,7 @@ import {
   Phone,
   Smartphone,
   Download,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -33,6 +34,7 @@ export function Sidebar() {
     wishlistItems,
     cartCount,
     addresses,
+    orders,
     addressText,
     phoneText,
     mobileShowContent,
@@ -215,6 +217,15 @@ export function Sidebar() {
             {hasRecentOrderUpdates && (
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
             )}
+            <span
+              className={
+                activeTab === 'orders'
+                  ? 'text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center bg-[#283618]/15 text-[#283618] border border-[#283618]/25'
+                  : 'glass-badge text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center text-neutral-800'
+              }
+            >
+              {orders ? orders.length : 0}
+            </span>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
           </div>
         </motion.button>
@@ -355,6 +366,26 @@ export function Sidebar() {
             </span>
             <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
           </div>
+        </motion.button>
+
+        <div className="border-t border-neutral-200/60" />
+
+        {/* Store Policies & Legal */}
+        <motion.button
+          role="tab"
+          aria-selected={path.startsWith('/policy')}
+          whileHover={{ x: 2 }}
+          onClick={() => navigate('/policy/shipping-policy')}
+          className={tabClass(path.startsWith('/policy'))}
+        >
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck
+              className={`w-4 h-4 ${path.startsWith('/policy') ? 'text-[#283618]' : 'text-neutral-700'}`}
+              strokeWidth={1.8}
+            />
+            <span>Store Policies</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-neutral-400" strokeWidth={1.5} />
         </motion.button>
 
         <div className="border-t border-neutral-200/60" />

@@ -73,7 +73,20 @@ const LazySkeletons = {
 export function RouteSkeleton({ variant = 'page' }) {
   if (variant === 'home') return <HomeSkeleton />;
 
-  if (variant === 'page' || variant === 'policy') {
+  const isAdminPath =
+    typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const effectiveVariant = variant === 'page' && isAdminPath ? 'admin' : variant;
+
+  if (effectiveVariant === 'admin') {
+    const Component = LazySkeletons['admin'];
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Component />
+      </Suspense>
+    );
+  }
+
+  if (effectiveVariant === 'page' || effectiveVariant === 'policy') {
     return (
       <>
         <PageLoader />
@@ -92,9 +105,9 @@ export function RouteSkeleton({ variant = 'page' }) {
     );
   }
 
-  const Component = LazySkeletons[variant];
+  const Component = LazySkeletons[effectiveVariant];
   if (Component) {
-    if (variant === 'checkout') {
+    if (effectiveVariant === 'checkout') {
       return (
         <div className="max-w-3xl mx-auto pt-8 px-4">
           <Suspense fallback={<PageLoader />}>

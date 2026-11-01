@@ -385,7 +385,7 @@ export function ProductGallery({ images = [], product }) {
                   {...dragProps}
                   className="fixed inset-x-2 sm:inset-x-4 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-4 z-10 pointer-events-auto flex flex-col w-[calc(100%-16px)] sm:w-full max-w-[540px] mx-auto"
                 >
-                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-3 pb-3 sm:px-4 sm:pb-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[92dvh] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] modern-sans-headings font-body">
+                  <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl pt-2 px-3 pb-3 sm:px-4 sm:pb-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col max-h-[92dvh] sm:max-h-[85dvh] overflow-hidden border border-black/[0.08] font-body">
                     {/* Handlebar for bottom sheet feel - moved right to the top rim */}
                     <div
                       className="w-full flex justify-center pt-1 pb-1.5 cursor-grab select-none"
@@ -405,25 +405,18 @@ export function ProductGallery({ images = [], product }) {
 
                     {/* Header */}
                     <div className="flex items-center justify-between pb-2 pr-10 border-b border-black/[0.06] mb-1">
-                      <h3
-                        className="font-sans text-[15px] sm:text-[16px] font-semibold text-neutral-900 leading-tight"
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          fontStretch: 'normal',
-                          letterSpacing: 'normal',
-                        }}
-                      >
+                      <h3 className="font-display font-bold text-[15px] sm:text-[16px] text-[#283618] leading-tight">
                         Similar Delights
                       </h3>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1">
+                    <div className="flex-1 overflow-y-auto overscroll-contain no-scrollbar pt-1">
                       <React.Suspense
                         fallback={<RecommendationSkeleton horizontal={true} compact={true} />}
                       >
                         <RecommendationSystem
-                          category={product.category}
+                          category={product.category || product.primaryCategory}
                           currentProductId={product._id || product.id}
                           compact={true}
                           horizontalScroll={true}

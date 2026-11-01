@@ -11,6 +11,11 @@ import {
 } from '../utils/email/transactionalEmailTemplates';
 
 import { sendDirectEmailProcessor } from './notificationService';
+import { renderInvoicePdf } from './invoice/invoicePdf';
+import storeSettingsService from './StoreSettingsService';
+import { getPublicWebsiteUrl } from '../utils/email/emailUrlUtils';
+
+type EmailAttachment = { filename: string; content: Buffer | string; contentType?: string };
 
 export class TransactionalEmailService {
   /**
@@ -24,7 +29,7 @@ export class TransactionalEmailService {
     type: 'order' | 'system' | 'engagement',
     action: string,
     notificationKey: string,
-    attachments?: { filename: string; content: Buffer | string; contentType?: string }[],
+    attachments?: EmailAttachment[],
   ) {
     if (!to) {
       logger.warn(`[EMAIL TRACE][ENQUEUE] skipped — no recipient for action=${action}`);
@@ -55,6 +60,33 @@ export class TransactionalEmailService {
         err,
       );
       throw err; // Let OutboxProcessor handle the retry logic
+    }
+  }
+
+  /**
+   * The same invoice the customer sees (and downloads) on the website, rendered
+   * as a PDF for the order email. Never blocks the email: on failure the
+   * confirmation is sent without the attachment.
+   */
+  private static async buildInvoiceAttachment(
+    order: any,
+    user: any,
+  ): Promise<EmailAttachment | null> {
+    try {
+      const settings: any = await storeSettingsService.getPublicSettings().catch(() => ({}));
+      const { buffer, filename } = await renderInvoicePdf(order, {
+        user,
+        storeName: settings?.general?.storeName || '',
+        storeSettings: settings,
+        origin: getPublicWebsiteUrl(),
+      });
+      return { filename, content: buffer, contentType: 'application/pdf' };
+    } catch (err: any) {
+      logger.error(
+        `[TransactionalEmailService] Invoice PDF failed for ${order?._id}: ${err?.message}`,
+        err,
+      );
+      return null;
     }
   }
 
@@ -99,7 +131,10 @@ export class TransactionalEmailService {
     // 1. Notify Customer
     const customerEmail = user?.email || order.shippingAddress?.email;
     if (customerEmail) {
-      const { subject, html } = buildOrderConfirmationCustomerEmail(order, user);
+      const invoice = await this.buildInvoiceAttachment(order, user);
+      const { subject, html } = buildOrderConfirmationCustomerEmail(order, user, {
+        invoiceFilename: invoice?.filename,
+      });
       const customerHash = this.hashEmail(customerEmail);
       const notificationKey = `ORDER_CREATED:${eventId}:CUSTOMER:${customerHash}`;
 
@@ -110,6 +145,7 @@ export class TransactionalEmailService {
         'order',
         'order_confirmation_customer',
         notificationKey,
+        invoice ? [invoice] : undefined,
       );
     }
 

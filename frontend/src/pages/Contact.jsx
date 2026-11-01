@@ -249,7 +249,8 @@ export function Contact() {
                 {whatsappDisplay && (
                   <a
                     href={BRAND.getWhatsAppUrl(
-                      'Hi Akula’s Kitchen, I have a query regarding my order.',
+                      settings?.contact?.whatsappMessage ||
+                        'Hi Akula’s Kitchen, I have a query regarding my order.',
                       whatsappDisplay,
                     )}
                     target="_blank"

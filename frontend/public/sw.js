@@ -10,7 +10,7 @@
  * - Instant update activation via SKIP_WAITING with safe client claiming.
  */
 
-const SW_VERSION = '1.0.1';
+const SW_VERSION = '1.0.2';
 const CACHE_PREFIX = 'akula';
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${SW_VERSION}`;
 const STATIC_CACHE = `${CACHE_PREFIX}-static-${SW_VERSION}`;
@@ -41,19 +41,35 @@ const PRECACHE_SHELL_ASSETS = [
  */
 const NEVER_CACHE_PATTERNS = [
   '/api/auth',
+  '/api/v1/auth',
   '/api/csrf-token',
+  '/api/v1/csrf-token',
+  '/api/users',
+  '/api/v1/users',
   '/api/users/cart',
+  '/api/v1/users/cart',
   '/api/users/wishlist',
+  '/api/v1/users/wishlist',
   '/api/orders',
+  '/api/v1/orders',
   '/api/checkout',
+  '/api/v1/checkout',
   '/api/payment',
+  '/api/v1/payment',
   '/api/razorpay',
+  '/api/v1/razorpay',
   '/api/admin',
+  '/api/v1/admin',
   '/api/notifications',
+  '/api/v1/notifications',
   '/api/customers',
+  '/api/v1/customers',
   '/api/health',
+  '/api/v1/health',
   '/api/marketing',
+  '/api/v1/marketing',
   '/api/customer-intelligence',
+  '/api/v1/customer-intelligence',
   '/socket.io',
   '/auth',
   '/checkout',
@@ -210,9 +226,11 @@ self.addEventListener('fetch', (event) => {
             cache.put(request, networkResponse.clone()).catch(() => {});
           }
           return networkResponse;
-        } catch (err) {
-          // If offline and not in cache, let caller handle
-          throw err;
+        } catch (_err) {
+          return new Response('Asset unavailable offline', {
+            status: 503,
+            statusText: 'Service Unavailable',
+          });
         }
       })(),
     );
@@ -247,11 +265,11 @@ self.addEventListener('fetch', (event) => {
             cache.put(request, networkResponse.clone()).catch(() => {});
           }
           return networkResponse;
-        } catch (fetchErr) {
+        } catch (_fetchErr) {
           if (cached) {
             return cached;
           }
-          throw fetchErr;
+          return new Response('', { status: 404, statusText: 'Not Found' });
         }
       })(),
     );
@@ -276,11 +294,33 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         } catch (_err) {
           // Network failed — fallback to cached catalog if available
-          const cached = await caches.match(request);
+          const cached =
+            (await caches.match(request)) || (await caches.match(request, { ignoreSearch: true }));
           if (cached) {
             return cached;
           }
-          throw _err;
+
+          // Handle client cancellation or aborted requests cleanly without throwing unhandled rejection
+          if (request.signal?.aborted || _err?.name === 'AbortError') {
+            return new Response(null, { status: 204, statusText: 'Request Aborted' });
+          }
+
+          // Synthetic offline response to avoid uncaught TypeError in service worker promise
+          return new Response(
+            JSON.stringify({
+              success: false,
+              message: 'Network offline. Catalog data is currently unavailable.',
+              offline: true,
+            }),
+            {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Offline-Fallback': 'true',
+              },
+            },
+          );
         }
       })(),
     );

@@ -116,8 +116,11 @@ const DEFAULT_STORE_SETTINGS = {
     invoiceFooter: '',
   },
   storefront: {
-    seoTitle: "Akula's Kitchen",
-    seoDescription: 'Authentic Flavors and Premium Culinary Experiences',
+    seoTitle: "Akula's Kitchen | Fresh • Tasty • Healthy",
+    seoDescription:
+      'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.',
+    seoKeywords:
+      "dosa batter, idli batter, fresh batter, homemade pickles, tomato pickle, gongura pickle, podi, karam podi, south indian food, breakfast batter, akula's kitchen",
     hideGallerySection: false,
     hideProductsFromGallery: false,
     customerAuthMethod: 'both',
@@ -526,8 +529,22 @@ export function AdminSettings({ hideHeader = false }) {
       } else if (name === 'whatsappNumber') {
         next.general.whatsappNumber = val;
         next.contact.whatsappNumber = val;
+      } else if (name === 'whatsappMessage') {
+        next.contact.whatsappMessage = val;
       } else if (
-        ['supportHours', 'address', 'city', 'state', 'postalCode', 'country'].includes(name)
+        [
+          'supportHours',
+          'address',
+          'city',
+          'state',
+          'postalCode',
+          'country',
+          'googleMapsUrl',
+          'instagram',
+          'facebook',
+          'pinterest',
+          'youtube',
+        ].includes(name)
       ) {
         next.contact[name] = val;
       } else if (['companyName', 'legalCompanyName', 'cin', 'registeredAddress'].includes(name)) {
@@ -933,8 +950,15 @@ export function AdminSettings({ hideHeader = false }) {
                   maintenanceMode: storeSettings.general?.maintenanceMode ?? false,
 
                   supportEmail:
-                    storeSettings.general?.supportEmail || storeSettings.contact?.email || '',
-                  phone: storeSettings.general?.phone || storeSettings.contact?.phone || '',
+                    storeSettings.general?.supportEmail ||
+                    storeSettings.contact?.email ||
+                    websiteContent?.contact?.email ||
+                    '',
+                  phone:
+                    storeSettings.general?.phone ||
+                    storeSettings.contact?.phone ||
+                    websiteContent?.contact?.phone ||
+                    '',
                   alternatePhone:
                     storeSettings.general?.alternatePhone ||
                     storeSettings.contact?.alternatePhone ||
@@ -942,14 +966,51 @@ export function AdminSettings({ hideHeader = false }) {
                   whatsappNumber:
                     storeSettings.general?.whatsappNumber ||
                     storeSettings.contact?.whatsappNumber ||
+                    websiteContent?.contact?.whatsapp ||
                     '',
-                  supportHours: storeSettings.contact?.supportHours || '',
+                  whatsappMessage:
+                    storeSettings.contact?.whatsappMessage ||
+                    "Hello! Thank you for reaching Akula's Kitchen.",
+                  supportHours:
+                    storeSettings.contact?.supportHours ||
+                    websiteContent?.contact?.businessHours ||
+                    '',
 
-                  address: storeSettings.contact?.address || '',
+                  address: storeSettings.contact?.address || websiteContent?.contact?.address || '',
                   city: storeSettings.contact?.city || '',
                   state: storeSettings.contact?.state || '',
                   postalCode: storeSettings.contact?.postalCode || '',
-                  country: storeSettings.contact?.country || '',
+                  country: storeSettings.contact?.country || 'India',
+                  googleMapsUrl:
+                    storeSettings.contact?.googleMapsUrl || websiteContent?.contact?.mapEmbed || '',
+                  instagram:
+                    storeSettings.contact?.instagram ||
+                    (Array.isArray(websiteContent?.footer?.socialLinks)
+                      ? websiteContent?.footer?.socialLinks?.find((s) => s.platform === 'instagram')
+                          ?.url
+                      : websiteContent?.footer?.socialLinks?.instagram) ||
+                    '',
+                  facebook:
+                    storeSettings.contact?.facebook ||
+                    (Array.isArray(websiteContent?.footer?.socialLinks)
+                      ? websiteContent?.footer?.socialLinks?.find((s) => s.platform === 'facebook')
+                          ?.url
+                      : websiteContent?.footer?.socialLinks?.facebook) ||
+                    '',
+                  pinterest:
+                    storeSettings.contact?.pinterest ||
+                    (Array.isArray(websiteContent?.footer?.socialLinks)
+                      ? websiteContent?.footer?.socialLinks?.find((s) => s.platform === 'pinterest')
+                          ?.url
+                      : websiteContent?.footer?.socialLinks?.pinterest) ||
+                    '',
+                  youtube:
+                    storeSettings.contact?.youtube ||
+                    (Array.isArray(websiteContent?.footer?.socialLinks)
+                      ? websiteContent?.footer?.socialLinks?.find((s) => s.platform === 'youtube')
+                          ?.url
+                      : websiteContent?.footer?.socialLinks?.youtube) ||
+                    '',
 
                   companyName:
                     storeSettings.legal?.companyName || storeSettings.general?.storeName || '',
@@ -988,7 +1049,22 @@ export function AdminSettings({ hideHeader = false }) {
 
             {sectionsList[activeSection].id === 'storefront' && (
               <StorefrontSettingsPanel
-                formData={storeSettings.storefront || {}}
+                formData={{
+                  ...(storeSettings.storefront || {}),
+                  seoTitle:
+                    storeSettings.storefront?.seoTitle &&
+                    !storeSettings.storefront.seoTitle.includes('Culinary Experiences')
+                      ? storeSettings.storefront.seoTitle
+                      : "Akula's Kitchen | Fresh • Tasty • Healthy",
+                  seoDescription:
+                    storeSettings.storefront?.seoDescription &&
+                    !storeSettings.storefront.seoDescription.includes('exquisite recipes')
+                      ? storeSettings.storefront.seoDescription
+                      : 'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.',
+                  seoKeywords:
+                    storeSettings.storefront?.seoKeywords ||
+                    "dosa batter, idli batter, fresh batter, homemade pickles, tomato pickle, gongura pickle, podi, karam podi, south indian food, breakfast batter, akula's kitchen",
+                }}
                 handleChange={handleStoreSettingsChange('storefront')}
                 handleSave={handleStoreSettingsSave('storefront')}
                 saving={saving}

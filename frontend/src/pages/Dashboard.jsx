@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingBag, User, MapPin } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, User, MapPin, ShieldCheck } from 'lucide-react';
 import { Routes, Route, Navigate, useSearchParams, Link } from 'react-router-dom';
 import { DashboardProvider } from '../context/DashboardContext';
 import { DashboardLayout } from './Dashboard/DashboardLayout';
@@ -30,7 +30,7 @@ function DashboardIndex() {
       </p>
 
       {/* Quick Action Tiles */}
-      <div className="grid grid-cols-3 gap-3 w-full max-w-lg mt-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-xl mt-2">
         <Link
           to="/dashboard/orders"
           className="flex flex-col items-center p-3.5 rounded-xl bg-white/80 hover:bg-white border border-neutral-200/70 hover:border-[#283618]/30 transition-all shadow-2xs group"
@@ -60,6 +60,16 @@ function DashboardIndex() {
           </div>
           <span className="text-[12px] font-bold text-neutral-900">Addresses</span>
           <span className="text-[10px] text-neutral-500 font-medium mt-0.5">Quick Drawer</span>
+        </Link>
+        <Link
+          to="/policy/shipping-policy"
+          className="flex flex-col items-center p-3.5 rounded-xl bg-white/80 hover:bg-white border border-neutral-200/70 hover:border-[#283618]/30 transition-all shadow-2xs group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-[#283618]/10 text-[#283618] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+            <ShieldCheck className="w-4.5 h-4.5" strokeWidth={1.8} />
+          </div>
+          <span className="text-[12px] font-bold text-neutral-900">Store Policies</span>
+          <span className="text-[10px] text-neutral-500 font-medium mt-0.5">Legal & Shipping</span>
         </Link>
       </div>
     </div>

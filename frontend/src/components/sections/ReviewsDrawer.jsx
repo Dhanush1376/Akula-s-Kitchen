@@ -333,7 +333,7 @@ export function ReviewsDrawer({
                     <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-black/[0.06] pr-10">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h2 className="font-sans text-[17px] sm:text-[18px] font-bold text-neutral-900 leading-tight">
+                          <h2 className="font-display text-[17px] sm:text-[18px] font-bold text-neutral-900 leading-tight">
                             Customer Reviews
                           </h2>
                           {reviews.length > 0 && (

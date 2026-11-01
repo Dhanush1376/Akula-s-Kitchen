@@ -84,9 +84,9 @@ export const escapeHtml = (value: unknown): string =>
 
 const inr = (n: number) => `₹${Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
-const HOME_TITLE = `${BRAND_NAME} | Homemade Batters, Pickles & Traditional Foods`;
+const HOME_TITLE = `${BRAND_NAME} | Fresh • Tasty • Healthy`;
 const HOME_DESCRIPTION =
-  "Order fresh idli and dosa batters, homemade pickles and chutneys, traditional podis and masalas, namkeen and cashews online from Akula's Kitchen.";
+  'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.';
 const SHOP_TITLE = `Shop Homemade Pickles, Batters & Podis Online | ${BRAND_NAME}`;
 const SHOP_DESCRIPTION =
   "Browse the full Akula's Kitchen range: idli and dosa batters, homemade pickles, chutneys, podis and masalas, namkeen and cashews, with pack sizes and prices.";
@@ -261,7 +261,13 @@ export function buildHomePage(data: CatalogData): PageSeoDescriptor {
   const featured = data.products.filter((p) => p.featured).slice(0, 12);
   return {
     status: 200,
-    head: baseHead({ title: HOME_TITLE, description: HOME_DESCRIPTION, canonical }),
+    head: baseHead({
+      title: HOME_TITLE,
+      description: HOME_DESCRIPTION,
+      keywords:
+        "dosa batter, idli batter, fresh batter, homemade pickles, tomato pickle, gongura pickle, podi, karam podi, south indian food, breakfast batter, akula's kitchen",
+      canonical,
+    }),
     jsonLd: [buildOrganizationJsonLd(data.contact), buildWebSiteJsonLd()],
     bodyHtml: shell(
       `<h1>${escapeHtml(BRAND_NAME)}: homemade batters, pickles and traditional foods</h1>` +

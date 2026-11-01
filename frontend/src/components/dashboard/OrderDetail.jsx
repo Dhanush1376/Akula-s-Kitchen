@@ -1,4 +1,4 @@
-import { BellRing, PackageCheck } from 'lucide-react';
+import { BellRing, PackageCheck, Star, ChevronLeft } from 'lucide-react';
 import React, { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useDashboard } from '../../context/DashboardContext';
@@ -58,11 +58,21 @@ export function OrderDetail() {
       <div className="bg-white border border-neutral-200 rounded-lg p-4 sm:p-5 shadow-sm">
         {/* Header Row */}
         <div className="pb-3 mb-3 border-b border-neutral-200 flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <PackageCheck className="w-4 h-4 text-neutral-800" strokeWidth={2} />
-            <span className="text-[13px] font-semibold text-neutral-900 tracking-normal">
-              Order Overview
-            </span>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setSelectedOrderId(null)}
+              className="inline-flex items-center gap-1 text-[11.5px] font-bold text-neutral-700 hover:text-neutral-950 transition-colors cursor-pointer bg-neutral-100 hover:bg-neutral-200/80 px-2.5 py-1 rounded-md"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2} />
+              <span>Back</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-neutral-800">
+              <PackageCheck className="w-4 h-4" strokeWidth={2} />
+              <span className="text-[13px] font-semibold text-neutral-900 tracking-normal">
+                Order Overview
+              </span>
+            </div>
           </div>
           <span
             onClick={() => {
@@ -91,7 +101,7 @@ export function OrderDetail() {
               (typeof orderItem.productId === 'object'
                 ? orderItem.productId?.imageSrc || orderItem.productId?.images?.[0]
                 : null) ||
-              '/MainLogo.png';
+              '';
             const itemVariant = orderItem.variant || 'Default';
             const itemQty = orderItem.quantity || 1;
             const itemPrice =
@@ -116,78 +126,88 @@ export function OrderDetail() {
               rawWeight && itemTitle.toLowerCase().includes(String(rawWeight).toLowerCase());
 
             return (
-              <div key={idx} className="py-3 first:pt-0 last:pb-0 flex items-center gap-3.5">
-                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-md bg-neutral-100 border border-neutral-200 overflow-hidden shrink-0 shadow-2xs">
-                  <OptimizedImage
-                    src={itemImage}
-                    alt={itemTitle}
-                    containerClassName="w-full h-full"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-semibold text-neutral-900 text-[13.5px] sm:text-[14px] leading-tight">
-                      {itemTitle}
-                    </h4>
-                    {rawWeight && !titleHasWeight && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[10.5px] sm:text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/80 leading-none shrink-0 shadow-2xs">
-                        {rawWeight}
-                      </span>
-                    )}
+              <div key={idx} className="py-3.5 first:pt-0 last:pb-0">
+                <div className="flex items-start gap-3 sm:gap-3.5">
+                  <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-md bg-neutral-100 border border-neutral-200 overflow-hidden shrink-0 shadow-2xs">
+                    <OptimizedImage
+                      src={itemImage}
+                      alt={itemTitle}
+                      containerClassName="w-full h-full"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
-                  {otherOptions.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      {otherOptions.map((opt, optIdx) => (
-                        <span key={optIdx} className="text-[11px] text-neutral-500 font-normal">
-                          <span className="text-neutral-400">{opt.groupName}:</span>{' '}
-                          <span className="font-medium text-neutral-700">{opt.optionLabel}</span>
-                          {opt.priceAdjustment > 0 && (
-                            <span className="ml-0.5 text-[10px] text-neutral-400">
-                              (+₹{opt.priceAdjustment})
-                            </span>
-                          )}
-                        </span>
-                      ))}
+                  <div className="flex-1 min-w-0">
+                    {/* Header: Title, Weight Badge, and Total Price (Full Width!) */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+                        <h4 className="font-semibold text-neutral-900 text-[13.5px] sm:text-[14px] leading-tight">
+                          {itemTitle}
+                        </h4>
+                        {rawWeight && !titleHasWeight && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-[4px] text-[10.5px] sm:text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/80 leading-none shrink-0 shadow-2xs">
+                            {rawWeight}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[13.5px] sm:text-[14px] font-bold text-[#8f7422] shrink-0">
+                        ₹{(itemPrice * itemQty).toLocaleString('en-IN')}
+                      </div>
                     </div>
-                  )}
 
-                  <p className="text-[12px] text-neutral-500 mt-1 font-normal">
-                    {itemVariant && itemVariant.toLowerCase() !== 'default'
-                      ? `Variant: ${itemVariant} • Qty: ${itemQty}`
-                      : `Qty: ${itemQty}`}
-                  </p>
-                  <div className="text-[13.5px] sm:text-[14px] font-bold text-[#8f7422] mt-1">
-                    ₹{(itemPrice * itemQty).toLocaleString('en-IN')}
+                    {otherOptions.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        {otherOptions.map((opt, optIdx) => (
+                          <span key={optIdx} className="text-[11px] text-neutral-500 font-normal">
+                            <span className="text-neutral-400">{opt.groupName}:</span>{' '}
+                            <span className="font-medium text-neutral-700">{opt.optionLabel}</span>
+                            {opt.priceAdjustment > 0 && (
+                              <span className="ml-0.5 text-[10px] text-neutral-400">
+                                (+₹{opt.priceAdjustment})
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Meta Row: Qty on Left & Rate & Review on Right (Leaves Title Uncluttered) */}
+                    <div className="flex items-center justify-between gap-2 mt-2 pt-1 border-t border-neutral-100/80">
+                      <p className="text-[11.5px] sm:text-[12px] text-neutral-500 font-normal">
+                        {itemVariant && itemVariant.toLowerCase() !== 'default'
+                          ? `Variant: ${itemVariant} • Qty: ${itemQty}`
+                          : `Qty: ${itemQty}`}
+                      </p>
+
+                      {isDelivered && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const pId =
+                              orderItem.productId?._id ||
+                              (typeof orderItem.productId === 'string'
+                                ? orderItem.productId
+                                : null) ||
+                              (orderItem.productId && typeof orderItem.productId === 'object'
+                                ? orderItem.productId.id
+                                : null) ||
+                              orderItem.id ||
+                              orderItem._id;
+                            setReviewingProduct({
+                              productId: pId,
+                              productTitle: itemTitle,
+                              orderItems: itemsList,
+                            });
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white hover:bg-amber-50/80 border border-amber-200 hover:border-amber-300 text-[11px] font-semibold text-neutral-800 hover:text-[#8f7422] transition-all shadow-2xs hover:shadow-xs active:scale-95 shrink-0 cursor-pointer"
+                        >
+                          <Star className="w-3 h-3 text-[#916a00] fill-[#916a00]" />
+                          <span>Rate & Review</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Review Button for Delivered item */}
-                {isDelivered && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const pId =
-                        orderItem.productId?._id ||
-                        (typeof orderItem.productId === 'string' ? orderItem.productId : null) ||
-                        (orderItem.productId && typeof orderItem.productId === 'object'
-                          ? orderItem.productId.id
-                          : null) ||
-                        orderItem.id ||
-                        orderItem._id;
-                      setReviewingProduct({
-                        productId: pId,
-                        productTitle: itemTitle,
-                        orderItems: itemsList,
-                      });
-                    }}
-                    className="px-3 py-1.5 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 text-[11px] font-semibold text-neutral-700 transition-colors shrink-0 cursor-pointer"
-                  >
-                    Rate & Review
-                  </button>
-                )}
               </div>
             );
           })}

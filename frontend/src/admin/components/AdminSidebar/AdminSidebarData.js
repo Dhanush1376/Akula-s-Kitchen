@@ -68,10 +68,10 @@ export const navSections = [
         domain: 'products',
       },
       {
-        label: 'Menu Page (CMS)',
+        label: 'Menu',
         icon: 'restaurant_menu',
         path: '/admin/homepage?section=menu-page',
-        keywords: 'menu, weekly calendar, schedule, daily kitchen, todays dishes',
+        keywords: 'menu, menu page, weekly calendar, schedule, daily kitchen, todays dishes',
         domain: 'products',
       },
     ],

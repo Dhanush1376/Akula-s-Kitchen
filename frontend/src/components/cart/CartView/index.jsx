@@ -493,7 +493,7 @@ export function CartView({ isEmbedded = false }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="bg-white min-h-screen pb-24 lg:pb-16 font-body text-neutral-950 modern-sans-headings"
+            className="bg-white min-h-screen pb-24 lg:pb-16 font-body text-neutral-950 "
           >
             {innerContent}
           </motion.div>

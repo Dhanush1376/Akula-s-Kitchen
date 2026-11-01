@@ -36,6 +36,17 @@ export const checkSocketConnectionRateLimit = async (socket: {
   handshake: { address?: string; headers?: Record<string, string | string[] | undefined> };
 }): Promise<{ allowed: boolean; ip: string }> => {
   const ip = getClientIp(socket);
+  const isLoopback =
+    ip === '127.0.0.1' ||
+    ip === '::1' ||
+    ip === '::ffff:127.0.0.1' ||
+    ip === 'localhost' ||
+    ip === 'unknown';
+
+  if (process.env.NODE_ENV !== 'production' && isLoopback) {
+    return { allowed: true, ip };
+  }
+
   const key = `socket:conn:${ip}`;
 
   if (redisClient && redisClient.isReady) {

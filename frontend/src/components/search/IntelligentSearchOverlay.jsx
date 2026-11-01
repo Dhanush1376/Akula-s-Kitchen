@@ -271,45 +271,12 @@ function SuggestionRow({ id, label, query, index, isActive, hint, onClick, onHov
   );
 }
 
-/** Small note beside a suggestion, only when it adds something: the size asked for, or stock. */
-const suggestionHint = (item) => {
-  if (item.type !== 'product') return '';
-  return item.matchedWeight || '';
-};
-
-function Results({ suggestions, query, activeIndex, setActiveIndex, onSelect, isMobile }) {
-  return (
-    <section className="so-group">
-      <div className="so-group__header">SUGGESTIONS</div>
-      <div className="so-sugs">
-        {suggestions.map((item, index) => {
-          const isRowActive = activeIndex === index || (activeIndex === -1 && index === 0);
-          return (
-            <SuggestionRow
-              key={item.id}
-              id={`so-opt-${index}`}
-              label={item.title}
-              query={query}
-              index={index}
-              isActive={isRowActive}
-              hint={suggestionHint(item)}
-              onClick={() => onSelect(item)}
-              onHover={isMobile ? undefined : () => setActiveIndex(index)}
-            />
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 /** Product results shown directly inside the searchbar overlay using the store's ProductCard */
 function SearchResultsView({
   query,
   products = [],
   loading = false,
   onCloseOverlay,
-  onBackToSuggestions,
   suggestions = [],
   onPickSuggestion,
 }) {
@@ -326,9 +293,6 @@ function SearchResultsView({
             </span>
           )}
         </div>
-        <button type="button" onClick={onBackToSuggestions} className="so-results-head__back">
-          Suggestions
-        </button>
       </div>
 
       {loading && products.length === 0 ? (
@@ -606,15 +570,17 @@ export function IntelligentSearchOverlay({
     });
   }, [searchResults?.items, suggestions, catalogue, trimmed]);
 
-  const showResults = hasQuery && suggestions.length > 0;
-  const showSkeleton = hasQuery && loading && suggestions.length === 0;
-  const showNoResults = hasQuery && !loading && !searchError && suggestions.length === 0;
-  const showError = hasQuery && !loading && searchError && suggestions.length === 0;
-  const productCount = suggestions.filter((s) => s.type === 'product').length;
+  const hasResults = hasQuery && productResults.length > 0;
+  const isBusy = loading || isSearchLoading;
+  const showSkeleton = hasQuery && !hasResults && isBusy;
+  const showNoResults = hasQuery && !hasResults && !isBusy && !searchError;
+  const showError = hasQuery && !hasResults && !isBusy && searchError;
+  const productCount = productResults.length;
   // A confident spelling fix is already applied to the results; a less sure one is a question
   const showCorrection =
     hasQuery && correctedQuery && trimmed.toLowerCase() !== correctedQuery.toLowerCase();
-  const correctionApplied = showCorrection && searchMeta.correctionLevel === 'high' && productCount;
+  const correctionApplied =
+    showCorrection && searchMeta.correctionLevel === 'high' && productCount > 0;
 
   const handlePickSuggestion = useCallback(
     (item) => {
@@ -792,10 +758,10 @@ export function IntelligentSearchOverlay({
                   role="combobox"
                   aria-label="Search products and categories"
                   aria-autocomplete="list"
-                  aria-expanded={showResults}
+                  aria-expanded={hasResults || showNoResults}
                   aria-controls="search-suggestions-list"
                   aria-activedescendant={
-                    showResults && activeIndex >= 0 ? `so-opt-${activeIndex}` : undefined
+                    showNoResults && activeIndex >= 0 ? `so-opt-${activeIndex}` : undefined
                   }
                   maxLength={100}
                 />
@@ -889,33 +855,21 @@ export function IntelligentSearchOverlay({
                   />
                 )}
 
-                {hasQuery && isShowingResults && (
+                {hasQuery && hasResults && (
                   <SearchResultsView
                     query={trimmed}
                     products={productResults}
                     loading={isSearchLoading}
                     onOpenProduct={openProduct}
                     onCloseOverlay={onClose}
-                    onBackToSuggestions={() => setIsShowingResults(false)}
                     suggestions={suggestions}
                     onPickSuggestion={handlePickSuggestion}
                   />
                 )}
 
-                {hasQuery && !isShowingResults && showSkeleton && <ResultSkeleton />}
+                {hasQuery && !hasResults && showSkeleton && <ResultSkeleton />}
 
-                {hasQuery && !isShowingResults && showResults && (
-                  <Results
-                    suggestions={suggestions}
-                    query={trimmed}
-                    activeIndex={activeIndex}
-                    setActiveIndex={setActiveIndex}
-                    onSelect={handlePickSuggestion}
-                    isMobile={isMobile}
-                  />
-                )}
-
-                {hasQuery && !isShowingResults && showError && (
+                {hasQuery && !hasResults && showError && (
                   <div className="so-none">
                     <p className="so-none__head">
                       <SearchX size={16} strokeWidth={2} aria-hidden="true" />
@@ -928,7 +882,7 @@ export function IntelligentSearchOverlay({
                   </div>
                 )}
 
-                {hasQuery && !isShowingResults && showNoResults && (
+                {hasQuery && !hasResults && showNoResults && (
                   <NoResults
                     query={trimmed}
                     catalogue={catalogue}

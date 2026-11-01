@@ -72,7 +72,14 @@ export class OrderQueryService {
    * Fetch a specific order by ID (Customer/Admin).
    */
   static async getOrderById(id: string, userId: string, role: string) {
-    const order: any = await Order.findById(id).populate('user', 'name email phone').lean();
+    const order: any = await Order.findById(id)
+      .populate('user', 'name email phone')
+      .populate({
+        path: 'items.productId',
+        select: 'primaryCategory imageSrc images title slug price',
+        populate: { path: 'primaryCategory', select: 'name' },
+      })
+      .lean();
     if (!order) {
       throw new ApiError(404, 'Order not found');
     }
@@ -103,7 +110,7 @@ export class OrderQueryService {
       Order.find(filter)
         .populate({
           path: 'items.productId',
-          select: 'primaryCategory',
+          select: 'primaryCategory imageSrc images title slug price',
           populate: { path: 'primaryCategory', select: 'name' },
         })
         .sort({ createdAt: -1 })

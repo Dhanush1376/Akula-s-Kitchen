@@ -112,14 +112,14 @@ export function CartDrawer({ isOpen, onClose }) {
                 onClose();
               }
             }}
-            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.22)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] modern-sans-headings font-body pt-[calc(0.5rem+env(safe-area-inset-top,0px))] sm:pt-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0 overflow-hidden"
+            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.22)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] font-body pt-[calc(0.5rem+env(safe-area-inset-top,0px))] sm:pt-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0 overflow-hidden"
           >
             {/* Header */}
             <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">
               <div className="flex items-center gap-2">
                 <span
-                  className="font-label text-[13px] font-extrabold uppercase tracking-[0.18em] text-neutral-900 leading-none"
-                  style={{ fontFamily: 'var(--font-label)' }}
+                  className="font-display text-[15px] sm:text-[16px] font-bold text-[#283618] leading-none"
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Cart
                 </span>

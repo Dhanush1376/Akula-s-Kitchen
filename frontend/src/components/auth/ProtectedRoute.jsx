@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { RouteSkeleton } from '../ui/RouteSkeleton';
+import { RouteSkeleton, getRouteSkeletonVariant } from '../ui/RouteSkeleton';
 import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,7 +14,11 @@ export function ProtectedRoute({ children, adminOnly = false }) {
   }, [isAuthInitialized, loading, isAuthenticated, openAuthModal]);
 
   if (!isAuthInitialized || (loading && !user)) {
-    return <RouteSkeleton variant="page" />;
+    if (adminOnly || location.pathname.startsWith('/admin')) {
+      return <RouteSkeleton variant="admin" />;
+    }
+    const variant = getRouteSkeletonVariant(location.pathname);
+    return <RouteSkeleton variant={variant} />;
   }
 
   if (!isAuthenticated) {

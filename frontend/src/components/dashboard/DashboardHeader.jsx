@@ -1,6 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDashboard } from '../../context/DashboardContext';
 
 export function DashboardHeader() {
@@ -14,6 +14,12 @@ export function DashboardHeader() {
   } = useDashboard();
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Hide header completely on the orders page
+  if (location.pathname.includes('/orders')) {
+    return null;
+  }
   const handleMobileBack = () => {
     setSelectedOrderId(null);
     if (window.history.state && window.history.state.idx > 0) {

@@ -2,6 +2,8 @@ import { X } from 'lucide-react';
 import { useState, useRef, Suspense, lazy, forwardRef, useImperativeHandle } from 'react';
 import toast from 'react-hot-toast';
 import { CANONICAL_INVOICE } from './invoiceTokens';
+import { buildInvoiceModel, formatInvoiceAmount } from './invoiceModel';
+import { downloadInvoicePdf, printInvoice } from '../../utils/media/invoiceExport';
 import { useConfig } from '../../context/ConfigContext';
 import { BRAND } from '../../config/brand';
 
@@ -19,7 +21,7 @@ const Barcode = lazy(() => import('react-barcode'));
  * - Complete mathematical price breakdown with exact labels
  * - Formal Terms & Conditions / Non-Returnable Policy section
  * - Order Tracking verification barcode & QR code
- * - High-DPI Lossless PDF generation via html2canvas & jsPDF
+ * - High-DPI PDF download and isolated A4 print (utils/media/invoiceExport.js)
  */
 export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
   { order, user = {}, onClose, isAdmin = false, isEmbedded = false },
@@ -30,348 +32,63 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
   const [isDownloading, setIsDownloading] = useState(false);
   const printRef = useRef(null);
 
-  // ─── Order Items ───────────────────────────────────────────────────
-  const rawItems = Array.isArray(order?.items) ? order.items : [];
-
-  // ─── Read from immutable snapshots ─────────────────────────────────
-  const invoiceSnap = order?.invoice || {};
-  const storeSnap = order?.store || {};
-  const taxSnap =
-    typeof order?.tax === 'object' && order?.tax !== null ? order.tax : order?.taxSnapshot || {};
-
-  const isGstEnabled = false;
-  const invoiceFooter = taxSnap.invoiceFooter || storeSettings?.taxes?.invoiceFooter || '';
-
-  // ─── Invoice metadata ─────────────────────────────────────────────
-  const orderId = order?.orderId || order?._id || order?.id || 'N/A';
-
-  const displayInvoiceNumber =
-    invoiceSnap.number ||
-    order?.invoiceNumber ||
-    (order?._id ? `INV-${order._id.slice(-8).toUpperCase()}` : 'Not Generated');
-
-  const invoiceNumber = displayInvoiceNumber;
+  // All values come from the shared invoice model, which the server-side PDF
+  // (attached to order emails) mirrors exactly.
+  const invoice = buildInvoiceModel(order, {
+    user,
+    storeName,
+    storeSettings,
+    brand: BRAND,
+    origin: typeof window !== 'undefined' ? window.location.origin : '',
+  });
+  const {
+    orderId,
+    invoiceNumber,
+    invoiceDate,
+    businessName,
+    legalName,
+    storeAddressLines,
+    paymentMode,
+    customerName,
+    customerEmail,
+    customerPhone,
+    shippingAddressText,
+    pin,
+    items,
+    subtotal,
+    discount,
+    platformFee,
+    codFee,
+    grandTotal,
+    currency,
+    barcodeValue,
+    trackingUrl: trackingQR,
+  } = invoice;
+  const displayInvoiceNumber = invoiceNumber;
   const invoiceHeading = 'INVOICE';
 
-  const rawDate = invoiceSnap.issuedAt || order.createdAt || order.date;
-  const invoiceDate = rawDate
-    ? new Date(rawDate).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      })
-    : 'N/A';
-
-  // ─── Store identity (from snapshot with live fallback) ─────────────
-  const businessName = storeSnap.displayName || storeName || BRAND.name || "Akula's Kitchen";
-  const legalName =
-    storeSnap.legalCompanyName ||
-    storeSettings?.legal?.legalCompanyName ||
-    storeSettings?.legal?.companyName ||
-    BRAND.legalCompanyName ||
-    '';
-
-  const storeEmail =
-    storeSnap.email ||
-    storeSettings?.general?.supportEmail ||
-    storeSettings?.contact?.email ||
-    BRAND.email ||
-    'support@akulaskitchen.com';
-
-  const baseAddress =
-    storeSnap.addressLine1 ||
-    storeSettings?.contact?.address ||
-    storeSettings?.legal?.registeredAddress ||
-    BRAND.address ||
-    'Plot No. 93/1, Purvanchal Silver City, Block-9-B204, Sector 93, Noida, Uttar Pradesh, India - 201304';
-
-  const storeAddressLines = [];
-  if (baseAddress) {
-    storeAddressLines.push(baseAddress);
-  }
-  if (
-    storeSnap.addressLine2 &&
-    !baseAddress.toLowerCase().includes(storeSnap.addressLine2.toLowerCase())
-  ) {
-    storeAddressLines.push(storeSnap.addressLine2);
-  }
-  const cityState = [storeSnap.city, storeSnap.state].filter(Boolean).join(', ');
-  if (cityState && !baseAddress.toLowerCase().includes(cityState.toLowerCase())) {
-    storeAddressLines.push(cityState);
-  }
-  if (storeSnap.postalCode && !baseAddress.includes(storeSnap.postalCode)) {
-    storeAddressLines.push(storeSnap.postalCode);
-  }
-
-  // ─── Payment (from live order fields) ──────────────────────────────
-  const paymentMode = order.paymentMethod || order.paymentMode || 'COD';
-
-  // ─── Customer (from live order fields) ─────────────────────────────
-  const customerName =
-    order.shippingAddress?.name ||
-    order.deliveryAddress?.name ||
-    order.customer ||
-    user.name ||
-    'Customer';
-  const customerEmail = order.email || order.shippingAddress?.email || user.email || '';
-  const customerPhone =
-    order.shippingAddress?.phone || order.deliveryAddress?.phone || order.phone || user.phone || '';
-
-  // ─── Shipping address (from live order fields) ─────────────────────
-  let addressLine1 =
-    order.shippingAddress?.address || order.deliveryAddress?.addressString || order.address || '';
-  let addressLine2 = '';
-  let pin = '';
-
-  if (order.shippingAddress || order.deliveryAddress) {
-    const addrObj = order.shippingAddress || order.deliveryAddress;
-    const parts = [];
-    if (addrObj.locality) parts.push(addrObj.locality);
-    if (addrObj.city) parts.push(addrObj.city);
-    if (addrObj.state) parts.push(addrObj.state);
-    if (parts.length > 0) {
-      addressLine2 = parts.join(', ');
-    }
-    pin = addrObj.pincode || '';
-  }
-
-  // ─── Items (normalized) ───────────────────────────────────────────
-  const items = rawItems.map((item) => ({
-    ...item,
-    title: item.title || item.name || 'Product',
-    quantity: item.quantity || item.qty || 1,
-    price: Number(item.price) || Number(item.unitPrice) || 0,
-  }));
-
-  // ─── Financial calculations (Authoritative values) ─────────────────
-  const itemsSubtotal = items.reduce(
-    (acc, i) => acc + (Number(i.price) || 0) * (Number(i.quantity) || 1),
-    0,
-  );
-  const subtotal = taxSnap.subtotal ?? order.subtotal ?? itemsSubtotal;
-
-  const discount = taxSnap.discount ?? order.discount ?? 0;
-  const deliveryCharge = order.shippingFee ?? order.deliveryCharge ?? 0;
-  const shippingFee = deliveryCharge;
-  const platformFee = Number(order.platformFee ?? taxSnap.platformFee ?? 0);
-
-  const rawGrandTotal =
-    taxSnap.grandTotal ??
-    order.totalAmount ??
-    order.total ??
-    subtotal + deliveryCharge + (order.codFee ?? 0) + platformFee - discount;
-
-  // Authoritative COD Handling Fee resolution
-  let codFee = Number(order.codFee ?? taxSnap.codFee ?? 0);
-  const isCodOrder =
-    String(paymentMode).toLowerCase().includes('cod') ||
-    String(paymentMode).toLowerCase().includes('cash');
-
-  if (
-    codFee === 0 &&
-    isCodOrder &&
-    rawGrandTotal > subtotal + shippingFee + platformFee - discount
-  ) {
-    codFee = rawGrandTotal - (subtotal + shippingFee + platformFee - discount);
-  }
-
-  // Invoice explicitly excludes shipping charges from commercial total
-  const grandTotal = Math.max(
-    0,
-    rawGrandTotal != null && rawGrandTotal > 0
-      ? rawGrandTotal - deliveryCharge
-      : subtotal + codFee + platformFee - discount,
-  );
-
-  const currency = taxSnap.currencySymbol || '₹';
-
-  // ─── Tracking info ────────────────────────────────────────────────
-  const trackingNumber = order.trackingNumber || displayInvoiceNumber;
-  const trackingQR = `${typeof window !== 'undefined' ? window.location.origin : ''}/track/${orderId}`;
-
-  // ─── High-Res PDF Capture ─────────────────────────────────────────
   const handleDownload = async () => {
+    if (!printRef.current) return;
     setIsDownloading(true);
-    let clone = null;
     try {
-      const element = printRef.current;
-      if (!element) throw new Error('Invoice element not found');
-
-      // Create an offscreen clone with fixed 480px canonical width for standard A4 export
-      clone = element.cloneNode(true);
-      clone.id = 'invoice-pdf-capture-clone';
-      clone.style.width = '480px';
-      clone.style.minWidth = '480px';
-      clone.style.maxWidth = '480px';
-      clone.style.boxSizing = 'border-box';
-      clone.style.padding = '14px';
-      clone.style.borderRadius = '0px';
-      clone.style.transform = 'none';
-      clone.style.position = 'fixed';
-      clone.style.left = '-9999px';
-      clone.style.top = '0';
-      clone.style.opacity = '1';
-      clone.style.visibility = 'visible';
-      clone.style.pointerEvents = 'none';
-      clone.style.zIndex = '-9999';
-      clone.style.backgroundColor = '#ffffff';
-      clone.style.color = '#000000';
-      clone.style.fontFamily = CANONICAL_INVOICE.FONT_FAMILY;
-      document.body.appendChild(clone);
-
-      // Copy canvas bitmaps (QR code and Barcode) from original into clone as static images
-      const origCanvases = element.querySelectorAll('canvas');
-      const cloneCanvases = clone.querySelectorAll('canvas');
-      origCanvases.forEach((orig, idx) => {
-        const dest = cloneCanvases[idx];
-        if (dest && orig.width > 0 && orig.height > 0) {
-          try {
-            const dataUrl = orig.toDataURL('image/png');
-            const img = document.createElement('img');
-            img.src = dataUrl;
-            img.width = orig.width;
-            img.height = orig.height;
-            img.style.width = `${dest.offsetWidth || dest.width || orig.offsetWidth || 40}px`;
-            img.style.height = `${dest.offsetHeight || dest.height || orig.offsetHeight || 40}px`;
-            img.style.display = 'block';
-            img.className = dest.className;
-            if (dest.parentNode) {
-              dest.parentNode.replaceChild(img, dest);
-            }
-          } catch (_e) {
-            dest.width = orig.width;
-            dest.height = orig.height;
-            const destCtx = dest.getContext('2d');
-            if (destCtx) {
-              destCtx.drawImage(orig, 0, 0);
-            }
-          }
-        }
-      });
-
-      // Ensure web fonts are completely resolved before rendering
-      if (document.fonts && document.fonts.ready) {
-        try {
-          await document.fonts.ready;
-        } catch (_e) {
-          // ignore font readiness errors
-        }
-      }
-      await new Promise((r) => setTimeout(r, 100));
-
-      const html2canvasModule = await import('html2canvas');
-      const html2canvas = html2canvasModule.default || html2canvasModule;
-      const { jsPDF } = await import('jspdf');
-
-      const cloneHeight = Math.max(
-        Math.ceil(clone.getBoundingClientRect().height) + 2,
-        clone.offsetHeight,
-        clone.scrollHeight,
-        element.offsetHeight,
-        480,
-      );
-
-      const canvas = await html2canvas(clone, {
-        scale: 3.5, // 480 * 3.5 = 1680px (~300 DPI high-definition print quality)
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 480,
-        height: cloneHeight,
-        logging: false,
-        imageTimeout: 0,
-      });
-
-      if (clone && clone.parentNode) {
-        clone.parentNode.removeChild(clone);
-        clone = null;
-      }
-
-      // Use lossless PNG to avoid compression artifacts around text and barcodes
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const margin = 10;
-      const pdfWidth = pdf.internal.pageSize.getWidth() - margin * 2;
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(
-        imgData,
-        'PNG',
-        margin,
-        margin,
-        pdfWidth,
-        Math.min(pdfHeight, 277),
-        undefined,
-        'FAST',
-      );
-
-      // Build authoritative clean filename
-      const rawNum = invoiceNumber;
-      const cleanNum = (
-        rawNum && rawNum !== 'Not Generated'
-          ? rawNum
-          : order._id
-            ? String(order._id).slice(-8).toUpperCase()
-            : 'DOC'
-      ).replace(/[^a-zA-Z0-9-_]/g, '_');
-      const filename = `Invoice_${cleanNum}.pdf`;
-
-      const isIOS =
-        typeof navigator !== 'undefined' &&
-        (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
-
-      if (isIOS) {
-        const pdfBlob = pdf.output('blob');
-        const blobUrl = URL.createObjectURL(pdfBlob);
-        const win = window.open(blobUrl, '_blank');
-        if (!win) {
-          const downloadLink = document.createElement('a');
-          downloadLink.href = blobUrl;
-          downloadLink.download = filename;
-          downloadLink.target = '_blank';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          setTimeout(() => {
-            if (downloadLink.parentNode) downloadLink.parentNode.removeChild(downloadLink);
-          }, 3000);
-        }
-      } else {
-        try {
-          pdf.save(filename);
-        } catch (_saveErr) {
-          const pdfBlob = pdf.output('blob');
-          const blobUrl = URL.createObjectURL(pdfBlob);
-          const downloadLink = document.createElement('a');
-          downloadLink.href = blobUrl;
-          downloadLink.download = filename;
-          downloadLink.style.display = 'none';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          setTimeout(() => {
-            if (downloadLink.parentNode) {
-              downloadLink.parentNode.removeChild(downloadLink);
-            }
-            URL.revokeObjectURL(blobUrl);
-          }, 5000);
-        }
-      }
-
-      toast.success('Invoice downloaded successfully');
+      await downloadInvoicePdf(printRef.current, invoice.filename);
+      toast.success('Invoice downloaded');
     } catch (err) {
       console.error('Invoice download failed', err);
       toast.error('Failed to generate PDF. Please try again.');
     } finally {
-      if (clone && clone.parentNode) {
-        clone.parentNode.removeChild(clone);
-      }
       setIsDownloading(false);
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    if (!printRef.current) return;
+    try {
+      await printInvoice(printRef.current, invoice.filename.replace(/\.pdf$/, ''));
+    } catch (err) {
+      console.error('Invoice print failed', err);
+      toast.error('Unable to open the print dialog. Please try Download PDF instead.');
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -484,7 +201,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
               >
                 {businessName}
               </h1>
-              {legalName && legalName !== businessName && (
+              {legalName && (
                 <p className="text-[7.5px] sm:text-[8px] text-neutral-500 font-semibold tracking-wide mt-0.5 leading-tight">
                   {legalName}
                 </p>
@@ -518,9 +235,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                   <p>
                     Order Ref:{' '}
                     <strong className="text-neutral-950 font-mono font-bold">
-                      {typeof orderId === 'string' && orderId.length > 8
-                        ? orderId.slice(-8).toUpperCase()
-                        : orderId}
+                      {invoice.orderRef}
                     </strong>
                   </p>
                 )}
@@ -574,8 +289,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                 {customerName}
               </p>
               <p className="text-neutral-600 text-[7.5px] sm:text-[8px] leading-tight mt-0.5 break-words">
-                {addressLine1}
-                {addressLine2 ? `, ${addressLine2}` : ''}
+                {shippingAddressText}
               </p>
               {pin && (
                 <span className="text-neutral-950 font-bold text-[7.5px] sm:text-[8px] font-mono block mt-0.5 tracking-wide">
@@ -607,16 +321,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
               </thead>
               <tbody className="divide-y divide-neutral-200 text-[8.5px] sm:text-[9px]">
                 {items.map((item, idx) => {
-                  const title = item.title || item.name || 'Item';
-                  const qty = item.quantity || item.qty || 1;
-                  const price = Number(item.price) || 0;
-                  const lineTotal = price * qty;
-                  const details = [
-                    item.variant && item.variant !== 'Default' ? item.variant : null,
-                    item.weight || null,
-                  ]
-                    .filter(Boolean)
-                    .join(' • ');
+                  const { title, quantity: qty, price, lineTotal, details } = item;
 
                   return (
                     <tr key={idx} className="hover:bg-neutral-50/50 transition-colors">
@@ -633,14 +338,14 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                       </td>
                       <td className="py-1 px-1 text-right font-mono text-neutral-700 border-r border-neutral-200">
                         {currency}
-                        {price.toLocaleString()}
+                        {formatInvoiceAmount(price)}
                       </td>
                       <td className="py-1 px-0.5 text-center font-bold text-neutral-950 border-r border-neutral-200">
                         {qty}
                       </td>
                       <td className="py-1 px-1.5 text-right font-bold font-mono text-neutral-950">
                         {currency}
-                        {lineTotal.toLocaleString()}
+                        {formatInvoiceAmount(lineTotal)}
                       </td>
                     </tr>
                   );
@@ -657,7 +362,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                 </span>
                 <span className="font-bold font-mono text-neutral-950 min-w-[62px]">
                   {currency}
-                  {subtotal.toLocaleString()}
+                  {formatInvoiceAmount(subtotal)}
                 </span>
               </div>
 
@@ -666,7 +371,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                   <span className="font-semibold">Coupon / Promo Discount:</span>
                   <span className="font-bold font-mono min-w-[62px]">
                     -{currency}
-                    {discount.toLocaleString()}
+                    {formatInvoiceAmount(discount)}
                   </span>
                 </div>
               )}
@@ -682,7 +387,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                   <span className="font-semibold text-neutral-600">Packaging & Platform Fee:</span>
                   <span className="font-bold font-mono text-neutral-950 min-w-[62px]">
                     {currency}
-                    {platformFee.toLocaleString()}
+                    {formatInvoiceAmount(platformFee)}
                   </span>
                 </div>
               )}
@@ -692,7 +397,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                   <span className="font-semibold text-neutral-600">COD Handling Fee:</span>
                   <span className="font-bold font-mono text-neutral-950 min-w-[62px]">
                     {currency}
-                    {codFee.toLocaleString()}
+                    {formatInvoiceAmount(codFee)}
                   </span>
                 </div>
               )}
@@ -711,7 +416,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
               </div>
               <span className="font-black font-mono text-neutral-950 text-[12px] sm:text-[13px]">
                 {currency}
-                {grandTotal.toLocaleString()}
+                {formatInvoiceAmount(grandTotal)}
               </span>
             </div>
           </div>
@@ -766,11 +471,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
                 <div className="w-full flex justify-center overflow-hidden">
                   <Suspense fallback={<div className="w-32 h-5 bg-neutral-100 animate-pulse" />}>
                     <Barcode
-                      value={
-                        trackingNumber !== 'Pending' && trackingNumber !== 'Not Generated'
-                          ? trackingNumber
-                          : orderId.slice(-10)
-                      }
+                      value={barcodeValue}
                       height={18}
                       width={1.05}
                       displayValue={false}
@@ -785,8 +486,7 @@ export const InvoiceTemplate = forwardRef(function InvoiceTemplate(
 
           {/* Footer Legal Disclaimer */}
           <div className="pt-0.5 mt-0.5 text-center text-neutral-400 text-[6.5px] font-medium leading-tight border-t border-neutral-200">
-            {invoiceFooter ||
-              `E. & O.E. • Computer-generated commercial invoice issued under ${businessName} regulations.`}
+            {invoice.footer}
           </div>
         </div>
       </div>

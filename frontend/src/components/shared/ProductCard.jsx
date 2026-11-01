@@ -271,19 +271,39 @@ export const ProductCard = React.memo(function ProductCard({
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4 animate-pulse">
-        <div
-          className={`aspect-[4/5] w-full bg-surface-container-high overflow-hidden ${isRectangular ? 'rounded-md' : 'rounded-2xl'}`}
-        />
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <div className="h-3 w-1/4 bg-surface-container rounded-full" />
-            <div className="h-3 w-1/6 bg-surface-container rounded-full" />
+      <div
+        className={`group relative flex flex-col select-none animate-pulse ${
+          isRectangular ? 'rounded-md' : 'rounded-[12px]'
+        }`}
+      >
+        <div className="relative">
+          <div
+            className={`aspect-[4/5] w-full bg-surface-container-high border border-black/[0.08] overflow-hidden ${
+              isRectangular ? 'rounded-md' : 'rounded-[14px]'
+            }`}
+          />
+          <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 pointer-events-none">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/80" />
           </div>
-          <div className="h-6 w-3/4 bg-surface-container rounded-lg" />
-          <div className="flex gap-2">
-            <div className="h-8 w-1/3 bg-surface-container rounded-lg" />
-            <div className="h-8 w-1/4 bg-surface-container rounded-lg" />
+          <div className="absolute -bottom-3.5 right-2.5 sm:right-3 pointer-events-none">
+            <div
+              className={`${compact ? 'h-6 w-14' : 'h-7 sm:h-8 w-16 sm:w-20'} bg-white shadow-xs ${
+                isRectangular ? 'rounded-md' : 'rounded-[14px]'
+              }`}
+            />
+          </div>
+        </div>
+        <div
+          className={`${compact ? 'pt-2 pb-1 px-1.5' : 'pt-3 pb-2 px-3.5 lg:px-4'} flex flex-col flex-1 space-y-2`}
+        >
+          <div className="flex items-center gap-1.5 h-4 lg:h-5">
+            <div className="h-3 w-16 bg-surface-container rounded-full" />
+            <div className="h-3 w-10 bg-surface-container rounded-full" />
+          </div>
+          <div className="h-4.5 sm:h-5 w-4/5 bg-surface-container rounded-md" />
+          <div className="flex items-center gap-2 pt-0.5">
+            <div className="h-4 sm:h-5 w-16 bg-surface-container rounded-md" />
+            <div className="h-3.5 w-12 bg-surface-container rounded-md" />
           </div>
         </div>
       </div>

@@ -7,8 +7,41 @@ import { useActiveCategories } from '../../../hooks/useProductQueries';
 import { MadeFreshStrip } from './MadeFreshStrip';
 import { getOptimizedUrl, getSrcSet } from '../../../utils/media/imageUtils';
 
+const DEFAULT_CATEGORY_COVERS = {
+  batters:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123124/akulas-kitchen/products/ykliysxhqcecv1ipyzjq.jpg',
+  chutneys:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793141737/products/czpmjcjvdj7n9z1t4mpd.jpg',
+  pickles:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123122/akulas-kitchen/products/bmv5h5wodrbnajoolldp.jpg',
+  masala:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+  podis:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
+  namkeen:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+  cashews:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793143529/products/h3e68tuv02qwv4umkm0l.jpg',
+  sweets:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123126/akulas-kitchen/products/uepc6xoknuoagrs3qtnt.jpg',
+  snacks:
+    'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+};
+
 const getCategoryImage = (cat) => {
-  return cat?.image || cat?.imageSrc || null;
+  const slug = (cat?.slug || cat?.name || cat?.title || '').toLowerCase().trim();
+  const directImage = cat?.image || cat?.imageSrc;
+
+  // Filter out known broken/404 legacy Cloudinary asset IDs
+  const isBrokenLegacy =
+    typeof directImage === 'string' &&
+    (directImage.includes('ouv4ci03wehkucl4nrxk') || directImage.includes('lbmarekwegbzfxauigxq'));
+
+  if (directImage && !isBrokenLegacy) {
+    return directImage;
+  }
+
+  return DEFAULT_CATEGORY_COVERS[slug] || null;
 };
 
 export const CategoryGrid = React.memo(function CategoryGrid({ previewContent }) {
@@ -117,7 +150,18 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        const target = e.currentTarget;
+                        const slug = (category.slug || category.name || '').toLowerCase().trim();
+                        const fallbackUrl = DEFAULT_CATEGORY_COVERS[slug];
+                        if (fallbackUrl && target.src !== fallbackUrl) {
+                          target.src = fallbackUrl;
+                          target.srcset = '';
+                        } else if (target.src !== imgSrc) {
+                          target.src = imgSrc;
+                          target.srcset = '';
+                        } else {
+                          target.style.display = 'none';
+                        }
                       }}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                     />

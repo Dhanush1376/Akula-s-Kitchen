@@ -213,7 +213,10 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
       </h4>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <FormGroup label="Support Email">
+        <FormGroup
+          label="Support Email"
+          description="Official email address displayed to customers"
+        >
           <Input
             type="email"
             name="supportEmail"
@@ -222,7 +225,7 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
             placeholder="support@example.com"
           />
         </FormGroup>
-        <FormGroup label="Support Hours">
+        <FormGroup label="Operating / Support Hours" description="e.g. Mon - Sat: 10 AM - 7 PM">
           <Input
             name="supportHours"
             value={formData.supportHours}
@@ -230,7 +233,10 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
             placeholder="Mon - Sat, 10 AM to 6 PM"
           />
         </FormGroup>
-        <FormGroup label="Primary Phone Number">
+        <FormGroup
+          label="Primary Phone Number"
+          description="Main helpline displayed on website & contact page"
+        >
           <PhoneInput
             name="phone"
             value={formData.phone}
@@ -238,7 +244,7 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
             placeholder="98765 43210"
           />
         </FormGroup>
-        <FormGroup label="Alternate Phone Number">
+        <FormGroup label="Alternate Phone Number" description="Secondary phone line for support">
           <PhoneInput
             name="alternatePhone"
             value={formData.alternatePhone}
@@ -246,16 +252,73 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
             placeholder="98765 43211"
           />
         </FormGroup>
-        <div className="md:col-span-2">
-          <FormGroup label="WhatsApp Number">
-            <PhoneInput
-              name="whatsappNumber"
-              value={formData.whatsappNumber}
-              onChange={handleChange}
-              placeholder="98765 43210"
-            />
-          </FormGroup>
-        </div>
+        <FormGroup
+          label="WhatsApp Number"
+          description="WhatsApp chat number for customer inquiries"
+        >
+          <PhoneInput
+            name="whatsappNumber"
+            value={formData.whatsappNumber}
+            onChange={handleChange}
+            placeholder="98765 43210"
+          />
+        </FormGroup>
+        <FormGroup
+          label="WhatsApp Default Message"
+          description="Pre-filled greeting when customers message on WhatsApp"
+        >
+          <Input
+            name="whatsappMessage"
+            value={formData.whatsappMessage}
+            onChange={handleChange}
+            placeholder="Hello! Thank you for reaching Akula's Kitchen."
+          />
+        </FormGroup>
+      </div>
+    </div>
+
+    {/* Social Media Links */}
+    <div className="space-y-4 pt-4 border-t border-[var(--admin-border-subtle)]">
+      <h4 className="text-[12px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider">
+        Social Media Profiles
+      </h4>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <FormGroup label="Instagram Profile URL" description="Direct link to your Instagram page">
+          <Input
+            name="instagram"
+            value={formData.instagram}
+            onChange={handleChange}
+            placeholder="https://instagram.com/akulas_kitchen"
+          />
+        </FormGroup>
+        <FormGroup
+          label="Facebook Page URL"
+          description="Direct link to your Facebook business page"
+        >
+          <Input
+            name="facebook"
+            value={formData.facebook}
+            onChange={handleChange}
+            placeholder="https://facebook.com/akulaskitchen"
+          />
+        </FormGroup>
+        <FormGroup label="Pinterest Profile URL" description="Direct link to your Pinterest page">
+          <Input
+            name="pinterest"
+            value={formData.pinterest}
+            onChange={handleChange}
+            placeholder="https://pinterest.com/akulaskitchen"
+          />
+        </FormGroup>
+        <FormGroup label="YouTube Channel URL" description="Direct link to your YouTube channel">
+          <Input
+            name="youtube"
+            value={formData.youtube}
+            onChange={handleChange}
+            placeholder="https://youtube.com/@akulaskitchen"
+          />
+        </FormGroup>
       </div>
     </div>
 
@@ -267,13 +330,16 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="md:col-span-2">
-          <FormGroup label="Physical Address">
+          <FormGroup
+            label="Kitchen / Physical Address"
+            description="Complete street address displayed on contact page and receipts"
+          >
             <textarea
               name="address"
               rows={2}
               value={formData.address || ''}
               onChange={handleChange}
-              placeholder="Street address, landmark"
+              placeholder="Plot No, Street, Landmark, Area"
               className="admin-textarea"
             />
           </FormGroup>
@@ -300,6 +366,19 @@ export const StoreDetailsLegalPanel = ({ formData, handleChange, handleSave, sav
             placeholder="Country"
           />
         </FormGroup>
+        <div className="md:col-span-2">
+          <FormGroup
+            label="Google Maps Direction Link"
+            description="URL or Google Maps location link for the 'Get Directions' button"
+          >
+            <Input
+              name="googleMapsUrl"
+              value={formData.googleMapsUrl}
+              onChange={handleChange}
+              placeholder="e.g. https://maps.google.com/?q=... or https://maps.app.goo.gl/..."
+            />
+          </FormGroup>
+        </div>
       </div>
     </div>
 
@@ -1364,20 +1443,69 @@ export const StorefrontSettingsPanel = ({ formData, handleChange, handleSave, sa
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
-            <FormGroup label="Default SEO Title">
-              <Input name="seoTitle" value={formData.seoTitle} onChange={handleChange} />
+            <FormGroup
+              label="Default SEO Title"
+              description="Main page title displayed in Google search results and browser tabs"
+            >
+              <Input
+                name="seoTitle"
+                value={formData.seoTitle}
+                onChange={handleChange}
+                placeholder="Akula's Kitchen | Fresh • Tasty • Healthy"
+              />
             </FormGroup>
           </div>
           <div className="md:col-span-2">
-            <FormGroup label="Default SEO Meta Description">
+            <FormGroup
+              label="Search Keywords"
+              description="Basic everyday search terms people search daily (e.g. dosa batter, idli batter, pickles, podis)"
+            >
+              <Input
+                name="seoKeywords"
+                value={formData.seoKeywords}
+                onChange={handleChange}
+                placeholder="dosa batter, idli batter, fresh batter, homemade pickles, tomato pickle, gongura pickle, podi, karam podi, south indian food, breakfast batter, akula's kitchen"
+              />
+            </FormGroup>
+          </div>
+          <div className="md:col-span-2">
+            <FormGroup
+              label="Default SEO Meta Description"
+              description="Simple, understandable summary shown under the Google search title"
+            >
               <textarea
                 name="seoDescription"
                 rows={3}
                 value={formData.seoDescription || ''}
                 onChange={handleChange}
+                placeholder="Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy."
                 className="admin-textarea"
               />
             </FormGroup>
+          </div>
+        </div>
+
+        {/* Live Search Engine Preview */}
+        <div className="pt-2 space-y-2">
+          <h4 className="text-[12.5px] font-bold text-[var(--admin-text-primary)]">
+            Live Search Engine Preview
+          </h4>
+          <div className="border border-[var(--admin-border)] rounded-[4px] bg-[var(--admin-surface)] p-3.5 sm:p-4 max-w-2xl font-sans shadow-2xs">
+            <div className="flex items-center gap-2 mb-1.5 text-[var(--admin-text-secondary)]">
+              <div className="w-5 h-5 bg-[var(--admin-accent)]/10 text-[var(--admin-accent)] rounded-full flex items-center justify-center text-[10px] font-bold">
+                AK
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-[var(--admin-text-tertiary)] truncate">
+                <span>https://akulas.kitchen</span>
+              </div>
+            </div>
+            <h5 className="text-[15px] sm:text-[16px] text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer leading-snug line-clamp-1">
+              {formData.seoTitle || "Akula's Kitchen | Fresh • Tasty • Healthy"}
+            </h5>
+            <p className="text-[12px] sm:text-[12.5px] text-[var(--admin-text-secondary)] line-clamp-2 leading-relaxed mt-0.5">
+              {formData.seoDescription ||
+                'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.'}
+            </p>
           </div>
         </div>
       </div>

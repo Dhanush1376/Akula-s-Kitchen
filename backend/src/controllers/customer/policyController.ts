@@ -24,12 +24,29 @@ export const getAllPolicies = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+const POLICY_PRIORITY_ORDER = [
+  'shipping-policy',
+  'cancellation-policy',
+  'return-policy',
+  'refund-policy',
+  'exchange-policy',
+  'privacy-policy',
+  'terms-and-conditions',
+];
+
 export const getPublicPolicies = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const policies = await Policy.find({ status: 'published' })
-      .select('title slug')
-      .sort({ createdAt: -1 })
-      .lean();
+    const policies = await Policy.find({ status: 'published' }).select('title slug').lean();
+
+    policies.sort((a: any, b: any) => {
+      const idxA = POLICY_PRIORITY_ORDER.indexOf(a.slug);
+      const idxB = POLICY_PRIORITY_ORDER.indexOf(b.slug);
+      const pA = idxA !== -1 ? idxA : 999;
+      const pB = idxB !== -1 ? idxB : 999;
+      if (pA !== pB) return pA - pB;
+      return (a.title || '').localeCompare(b.title || '');
+    });
+
     res.status(200).json({ success: true, data: policies });
   } catch (error) {
     next(error);

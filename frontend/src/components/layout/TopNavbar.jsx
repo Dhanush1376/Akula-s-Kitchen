@@ -22,7 +22,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { adminInviteService } from '../../services/domainServices';
-import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { useSearchOverlay } from '../../hooks/useSearchOverlay';
 import { SearchTrigger } from '../search/SearchTrigger';
 import { useScrollLock } from '../../hooks/useScrollLock';
@@ -43,8 +42,7 @@ const IntelligentSearchOverlay = lazy(() =>
 
 export function TopNavbar() {
   const { storeSettings, storeNameUpper, categories: configCategories } = useConfig();
-  const { navigation } = useWebsiteContent();
-  const logoText = navigation?.logo?.text || storeNameUpper || "AKULA'S KITCHEN";
+  const logoText = storeSettings?.general?.storeName || storeNameUpper || "AKULA'S KITCHEN";
   const logoWords = logoText.split(' ');
   const _firstWord = logoWords[0] || "AKULA'S";
   const _restWords = logoWords.slice(1).join(' ') || 'KITCHEN';
@@ -306,19 +304,12 @@ export function TopNavbar() {
     };
   }, [isOpen, isMobile]);
 
-  // Purely dynamic, CMS-driven links. No hardcoded fallbacks.
-  const dbLinks =
-    navigation?.mainLinks
-      ?.filter((link) => link.isVisible)
-      .map((link) => ({
-        label: link.label,
-        href: link.href || link.link,
-      })) || [];
-
+  // Site navigation pages mapped directly from storefront routes
   const navLinks = [
     { label: 'Home', href: '/', mobileOnly: true },
     { label: 'Menu', href: '/menu', mobileOnly: true },
-    ...dbLinks.filter((link) => link.href !== '/menu' && link.label?.toLowerCase() !== 'menu'),
+    { label: 'Shop', href: '/collections', mobileOnly: true },
+    { label: 'Blog', href: '/blog', mobileOnly: true },
     { label: 'My Orders', href: '/dashboard/orders', mobileOnly: true },
     { label: 'Contact Us', href: '/contact', mobileOnly: true },
   ];
@@ -404,29 +395,28 @@ export function TopNavbar() {
         }`}
         style={{ zIndex: 'var(--z-sticky)' }}
       >
-        <div className="max-w-[1400px] lg:max-w-[1280px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 lg:pt-4 pb-1.5 sm:pb-2 pointer-events-auto">
-          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 lg:pl-3 lg:pr-3 lg:py-2.5 lg:rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
+        <div className="max-w-[1400px] lg:max-w-[1120px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 lg:pt-4 pb-1.5 sm:pb-2 pointer-events-auto">
+          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
             {/* Big Circular Logo spanning full height on left */}
             <Link to="/" className="shrink-0 flex items-center self-center group pl-0.5 sm:pl-1">
               <BrandLogo
-                size={isMobile ? '78px' : isDesktop ? '78px' : '86px'}
+                size={isMobile ? '78px' : isDesktop ? '80px' : '86px'}
                 className="drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
                 variant="default"
               />
             </Link>
 
-            {/* Right Content: Top Row (Search + Actions) & Bottom Row (SHOP + Categories).
-                On laptops both rows sit on one line: categories, then search + actions. */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5 lg:flex-row lg:items-center lg:gap-4">
+            {/* Right Content: Top Row (Search + Actions) & Bottom Row (SHOP + Categories) */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 sm:gap-2.5">
               {/* Top Row: Pill Search Bar + Actions */}
-              <div className="flex items-center gap-2 sm:gap-3 w-full lg:contents">
+              <div className="flex items-center gap-2 sm:gap-3 w-full">
                 {/* Search pill: opens the search panel (the mic opens it in voice mode) */}
-                <div className="flex flex-1 min-w-0 lg:flex-none lg:w-[240px] xl:w-[280px] lg:order-1">
+                <div className="flex flex-1 min-w-0">
                   <SearchTrigger onOpen={search.handleOpen} />
                 </div>
 
                 {/* Right Action Group: Wishlist, My Orders, Cart & Profile (Laptop/Desktop) / Log In Button */}
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 lg:order-3">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {/* Wishlist Circle Button (Laptop/Desktop) */}
                   <Link
                     to="/wishlist"
@@ -446,19 +436,6 @@ export function TopNavbar() {
                       </motion.span>
                     )}
                   </Link>
-
-                  {/* My Orders Circle Button (Laptop/Desktop - When Authenticated) */}
-                  {isAuthenticated && (
-                    <Link
-                      to="/dashboard/orders"
-                      id="orders-nav-btn"
-                      className="hidden md:flex w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 hover:border-neutral-400 items-center justify-center text-neutral-900 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all relative cursor-pointer shrink-0"
-                      aria-label="My Orders"
-                      title="My Orders"
-                    >
-                      <ShoppingBag size={19} strokeWidth={1.8} />
-                    </Link>
-                  )}
 
                   {/* Cart Circle Button */}
                   <motion.button
@@ -486,22 +463,6 @@ export function TopNavbar() {
                     )}
                   </motion.button>
 
-                  {/* Admin Portal Circle Button (Laptop/Desktop - When Admin) */}
-                  {isAuthenticated && adminRoles.includes(user?.role) && (
-                    <Link
-                      to="/admin"
-                      id="admin-nav-btn"
-                      className="hidden md:flex w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full bg-white hover:bg-[#fff9e6] border border-amber-300/80 hover:border-[#f7bb0e] items-center justify-center text-[#a37200] hover:text-[#7d5700] shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all relative cursor-pointer shrink-0"
-                      aria-label="Admin Portal"
-                      title="Admin Portal"
-                    >
-                      <LayoutGrid size={19} strokeWidth={1.9} />
-                      {hasPendingInvite && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white ring-1 ring-rose-400/50" />
-                      )}
-                    </Link>
-                  )}
-
                   {/* Laptop/Desktop Profile Button & Dropdown (When logged in) / Log In Button (When logged out) */}
                   {isAuthenticated ? (
                     <div ref={profileDropdownRef} className="relative hidden md:block">
@@ -511,7 +472,7 @@ export function TopNavbar() {
                         onClick={() => setIsProfileDropdownOpen((prev) => !prev)}
                         className={`w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full border flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] transition-all relative cursor-pointer shrink-0 ${
                           isProfileDropdownOpen
-                            ? 'bg-[#f7bb0e] text-neutral-950 border-[#f7bb0e] ring-2 ring-[#f7bb0e]/30'
+                            ? 'bg-[#1b2510] text-white border-[#1b2510] ring-2 ring-[#1b2510]/25 shadow-md'
                             : 'bg-white hover:bg-neutral-50 border-neutral-300 hover:border-neutral-400 text-neutral-900'
                         }`}
                         aria-label="Account Profile"
@@ -529,52 +490,87 @@ export function TopNavbar() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 6, scale: 0.96 }}
                             transition={{ duration: 0.16 }}
-                            className="absolute right-0 top-full mt-2 w-64 bg-white/85 backdrop-blur-2xl rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-neutral-200 p-2 z-50 text-left"
+                            className="absolute right-0 top-full mt-2.5 w-72 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18),0_4px_16px_rgba(0,0,0,0.06)] border border-neutral-200/90 p-2 z-50 text-left"
                           >
                             {/* User Header */}
-                            <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 mb-1.5">
-                              <p className="text-[13px] font-bold text-neutral-900 truncate">
-                                {user?.name || 'My Account'}
-                              </p>
-                              <p className="text-[11px] text-neutral-500 truncate mt-0.5">
-                                {user?.email || user?.phone || ''}
-                              </p>
-                              {user?.role && adminRoles.includes(user.role) && (
-                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f7bb0e]/20 text-[#a37200] text-[10px] font-bold uppercase tracking-wider">
-                                  {user.role.replace('_', ' ')}
-                                </span>
-                              )}
+                            <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 mb-2">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-[#1b2510] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                  {user?.name ? (
+                                    user.name.charAt(0).toUpperCase()
+                                  ) : (
+                                    <User size={18} />
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[13.5px] font-bold text-neutral-900 truncate leading-snug">
+                                    {user?.name || 'My Account'}
+                                  </p>
+                                  <p className="text-[11px] text-neutral-500 truncate leading-tight">
+                                    {user?.email || user?.phone || ''}
+                                  </p>
+                                  {user?.role && adminRoles.includes(user.role) && (
+                                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/25 text-[9.5px] font-bold uppercase tracking-wider">
+                                      {user.role.replace('_', ' ')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
 
                             {/* Navigation Options */}
-                            <div className="py-1 space-y-0.5">
+                            <div className="space-y-1">
+                              {/* My Profile */}
                               <Link
                                 to="/dashboard?drawer=profile"
                                 onClick={() => setIsProfileDropdownOpen(false)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-neutral-700 hover:text-black hover:bg-neutral-100 transition-colors"
+                                className="group flex items-center gap-3 px-2.5 py-2 rounded-xl text-[13px] font-medium text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 transition-colors"
                               >
-                                <User size={16} strokeWidth={2} className="text-neutral-500" />
-                                <span>My Profile</span>
+                                <div className="w-8 h-8 rounded-lg bg-neutral-100 group-hover:bg-[#1b2510] group-hover:text-white flex items-center justify-center text-neutral-600 transition-colors shrink-0">
+                                  <User size={16} strokeWidth={2} />
+                                </div>
+                                <span className="font-semibold">My Profile</span>
                               </Link>
 
+                              {/* My Orders */}
+                              <Link
+                                to="/dashboard/orders"
+                                onClick={() => setIsProfileDropdownOpen(false)}
+                                className="group flex items-center gap-3 px-2.5 py-2 rounded-xl text-[13px] font-medium text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 transition-colors"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-neutral-100 group-hover:bg-[#1b2510] group-hover:text-white flex items-center justify-center text-neutral-600 transition-colors shrink-0">
+                                  <ShoppingBag size={16} strokeWidth={2} />
+                                </div>
+                                <span className="font-semibold">My Orders</span>
+                              </Link>
+
+                              {/* Admin Portal (When user has admin permissions) */}
                               {adminRoles.includes(user?.role) && (
                                 <Link
                                   to="/admin"
                                   onClick={() => setIsProfileDropdownOpen(false)}
-                                  className="flex items-center justify-between px-3 py-2 rounded-lg text-[12.5px] font-bold text-[#b4820a] hover:bg-[#fff9e6] transition-colors"
+                                  className="group flex items-center justify-between px-2.5 py-2 rounded-xl text-[13px] font-semibold text-neutral-800 hover:text-neutral-950 hover:bg-amber-50/70 transition-colors"
                                 >
-                                  <span className="flex items-center gap-2.5">
-                                    <LayoutGrid size={16} strokeWidth={2} />
+                                  <span className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-500/15 group-hover:bg-[#1b2510] group-hover:text-amber-300 flex items-center justify-center text-amber-800 transition-colors shrink-0">
+                                      <LayoutGrid size={16} strokeWidth={2} />
+                                    </div>
                                     <span>Admin Portal</span>
                                   </span>
-                                  {hasPendingInvite && (
-                                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                                  {hasPendingInvite ? (
+                                    <span className="w-2 h-2 rounded-full bg-rose-500 ring-2 ring-rose-200" />
+                                  ) : (
+                                    <ChevronRight
+                                      size={15}
+                                      strokeWidth={2.2}
+                                      className="text-neutral-400 group-hover:text-neutral-800 group-hover:translate-x-0.5 transition-all"
+                                    />
                                   )}
                                 </Link>
                               )}
                             </div>
 
-                            <div className="my-1 border-t border-neutral-100" />
+                            <div className="my-1.5 border-t border-neutral-100" />
 
                             {/* Sign Out */}
                             <button
@@ -583,9 +579,11 @@ export function TopNavbar() {
                                 setIsProfileDropdownOpen(false);
                                 logout();
                               }}
-                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              className="group w-full flex items-center gap-3 px-2.5 py-2 rounded-xl text-[13px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer text-left"
                             >
-                              <LogOut size={16} strokeWidth={2} />
+                              <div className="w-8 h-8 rounded-lg bg-rose-100/70 group-hover:bg-rose-600 group-hover:text-white flex items-center justify-center text-rose-600 transition-colors shrink-0">
+                                <LogOut size={16} strokeWidth={2} />
+                              </div>
                               <span>Sign Out</span>
                             </button>
                           </motion.div>
@@ -620,7 +618,7 @@ export function TopNavbar() {
               </div>
 
               {/* Bottom Row: Horizontal Scrolling Row (SHOP + Categories) */}
-              <div className="flex items-center w-full min-w-0 relative rounded-full overflow-hidden isolate lg:order-2 lg:flex-1">
+              <div className="flex items-center w-full min-w-0 relative rounded-full overflow-hidden isolate">
                 {/* Horizontal Scrolling Categories including SHOP */}
                 <div
                   ref={categoriesScrollRef}
@@ -761,38 +759,38 @@ export function TopNavbar() {
                                       openAccordion === accordionId ? null : accordionId,
                                     )
                                   }
-                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
+                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-3 rounded-xl min-h-[40px] ${
                                     active || openAccordion === accordionId
-                                      ? 'text-primary bg-neutral-100/50'
-                                      : 'text-neutral-800'
+                                      ? 'bg-[#1b2510] text-white shadow-xs'
+                                      : 'text-neutral-800 hover:text-black hover:bg-neutral-100'
                                   }`}
                                 >
                                   <span>{link.label}</span>
-                                  <div className="w-6 h-6 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+                                  <div
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${active || openAccordion === accordionId ? 'bg-white/15 text-white' : 'bg-neutral-100 text-neutral-500'}`}
+                                  >
                                     <ChevronDown
                                       size={13}
                                       strokeWidth={2.2}
-                                      className={`transition-transform duration-200 ${
-                                        openAccordion === accordionId
-                                          ? 'rotate-180 text-black'
-                                          : 'text-neutral-500'
-                                      }`}
+                                      className={`transition-transform duration-200 ${openAccordion === accordionId ? 'rotate-180' : ''}`}
                                     />
                                   </div>
                                 </button>
                               ) : (
                                 <Link
                                   onClick={() => setIsOpen(false)}
-                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-1.5 px-2 rounded-xl hover:bg-neutral-100/70 min-h-[38px] ${
+                                  className={`flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-3 rounded-xl min-h-[40px] ${
                                     active
-                                      ? 'text-primary bg-[#f7bb0e]/15 font-extrabold'
-                                      : 'text-neutral-800'
+                                      ? 'bg-[#1b2510] text-white shadow-xs'
+                                      : 'text-neutral-800 hover:text-black hover:bg-neutral-100'
                                   }`}
                                   to={link.href}
                                 >
                                   <span>{link.label}</span>
                                   {link.label.toLowerCase() === 'menu' && (
-                                    <span className="text-[10px] sm:text-[10.5px] font-sans font-bold tracking-normal capitalize text-[#283618]/70 bg-[#283618]/[0.07] px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                                    <span
+                                      className={`text-[10px] sm:text-[10.5px] font-sans font-bold tracking-normal capitalize px-2 py-0.5 rounded-full flex items-center gap-1.5 ${active ? 'text-white/90 bg-white/15' : 'text-[#283618]/70 bg-[#283618]/[0.07]'}`}
+                                    >
                                       <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e]" />
                                       {todayFormatted}
                                     </span>
@@ -856,10 +854,10 @@ export function TopNavbar() {
                         >
                           <Link
                             onClick={() => setIsOpen(false)}
-                            className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-3 px-3.5 rounded-xl bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.98] text-white shadow-sm shadow-[#283618]/25"
+                            className="group flex items-center justify-between font-sans uppercase font-bold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-3 px-3.5 rounded-full bg-[#283618] hover:bg-[#1f2b13] active:scale-[0.98] text-white shadow-sm shadow-[#283618]/25"
                             to="/admin"
                           >
-                            <span className="flex items-center gap-2">
+                            <span className="flex items-center gap-2.5">
                               <LayoutGrid size={15} strokeWidth={2.2} className="text-[#f7bb0e]" />
                               <span>Admin Portal</span>
                             </span>
@@ -880,35 +878,30 @@ export function TopNavbar() {
 
                   {/* Persistent Install App CTA Button inside Mobile Drawer */}
                   {!isStandalone && !isInstalled && (
-                    <div className="w-full mt-3 mb-2 px-1">
+                    <div className="w-full mt-auto pt-3 pb-2.5">
                       <button
                         type="button"
                         onClick={() => {
                           setIsOpen(false);
                           openInstallDrawer();
                         }}
-                        className="relative w-full p-2.5 rounded-2xl bg-[#F7BB0E] hover:bg-[#eab30c] border border-amber-400/40 shadow-xs active:scale-[0.98] transition-all flex items-center justify-between gap-3 cursor-pointer group text-neutral-950"
+                        className="group flex items-center justify-between font-sans uppercase font-extrabold tracking-wider text-[13px] sm:text-[14px] transition-all duration-200 w-full text-left py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-full bg-[#f7bb0e] hover:bg-[#eab00d] active:scale-[0.98] text-neutral-950 shadow-sm shadow-[#f7bb0e]/30 cursor-pointer"
                       >
-                        {/* App Icon Tile & Title */}
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-white shadow-xs border border-neutral-200/80 p-0.5 flex items-center justify-center shrink-0 overflow-hidden">
+                        <span className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                          <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center ring-2 ring-black/10 shadow-xs">
                             <img
                               src="/MainLogo.png"
                               alt="Akula's Kitchen"
-                              width={40}
-                              height={40}
-                              className="w-full h-full object-contain"
+                              className="w-full h-full object-cover rounded-full"
                             />
                           </div>
-                          <span className="font-sans font-extrabold text-[13.5px] sm:text-sm text-neutral-950 leading-tight truncate">
-                            Install Akula's Kitchen
-                          </span>
-                        </div>
-
-                        {/* Native Action Glyph Badge */}
-                        <div className="shrink-0 w-8 h-8 rounded-full bg-neutral-950 text-[#F7BB0E] flex items-center justify-center shadow-xs group-hover:scale-105 active:scale-95 transition-transform">
-                          <Download size={14} strokeWidth={2.6} />
-                        </div>
+                          <span className="truncate">Install App</span>
+                        </span>
+                        <Download
+                          size={18}
+                          strokeWidth={2.4}
+                          className="text-neutral-950 group-hover:translate-y-0.5 transition-transform shrink-0 mr-1.5"
+                        />
                       </button>
                     </div>
                   )}
@@ -918,7 +911,7 @@ export function TopNavbar() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
-                    className="mt-auto w-full pt-4 border-t border-black/[0.06]"
+                    className="w-full pt-3.5 border-t border-black/[0.06]"
                   >
                     <div className="flex items-center justify-between w-full px-1">
                       {/* Left: Utilities */}

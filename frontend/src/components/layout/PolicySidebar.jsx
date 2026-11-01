@@ -1,43 +1,50 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { policyService } from '../../services/domainServices';
-import { DEFAULT_POLICIES, getPolicyMeta } from '../../constants/defaultPolicies';
-import { Shield, ChevronRight } from 'lucide-react';
+import {
+  DEFAULT_POLICIES,
+  getPolicyMeta,
+  sortPoliciesByImportance,
+} from '../../constants/defaultPolicies';
+import { Shield, ChevronRight, ChevronLeft } from 'lucide-react';
 
 export function PolicySidebar() {
   const { pathname } = useLocation();
 
-  const { data: response, isLoading } = useQuery({
+  const { data: response } = useQuery({
     queryKey: ['public-policies'],
     queryFn: () => policyService.getPublicPolicies(),
     staleTime: 5 * 60 * 1000,
   });
 
-  // Merge live policies with default policies fallback
-  const livePolicies = response?.data || [];
-  const policies =
-    livePolicies.length > 0
-      ? livePolicies.map((p) => {
-          const meta = getPolicyMeta(p.slug, p.title);
-          return {
-            title: p.title,
-            slug: p.slug,
-            path: `/policy/${p.slug}`,
-            icon: meta.icon,
-            badge: meta.badge,
-          };
-        })
-      : DEFAULT_POLICIES.map((p) => {
-          const meta = getPolicyMeta(p.slug, p.title);
-          return {
-            title: p.title,
-            slug: p.slug,
-            path: `/policy/${p.slug}`,
-            icon: meta.icon,
-            badge: meta.badge,
-          };
-        });
+  // Merge live policies with default policies fallback and sort by importance
+  const policies = useMemo(() => {
+    const livePolicies = response?.data || [];
+    const raw =
+      livePolicies.length > 0
+        ? livePolicies.map((p) => {
+            const meta = getPolicyMeta(p.slug, p.title);
+            return {
+              title: p.title,
+              slug: p.slug,
+              path: `/policy/${p.slug}`,
+              icon: meta.icon,
+              badge: meta.badge,
+            };
+          })
+        : DEFAULT_POLICIES.map((p) => {
+            const meta = getPolicyMeta(p.slug, p.title);
+            return {
+              title: p.title,
+              slug: p.slug,
+              path: `/policy/${p.slug}`,
+              icon: meta.icon,
+              badge: meta.badge,
+            };
+          });
+    return sortPoliciesByImportance(raw);
+  }, [response?.data]);
 
   return (
     <aside className="lg:col-span-4 xl:col-span-3.5 space-y-6 sticky top-44 lg:top-48 h-fit hidden lg:block">
@@ -97,7 +104,14 @@ export function PolicySidebar() {
 export function MobilePolicyNav() {
   const { pathname } = useLocation();
   const scrollContainerRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Mouse drag-to-scroll tracking
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftStartRef = useRef(0);
+  const hasDraggedRef = useRef(false);
 
   const { data: response } = useQuery({
     queryKey: ['public-policies'],
@@ -105,35 +119,39 @@ export function MobilePolicyNav() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const livePolicies = response?.data || [];
-  const policies =
-    livePolicies.length > 0
-      ? livePolicies.map((p) => {
-          const meta = getPolicyMeta(p.slug, p.title);
-          return {
-            title: meta.shortTitle || p.title,
-            fullTitle: p.title,
-            slug: p.slug,
-            path: `/policy/${p.slug}`,
-            icon: meta.icon,
-          };
-        })
-      : DEFAULT_POLICIES.map((p) => {
-          const meta = getPolicyMeta(p.slug, p.title);
-          return {
-            title: meta.shortTitle || p.title,
-            fullTitle: p.title,
-            slug: p.slug,
-            path: `/policy/${p.slug}`,
-            icon: meta.icon,
-          };
-        });
+  const policies = useMemo(() => {
+    const livePolicies = response?.data || [];
+    const raw =
+      livePolicies.length > 0
+        ? livePolicies.map((p) => {
+            const meta = getPolicyMeta(p.slug, p.title);
+            return {
+              title: meta.shortTitle || p.title,
+              fullTitle: p.title,
+              slug: p.slug,
+              path: `/policy/${p.slug}`,
+              icon: meta.icon,
+            };
+          })
+        : DEFAULT_POLICIES.map((p) => {
+            const meta = getPolicyMeta(p.slug, p.title);
+            return {
+              title: meta.shortTitle || p.title,
+              fullTitle: p.title,
+              slug: p.slug,
+              path: `/policy/${p.slug}`,
+              icon: meta.icon,
+            };
+          });
+    return sortPoliciesByImportance(raw);
+  }, [response?.data]);
 
   const checkScroll = useCallback(() => {
     const el = scrollContainerRef.current;
     if (el) {
       const { scrollLeft, scrollWidth, clientWidth } = el;
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+      setCanScrollLeft(scrollLeft > 4);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
     }
   }, []);
 
@@ -158,51 +176,155 @@ export function MobilePolicyNav() {
     };
   }, [checkScroll, policies]);
 
-  // Bring the active policy chip to the front of the row, matching TopNavbar categories behavior
+  // Handle smooth horizontal scrolling with mouse wheel
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (maxScroll <= 0) return;
+        const canScrollInDir =
+          (e.deltaY > 0 && el.scrollLeft < maxScroll - 1) || (e.deltaY < 0 && el.scrollLeft > 1);
+        if (canScrollInDir) {
+          e.preventDefault();
+          el.scrollBy({ left: e.deltaY * 1.15, behavior: 'auto' });
+          checkScroll();
+        }
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [checkScroll]);
+
+  // Clean up global drag state on mouseup anywhere
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
+
+  // Smoothly bring active policy chip into view if out of sight
   useEffect(() => {
     const row = scrollContainerRef.current;
     if (!row) return;
     const chip = row.querySelector('[data-active="true"]');
     if (chip) {
-      const left =
-        row.scrollLeft + chip.getBoundingClientRect().left - row.getBoundingClientRect().left - 4;
-      row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      const rowRect = row.getBoundingClientRect();
+      const chipRect = chip.getBoundingClientRect();
+      if (chipRect.left < rowRect.left || chipRect.right > rowRect.right) {
+        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
     }
-    const timer = setTimeout(checkScroll, 350);
+    const timer = setTimeout(checkScroll, 200);
     return () => clearTimeout(timer);
   }, [pathname, policies, checkScroll]);
 
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    isDraggingRef.current = true;
+    hasDraggedRef.current = false;
+    startXRef.current = e.pageX;
+    scrollLeftStartRef.current = el.scrollLeft;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const dx = e.pageX - startXRef.current;
+    if (Math.abs(dx) > 4) {
+      hasDraggedRef.current = true;
+    }
+    el.scrollLeft = scrollLeftStartRef.current - dx;
+    checkScroll();
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
   const handleChipClick = (e) => {
+    if (hasDraggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     const row = scrollContainerRef.current;
     const chip = e.currentTarget;
     if (row && chip) {
-      const left =
-        row.scrollLeft + chip.getBoundingClientRect().left - row.getBoundingClientRect().left - 4;
-      row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
-      setTimeout(checkScroll, 350);
+      const rowRect = row.getBoundingClientRect();
+      const chipRect = chip.getBoundingClientRect();
+      if (chipRect.left < rowRect.left || chipRect.right > rowRect.right) {
+        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+      setTimeout(checkScroll, 200);
+    }
+  };
+
+  const handleScrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -220, behavior: 'smooth' });
+      setTimeout(checkScroll, 200);
     }
   };
 
   const handleScrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 160, behavior: 'smooth' });
-      setTimeout(checkScroll, 250);
+      scrollContainerRef.current.scrollBy({ left: 220, behavior: 'smooth' });
+      setTimeout(checkScroll, 200);
     }
   };
 
   return (
     <div className="lg:hidden mb-8 policy-mobile-nav">
-      <div className="flex items-center gap-1.5 mb-2.5 px-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#283618]" />
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#283618]">
-          Select Policy
-        </span>
+      {/* Top Header with title and clean, non-overlapping prev/next scroll buttons */}
+      <div className="flex items-center justify-between mb-2.5 px-0.5 select-none">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#283618]" />
+          <span className="text-[11.5px] font-bold uppercase tracking-wider text-[#283618]">
+            Select Policy
+          </span>
+          <span className="text-[10px] text-[#283618]/50 font-semibold">({policies.length})</span>
+        </div>
+
+        {/* Clean Prev / Next controls in header (Zero overlay on chips!) */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleScrollLeft}
+            disabled={!canScrollLeft}
+            className="w-7 h-7 rounded-full bg-white hover:bg-neutral-100 disabled:opacity-20 disabled:pointer-events-none border border-[#283618]/20 flex items-center justify-center text-[#283618] shadow-2xs transition-all active:scale-90 cursor-pointer"
+            aria-label="Previous policies"
+            title="Scroll left"
+          >
+            <ChevronLeft size={13} strokeWidth={2.5} />
+          </button>
+          <button
+            type="button"
+            onClick={handleScrollRight}
+            disabled={!canScrollRight}
+            className="w-7 h-7 rounded-full bg-white hover:bg-neutral-100 disabled:opacity-20 disabled:pointer-events-none border border-[#283618]/20 flex items-center justify-center text-[#283618] shadow-2xs transition-all active:scale-90 cursor-pointer"
+            aria-label="Next policies"
+            title="Scroll right"
+          >
+            <ChevronRight size={13} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
-      <div className="relative">
+      {/* 100% Unobstructed, Silky-Smooth Chips Row */}
+      <div className="w-full">
         <div
           ref={scrollContainerRef}
-          className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 -mx-1 scroll-smooth"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 -mx-1 overscroll-x-contain touch-pan-x cursor-grab active:cursor-grabbing select-none"
         >
           {policies.map((policy) => {
             const isActive = pathname === policy.path;
@@ -216,8 +338,8 @@ export function MobilePolicyNav() {
                 onClick={handleChipClick}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
                   isActive
-                    ? 'bg-[#283618] text-white shadow-sm ring-2 ring-[#283618]/20'
-                    : 'bg-[#fdfbf7] text-[#4b5563] border border-[#283618]/10 hover:border-[#283618]/30 hover:bg-white'
+                    ? 'bg-[#283618] text-white shadow-sm ring-2 ring-[#283618]/20 font-bold'
+                    : 'bg-[#fdfbf7] text-[#4b5563] border border-[#283618]/12 hover:border-[#283618]/30 hover:bg-white active:bg-neutral-100'
                 }`}
               >
                 <IconComponent
@@ -229,20 +351,6 @@ export function MobilePolicyNav() {
             );
           })}
         </div>
-
-        {canScrollRight && (
-          <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-6 pr-0.5 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none">
-            <button
-              type="button"
-              onClick={handleScrollRight}
-              className="pointer-events-auto w-6.5 h-6.5 rounded-full bg-white hover:bg-neutral-50 active:scale-95 text-[#283618] border border-[#283618]/15 shadow-xs flex items-center justify-center transition-all cursor-pointer"
-              aria-label="Scroll policies right"
-              title="Next policies"
-            >
-              <ChevronRight size={13} strokeWidth={2.5} />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

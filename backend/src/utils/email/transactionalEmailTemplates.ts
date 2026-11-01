@@ -7,6 +7,8 @@ import {
 } from './emailTemplates';
 import { getStoreConfigSync } from '../../config/storeConfig';
 import { resolveEmailImageUrl, getPublicWebsiteUrl, resolveOrderGrandTotal } from './emailUrlUtils';
+import { LogisticsService } from '../../services/logisticsService';
+import logger from '../../config/logger';
 
 const itemsTable = (items: any[]) => {
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -155,9 +157,57 @@ const addressBlock = (title: string, address: any) => {
   `;
 };
 
+/**
+ * Public tracking link for an order. Carries a signed 90-day tracking token so
+ * customers can follow the order on the website without logging in.
+ */
+export const buildOrderTrackingUrl = (order: any): string => {
+  const base = getPublicWebsiteUrl();
+  const id = String(order?._id || order?.orderId || '');
+  if (!id) return `${base}/dashboard/orders`;
+  try {
+    return `${base}/track/${id}?token=${encodeURIComponent(LogisticsService.generateTrackingToken(id))}`;
+  } catch (err: any) {
+    logger.warn(`[EMAIL] Tracking token unavailable, using login-protected link: ${err?.message}`);
+    return `${base}/track/${id}`;
+  }
+};
+
+/** "Your invoice is attached" note shown above the tracking block. */
+const invoiceAttachedNote = (filename: string) => `
+    <div style="background-color: #f6f8f3; border: 1px solid #dfe6d5; border-radius: 8px; padding: 12px 16px; margin: 18px 0 0 0;">
+      <p style="color: #2d3725; font-size: 13px; line-height: 1.55; margin: 0;">
+        &#128206; Your invoice is attached to this email as a PDF (<strong>${escapeHtml(filename)}</strong>).
+        You can also view, download or print it any time from <strong>My Orders</strong> on our website.
+      </p>
+    </div>
+  `;
+
+/** "Track your order" call-to-action linking to the website's live tracking page. */
+const trackOrderBlock = (order: any) => {
+  const url = buildOrderTrackingUrl(order);
+  const domain = getPublicWebsiteUrl().replace(/^https?:\/\//, '');
+  return `
+    <div style="background-color: #fffdf2; border: 1px solid #f1e3b0; border-radius: 8px; padding: 18px 16px; margin: 18px 0 6px 0; text-align: center;">
+      <h3 style="color: #283618; font-size: 15px; font-weight: 800; margin: 0 0 6px 0;">Track your order</h3>
+      <p style="color: #4a5240; font-size: 13px; line-height: 1.55; margin: 0 0 14px 0;">
+        Follow your order from our kitchen to your door — packed, shipped and out for delivery — live on our website.
+      </p>
+      <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="display: inline-block; background-color: #283618; color: #ffffff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; padding: 12px 26px; border-radius: 999px;">Track Order</a>
+      <p style="color: #6b7260; font-size: 11.5px; line-height: 1.5; margin: 12px 0 0 0;">
+        Or visit <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color: #283618; font-weight: 700;">${escapeHtml(domain)}</a> &rarr; My Orders.
+      </p>
+    </div>
+  `;
+};
+
 // --- Order Templates ---
 
-export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
+export const buildOrderConfirmationCustomerEmail = (
+  order: any,
+  user: any,
+  options: { invoiceFilename?: string } = {},
+) => {
   const store = getStoreConfigSync();
   const domain = store.websiteDomain || 'akulas.kitchen';
   const grandTotal = resolveOrderGrandTotal(order);
@@ -213,6 +263,8 @@ export const buildOrderConfirmationCustomerEmail = (order: any, user: any) => {
         </td>
       </tr>
     </table>
+    ${options.invoiceFilename ? invoiceAttachedNote(options.invoiceFilename) : ''}
+    ${trackOrderBlock(order)}
   `;
 
   return {
@@ -359,6 +411,7 @@ export const buildOrderStatusChangeEmail = (order: any, oldStatus: string, newSt
     <h3 style="color: #283618; margin-top: 22px; margin-bottom: 10px;">Order Summary</h3>
     ${itemsTable(order.items)}
     ${totalsSummary(subtotal, shippingFee, tax, grandTotal, discount)}
+    ${trackOrderBlock(order)}
   `;
 
   return {

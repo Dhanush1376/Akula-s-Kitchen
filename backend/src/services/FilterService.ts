@@ -3,6 +3,7 @@ import ProductService from './productService';
 import CatalogValue from '../models/CatalogValue';
 import CatalogAttribute from '../models/CatalogAttribute';
 import { MemoryCache } from '../utils/cache/MemoryCache';
+import { canonicalWeightLabel, isWeightLabel, weightInGrams } from '../utils/weightLabel';
 
 const filterCache = new MemoryCache({
   defaultTtlMs: 5 * 60 * 1000, // 5 minutes
@@ -199,66 +200,27 @@ export class FilterService {
       });
     }
 
-    // Process Tags
-    if (result.tags?.length > 1) {
-      // Group tags by taxonomy if there are many
-      const tagSlugs = result.tags.map((t: any) => t._id.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
-      const canonicalTags = await CatalogValue.find({
-        attributeSlug: 'tag',
-        slug: { $in: tagSlugs },
-        isVisible: true,
-      }).lean();
+    // Process Tags (only weight tags are surfaced, as their own group)
+    if (result.tags?.length > 0) {
+      // Weight tags get their own group. Spellings of the same weight ("1kg", "1 Kg")
+      // are merged into one canonical option, and the threshold applies to the merged count.
+      const weightCounts = new Map<string, number>();
+      result.tags.forEach((t: any) => {
+        if (!isWeightLabel(t._id)) return;
+        const label = canonicalWeightLabel(t._id);
+        weightCounts.set(label, (weightCounts.get(label) || 0) + t.count);
+      });
+      const weightTagOptions = Array.from(weightCounts.entries())
+        .filter(([, count]) => count >= 2)
+        .map(([label, count]) => ({ value: label, label, count }))
+        .sort((a, b) => weightInGrams(a.value) - weightInGrams(b.value));
 
-      const tagOptions = result.tags
-        .map((t: any) => {
-          const slug = t._id.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          const canonical = canonicalTags.find((ct) => ct.slug === slug);
-          return {
-            value: canonical ? canonical.value : t._id,
-            label: canonical ? canonical.value : t._id,
-            count: t.count,
-            taxonomy: canonical?.taxonomy || 'Other',
-            sortOrder: canonical?.usageCount || 0,
-          };
-        })
-        .filter((t: any) => t.count >= 2); // Minimum threshold
-
-      const isWeight = (str: string) => {
-        if (!str || typeof str !== 'string') return false;
-        return (
-          /^(\d+(?:\.\d+)?)\s*(g|gm|gms|gram|grams|kg|kgs|kilo|kilos|ml|l|ltr|litre|litres|oz|lb|lbs)$/i.test(
-            str.trim(),
-          ) || /^(half|quarter)\s*(kg|kilo|litre|liter)$/i.test(str.trim())
-        );
-      };
-
-      const parseWeightGrams = (str: string) => {
-        const match = str
-          .trim()
-          .toLowerCase()
-          .match(/^(\d+(?:\.\d+)?)\s*([a-z]+)$/);
-        if (!match) return 0;
-        const num = parseFloat(match[1]);
-        const unit = match[2];
-        if (unit.startsWith('k')) return num * 1000;
-        if (unit.startsWith('g')) return num;
-        if (unit.startsWith('l')) return num * 1000;
-        if (unit.startsWith('m')) return num;
-        return num;
-      };
-
-      const weightTagOptions = tagOptions.filter((t: any) => isWeight(t.value || t.label));
-      const nonWeightTagOptions = tagOptions.filter((t: any) => !isWeight(t.value || t.label));
-
-      // 1. Separate Weight Tag Filter Group
       if (weightTagOptions.length > 0) {
         filterGroups.push({
           id: 'weight',
           label: 'Weight',
           type: 'checkbox',
-          options: weightTagOptions.sort(
-            (a: any, b: any) => parseWeightGrams(a.value) - parseWeightGrams(b.value),
-          ),
+          options: weightTagOptions,
         });
       }
     }

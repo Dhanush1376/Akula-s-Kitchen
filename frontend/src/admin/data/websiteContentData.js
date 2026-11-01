@@ -197,16 +197,17 @@ export const initialWebsiteContent = {
   // SEO SETTINGS
   // ═══════════════════════════════════════════════════════
   seo: {
-    globalTitle: "Akula's Kitchen — Authentic Flavors & Premium Culinary Experiences",
+    globalTitle: "Akula's Kitchen | Fresh • Tasty • Healthy",
     globalDescription:
-      "Authentic culinary experiences, exquisite recipes, and premium catering by Akula's Kitchen.",
-    globalKeywords: "Akula's Kitchen, gourmet, authentic recipes, kitchen, catering, food",
+      'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.',
+    globalKeywords:
+      "dosa batter, idli batter, fresh batter, homemade pickles, tomato pickle, gongura pickle, podi, karam podi, south indian food, breakfast batter, akula's kitchen",
     ogImage: '/og-image.png',
     pages: {
       home: {
-        title: "Akula's Kitchen — Authentic Flavors",
+        title: "Akula's Kitchen | Fresh • Tasty • Healthy",
         description:
-          "Authentic culinary experiences, exquisite recipes, and premium catering by Akula's Kitchen.",
+          'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.',
       },
       shop: {
         title: "Shop Menu — Akula's Kitchen",

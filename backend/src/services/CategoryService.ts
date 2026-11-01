@@ -18,9 +18,9 @@ export class CategoryService {
     batters:
       'https://res.cloudinary.com/cftqgair/image/upload/v1793123124/akulas-kitchen/products/ykliysxhqcecv1ipyzjq.jpg',
     chutneys:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123125/akulas-kitchen/products/lbmarekwegbzfxauigxq.jpg',
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793141737/products/czpmjcjvdj7n9z1t4mpd.jpg',
     pickles:
-      'https://res.cloudinary.com/cftqgair/image/upload/v1793123121/akulas-kitchen/products/ouv4ci03wehkucl4nrxk.jpg',
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793123122/akulas-kitchen/products/bmv5h5wodrbnajoolldp.jpg',
     masala:
       'https://res.cloudinary.com/cftqgair/image/upload/v1793123135/akulas-kitchen/products/luf8ibyw8shf168fgrsq.jpg',
     podis:
@@ -29,6 +29,8 @@ export class CategoryService {
       'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
     namkeen:
       'https://res.cloudinary.com/cftqgair/image/upload/v1793123134/akulas-kitchen/products/s5seblgvndbkjlhlthlv.jpg',
+    cashews:
+      'https://res.cloudinary.com/cftqgair/image/upload/v1793143529/products/h3e68tuv02qwv4umkm0l.jpg',
     sweets:
       'https://res.cloudinary.com/cftqgair/image/upload/v1793123126/akulas-kitchen/products/uepc6xoknuoagrs3qtnt.jpg',
   };

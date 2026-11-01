@@ -146,7 +146,7 @@
 .ak-section-header--sm .ak-section-header__title {
   font-size: 16px !important;
   font-weight: 700 !important;
-  font-stretch: normal !important;
+  font-stretch: 112% !important;
   letter-spacing: -0.01em !important;
   line-height: 1.25 !important;
   gap: 8px !important;
@@ -169,7 +169,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
-  font-stretch: normal !important;
+  font-stretch: 112% !important;
   font-size: clamp(20px, 5vw, 30px);
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -382,7 +382,8 @@
   border-radius: 22px;
   overflow: hidden;
   isolation: isolate;
-  background: #f3f1ea;
+  /* Off-white placeholder while the card photo loads (matches skeleton fill) */
+  background: #f2f2f0;
   box-shadow: 0 6px 18px rgba(40, 54, 24, 0.1);
   transition:
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),

@@ -53,30 +53,63 @@ const isWeightString = (str) => {
   );
 };
 
-const parseWeightGrams = (str) => {
-  if (!str || typeof str !== 'string') return 0;
-  const match = str
+// "1 Kg", "1kgs", "1 kilo" → "1kg" so one weight is listed once (kept in step with
+// backend/src/utils/weightLabel.ts, which matches every spelling when filtering).
+const UNIT_BY_ALIAS = {
+  g: 'g',
+  gm: 'g',
+  gms: 'g',
+  gram: 'g',
+  grams: 'g',
+  kg: 'kg',
+  kgs: 'kg',
+  kilo: 'kg',
+  kilos: 'kg',
+  ml: 'ml',
+  l: 'l',
+  ltr: 'l',
+  litre: 'l',
+  litres: 'l',
+  liter: 'l',
+  liters: 'l',
+  oz: 'oz',
+  lb: 'lb',
+  lbs: 'lb',
+};
+
+const parseWeight = (str) => {
+  const match = String(str || '')
     .trim()
-    .toLowerCase()
-    .match(/^(\d+(?:\.\d+)?)\s*([a-z]+)$/);
-  if (!match) return 0;
-  const num = parseFloat(match[1]);
-  const unit = match[2];
-  if (unit.startsWith('k')) return num * 1000;
-  if (unit.startsWith('g')) return num;
-  if (unit.startsWith('l')) return num * 1000;
-  if (unit.startsWith('m')) return num;
-  return num;
+    .match(/^(\d+(?:\.\d+)?)\s*([a-z]+)$/i);
+  const unit = match && UNIT_BY_ALIAS[match[2].toLowerCase()];
+  return unit ? { num: parseFloat(match[1]), unit } : null;
+};
+
+const canonicalWeight = (str) => {
+  const parsed = parseWeight(str);
+  return parsed ? `${parsed.num}${parsed.unit}` : String(str || '').trim();
+};
+
+const parseWeightGrams = (str) => {
+  const parsed = parseWeight(str);
+  if (!parsed) return 0;
+  return parsed.unit === 'kg' || parsed.unit === 'l' ? parsed.num * 1000 : parsed.num;
 };
 
 const Checkbox = ({ label, count, type, currentFilters, onToggleFilter, isChild = false }) => {
   const isChecked =
     currentFilters[type]?.includes(label) ||
+    (type === 'weight' &&
+      currentFilters.weight?.some((v) => canonicalWeight(v) === canonicalWeight(label))) ||
     (type === 'weight' && currentFilters['tags']?.includes(label)) ||
     (type === 'tags' && currentFilters['weight']?.includes(label));
 
   const handleChange = () => {
-    onToggleFilter(type, label);
+    // Unticking a weight selected under another spelling ("1 Kg") removes that value.
+    const selectedSpelling =
+      type === 'weight' &&
+      currentFilters.weight?.find((v) => canonicalWeight(v) === canonicalWeight(label));
+    onToggleFilter(type, selectedSpelling || label);
     if (type === 'weight' && currentFilters['tags']?.includes(label)) {
       onToggleFilter('tags', label);
     } else if (type === 'tags' && currentFilters['weight']?.includes(label)) {
@@ -652,7 +685,8 @@ export function FilterPanel({
       products.forEach((p) => {
         (p.tags || []).forEach((t) => {
           if (isWeightString(t)) {
-            weightCounts.set(t, (weightCounts.get(t) || 0) + 1);
+            const w = canonicalWeight(t);
+            weightCounts.set(w, (weightCounts.get(w) || 0) + 1);
           }
         });
         (p.optionGroups || []).forEach((og) => {
@@ -660,7 +694,8 @@ export function FilterPanel({
             (og.options || []).forEach((o) => {
               const val = o.label || o.value;
               if (val && isWeightString(val)) {
-                weightCounts.set(val, (weightCounts.get(val) || 0) + 1);
+                const w = canonicalWeight(val);
+                weightCounts.set(w, (weightCounts.get(w) || 0) + 1);
               }
             });
           }
@@ -681,11 +716,12 @@ export function FilterPanel({
     if (extractedWeightOptions.length > 0) {
       const uniqueWeights = new Map();
       extractedWeightOptions.forEach((opt) => {
-        const key = opt.value || opt.label;
+        const key = canonicalWeight(opt.value || opt.label);
         if (!uniqueWeights.has(key)) {
-          uniqueWeights.set(key, { ...opt });
+          uniqueWeights.set(key, { ...opt, value: key, label: key });
         } else {
-          uniqueWeights.get(key).count = Math.max(uniqueWeights.get(key).count, opt.count);
+          // Different spellings of one weight are different products: add them up.
+          uniqueWeights.get(key).count = (uniqueWeights.get(key).count || 0) + (opt.count || 0);
         }
       });
 
@@ -799,7 +835,7 @@ export function FilterPanel({
       {/* Top Header Row with normal typography & compact margins */}
       <div className="flex items-center justify-between mb-2 pb-2 border-b border-black/[0.06]">
         <div className="flex flex-col">
-          <h2 className="font-sans text-[20px] sm:text-[22px] text-neutral-900 font-bold leading-tight">
+          <h2 className="font-display text-[20px] sm:text-[22px] text-neutral-900 font-bold leading-tight">
             Filters
           </h2>
           {isOpen && (
@@ -897,8 +933,13 @@ export function FilterPanel({
               const finalOptionsMap = new Map();
               cumulativeGroupOptions.forEach((opt) => finalOptionsMap.set(opt.value, opt));
 
+              const weightListed = (val) =>
+                group.id === 'weight' &&
+                [...finalOptionsMap.keys()].some(
+                  (k) => canonicalWeight(k) === canonicalWeight(val),
+                );
               selectedValues.forEach((val) => {
-                if (!finalOptionsMap.has(val)) {
+                if (!finalOptionsMap.has(val) && !weightListed(val)) {
                   finalOptionsMap.set(val, { value: val, label: val, count: 0 }); // Retain selected
                 }
               });

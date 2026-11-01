@@ -136,6 +136,7 @@ export interface IStoreSettings extends Document {
   storefront: {
     seoTitle: string;
     seoDescription: string;
+    seoKeywords?: string;
     hideGallerySection: boolean;
     hideProductsFromGallery: boolean;
     customerAuthMethod?: 'both' | 'phone_only' | 'email_only';
@@ -302,6 +303,7 @@ const StoreSettingsSchema: Schema = new Schema(
     storefront: {
       seoTitle: { type: String, default: '' },
       seoDescription: { type: String, default: '' },
+      seoKeywords: { type: String, default: '' },
       hideGallerySection: { type: Boolean, default: false },
       hideProductsFromGallery: { type: Boolean, default: false },
       customerAuthMethod: {

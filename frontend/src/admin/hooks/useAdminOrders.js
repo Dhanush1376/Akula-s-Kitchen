@@ -38,7 +38,7 @@ const mapDbOrderToFrontend = (o) => {
           item.thumbnail ||
           item.product?.images?.[0] ||
           item.product?.image ||
-          '/MainLogo.png',
+          '',
       }))
     : [];
 

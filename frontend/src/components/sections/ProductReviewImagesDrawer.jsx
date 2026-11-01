@@ -258,7 +258,7 @@ export function ProductReviewImagesDrawer({
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h2 className="font-sans text-[16px] sm:text-[17px] font-bold text-neutral-900 leading-tight">
+                          <h2 className="font-display text-[16px] sm:text-[17px] font-bold text-neutral-900 leading-tight">
                             Customer Gallery
                           </h2>
                           {photos.length > 0 && (
@@ -537,7 +537,7 @@ export function ProductReviewImagesDrawer({
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h2 className="font-sans text-lg font-bold text-neutral-900 leading-tight">
+                        <h2 className="font-display text-lg font-bold text-neutral-900 leading-tight">
                           Customer Gallery
                         </h2>
                         {photos.length > 0 && (
@@ -610,7 +610,7 @@ export function ProductReviewImagesDrawer({
                       <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4 text-neutral-400">
                         <Camera className="w-8 h-8" />
                       </div>
-                      <h3 className="font-sans text-lg font-bold text-neutral-800">
+                      <h3 className="font-display text-lg font-bold text-neutral-800">
                         No customer photos yet
                       </h3>
                       <p className="font-sans text-sm text-neutral-500 mt-1 max-w-sm">
@@ -704,7 +704,7 @@ export function ProductReviewImagesDrawer({
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <h4 className="font-body text-sm font-bold text-neutral-900 truncate">
+                                <h4 className="font-display text-sm font-bold text-neutral-900 truncate">
                                   {customerName}
                                 </h4>
                                 {activeReview?.verified && (

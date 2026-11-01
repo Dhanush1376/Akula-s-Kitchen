@@ -27,7 +27,7 @@ export function ContactSkeleton() {
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="p-4 rounded-2xl border border-[#283618]/10 bg-[#fdfbf7] flex items-center gap-3"
+                className="p-4 rounded-2xl border border-[#283618]/10 bg-white flex items-center gap-3"
               >
                 <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
                 <div className="space-y-1.5 flex-1">
@@ -41,7 +41,7 @@ export function ContactSkeleton() {
           {/* Right Column */}
           <div className="lg:col-span-7 space-y-3.5">
             <Skeleton className="h-3 w-36 mb-1" />
-            <div className="rounded-2xl border border-[#283618]/10 bg-[#fdfbf7] p-4 space-y-3.5">
+            <div className="rounded-2xl border border-[#283618]/10 bg-white p-4 space-y-3.5">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-56 sm:h-64 w-full rounded-xl" />
             </div>

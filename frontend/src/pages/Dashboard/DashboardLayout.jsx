@@ -75,7 +75,7 @@ export function DashboardLayout() {
 
       <div className="relative z-10 max-w-max-width mx-auto px-margin-mobile lg:px-margin-desktop">
         {/* HEADER */}
-        <DashboardHeader />
+        {!location.pathname.includes('/orders') && <DashboardHeader />}
 
         <div className="grid grid-cols-1 lg:grid-cols-6 lg:grid-cols-12 gap-6">
           {/* LEFT SIDEBAR NAVIGATION PANEL */}

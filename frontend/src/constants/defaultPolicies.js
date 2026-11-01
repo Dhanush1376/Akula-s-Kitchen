@@ -88,6 +88,30 @@ export const POLICY_METADATA_MAP = {
   },
 };
 
+export const POLICY_PRIORITY_ORDER = [
+  'shipping-policy',
+  'cancellation-policy',
+  'return-policy',
+  'refund-policy',
+  'exchange-policy',
+  'privacy-policy',
+  'terms-and-conditions',
+];
+
+export function sortPoliciesByImportance(policies = []) {
+  if (!Array.isArray(policies)) return [];
+  return [...policies].sort((a, b) => {
+    const slugA = (a?.slug || '').toLowerCase().trim();
+    const slugB = (b?.slug || '').toLowerCase().trim();
+    const idxA = POLICY_PRIORITY_ORDER.indexOf(slugA);
+    const idxB = POLICY_PRIORITY_ORDER.indexOf(slugB);
+    const pA = idxA !== -1 ? idxA : 999;
+    const pB = idxB !== -1 ? idxB : 999;
+    if (pA !== pB) return pA - pB;
+    return (a?.title || '').localeCompare(b?.title || '');
+  });
+}
+
 export const DEFAULT_POLICIES = [
   {
     title: 'Shipping & Delivery Policy',
@@ -141,53 +165,73 @@ export const DEFAULT_POLICIES = [
     ],
   },
   {
-    title: 'Terms & Conditions',
-    slug: 'terms-and-conditions',
+    title: 'Cancellation Policy',
+    slug: 'cancellation-policy',
     status: 'published',
     version: 1,
     updatedAt: '2026-03-15T00:00:00.000Z',
     seoMetadata: {
-      title: "Terms & Conditions | Akula's Kitchen",
-      description:
-        "Official Terms and Conditions governing purchases, website access, and customer service at Akula's Kitchen.",
+      title: "Cancellation Policy | Akula's Kitchen",
+      description: "Order cancellation guidelines and refund timelines at Akula's Kitchen.",
     },
     sections: [
       {
-        heading: '1. Agreement to Terms',
+        heading: '1. Pre-Dispatch Order Cancellations',
         paragraph:
-          "Welcome to Akula's Kitchen (https://akulas.kitchen). By accessing our website, creating an account, or placing an order, you acknowledge that you have read, understood, and agreed to be bound by these Terms & Conditions, along with our Privacy Policy and all applicable laws and regulations of India.",
-      },
-      {
-        heading: '2. Store Operator & Legal Identity',
-        paragraph:
-          "This platform is owned and operated by Akula's Kitchen, registered at Plot No. 93/1, Purvanchal Silver City, Block-9-B204, Sector 93, Noida, Uttar Pradesh, India - 201304. Customers transacting on this website confirm that they are at least 18 years of age or accessing under the supervision of a parent or legal guardian.",
-      },
-      {
-        heading: '3. Product Information, Shelf Life & Proper Storage',
-        paragraph:
-          "We take utmost care to accurately display ingredients, net weights, nutritional information, and allergen notices for all items. Because our batters and culinary products are naturally fermented and free of artificial chemical stabilizers, customers are strictly advised to refrigerate fresh batters (between 1°C and 4°C) immediately upon delivery. Akula's Kitchen cannot be held responsible for premature spoilage caused by improper storage after delivery.",
+          'You may cancel your order at any time before it enters the kitchen packaging and courier dispatch stage (typically within 2 to 4 hours of placing the order).',
         highlight:
-          'Store fresh batters refrigerated (1°C - 4°C) immediately upon arrival to preserve freshness.',
+          'Easy self-cancellation available via your Account Dashboard prior to kitchen packaging.',
       },
       {
-        heading: '4. Pricing, Invoicing & Digital Payments',
+        heading: '2. How to Request Cancellation',
         paragraph:
-          "All product prices are displayed in Indian National Rupees (INR) and are inclusive of applicable Goods and Services Tax (GST). Payments can be completed securely via authorized digital payment gateways (UPI, Credit/Debit Cards, Net Banking) powered by Razorpay, or via Cash on Delivery where serviceable. Akula's Kitchen reserves the right to adjust catalog prices or modify promotional campaigns without prior notice.",
+          '• Account Dashboard: Log in to Akula\'s Kitchen, navigate to Dashboard > My Orders, and click "Cancel Order" on eligible pending orders.\n• Support Helpdesk: Alternatively, send a quick message on WhatsApp at +91 8800775528 or email mahesh.akula@gmail.com with your Order ID and the subject "URGENT: Cancel Order".',
       },
       {
-        heading: '5. Intellectual Property Rights',
+        heading: '3. Post-Dispatch Cancellations',
         paragraph:
-          "All logos, trademarks, brand names, product photography, culinary recipes, design layouts, and website text are the exclusive intellectual property of Akula's Kitchen and protected under Indian Copyright and Trademark legislation. Any unauthorized reproduction, scraping, or commercial duplication is strictly prohibited.",
+          'Once an order has been picked up by the courier partner and entered the transit stream, it cannot be cancelled due to the perishable, time-sensitive nature of fresh batters and homemade delicacies.',
       },
       {
-        heading: '6. Limitation of Liability',
+        heading: '4. Prompt Refund for Cancelled Orders',
         paragraph:
-          "Akula's Kitchen shall not be held liable for any indirect, incidental, or consequential damages resulting from delayed transit caused by third-party logistics partners, adverse weather events, inaccurate delivery addresses provided by the buyer, or improper storage after delivery.",
+          'For prepaid orders cancelled before dispatch, a full 100% refund is initiated immediately to your original payment method, reflecting in your bank account within 5 to 7 business days.',
+      },
+    ],
+  },
+  {
+    title: 'Return Policy',
+    slug: 'return-policy',
+    status: 'published',
+    version: 1,
+    updatedAt: '2026-03-15T00:00:00.000Z',
+    seoMetadata: {
+      title: "Return Policy | Akula's Kitchen",
+      description:
+        "Guidelines on returns, replacements, and reporting issues with food items at Akula's Kitchen.",
+    },
+    sections: [
+      {
+        heading: '1. Perishable Food Safety Standards',
+        paragraph:
+          "Because Akula's Kitchen specializes in fresh culinary batters, homemade spice mixes, and freshly ground condiments, we cannot accept physical returns of opened or perishable food items. This policy upholds strict FSSAI hygiene standards and prevents cross-contamination.",
       },
       {
-        heading: '7. Governing Law & Jurisdiction',
+        heading: '2. Damaged, Defective or Incorrect Items',
         paragraph:
-          'These Terms & Conditions shall be governed by and interpreted in accordance with the laws of the Republic of India. Any disputes or claims arising from transactions on this platform shall fall under the exclusive jurisdiction of the competent courts in Noida / Gautam Buddha Nagar, Uttar Pradesh.',
+          'If your parcel is delivered damaged, unsealed, spoiled, or contains the wrong products, you are entitled to a 100% complimentary fresh replacement or full refund. You do NOT have to return the compromised perishable item back to us.',
+        highlight:
+          'Zero hassle: We resolve compromised food shipments without asking you to ship perishable items back.',
+      },
+      {
+        heading: '3. Photographic Verification Procedure',
+        paragraph:
+          'Simply share your Order ID along with clear unboxing photos or a short video clip showing the outer box, courier shipping label, and the affected item to mahesh.akula@gmail.com or via WhatsApp at +91 8800775528 within 7 days of receipt.',
+      },
+      {
+        heading: '4. Reverse Courier Pickups for Non-Perishables',
+        paragraph:
+          'In rare cases involving non-perishable hardware or special merchandise, reverse pickup will be scheduled through our courier partner at zero cost to you. If reverse pickup is unavailable at your PIN code, we issue resolution immediately based on digital photo proof.',
       },
     ],
   },
@@ -230,42 +274,6 @@ export const DEFAULT_POLICIES = [
     ],
   },
   {
-    title: 'Return Policy',
-    slug: 'return-policy',
-    status: 'published',
-    version: 1,
-    updatedAt: '2026-03-15T00:00:00.000Z',
-    seoMetadata: {
-      title: "Return Policy | Akula's Kitchen",
-      description:
-        "Guidelines on returns, replacements, and reporting issues with food items at Akula's Kitchen.",
-    },
-    sections: [
-      {
-        heading: '1. Perishable Food Safety Standards',
-        paragraph:
-          "Because Akula's Kitchen specializes in fresh culinary batters, homemade spice mixes, and freshly ground condiments, we cannot accept physical returns of opened or perishable food items. This policy upholds strict FSSAI hygiene standards and prevents cross-contamination.",
-      },
-      {
-        heading: '2. Damaged, Defective or Incorrect Items',
-        paragraph:
-          'If your parcel is delivered damaged, unsealed, spoiled, or contains the wrong products, you are entitled to a 100% complimentary fresh replacement or full refund. You do NOT have to return the compromised perishable item back to us.',
-        highlight:
-          'Zero hassle: We resolve compromised food shipments without asking you to ship perishable items back.',
-      },
-      {
-        heading: '3. Photographic Verification Procedure',
-        paragraph:
-          'Simply share your Order ID along with clear unboxing photos or a short video clip showing the outer box, courier shipping label, and the affected item to mahesh.akula@gmail.com or via WhatsApp at +91 8800775528 within 7 days of receipt.',
-      },
-      {
-        heading: '4. Reverse Courier Pickups for Non-Perishables',
-        paragraph:
-          'In rare cases involving non-perishable hardware or special merchandise, reverse pickup will be scheduled through our courier partner at zero cost to you. If reverse pickup is unavailable at your PIN code, we issue resolution immediately based on digital photo proof.',
-      },
-    ],
-  },
-  {
     title: 'Exchange & Replacement Policy',
     slug: 'exchange-policy',
     status: 'published',
@@ -297,41 +305,6 @@ export const DEFAULT_POLICIES = [
         heading: '4. Product Substitutions',
         paragraph:
           'Direct physical exchanges for different catalog items are not feasible due to batch shelf life and dynamic pricing. In such instances, store credit or a full refund is issued so you may reorder your desired item instantly.',
-      },
-    ],
-  },
-  {
-    title: 'Cancellation Policy',
-    slug: 'cancellation-policy',
-    status: 'published',
-    version: 1,
-    updatedAt: '2026-03-15T00:00:00.000Z',
-    seoMetadata: {
-      title: "Cancellation Policy | Akula's Kitchen",
-      description: "Order cancellation guidelines and refund timelines at Akula's Kitchen.",
-    },
-    sections: [
-      {
-        heading: '1. Pre-Dispatch Order Cancellations',
-        paragraph:
-          'You may cancel your order at any time before it enters the kitchen packaging and courier dispatch stage (typically within 2 to 4 hours of placing the order).',
-        highlight:
-          'Easy self-cancellation available via your Account Dashboard prior to kitchen packaging.',
-      },
-      {
-        heading: '2. How to Request Cancellation',
-        paragraph:
-          '• Account Dashboard: Log in to Akula\'s Kitchen, navigate to Dashboard > My Orders, and click "Cancel Order" on eligible pending orders.\n• Support Helpdesk: Alternatively, send a quick message on WhatsApp at +91 8800775528 or email mahesh.akula@gmail.com with your Order ID and the subject "URGENT: Cancel Order".',
-      },
-      {
-        heading: '3. Post-Dispatch Cancellations',
-        paragraph:
-          'Once an order has been picked up by the courier partner and entered the transit stream, it cannot be cancelled due to the perishable, time-sensitive nature of fresh batters and homemade delicacies.',
-      },
-      {
-        heading: '4. Prompt Refund for Cancelled Orders',
-        paragraph:
-          'For prepaid orders cancelled before dispatch, a full 100% refund is initiated immediately to your original payment method, reflecting in your bank account within 5 to 7 business days.',
       },
     ],
   },
@@ -383,6 +356,57 @@ export const DEFAULT_POLICIES = [
         paragraph:
           'In compliance with the Information Technology Act and Consumer Protection Rules, please contact our designated Grievance Officer for data rights, access requests, or privacy inquiries:\nName: Mahesh Akula\nDesignation: Grievance Redressal Officer\nAddress: Plot No. 93/1, Purvanchal Silver City, Block-9-B204, Sector 93, Noida, UP, India - 201304\nEmail: mahesh.akula@gmail.com | Phone: +91 8800775528',
         highlight: 'Designated Grievance Officer: Mahesh Akula, Noida (mahesh.akula@gmail.com)',
+      },
+    ],
+  },
+  {
+    title: 'Terms & Conditions',
+    slug: 'terms-and-conditions',
+    status: 'published',
+    version: 1,
+    updatedAt: '2026-03-15T00:00:00.000Z',
+    seoMetadata: {
+      title: "Terms & Conditions | Akula's Kitchen",
+      description:
+        "Official Terms and Conditions governing purchases, website access, and customer service at Akula's Kitchen.",
+    },
+    sections: [
+      {
+        heading: '1. Agreement to Terms',
+        paragraph:
+          "Welcome to Akula's Kitchen (https://akulas.kitchen). By accessing our website, creating an account, or placing an order, you acknowledge that you have read, understood, and agreed to be bound by these Terms & Conditions, along with our Privacy Policy and all applicable laws and regulations of India.",
+      },
+      {
+        heading: '2. Store Operator & Legal Identity',
+        paragraph:
+          "This platform is owned and operated by Akula's Kitchen, registered at Plot No. 93/1, Purvanchal Silver City, Block-9-B204, Sector 93, Noida, Uttar Pradesh, India - 201304. Customers transacting on this website confirm that they are at least 18 years of age or accessing under the supervision of a parent or legal guardian.",
+      },
+      {
+        heading: '3. Product Information, Shelf Life & Proper Storage',
+        paragraph:
+          "We take utmost care to accurately display ingredients, net weights, nutritional information, and allergen notices for all items. Because our batters and culinary products are naturally fermented and free of artificial chemical stabilizers, customers are strictly advised to refrigerate fresh batters (between 1°C and 4°C) immediately upon delivery. Akula's Kitchen cannot be held responsible for premature spoilage caused by improper storage after delivery.",
+        highlight:
+          'Store fresh batters refrigerated (1°C - 4°C) immediately upon arrival to preserve freshness.',
+      },
+      {
+        heading: '4. Pricing, Invoicing & Digital Payments',
+        paragraph:
+          "All product prices are displayed in Indian National Rupees (INR) and are inclusive of applicable Goods and Services Tax (GST). Payments can be completed securely via authorized digital payment gateways (UPI, Credit/Debit Cards, Net Banking) powered by Razorpay, or via Cash on Delivery where serviceable. Akula's Kitchen reserves the right to adjust catalog prices or modify promotional campaigns without prior notice.",
+      },
+      {
+        heading: '5. Intellectual Property Rights',
+        paragraph:
+          "All logos, trademarks, brand names, product photography, culinary recipes, design layouts, and website text are the exclusive intellectual property of Akula's Kitchen and protected under Indian Copyright and Trademark legislation. Any unauthorized reproduction, scraping, or commercial duplication is strictly prohibited.",
+      },
+      {
+        heading: '6. Limitation of Liability',
+        paragraph:
+          "Akula's Kitchen shall not be held liable for any indirect, incidental, or consequential damages resulting from delayed transit caused by third-party logistics partners, adverse weather events, inaccurate delivery addresses provided by the buyer, or improper storage after delivery.",
+      },
+      {
+        heading: '7. Governing Law & Jurisdiction',
+        paragraph:
+          'These Terms & Conditions shall be governed by and interpreted in accordance with the laws of the Republic of India. Any disputes or claims arising from transactions on this platform shall fall under the exclusive jurisdiction of the competent courts in Noida / Gautam Buddha Nagar, Uttar Pradesh.',
       },
     ],
   },

@@ -215,6 +215,17 @@
   background-color: #283618;
 }
 
+/* Mobile Policy Nav smooth horizontal scrolling */
+.policy-mobile-nav .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.policy-mobile-nav .overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
 /* Print Styles */
 @media print {
   /* Hide non-printable navigation and widgets */

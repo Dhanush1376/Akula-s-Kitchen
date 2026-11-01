@@ -160,6 +160,7 @@ class StoreSettingsService {
       storefront: {
         seoTitle: settings.storefront?.seoTitle || '',
         seoDescription: settings.storefront?.seoDescription || '',
+        seoKeywords: settings.storefront?.seoKeywords || '',
         hideGallerySection: Boolean(settings.storefront?.hideGallerySection),
         hideProductsFromGallery: Boolean(settings.storefront?.hideProductsFromGallery),
         customerAuthMethod: settings.storefront?.customerAuthMethod || 'both',

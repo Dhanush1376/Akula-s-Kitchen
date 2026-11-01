@@ -121,7 +121,7 @@ export function OrderCard({ order, item, itemIdx, idx = 0 }) {
                   (typeof orderItem.productId === 'object'
                     ? orderItem.productId?.imageSrc || orderItem.productId?.images?.[0]
                     : null) ||
-                  '/MainLogo.png';
+                  '';
                 const itemTitle =
                   orderItem.title ||
                   (typeof orderItem.productId === 'object' ? orderItem.productId?.title : null) ||
@@ -158,7 +158,7 @@ export function OrderCard({ order, item, itemIdx, idx = 0 }) {
                   (typeof items[0]?.productId === 'object'
                     ? items[0]?.productId?.imageSrc || items[0]?.productId?.images?.[0]
                     : null) ||
-                  '/MainLogo.png'
+                  ''
                 }
                 alt={items[0]?.title || 'Delicacy'}
                 containerClassName="w-full h-full"
@@ -252,114 +252,52 @@ export function OrderCard({ order, item, itemIdx, idx = 0 }) {
       {/* Interactive Review Action Footer */}
       {statusLower === 'delivered' && (
         <div
-          onClick={(e) => e.stopPropagation()}
-          className="px-3.5 py-2.5 bg-[#fdfbf6] border-t border-amber-100/60"
+          onClick={(e) => {
+            e.stopPropagation();
+            const firstItem = items[0];
+            const pId =
+              firstItem?.productId?._id ||
+              (typeof firstItem?.productId === 'string' ? firstItem?.productId : null) ||
+              (firstItem?.productId && typeof firstItem.productId === 'object'
+                ? firstItem.productId.id
+                : null) ||
+              firstItem?.id ||
+              firstItem?._id;
+            const pTitle =
+              firstItem?.title ||
+              (typeof firstItem?.productId === 'object' ? firstItem.productId?.title : null) ||
+              firstItem?.name ||
+              'Delicacy Item';
+
+            setReviewingProduct({
+              productId: pId,
+              productTitle: pTitle,
+              orderItems: items,
+            });
+          }}
+          className="px-3.5 py-2.5 bg-linear-to-r from-amber-50/70 via-amber-50/30 to-amber-50/70 border-t border-amber-200/70 cursor-pointer group hover:bg-amber-100/60 transition-colors"
         >
-          {items.length <= 1 ? (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                const singleItem = items[0];
-                const pId =
-                  singleItem?.productId?._id ||
-                  (typeof singleItem?.productId === 'string' ? singleItem?.productId : null) ||
-                  (singleItem?.productId && typeof singleItem.productId === 'object'
-                    ? singleItem.productId.id
-                    : null) ||
-                  singleItem?.id ||
-                  singleItem?._id;
-                const pTitle =
-                  singleItem?.title ||
-                  (typeof singleItem?.productId === 'object'
-                    ? singleItem?.productId?.title
-                    : null) ||
-                  singleItem?.name ||
-                  'Delicacy Item';
-
-                setReviewingProduct({
-                  productId: pId,
-                  productTitle: pTitle,
-                  orderItems: items,
-                });
-              }}
-              className="flex items-center justify-between cursor-pointer hover:opacity-85 transition-opacity"
-            >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Star className="w-3.5 h-3.5 text-[#916a00] fill-[#916a00] shrink-0" />
-                <span className="text-[11px] font-medium text-neutral-700 truncate">
-                  Rate & Review
-                </span>
+          <div className="flex items-center justify-between py-0.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-5 h-5 rounded-full bg-amber-500/10 border border-amber-400/25 flex items-center justify-center shrink-0">
+                <Star className="w-2.5 h-2.5 text-amber-600 fill-amber-500" />
               </div>
+              <span className="text-[11px] sm:text-[11.5px] font-medium text-neutral-700 group-hover:text-neutral-900 transition-colors truncate">
+                Rate & Review this order
+              </span>
+            </div>
 
-              <div className="flex items-center gap-0.5 text-[#916a00] shrink-0">
+            <div className="flex items-center gap-1.5 text-amber-500 shrink-0 bg-white px-2.5 py-1 rounded-full border border-amber-200/90 shadow-2xs group-hover:border-amber-400 group-hover:bg-amber-50/90 group-hover:shadow-xs transition-all active:scale-95">
+              <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3 h-3 fill-[#916a00] text-[#916a00]" />
+                  <Star key={i} className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
                 ))}
               </div>
+              <span className="text-[10px] sm:text-[10.5px] font-semibold text-[#8f7422]">
+                Write
+              </span>
             </div>
-          ) : (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Star className="w-3.5 h-3.5 text-[#916a00] fill-[#916a00] shrink-0" />
-                  <span className="text-[11px] font-semibold text-neutral-800 truncate">
-                    Rate & Review ({items.length} Products)
-                  </span>
-                </div>
-                <span className="text-[9.5px] font-medium text-amber-800/80">Choose product</span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                {items.map((it, iIdx) => {
-                  const itId =
-                    it?.productId?._id ||
-                    (typeof it?.productId === 'string' ? it?.productId : null) ||
-                    (it?.productId && typeof it.productId === 'object' ? it.productId.id : null) ||
-                    it?.id ||
-                    it?._id;
-                  const itTitle =
-                    it?.title ||
-                    (typeof it?.productId === 'object' ? it?.productId?.title : null) ||
-                    it?.name ||
-                    'Item';
-                  const itImg =
-                    it?.imageSrc ||
-                    (typeof it?.productId === 'object'
-                      ? it.productId?.imageSrc || it.productId?.images?.[0]
-                      : null) ||
-                    '/MainLogo.png';
-
-                  return (
-                    <button
-                      key={iIdx}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setReviewingProduct({
-                          productId: itId,
-                          productTitle: itTitle,
-                          orderItems: items,
-                        });
-                      }}
-                      className="group/item inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-amber-200/90 shadow-2xs hover:border-amber-400 hover:bg-amber-50 active:scale-95 transition-all text-neutral-800 text-[11px] font-medium cursor-pointer"
-                      title={`Rate & Review ${itTitle}`}
-                    >
-                      <img
-                        src={itImg}
-                        alt=""
-                        className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-neutral-200"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                      <span className="max-w-[120px] sm:max-w-[160px] truncate">{itTitle}</span>
-                      <Star className="w-2.5 h-2.5 text-[#916a00] fill-[#916a00] shrink-0 group-hover/item:scale-110 transition-transform" />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
     </motion.div>

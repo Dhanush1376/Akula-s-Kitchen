@@ -119,16 +119,19 @@
     letter-spacing: -0.01em;
   }
 
-  .modern-sans-headings h1:not(.font-display-force),
-  .modern-sans-headings h2:not(.font-display-force),
-  .modern-sans-headings h3:not(.font-display-force),
-  .modern-sans-headings h4:not(.font-display-force),
-  .modern-sans-headings h5:not(.font-display-force),
-  .modern-sans-headings h6:not(.font-display-force),
-  .modern-sans-headings [class*='font-display']:not(.font-display-force) {
-    font-family: var(--font-body) !important;
-    font-stretch: normal !important;
-    letter-spacing: normal !important;
+  .modern-sans-headings h1,
+  .modern-sans-headings h2,
+  .modern-sans-headings h3,
+  .modern-sans-headings h4,
+  .modern-sans-headings h5,
+  .modern-sans-headings h6,
+  .modern-sans-headings [class*='font-display'],
+  .modern-sans-headings .font-serif-heading,
+  .modern-sans-headings .font-display-force {
+    font-family: var(--font-display) !important;
+    font-weight: 800;
+    font-stretch: 112%;
+    letter-spacing: -0.01em;
   }
 
   .font-serif-heading,

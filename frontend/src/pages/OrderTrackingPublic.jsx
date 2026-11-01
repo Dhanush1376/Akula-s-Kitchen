@@ -48,7 +48,7 @@ export function OrderTrackingPublic() {
       <div className="min-h-screen bg-surface-bright flex flex-col items-center justify-center p-6 text-center">
         <SEO title="Tracking Error" noindex />
         <Truck className="text-[64px] text-red-400 mb-4 animate-bounce" strokeWidth={1.5} />
-        <h2 className="font-body text-xl font-bold text-on-surface mb-2">
+        <h2 className="font-display text-xl font-bold text-on-surface mb-2">
           Tracking Record Unreachable
         </h2>
         <p className="text-xs text-secondary max-w-sm mb-6 leading-relaxed">

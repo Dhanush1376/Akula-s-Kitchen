@@ -26,6 +26,17 @@ export function registerServiceWorker(options = {}) {
     return;
   }
 
+  // In development mode, automatically unregister any stale service workers to prevent dev proxy & HMR collisions
+  if (import.meta.env.DEV) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (const registration of registrations) {
+        registration.unregister();
+        logger.info('[PWA] Unregistered service worker in development mode');
+      }
+    });
+    return;
+  }
+
   const { onUpdate, onSuccess } = options;
 
   const doRegister = async () => {

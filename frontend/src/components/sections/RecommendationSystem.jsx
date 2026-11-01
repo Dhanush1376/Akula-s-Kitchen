@@ -12,11 +12,11 @@ import {
   useTrendingRecommendations,
 } from '../../hooks/useRecommendationQueries';
 import { useRecentlyViewed } from '../../hooks/useUserQueries';
-import { useCategories } from '../../hooks/useProductQueries';
+import { useCategories, useProducts } from '../../hooks/useProductQueries';
 import { useAuth } from '../../context/AuthContext';
 
 export function RecommendationSystem({
-  _category,
+  category,
   currentProductId,
   targetType = 'product',
   hideHeader = false,
@@ -29,12 +29,15 @@ export function RecommendationSystem({
   viewMoreText = 'View More',
 }) {
   const { isAuthenticated } = useAuth();
-  const [shouldFetch, setShouldFetch] = useState(false);
+  // If compact, fetch immediately without delay; otherwise defer slightly for main page rendering
+  const [shouldFetch, setShouldFetch] = useState(Boolean(compact));
   const { data: categoriesData = [] } = useCategories();
 
-  // Progressive rendering: defer execution slightly to allow main page content to render first, but instant when compact
   useEffect(() => {
-    if (compact) return;
+    if (compact) {
+      setShouldFetch(true);
+      return;
+    }
     const timer = setTimeout(() => {
       setShouldFetch(true);
     }, 400);
@@ -42,6 +45,12 @@ export function RecommendationSystem({
   }, [compact]);
 
   const cleanProductId = currentProductId ? String(currentProductId).split('___')[0] : null;
+
+  const categoryName = useMemo(() => {
+    if (!category) return null;
+    if (typeof category === 'string') return category.trim();
+    return (category.name || category.title || category.slug || '').trim() || null;
+  }, [category]);
 
   const similarQuery = useSimilarRecommendations(targetType, cleanProductId, 8, {
     enabled: shouldFetch && !!cleanProductId,
@@ -53,15 +62,56 @@ export function RecommendationSystem({
     enabled: shouldFetch && !!cleanProductId,
   });
   const recentlyViewedQuery = useRecentlyViewed();
-  const trendingQuery = useTrendingRecommendations(
-    { limit: 12 },
-    { enabled: shouldFetch && !cleanProductId },
+
+  // Category fallback: products in the same category so Similar Delights ALWAYS shows items
+  const categoryProductsQuery = useProducts(
+    categoryName ? { category: categoryName, limit: 12 } : { limit: 12 },
+    { enabled: shouldFetch },
   );
 
-  const similarList = similarQuery.data?.items || similarQuery.data || [];
-  const completeSetupList = completeQuery.data?.items || completeQuery.data || [];
-  const alsoViewedList = alsoViewedQuery.data?.items || alsoViewedQuery.data || [];
-  const trendingList = trendingQuery.data?.items || trendingQuery.data || [];
+  // Trending fallback query
+  const trendingQuery = useTrendingRecommendations({ limit: 12 }, { enabled: shouldFetch });
+
+  const similarList = useMemo(() => {
+    const data = similarQuery.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    return [];
+  }, [similarQuery.data]);
+
+  const completeSetupList = useMemo(() => {
+    const data = completeQuery.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    return [];
+  }, [completeQuery.data]);
+
+  const alsoViewedList = useMemo(() => {
+    const data = alsoViewedQuery.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    return [];
+  }, [alsoViewedQuery.data]);
+
+  const trendingList = useMemo(() => {
+    const data = trendingQuery.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.items)) return data.items;
+    return [];
+  }, [trendingQuery.data]);
+
+  const categoryList = useMemo(() => {
+    const data = categoryProductsQuery.data;
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.products)) return data.products;
+    if (Array.isArray(data.items)) return data.items;
+    return [];
+  }, [categoryProductsQuery.data]);
 
   const recentlyViewedList = useMemo(() => {
     if (!isAuthenticated || !recentlyViewedQuery.data) return [];
@@ -91,32 +141,23 @@ export function RecommendationSystem({
       .slice(0, 8);
   }, [recentlyViewedQuery.data, isAuthenticated, currentProductId]);
 
-  // Determine if we should show the loading skeleton
-  // We only show loading if we have started fetching AND we don't have any cached placeholder data
-  const loading =
-    shouldFetch &&
-    (currentProductId
-      ? (similarQuery.isPending && similarList.length === 0) ||
-        (completeQuery.isPending && completeSetupList.length === 0) ||
-        (alsoViewedQuery.isPending && alsoViewedList.length === 0)
-      : trendingQuery.isPending && trendingList.length === 0);
-
-  const getActiveList = () => {
+  const activeList = useMemo(() => {
     const combined = [
       ...similarList,
       ...completeSetupList,
       ...alsoViewedList,
+      ...categoryList,
       ...recentlyViewedList,
       ...trendingList,
     ];
     const uniqueIds = new Set();
     const uniqueList = [];
-    const currentIdStr = currentProductId ? String(currentProductId) : '';
+    const currentIdStr = cleanProductId ? String(cleanProductId).toLowerCase() : '';
 
     for (const item of combined) {
       const rawId = item.id || item._id;
       if (!rawId) continue;
-      const idStr = String(rawId);
+      const idStr = String(rawId).split('___')[0].toLowerCase();
 
       if (!uniqueIds.has(idStr) && idStr !== currentIdStr) {
         uniqueIds.add(idStr);
@@ -125,9 +166,26 @@ export function RecommendationSystem({
     }
 
     return uniqueList.slice(0, 16);
-  };
+  }, [
+    similarList,
+    completeSetupList,
+    alsoViewedList,
+    categoryList,
+    recentlyViewedList,
+    trendingList,
+    cleanProductId,
+  ]);
 
-  const activeList = getActiveList();
+  // Determine if we should show the loading skeleton
+  // Only show skeleton if we have NO items yet AND relevant queries are still in flight
+  const isAnyPending =
+    (similarQuery.isPending && !similarQuery.isError) ||
+    (completeQuery.isPending && !completeQuery.isError) ||
+    (alsoViewedQuery.isPending && !alsoViewedQuery.isError) ||
+    (categoryProductsQuery.isPending && !categoryProductsQuery.isError) ||
+    (trendingQuery.isPending && !trendingQuery.isError);
+
+  const loading = shouldFetch && isAnyPending && activeList.length === 0;
 
   if (!shouldFetch) {
     // Return placeholder matching compact or full height
@@ -139,6 +197,13 @@ export function RecommendationSystem({
   }
 
   if (!loading && activeList.length === 0) {
+    if (compact) {
+      return (
+        <div className="py-8 text-center text-neutral-500 text-xs font-medium">
+          No similar delights found at the moment.
+        </div>
+      );
+    }
     return null;
   }
 

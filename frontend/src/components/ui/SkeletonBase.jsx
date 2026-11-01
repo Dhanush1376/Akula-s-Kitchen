@@ -1,5 +1,5 @@
-// Fill is the warm cream the product cards use before their images load. The surface
-// tokens are all white, so a token fill made skeletons invisible on white pages.
+// Fill is a neutral off-white: visible on the white page surface (the surface tokens
+// are all white, so a token fill made skeletons invisible) without a cream tint.
 export function Skeleton({ className = '', variant = 'rect', delay = 0 }) {
   const variants = {
     rect: 'rounded-2xl',
@@ -9,7 +9,7 @@ export function Skeleton({ className = '', variant = 'rect', delay = 0 }) {
 
   return (
     <div
-      className={`bg-[#f3f1ea] dark:bg-white/[0.06] border border-outline-variant/10 ${variants[variant]} ${className} relative overflow-hidden`}
+      className={`bg-[#f2f2f0] dark:bg-white/[0.06] border border-outline-variant/10 ${variants[variant]} ${className} relative overflow-hidden`}
       style={{ animationDelay: `${delay}ms` }}
       aria-hidden="true"
     >

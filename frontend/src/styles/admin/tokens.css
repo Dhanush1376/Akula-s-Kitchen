@@ -40,6 +40,7 @@
   --admin-surface: #ffffff; /* Pure white cards */
   --admin-surface-hover: #f9f8f5; /* Warm hover */
   --admin-surface-muted: #f3f1ed; /* Warm muted */
+  --admin-skeleton-bg: #f2f2f0; /* Neutral off-white skeleton fill (matches storefront) */
   --admin-surface-raised: #ffffff;
   --admin-surface-overlay: rgba(0, 0, 0, 0.45); /* Neutral overlay */
 

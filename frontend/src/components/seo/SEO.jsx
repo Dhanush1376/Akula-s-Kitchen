@@ -5,9 +5,11 @@ import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { SITE_URL, SITE_NAME, OG_IMAGE_URL, TWITTER_HANDLE } from '../../constants/brandEnv';
 import { getOptimizedUrl } from '../../utils/media/imageUtils';
 
-export const DEFAULT_TITLE = "Akula's Kitchen | Homemade Batters, Pickles & Traditional Foods";
+export const DEFAULT_TITLE = "Akula's Kitchen | Fresh • Tasty • Healthy";
 export const DEFAULT_DESCRIPTION =
-  "Order fresh idli and dosa batters, homemade pickles and chutneys, traditional podis and masalas, namkeen and cashews online from Akula's Kitchen.";
+  'Fresh, homemade idli & dosa batters, authentic traditional pickles, and delicious podis delivered fresh to your doorstep. Fresh • Tasty • Healthy.';
+export const DEFAULT_KEYWORDS =
+  "dosa batter, idli batter, fresh batter, homemade pickles, tomato pickle, gongura pickle, podi, karam podi, south indian food, breakfast batter, akula's kitchen";
 
 const INDEX_ROBOTS = 'index, follow, max-image-preview:large';
 const NOINDEX_ROBOTS = 'noindex, follow';
@@ -129,6 +131,8 @@ export function SEO({
     fullTitleProp ||
     (cleanTitle && !isBareBrand ? `${cleanTitle} | ${siteName}` : globalTitle || DEFAULT_TITLE);
   const metaDescription = description || globalDescription || DEFAULT_DESCRIPTION;
+  const metaKeywords =
+    keywords || storeSettings?.storefront?.seoKeywords || seo?.globalKeywords || DEFAULT_KEYWORDS;
 
   const canonical = canonicalUrl
     ? /^https?:\/\//i.test(canonicalUrl)
@@ -215,7 +219,7 @@ export function SEO({
       <html lang="en-IN" />
       <title>{fullTitle}</title>
       <meta name="description" content={metaDescription} />
-      {keywords && <meta name="keywords" content={keywords} />}
+      <meta name="keywords" content={metaKeywords} />
       <meta name="robots" content={robotsContent} />
       <link rel="canonical" href={canonical} />
 

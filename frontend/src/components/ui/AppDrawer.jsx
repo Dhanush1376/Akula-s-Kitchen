@@ -69,7 +69,7 @@ export function AppDrawer({
                     )}
                     <div>
                       {title && (
-                        <h2 className="font-sans text-[16px] sm:text-[18px] font-bold text-neutral-900 leading-tight">
+                        <h2 className="font-display text-[16px] sm:text-[18px] font-bold text-neutral-900 leading-tight">
                           {title}
                         </h2>
                       )}

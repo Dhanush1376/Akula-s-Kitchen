@@ -252,7 +252,7 @@ export function NotificationsSection({ isDrawer = false }) {
             <div className="w-12 h-12 rounded-full bg-[#283618]/10 text-[#283618] flex items-center justify-center mb-3">
               <Bell className="w-5 h-5" strokeWidth={1.8} />
             </div>
-            <h3 className="font-sans font-bold text-[14px] text-neutral-900 mb-1">
+            <h3 className="font-display font-bold text-[14px] text-neutral-900 mb-1">
               All caught up!
             </h3>
             <p className="text-[11.5px] text-neutral-500 max-w-[260px] leading-relaxed">

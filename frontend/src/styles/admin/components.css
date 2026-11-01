@@ -389,7 +389,7 @@
 .admin-section-root .admin-skeleton {
   position: relative;
   overflow: hidden;
-  background: var(--admin-surface-muted);
+  background: var(--admin-skeleton-bg, var(--admin-surface-muted));
   border-radius: var(--admin-radius-md);
   /* Hardware acceleration for smooth shimmer */
   transform: translateZ(0);
@@ -508,7 +508,7 @@
 .admin-section-root .admin-skeleton {
   position: relative;
   overflow: hidden;
-  background: var(--admin-surface-muted);
+  background: var(--admin-skeleton-bg, var(--admin-surface-muted));
   border-radius: var(--admin-radius-md);
   /* Use default software rendering to prevent GPU out-of-memory */
 }

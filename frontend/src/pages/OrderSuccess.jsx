@@ -412,8 +412,8 @@ export function OrderSuccess() {
                           <div
                             role="heading"
                             aria-level={4}
-                            className="font-bold text-sm sm:text-base text-on-surface line-clamp-1 font-sans"
-                            style={{ fontFamily: 'var(--font-body)' }}
+                            className="font-display font-bold text-sm sm:text-base text-on-surface line-clamp-1"
+                            style={{ fontFamily: 'var(--font-display)' }}
                           >
                             {item.title}
                           </div>

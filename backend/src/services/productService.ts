@@ -8,6 +8,7 @@ import { categoryCache, MemoryCache } from '../utils/cache/MemoryCache';
 import redisClient from '../utils/cache/redis';
 import { MediaService } from './media/MediaService';
 import { analyzeQueryWithAI, escapeRegex, getMatchingProductCategory } from './searchService';
+import { weightMatchRegex } from '../utils/weightLabel';
 import { computeSearchScore } from './search/rankingEngine';
 import { analyzeCatalogQuery, CatalogSearchAnalysis } from './search/catalogVocabulary';
 import Category from '../models/Category';
@@ -167,7 +168,10 @@ class ProductService {
 
       if (values.length > 0) {
         // Build regex for each value
-        const valRegexes = values.map((v) => new RegExp(`^${escapeRegex(v)}$`, 'i'));
+        // Weights match every spelling ("1kg" also finds products tagged "1 Kg").
+        const valRegexes = values.map(
+          (v) => weightMatchRegex(v) || new RegExp(`^${escapeRegex(v)}$`, 'i'),
+        );
 
         dynamicFilterOrs.push({
           $or: [

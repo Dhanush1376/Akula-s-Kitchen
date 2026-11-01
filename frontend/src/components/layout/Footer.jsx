@@ -1,7 +1,9 @@
+// ═══════════════════════════════════════════════════════════
+// AKULA'S KITCHEN - STOREFRONT FOOTER (SETTINGS-DRIVEN)
+// ═══════════════════════════════════════════════════════════
 import { Phone, Mail, ArrowUpRight, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../ui/BrandLogo';
-import { useWebsiteContent } from '../../hooks/useWebsiteContent';
 import { CONTACT_EMAIL, SOCIAL_INSTAGRAM, SOCIAL_PINTEREST } from '../../constants/brandEnv';
 import { useQuery } from '@tanstack/react-query';
 import storeSettingsService from '../../services/api/storeSettingsService';
@@ -23,7 +25,6 @@ export function Footer() {
     storeSettings,
   } = useConfig();
   const { openInstallDrawer, isStandalone, isInstalled } = usePwa();
-  const { contact, footer, navigation } = useWebsiteContent();
   const { data: settings } = useQuery({
     queryKey: ['storeSettings', 'public'],
     queryFn: () => storeSettingsService.getPublicSettings(),
@@ -37,72 +38,86 @@ export function Footer() {
   });
   const policies = policiesResponse?.data || [];
 
-  const logoText = navigation?.logo?.text || storeNameUpper || "AKULA'S KITCHEN";
+  const logoText =
+    settings?.general?.storeName ||
+    storeSettings?.general?.storeName ||
+    storeNameUpper ||
+    "AKULA'S KITCHEN";
   const currentYear = new Date().getFullYear();
 
   const primaryPhone =
-    settings?.general?.phone ||
     settings?.contact?.phone ||
+    settings?.general?.phone ||
+    storeSettings?.contact?.phone ||
+    storeSettings?.general?.phone ||
     configPhone ||
-    contact?.phone ||
-    footer?.phone ||
     BRAND.phone;
 
   const alternatePhone =
-    settings?.general?.alternatePhone ||
     settings?.contact?.alternatePhone ||
+    settings?.general?.alternatePhone ||
+    storeSettings?.contact?.alternatePhone ||
+    storeSettings?.general?.alternatePhone ||
     configAltPhone ||
     BRAND.alternatePhone;
 
   const email =
-    settings?.general?.supportEmail ||
     settings?.contact?.email ||
+    settings?.general?.supportEmail ||
+    storeSettings?.contact?.email ||
+    storeSettings?.general?.supportEmail ||
     configEmail ||
-    contact?.email ||
-    footer?.email ||
     BRAND.email ||
     CONTACT_EMAIL;
 
   const instagramLink =
-    settings?.social?.instagramUrl || footer?.socialLinks?.instagram || SOCIAL_INSTAGRAM;
+    settings?.contact?.instagram ||
+    storeSettings?.contact?.instagram ||
+    settings?.social?.instagramUrl ||
+    SOCIAL_INSTAGRAM;
+
+  const facebookLink =
+    settings?.contact?.facebook ||
+    storeSettings?.contact?.facebook ||
+    settings?.social?.facebookUrl ||
+    '';
+
   const pinterestLink =
-    settings?.social?.pinterestUrl || footer?.socialLinks?.pinterest || SOCIAL_PINTEREST;
+    settings?.contact?.pinterest ||
+    storeSettings?.contact?.pinterest ||
+    settings?.social?.pinterestUrl ||
+    SOCIAL_PINTEREST;
+
+  const youtubeLink =
+    settings?.contact?.youtube ||
+    storeSettings?.contact?.youtube ||
+    settings?.social?.youtubeUrl ||
+    '';
 
   const businessName =
     settings?.legal?.legalCompanyName ||
     settings?.legal?.companyName ||
     settings?.general?.storeName ||
+    storeSettings?.legal?.companyName ||
+    storeSettings?.general?.storeName ||
     storeName ||
     "Akula's Kitchen";
 
-  // Dynamic CMS Link Mappings
-  const exploreLinks =
-    footer?.exploreLinks?.length > 0
-      ? footer.exploreLinks
-      : [
-          { label: 'All Collections', href: '/collections' },
-          { label: 'Special Today', href: '/' },
-        ];
+  // Real site storefront pages
+  const exploreLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Shop Menu', href: '/menu' },
+    { label: 'All Collections', href: '/collections' },
+    { label: 'Special Today', href: '/' },
+  ];
 
-  // `studioLinks` is the persisted CMS key for the footer's second link column.
-  const quickLinks = (
-    footer?.studioLinks?.length > 0
-      ? footer.studioLinks
-      : [
-          { label: 'Shop Menu', href: '/collections' },
-          { label: 'Customer Support', href: '/contact' },
-        ]
-  ).filter((link) => {
-    const href = (link?.href || link?.link || '').toLowerCase().trim();
-    const label = (link?.label || '').toLowerCase().trim();
-    return (
-      href !== '/about' &&
-      !href.includes('/about') &&
-      label !== 'our story' &&
-      label !== 'about us' &&
-      label !== 'about'
-    );
-  });
+  const quickLinks = [
+    { label: 'Food Blog', href: '/blog' },
+    { label: 'Customer Support', href: '/contact' },
+    { label: 'Track Order', href: '/track-order' },
+    { label: 'My Orders', href: '/dashboard/orders' },
+    { label: 'Wishlist', href: '/wishlist' },
+  ];
 
   const defaultPolicyLinks = [
     { label: 'Shipping Policy', href: '/policy/shipping-policy' },
@@ -114,12 +129,11 @@ export function Footer() {
     { label: 'Privacy Policy', href: '/policy/privacy-policy' },
   ];
 
+  // Dynamic policy links generated directly from policy pages database
   const policyLinks =
-    footer?.policyLinks?.length > 0
-      ? footer.policyLinks
-      : policies.length > 0
-        ? policies.map((p) => ({ label: p.title, href: `/policy/${p.slug}` }))
-        : defaultPolicyLinks;
+    policies.length > 0
+      ? policies.map((p) => ({ label: p.title, href: `/policy/${p.slug}` }))
+      : defaultPolicyLinks;
 
   const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -168,9 +182,9 @@ export function Footer() {
             </div>
 
             <p className="text-[11.5px] sm:text-[13px] text-neutral-300 leading-snug sm:leading-relaxed max-w-sm font-normal line-clamp-2 sm:line-clamp-none">
-              {footer?.description ||
+              {settings?.general?.tagline ||
+                storeSettings?.general?.tagline ||
                 storeTagline ||
-                settings?.general?.tagline ||
                 'Authentic homemade delicacies, freshly prepared daily with pure traditional ingredients.'}
             </p>
 
@@ -201,6 +215,25 @@ export function Footer() {
                   </svg>
                 </a>
               )}
+              {facebookLink && (
+                <a
+                  aria-label="Follow on Facebook"
+                  href={facebookLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="sm:w-[16px] sm:h-[16px]"
+                  >
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </a>
+              )}
               {pinterestLink && (
                 <a
                   aria-label="Follow on Pinterest"
@@ -210,6 +243,25 @@ export function Footer() {
                   className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
                 >
                   <span className="font-bold text-[12px] sm:text-[14px]">P</span>
+                </a>
+              )}
+              {youtubeLink && (
+                <a
+                  aria-label="Follow on YouTube"
+                  href={youtubeLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/[0.06] hover:bg-[#f7bb0e] hover:text-[#1b2510] text-neutral-200 border border-white/10 flex items-center justify-center transition-all duration-200 shadow-sm"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="sm:w-[16px] sm:h-[16px]"
+                  >
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
                 </a>
               )}
             </div>
@@ -240,10 +292,10 @@ export function Footer() {
               </ul>
             </div>
 
-            {/* Kitchen Column */}
+            {/* Quick Links Column */}
             <div>
               <h3 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#f7bb0e] mb-1.5 sm:mb-4">
-                Kitchen
+                Pages & Help
               </h3>
               <ul className="space-y-1 sm:space-y-2.5">
                 {quickLinks.map((link, idx) => (
@@ -316,10 +368,7 @@ export function Footer() {
         {/* Bottom Legal & Policies Row */}
         <div className="pt-3.5 sm:pt-6 lg:pt-8 flex flex-col md:flex-row items-center justify-between gap-2.5 sm:gap-4 text-[10.5px] sm:text-[12px] text-neutral-400">
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2 text-center md:text-left">
-            <span>
-              {footer?.copyright?.replace('{year}', currentYear.toString()) ||
-                `© ${currentYear} ${businessName}. All rights reserved.`}
-            </span>
+            <span>{`© ${currentYear} ${businessName}. All rights reserved.`}</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 sm:gap-x-5 gap-y-1">
