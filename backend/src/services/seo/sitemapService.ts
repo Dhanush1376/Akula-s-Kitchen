@@ -88,7 +88,7 @@ export function buildSitemapEntries(input: {
 
   const entries: SitemapEntry[] = [
     { loc: `${SITE_URL}/`, lastmod: newestProduct },
-    { loc: `${SITE_URL}/collections`, lastmod: newestProduct },
+    { loc: `${SITE_URL}/shop`, lastmod: newestProduct },
     { loc: `${SITE_URL}/menu` },
     { loc: `${SITE_URL}/contact` },
   ];

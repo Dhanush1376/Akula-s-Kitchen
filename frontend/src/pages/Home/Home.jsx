@@ -5,6 +5,7 @@ import { SEO } from '../../components/seo/SEO';
 
 import { EditorialHero } from './sections/EditorialHero';
 import { HomeHeroLeaves } from './sections/HomeHeroLeaves';
+import { FreshEveryDay } from './sections/FreshEveryDay';
 import {
   HomeCategorySkeleton,
   HomeProductRowSkeleton,
@@ -94,6 +95,7 @@ export function Home({ previewContent }) {
                     <Suspense fallback={<HomeCategorySkeleton />}>
                       <CategoryGrid previewContent={activeCms} />
                     </Suspense>
+                    <div className="ak-section-divider" aria-hidden="true" />
                   </div>
                 );
               case 'trendingProducts':
@@ -106,6 +108,7 @@ export function Home({ previewContent }) {
                     >
                       <TrendingProducts previewContent={activeCms} />
                     </Suspense>
+                    <FreshEveryDay />
                   </div>
                 );
               case 'featuredProducts':
@@ -114,6 +117,7 @@ export function Home({ previewContent }) {
                     <Suspense fallback={<HomeProductRowSkeleton />}>
                       <BestSellers previewContent={activeCms} />
                     </Suspense>
+                    <div className="ak-section-divider" aria-hidden="true" />
                   </div>
                 );
               case 'recommendedProducts':

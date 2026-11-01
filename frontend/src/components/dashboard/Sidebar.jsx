@@ -53,7 +53,7 @@ export function Sidebar() {
   else if (drawerParam === 'notifications') activeTab = 'notifications';
   else if (path.includes('/orders')) activeTab = 'orders';
   else if (path.includes('/settings')) activeTab = 'preferences';
-  else if (path.includes('/collections')) activeTab = 'collections';
+  else if (path.includes('/shop') || path.includes('/collections')) activeTab = 'collections';
   else if (path.includes('/shopping-bag')) activeTab = 'shopping-bag';
   else if (path.includes('/notifications')) activeTab = 'notifications';
   else if (path.includes('/security')) activeTab = 'security';

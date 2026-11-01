@@ -15,7 +15,7 @@ export function CheckoutNavbar() {
         <div className="flex-1">
           {isCart ? (
             <Link
-              to="/collections"
+              to="/shop"
               className="group inline-flex items-center gap-1.5 text-secondary hover:text-on-surface transition-colors"
             >
               <span className="material-symbols-outlined text-[20px] group-hover:-translate-x-1 transition-transform">

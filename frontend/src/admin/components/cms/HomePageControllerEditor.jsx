@@ -551,7 +551,7 @@ export function HomePageControllerEditor({ content, onUpdate }) {
                         } else {
                           cats.push({
                             title: categoryName,
-                            link: `/collections?category=${encodeURIComponent(categoryName)}`,
+                            link: `/shop?category=${encodeURIComponent(categoryName)}`,
                             image: '',
                           });
                         }
@@ -641,7 +641,7 @@ export function HomePageControllerEditor({ content, onUpdate }) {
                                   updateSectionState('categoryGrid', 'categories', cats);
                                 }}
                                 className="text-[11px] text-[var(--admin-text-secondary)] bg-transparent border-b border-transparent focus:border-[var(--admin-accent)]/50 outline-none focus:ring-0 p-0 m-0 w-full transition-colors"
-                                placeholder={`/collections?category=${encodeURIComponent(cat.title)}`}
+                                placeholder={`/shop?category=${encodeURIComponent(cat.title)}`}
                               />
                             </div>
                           </div>

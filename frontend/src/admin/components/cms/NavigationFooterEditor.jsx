@@ -9,14 +9,14 @@ export function NavigationFooterEditor({ nav = {}, footer = {}, onUpdate }) {
   const exploreLinks =
     footer.exploreLinks?.length > 0
       ? footer.exploreLinks
-      : [{ label: 'Collections', href: '/collections' }];
+      : [{ label: 'Collections', href: '/shop' }];
 
   // `studioLinks` is the persisted CMS key for the footer's second link column.
   const quickLinks =
     footer.studioLinks?.length > 0
       ? footer.studioLinks
       : [
-          { label: 'Collections', href: '/collections' },
+          { label: 'Collections', href: '/shop' },
           { label: 'Contact', href: '/contact' },
         ];
 

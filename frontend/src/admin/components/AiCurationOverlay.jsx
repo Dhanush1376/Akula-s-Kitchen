@@ -16,7 +16,6 @@ export function AiCurationOverlay({
   handleApplyAISpecs,
 }) {
   const [tagInput, setTagInput] = useState('');
-  const [materialInput, setMaterialInput] = useState('');
   const [badgeInput, setBadgeInput] = useState('');
 
   const { isMobile, dragProps, sheetTransition } = useMobileDrawerEngine({
@@ -308,60 +307,6 @@ export function AiCurationOverlay({
                         onClick={() => {
                           addArrayItem('badges', badgeInput);
                           setBadgeInput('');
-                        }}
-                        className="admin-btn-icon !w-6 !h-6 !rounded-[3px] text-[11px]"
-                      >
-                        <span className="material-symbols-outlined text-[13px]">add</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Ingredients */}
-              <div className="p-3 sm:p-3.5 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[4px] space-y-2">
-                <span className="text-[10.5px] font-bold uppercase tracking-wider text-[var(--admin-text-secondary)] block">
-                  Detected Ingredients
-                </span>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {(aiAnalysisResult.materials || []).map((m, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 bg-[var(--admin-surface-muted)] text-[var(--admin-text-primary)] pl-2 pr-1 py-0.5 rounded-[4px] text-[11.5px] font-medium border border-[var(--admin-border)]"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--admin-accent)]" />
-                      {m}
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem('materials', idx)}
-                        className="hover:text-red-500 transition-colors cursor-pointer p-0.5 flex items-center"
-                        title="Remove"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">close</span>
-                      </button>
-                    </span>
-                  ))}
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="text"
-                      value={materialInput}
-                      onChange={(e) => setMaterialInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addArrayItem('materials', materialInput);
-                          setMaterialInput('');
-                        }
-                      }}
-                      placeholder="+ Add ingredient"
-                      className="w-28 bg-[var(--admin-bg-subtle)] border border-[var(--admin-border)] rounded-[4px] px-2 py-0.5 text-[11px] text-[var(--admin-text-primary)] focus:border-[var(--admin-accent)] outline-none"
-                    />
-                    {materialInput.trim() && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          addArrayItem('materials', materialInput);
-                          setMaterialInput('');
                         }}
                         className="admin-btn-icon !w-6 !h-6 !rounded-[3px] text-[11px]"
                       >

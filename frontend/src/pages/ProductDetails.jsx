@@ -154,7 +154,7 @@ export function ProductDetails() {
           description="The product you are looking for may have been moved or is currently unavailable."
           icon="inventory_2"
           actionLabel="Return to Collections"
-          onAction={() => (window.location.href = '/collections')}
+          onAction={() => (window.location.href = '/shop')}
         />
       </div>
     );
@@ -195,7 +195,7 @@ export function ProductDetails() {
             Home
           </Link>
           <span className="text-neutral-300">/</span>
-          <Link to="/collections" className="hover:text-neutral-950 transition-colors">
+          <Link to="/shop" className="hover:text-neutral-950 transition-colors">
             Shop
           </Link>
           {(product.primaryCategory?.name || product.category) && (

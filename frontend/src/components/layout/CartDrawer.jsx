@@ -169,7 +169,7 @@ export function CartDrawer({ isOpen, onClose }) {
                     actionLabel="Explore Kitchen"
                     onAction={() => {
                       onClose();
-                      navigate('/collections');
+                      navigate('/shop');
                     }}
                   />
                 </div>

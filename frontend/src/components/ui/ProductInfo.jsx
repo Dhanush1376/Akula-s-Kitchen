@@ -82,7 +82,7 @@ export function ProductInfo({ product, atcRef, _maxQuantity = 10 }) {
         <div className="flex flex-wrap items-start justify-between gap-1.5 sm:gap-2">
           <div className="flex items-center gap-1.5 pt-0.5">
             <Link
-              to={`/collections?category=${encodeURIComponent(product.primaryCategory?.name || product.category || '')}`}
+              to={`/shop?category=${encodeURIComponent(product.primaryCategory?.name || product.category || '')}`}
               className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-neutral-950 font-extrabold text-[10.5px] uppercase tracking-wider border border-black/10 shadow-2xs hover:bg-[#f7bb0e]/20 hover:border-black/20 transition-all"
             >
               {product.primaryCategory?.name || product.category || "Akula's Kitchen"}

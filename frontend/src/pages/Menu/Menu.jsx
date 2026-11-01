@@ -701,7 +701,7 @@ export function Menu() {
               </nav>
             </div>
 
-            <Link to="/collections" className="menu-shop-card group">
+            <Link to="/shop" className="menu-shop-card group">
               <span className="menu-shop-card__title">Shop Full Catalogue</span>
               <span className="menu-shop-card__icon">
                 <ArrowUpRight strokeWidth={2.4} aria-hidden="true" />
@@ -742,7 +742,7 @@ export function Menu() {
                   >
                     View Today&apos;s Menu
                   </button>
-                  <Link to="/collections" className="ak-btn ak-btn--outline text-xs">
+                  <Link to="/shop" className="ak-btn ak-btn--outline text-xs">
                     Browse All Dishes
                   </Link>
                 </div>

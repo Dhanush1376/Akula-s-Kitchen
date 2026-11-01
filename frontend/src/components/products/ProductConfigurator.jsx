@@ -405,15 +405,15 @@ export function ProductConfigurator({
             <div
               key={gid}
               ref={(el) => (groupRefs.current[gid] = el)}
-              className={`p-4 rounded-2xl transition-all duration-300 border ${
+              className={`p-3.5 sm:p-4 rounded-2xl transition-all duration-300 border ${
                 hasError
                   ? 'bg-red-50/50 border-red-300 ring-2 ring-red-200'
-                  : 'bg-white border-neutral-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
+                  : 'bg-neutral-50/70 border-neutral-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
               }`}
             >
               {/* Group Header */}
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="font-extrabold text-[13.5px] sm:text-[14px] text-neutral-950 uppercase tracking-wide">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <span className="font-extrabold text-[12.5px] sm:text-[13px] text-neutral-900 uppercase tracking-wide font-sans">
                   {group.name}
                 </span>
 
@@ -424,11 +424,11 @@ export function ProductConfigurator({
                     </span>
                   )}
                   {group.required ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-neutral-900 text-white shadow-2xs">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#283618]/10 text-[#283618]">
                       Required
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-500 border border-neutral-200/80">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-500 border border-neutral-200/80">
                       Optional
                     </span>
                   )}
@@ -483,7 +483,7 @@ export function ProductConfigurator({
                         isUnavailable
                           ? 'opacity-40 bg-neutral-100 border-neutral-200 cursor-not-allowed'
                           : isSelected
-                            ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-1 ring-neutral-950'
+                            ? 'bg-[#283618] text-white border-[#283618] shadow-sm ring-1 ring-[#283618]'
                             : 'bg-white hover:bg-neutral-50/80 border-neutral-200/90 hover:border-neutral-300 text-neutral-800 shadow-2xs'
                       }`}
                     >
@@ -500,7 +500,7 @@ export function ProductConfigurator({
                         {adj > 0 ? (
                           <span
                             className={`font-extrabold ${
-                              isSelected ? 'text-[#f7bb0e]' : 'text-neutral-700'
+                              isSelected ? 'text-[#f7bb0e]' : 'text-[#283618]'
                             }`}
                           >
                             +₹{formatPrice(adj)}
@@ -508,7 +508,7 @@ export function ProductConfigurator({
                         ) : adj < 0 ? (
                           <span
                             className={`font-extrabold ${
-                              isSelected ? 'text-emerald-400' : 'text-emerald-700'
+                              isSelected ? 'text-emerald-300' : 'text-emerald-700'
                             }`}
                           >
                             −₹{formatPrice(Math.abs(adj))}
@@ -516,7 +516,7 @@ export function ProductConfigurator({
                         ) : (
                           <span
                             className={`font-medium ${
-                              isSelected ? 'text-neutral-300' : 'text-neutral-400'
+                              isSelected ? 'text-white/80' : 'text-neutral-400'
                             }`}
                           >
                             Included
@@ -570,24 +570,24 @@ export function ProductConfigurator({
               <span className="text-[11px] uppercase tracking-wider font-extrabold text-neutral-500 hidden sm:inline">
                 Qty
               </span>
-              <div className="inline-flex items-center h-9 rounded-full border-[1.5px] border-[#f7bb0e] bg-[#fffdf0] px-1 shadow-2xs">
+              <div className="inline-flex items-center h-9 rounded-full border border-black/10 bg-neutral-100/90 px-1 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1 || isSubmitting}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-950 hover:bg-[#f7bb0e] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-800 hover:bg-white hover:shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
                   aria-label="Decrease quantity"
                 >
                   <Minus size={12} strokeWidth={2.5} />
                 </button>
-                <span className="w-7 text-center font-extrabold text-[13px] text-neutral-950">
+                <span className="w-7 text-center font-bold text-[13px] text-neutral-900">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => onQuantityChange(Math.min(99, quantity + 1))}
                   disabled={quantity >= 99 || isSubmitting}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-950 hover:bg-[#f7bb0e] disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-800 hover:bg-white hover:shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
                   aria-label="Increase quantity"
                 >
                   <Plus size={12} strokeWidth={2.5} />
@@ -604,10 +604,12 @@ export function ProductConfigurator({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full h-[48px] sm:h-[52px] rounded-full flex items-center justify-center gap-2 sm:gap-2.5 font-extrabold text-[12px] sm:text-[13px] uppercase tracking-wider bg-[#f7bb0e] text-neutral-950 hover:bg-[#eab00d] border-[1.5px] border-[#f7bb0e] shadow-[0_1.5px_0_0_#d99b00,0_2px_4px_rgba(0,0,0,0.06)] active:scale-98 transition-all cursor-pointer px-3 sm:px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-[48px] sm:h-[52px] rounded-full flex items-center justify-center gap-2 sm:gap-2.5 font-sans font-bold text-[12.5px] sm:text-[13px] uppercase tracking-wider bg-[#283618] text-white hover:bg-[#1f2b13] shadow-md hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer px-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" strokeWidth={2.2} />
-            <span className="truncate">{ctaLabel}</span>
+            <span className="truncate">
+              {ctaLabel} • ₹{formatPrice(configuredUnitPrice * quantity)}
+            </span>
           </button>
 
           {secondaryAction}

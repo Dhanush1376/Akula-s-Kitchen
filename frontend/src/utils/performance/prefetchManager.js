@@ -79,7 +79,12 @@ class PrefetchManager {
             staleTime: 1000 * 60 * 10,
           });
         }
-      } else if (route === '/collections' || route.startsWith('/collections?')) {
+      } else if (
+        route === '/shop' ||
+        route.startsWith('/shop?') ||
+        route === '/collections' ||
+        route.startsWith('/collections?')
+      ) {
         await this.queryClient.prefetchQuery({
           queryKey: ['products', { page: 1, limit: 50, sort: 'newest' }],
           queryFn: async () => {
@@ -126,7 +131,7 @@ class PrefetchManager {
     if (!route) return '';
     if (route.startsWith('/product/')) return '/product/:id';
     if (route.startsWith('/dashboard')) return '/dashboard';
-    if (route.startsWith('/collections')) return '/collections';
+    if (route.startsWith('/shop') || route.startsWith('/collections')) return '/shop';
     return route.split('?')[0];
   }
 
@@ -136,6 +141,7 @@ class PrefetchManager {
 
     const importers = {
       '/': () => import('../../pages/Home/Home'),
+      '/shop': () => import('../../pages/ProductListing'),
       '/collections': () => import('../../pages/ProductListing'),
       '/cart': () => import('../../pages/Cart'),
       '/checkout': () => import('../../pages/Checkout'),
@@ -215,7 +221,9 @@ class PrefetchManager {
       .slice(0, limit)
       .map(([route]) => route)
       .filter((route) =>
-        ['/cart', '/checkout', '/dashboard', '/collections', '/product/:id'].includes(route),
+        ['/cart', '/checkout', '/dashboard', '/shop', '/collections', '/product/:id'].includes(
+          route,
+        ),
       );
   }
 

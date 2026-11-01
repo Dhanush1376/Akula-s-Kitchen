@@ -107,7 +107,7 @@ export function Footer() {
   const exploreLinks = [
     { label: 'Home', href: '/' },
     { label: 'Shop Menu', href: '/menu' },
-    { label: 'All Collections', href: '/collections' },
+    { label: 'All Products', href: '/shop' },
     { label: 'Special Today', href: '/' },
   ];
 

@@ -623,7 +623,7 @@ export function OrderSuccess() {
                 <span>View Digital Invoice</span>
               </button>
               <Link
-                to="/collections"
+                to="/shop"
                 className="w-full bg-surface-bright border border-outline-variant text-secondary h-12 rounded-full text-[12px] font-extrabold uppercase tracking-wider hover:bg-surface-container-low transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <ShoppingBag className="w-4 h-4 text-neutral-700" strokeWidth={1.8} />

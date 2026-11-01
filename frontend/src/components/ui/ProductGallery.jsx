@@ -90,7 +90,7 @@ export function ProductGallery({ images = [], product }) {
       if (window.history.state && window.history.state.idx > 0) {
         navigate(-1);
       } else {
-        navigate('/collections');
+        navigate('/shop');
         // Force scroll reset on fallback
         window.scrollTo(0, 0);
       }

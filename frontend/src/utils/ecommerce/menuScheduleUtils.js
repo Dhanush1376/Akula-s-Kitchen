@@ -102,6 +102,77 @@ export function formatCutoffTimeDisplay(cutoffTime) {
   return `${displayHours}${displayMinutes} ${period}`;
 }
 
+const WEEKDAY_INDEX_MAP = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+/**
+ * Returns date parts strictly in India Standard Time (IST, UTC+5:30).
+ */
+export function getISTDateParts(date = new Date()) {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      weekday: 'short',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(date);
+    const map = {};
+    for (const p of parts) map[p.type] = p.value;
+    let hours = parseInt(map.hour, 10);
+    if (hours === 24) hours = 0;
+    const minutes = parseInt(map.minute, 10);
+    const day = parseInt(map.day, 10);
+    const month = parseInt(map.month, 10);
+    const year = parseInt(map.year, 10);
+    const dayIndex = WEEKDAY_INDEX_MAP[map.weekday] ?? date.getDay();
+    return {
+      hours,
+      minutes,
+      totalMinutes: hours * 60 + minutes,
+      day,
+      month,
+      year,
+      weekday: map.weekday,
+      dayIndex,
+    };
+  } catch {
+    return {
+      hours: date.getHours(),
+      minutes: date.getMinutes(),
+      totalMinutes: date.getHours() * 60 + date.getMinutes(),
+      day: date.getDate(),
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+      weekday: 'Mon',
+      dayIndex: date.getDay(),
+    };
+  }
+}
+
+/**
+ * Returns current timestamp converted to India Standard Time (IST, UTC+5:30),
+ * matching the kitchen's operational time zone.
+ */
+export function getNowInIST(customDate = null) {
+  if (customDate instanceof Date) return customDate;
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utc + 3600000 * 5.5);
+}
+
 /**
  * Calculates effective menu day and tomorrow transition state.
  *
@@ -110,15 +181,16 @@ export function formatCutoffTimeDisplay(cutoffTime) {
  * @returns {Object} Effective day resolution
  */
 export function getEffectiveMenuDay(cutoffTime = '18:00', customDate = null) {
-  const now = customDate instanceof Date ? customDate : new Date();
-  const todayIndex = now.getDay(); // 0 is Sunday
+  const baseDate = customDate instanceof Date ? customDate : new Date();
+  const istParts = getISTDateParts(baseDate);
+  const todayIndex = istParts.dayIndex; // 0 is Sunday
   const todayKey = DAY_KEY_MAP[todayIndex] || 'thursday';
 
   const tomorrowIndex = (todayIndex + 1) % 7;
   const tomorrowKey = DAY_KEY_MAP[tomorrowIndex] || 'friday';
 
   const parsedCutoff = parseCutoffTime(cutoffTime);
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = istParts.totalMinutes;
 
   const isAfterCutoff = Boolean(parsedCutoff && currentMinutes >= parsedCutoff.totalMinutes);
   const isTomorrow = isAfterCutoff;
@@ -126,14 +198,36 @@ export function getEffectiveMenuDay(cutoffTime = '18:00', customDate = null) {
 
   const effectiveDayKey = isTomorrow ? tomorrowKey : todayKey;
 
-  const effectiveDate = new Date(now);
+  const effectiveDate = new Date(baseDate);
   if (isTomorrow) {
-    effectiveDate.setDate(now.getDate() + 1);
+    effectiveDate.setDate(effectiveDate.getDate() + 1);
   }
 
   const todayMeta = DAYS_OF_WEEK.find((d) => d.key === todayKey) || DAYS_OF_WEEK[0];
   const tomorrowMeta = DAYS_OF_WEEK.find((d) => d.key === tomorrowKey) || DAYS_OF_WEEK[0];
   const effectiveMeta = isTomorrow ? tomorrowMeta : todayMeta;
+
+  const formattedEffectiveDate = effectiveDate.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+
+  const formattedEffectiveDateWithYear = effectiveDate.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  const formattedTodayDate = baseDate.toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
 
   return {
     todayKey,
@@ -146,21 +240,14 @@ export function getEffectiveMenuDay(cutoffTime = '18:00', customDate = null) {
     isTomorrow,
     isToday,
     effectiveDate,
-    now,
+    now: baseDate,
     cutoffTime: parsedCutoff
       ? `${String(parsedCutoff.hours).padStart(2, '0')}:${String(parsedCutoff.minutes).padStart(2, '0')}`
       : 'disabled',
     cutoffDisplay: formatCutoffTimeDisplay(cutoffTime),
-    formattedEffectiveDate: effectiveDate.toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    }),
-    formattedTodayDate: now.toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    }),
+    formattedEffectiveDate,
+    formattedEffectiveDateWithYear,
+    formattedTodayDate,
   };
 }
 
@@ -171,8 +258,8 @@ export function getEffectiveMenuDay(cutoffTime = '18:00', customDate = null) {
  * @param {Date|string|number} refDate
  * @returns {Array<{key: string, label: string, short: string, index: number, date: Date, dayNumber: number, monthShort: string, formattedDate: string}>}
  */
-export function getWeekDates(refDate = new Date()) {
-  const now = refDate instanceof Date ? refDate : new Date(refDate);
+export function getWeekDates(refDate = null) {
+  const now = refDate instanceof Date ? refDate : refDate ? new Date(refDate) : getNowInIST();
   const currentDayIndex = now.getDay(); // 0 is Sunday, 1 is Monday...
   // Days from Monday (Monday = 0 offset, Sunday = 6 offset)
   const mondayOffset = (currentDayIndex + 6) % 7;

@@ -35,7 +35,7 @@ export function NotFound() {
               </span>
             </Link>
             <Link
-              to="/collections"
+              to="/shop"
               className="inline-flex items-center justify-center px-6 min-h-[48px] rounded-full border border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50 text-neutral-900 font-extrabold text-[12.5px] uppercase tracking-wider transition-all active:scale-[0.98] min-w-[210px]"
             >
               Browse Collections
@@ -49,7 +49,7 @@ export function NotFound() {
         <div className="text-center">
           <h3 className="font-label-sm mb-3">Shop</h3>
           <Link
-            to="/collections"
+            to="/shop"
             className="text-on-surface-variant hover:text-primary transition-colors text-sm"
           >
             All Products
@@ -58,7 +58,7 @@ export function NotFound() {
         <div className="text-center">
           <h3 className="font-label-sm mb-3">Services</h3>
           <Link
-            to="/collections"
+            to="/shop"
             className="text-on-surface-variant hover:text-primary transition-colors text-sm"
           >
             Browse Collections

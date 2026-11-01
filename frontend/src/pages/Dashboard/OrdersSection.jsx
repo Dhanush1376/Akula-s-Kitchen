@@ -70,7 +70,7 @@ export function OrdersSection() {
               </p>
 
               <Link
-                to="/collections"
+                to="/shop"
                 className="inline-flex items-center justify-between gap-3.5 pl-6 pr-2 py-1.5 min-h-[46px] rounded-full bg-[#283618] hover:bg-[#1f2b13] text-white font-extrabold text-[12.5px] uppercase tracking-wider transition-all shadow-sm hover:shadow-md active:scale-[0.98] border border-[#283618] group select-none cursor-pointer"
               >
                 <span>Browse Delicacies</span>

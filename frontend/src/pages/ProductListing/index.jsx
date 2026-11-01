@@ -158,7 +158,7 @@ export function ProductListing() {
             title: 'Shop Homemade Pickles, Batters & Podis Online',
             description:
               "Browse the full Akula's Kitchen range: idli and dosa batters, homemade pickles, chutneys, podis and masalas, namkeen and cashews, with pack sizes and prices.",
-            canonicalUrl: '/collections',
+            canonicalUrl: '/shop',
             noindex: Boolean(state.searchParam),
           }}
         />

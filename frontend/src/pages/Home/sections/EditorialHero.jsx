@@ -116,14 +116,16 @@ function TodayHead({
         />
         {isTomorrow ? `For ${displayDate}` : `Fresh today · ${displayDate}`}
       </p>
-      <h1 id="ak-today-title" className="ak-today__title">
-        {title}
-      </h1>
-      <Link to={seeAllLink} className="ak-today__all">
-        {count > 0 && <span className="ak-today__count">{count}</span>}
-        <span>{seeAllText}</span>
-        <ArrowRight strokeWidth={2.4} aria-hidden="true" />
-      </Link>
+      <div className="ak-today__title-row">
+        <h1 id="ak-today-title" className="ak-today__title">
+          {title}
+        </h1>
+        <Link to={seeAllLink} className="ak-today__all">
+          {count > 0 && <span className="ak-today__count">{count}</span>}
+          <span>{seeAllText}</span>
+          <ArrowRight strokeWidth={2.4} aria-hidden="true" />
+        </Link>
+      </div>
     </div>
   );
 }

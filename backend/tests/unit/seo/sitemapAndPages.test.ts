@@ -65,7 +65,7 @@ describe('sitemap', () => {
     expect(locs).toEqual(
       expect.arrayContaining([
         `${SITE_URL}/`,
-        `${SITE_URL}/collections`,
+        `${SITE_URL}/shop`,
         `${SITE_URL}/menu`,
         `${SITE_URL}/contact`,
         `${SITE_URL}/category/pickles`,

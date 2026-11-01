@@ -112,11 +112,8 @@ export class ErrorBoundary extends Component {
                   Home
                 </a>
                 <span className="text-stone-300">·</span>
-                <a
-                  href="/collections"
-                  className="hover:underline hover:text-[#7a5a00] transition-colors"
-                >
-                  Collections
+                <a href="/shop" className="hover:underline hover:text-[#7a5a00] transition-colors">
+                  Shop
                 </a>
                 <span className="text-stone-300">·</span>
                 <a

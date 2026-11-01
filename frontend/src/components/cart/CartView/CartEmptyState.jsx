@@ -28,7 +28,7 @@ export const CartEmptyState = () => {
         </p>
         <div className="flex justify-center">
           <Link
-            to="/collections"
+            to="/shop"
             className="inline-flex items-center justify-between gap-4 pl-6 pr-2 py-1.5 rounded-full bg-[#283618] text-white hover:bg-[#1f2b13] border border-[#283618] font-extrabold text-[12px] uppercase tracking-wider shadow-sm transition-all active:scale-[0.98] group cursor-pointer"
           >
             <span>Explore Kitchen </span>

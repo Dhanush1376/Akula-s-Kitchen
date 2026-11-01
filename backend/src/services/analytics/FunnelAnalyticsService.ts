@@ -16,7 +16,7 @@ export class FunnelAnalyticsService {
         // We'll count unique sessions for each stage of the funnel
         const funnelStages = [
           { key: 'homepage', eventTypes: ['page_view'], pageMatch: /^\/$/ }, // Homepage
-          { key: 'category', eventTypes: ['page_view'], pageMatch: /^\/collections/ },
+          { key: 'category', eventTypes: ['page_view'], pageMatch: /^\/(collections|shop)/ },
           { key: 'product', eventTypes: ['page_view'], pageMatch: /^\/product\// },
           { key: 'cart', eventTypes: ['page_view'], pageMatch: /^\/cart/ },
           { key: 'checkout', eventTypes: ['checkout_started'] },

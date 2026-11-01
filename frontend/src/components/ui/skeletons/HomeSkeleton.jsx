@@ -39,13 +39,15 @@ export function HomeHeroSkeleton({ columns }) {
     <section className="ak-today" aria-busy="true" aria-label="Loading today's menu">
       <div className="ak-today__head">
         <div className="ak-today__eyebrow">
-          <Skeleton className="h-3 w-32 !rounded-full" glassy />
+          <Skeleton className="h-3 w-32 !rounded-full ak-skeleton-glassy" glassy />
         </div>
-        <div className="ak-today__title">
-          <Skeleton className="h-8 w-44 sm:w-56 !rounded-lg" glassy />
-        </div>
-        <div className="ak-today__all">
-          <Skeleton className="h-8.5 w-24 !rounded-full" glassy />
+        <div className="ak-today__title-row">
+          <div className="ak-today__title">
+            <Skeleton className="h-8 w-44 sm:w-56 !rounded-lg ak-skeleton-glassy" glassy />
+          </div>
+          <div className="ak-today__all">
+            <Skeleton className="h-8.5 w-24 !rounded-full ak-skeleton-glassy" glassy />
+          </div>
         </div>
       </div>
       <div className="ak-today__grid" style={{ '--cols': cols }}>
@@ -53,7 +55,11 @@ export function HomeHeroSkeleton({ columns }) {
           <div key={c} className="ak-today__col">
             {heights.map((h, i) => (
               <div key={i} style={{ height: h }}>
-                <Skeleton className="!rounded-[18px] w-full h-full" delay={(c + i) * 60} glassy />
+                <Skeleton
+                  className="!rounded-[18px] w-full h-full ak-skeleton-glassy"
+                  delay={(c + i) * 60}
+                  glassy
+                />
               </div>
             ))}
           </div>

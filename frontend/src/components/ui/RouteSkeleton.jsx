@@ -7,11 +7,13 @@ import { lazy, Suspense } from 'react';
 
 export function getRouteSkeletonVariant(path) {
   if (path === '/') return 'home';
-  if (path === '/collections' || path.startsWith('/category/')) return 'product-list';
+  if (path === '/shop' || path === '/collections' || path.startsWith('/category/'))
+    return 'product-list';
   if (path === '/menu') return 'menu';
-  if (path.match(/^\/collections\/[^/]+$/)) return 'collection-detail';
+  if (path.match(/^\/(?:shop|collections)\/[^/]+$/)) return 'collection-detail';
   if (path.startsWith('/product')) return 'product-detail';
-  if (path.startsWith('/collections') || path.startsWith('/search')) return 'product-list';
+  if (path.startsWith('/shop') || path.startsWith('/collections') || path.startsWith('/search'))
+    return 'product-list';
   if (path === '/cart') return 'cart';
   if (path === '/checkout') return 'checkout';
   if (path.startsWith('/dashboard')) return 'dashboard';

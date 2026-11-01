@@ -6,22 +6,37 @@ export function Skeleton({ className = '', variant = 'rect', delay = 0, glassy =
     text: 'rounded-lg h-4 w-3/4',
   };
 
-  const isGlassy = glassy || className.includes('glassy');
-
-  const defaultBg = isGlassy
-    ? 'bg-white/40 dark:bg-white/[0.08] backdrop-blur-md border border-white/60 dark:border-white/15 shadow-[0_4px_20px_rgba(40,54,24,0.03)]'
-    : 'bg-[#f2f2f0] dark:bg-white/[0.06] border border-outline-variant/10';
+  const isGlassy =
+    glassy || className.includes('glassy') || className.includes('ak-skeleton-glassy');
 
   return (
     <div
-      className={`${defaultBg} ${variants[variant]} ${className} relative overflow-hidden`}
-      style={{ animationDelay: `${delay}ms` }}
+      className={`${variants[variant]} ${className} ${
+        isGlassy
+          ? 'ak-skeleton-glassy'
+          : 'bg-[#f2f2f0] dark:bg-white/[0.06] border border-outline-variant/10'
+      } relative overflow-hidden`}
+      style={{
+        animationDelay: `${delay}ms`,
+        ...(isGlassy
+          ? {
+              backgroundColor: 'rgba(255, 255, 255, 0.22)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.45)',
+              boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.03)',
+            }
+          : {}),
+      }}
       aria-hidden="true"
     >
       <div
-        className={`absolute inset-0 bg-gradient-to-r from-transparent ${
-          isGlassy ? 'via-white/55 dark:via-white/20' : 'via-white/30 dark:via-white/10'
-        } to-transparent animate-shimmer`}
+        className="absolute inset-0 animate-shimmer"
+        style={{
+          background: isGlassy
+            ? 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%)'
+            : 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%)',
+        }}
       />
     </div>
   );

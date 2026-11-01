@@ -22,5 +22,5 @@ export const getCategoryRoute = (category) => {
     .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  return slug ? `/category/${slug}` : '/collections';
+  return slug ? `/category/${slug}` : '/shop';
 };

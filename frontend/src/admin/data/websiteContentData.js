@@ -119,12 +119,12 @@ export const initialWebsiteContent = {
   // ═══════════════════════════════════════════════════════
   navigation: {
     logo: { text: "AKULA'S KITCHEN", tagline: '', image: '/akulas-kitchen-logo.png' },
-    mainLinks: [{ label: 'Shop', href: '/collections', isVisible: true }],
+    mainLinks: [{ label: 'Shop', href: '/shop', isVisible: true }],
   },
 
   footer: {
     description: 'Fresh, tasty and healthy homemade foods.',
-    exploreLinks: [{ label: 'Collections', href: '/collections' }],
+    exploreLinks: [{ label: 'Collections', href: '/shop' }],
     studioLinks: [{ label: 'Contact', href: '/contact' }],
     phone: '',
     alternatePhone: '',

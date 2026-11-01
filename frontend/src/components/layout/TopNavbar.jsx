@@ -31,6 +31,7 @@ import api from '../../services/api';
 import { lazyWithRetry as lazy } from '../../utils/performance/lazyWithRetry';
 import { useConfig } from '../../context/ConfigContext';
 import { usePwa } from '../../context/PwaContext';
+import { getEffectiveMenuDay } from '../../utils/ecommerce/menuScheduleUtils';
 
 const IntelligentSearchOverlay = lazy(() =>
   import('../search/IntelligentSearchOverlay').then((m) => ({
@@ -153,7 +154,7 @@ export function TopNavbar() {
   const searchParam = searchParams.get('search');
 
   const isHomePage = location.pathname === '/';
-  const isShopPage = location.pathname === '/collections';
+  const isShopPage = location.pathname === '/shop' || location.pathname === '/collections';
   const isWishlistPage = location.pathname === '/wishlist';
   const isCartPage = location.pathname === '/cart';
 
@@ -308,7 +309,7 @@ export function TopNavbar() {
   const navLinks = [
     { label: 'Home', href: '/', mobileOnly: true },
     { label: 'Menu', href: '/menu', mobileOnly: true },
-    { label: 'Shop', href: '/collections', mobileOnly: true },
+    { label: 'Shop', href: '/shop', mobileOnly: true },
     { label: 'My Orders', href: '/dashboard/orders', mobileOnly: true },
     { label: 'Contact Us', href: '/contact', mobileOnly: true },
   ];
@@ -316,12 +317,8 @@ export function TopNavbar() {
   const isActive = (href) => location.pathname === href;
 
   const todayFormatted = useMemo(() => {
-    return new Date().toLocaleDateString('en-IN', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    const eff = getEffectiveMenuDay();
+    return eff.formattedEffectiveDateWithYear || eff.formattedEffectiveDate;
   }, []);
 
   // Dynamic categories with instant 0ms cached loading
@@ -628,7 +625,7 @@ export function TopNavbar() {
                   {/* SHOP Pill Button (Dark Olive Green / Active Gold) */}
                   <button
                     type="button"
-                    onClick={() => navigate('/collections')}
+                    onClick={() => navigate('/shop')}
                     className={`rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 shrink-0 text-[11px] sm:text-[11.5px] font-bold tracking-wider uppercase whitespace-nowrap transition-all shadow-2xs cursor-pointer border-0 outline-none backdrop-blur-xs ${
                       isShopPage && (!activeCategory || activeCategory.toLowerCase() === 'all')
                         ? 'bg-[#f7bb0e] text-neutral-950 shadow-xs'
@@ -650,9 +647,7 @@ export function TopNavbar() {
                         key={`${catName}-${i}`}
                         data-cat={catName.toLowerCase()}
                         type="button"
-                        onClick={() =>
-                          navigate(`/collections?category=${encodeURIComponent(catName)}`)
-                        }
+                        onClick={() => navigate(`/shop?category=${encodeURIComponent(catName)}`)}
                         className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-[11px] sm:text-[11.5px] tracking-wider uppercase whitespace-nowrap shadow-2xs transition-all shrink-0 cursor-pointer border-0 outline-none ${
                           isSelected
                             ? 'bg-[#f7bb0e] text-neutral-950 shadow-xs'
@@ -825,7 +820,7 @@ export function TopNavbar() {
                                       return (
                                         <div key={i} className="w-full">
                                           <Link
-                                            to={`/collections?category=${encodeURIComponent(categoryName)}`}
+                                            to={`/shop?category=${encodeURIComponent(categoryName)}`}
                                             onClick={() => setIsOpen(false)}
                                             className="font-sans font-medium text-[13px] capitalize text-neutral-600 hover:text-black py-1.5 px-2 rounded-lg hover:bg-neutral-100/60 transition-colors block"
                                           >

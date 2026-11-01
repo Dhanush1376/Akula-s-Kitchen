@@ -200,7 +200,8 @@ describe('Product SEO lifecycle (real ProductService + MongoDB)', () => {
       status: 301,
       redirect: '/category/pickles',
     });
-    expect(await resolvePageSeo('/shop')).toMatchObject({ status: 301, redirect: '/collections' });
+    expect((await resolvePageSeo('/shop'))!.status).toBe(200);
+    expect(await resolvePageSeo('/collections')).toMatchObject({ status: 301, redirect: '/shop' });
     expect(await resolvePageSeo('/Contact/')).toMatchObject({ status: 301, redirect: '/contact' });
     expect((await resolvePageSeo('/category/does-not-exist'))!.status).toBe(404);
     expect((await resolvePageSeo('/totally-unknown'))!.status).toBe(404);

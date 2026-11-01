@@ -35,7 +35,7 @@ export function StoreClosedOverlay({ isOpen, onClose }) {
 
   const handleExplore = () => {
     onClose();
-    navigate('/collections');
+    navigate('/shop');
   };
 
   const handleSignIn = () => {

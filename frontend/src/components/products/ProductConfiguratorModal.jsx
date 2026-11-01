@@ -4,22 +4,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { ProductConfigurator } from './ProductConfigurator';
 import { CloudinaryImage } from '../ui/CloudinaryImage';
-import { useScrollLock } from '../../hooks/useScrollLock';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { AuthCornerLeaves } from '../auth/AuthCornerLeaves';
+import { useMobileDrawerEngine } from '../../hooks/useMobileDrawerEngine';
 
 /**
  * ProductConfiguratorModal
- * Adapts responsively:
- * - On desktop / laptop (>= 768px): Centered pop-up modal dialog with backdrop blur.
- * - On mobile / phones (< 768px): App drawer / bottom sheet sliding up from bottom with safe-area handling.
+ * Styled according to the FilterPanel and InvoiceModal design system:
+ * - Floating bottom sheet on mobile (<640px) with drag-to-dismiss gesture engine
+ * - Floating centered card modal on desktop
+ * - Signature Akula's Kitchen organic corner leaves decoration
+ * - Frosted glassmorphism background (bg-white/95 backdrop-blur-2xl)
+ * - Rounded-3xl corners with subtle border & depth shadow
+ * - Sleek circular close button and pill grab handle
+ * - Brand Forest Olive Green (#283618) action styling
  */
 export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 767px)');
 
-  // Shared, reference-counted lock: also tints the iOS Safari edge strip under the sheet
-  useScrollLock(isOpen);
+  const { isMobile, dragProps, sheetTransition } = useMobileDrawerEngine({
+    isOpen,
+    onClose,
+  });
 
   useEffect(() => {
     if (!isOpen) setQuantity(1);
@@ -41,85 +47,116 @@ export function ProductConfiguratorModal({ isOpen, onClose, product, onAddToCart
     product?.imageSrc ||
     (Array.isArray(product?.images) && product.images.length > 0 ? product.images[0] : null);
 
+  const modalVariants = {
+    hidden: isMobile ? { y: '100%', opacity: 0.5 } : { opacity: 0, scale: 0.95, y: 15 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: isMobile ? sheetTransition : { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+    },
+    exit: isMobile
+      ? {
+          y: '100%',
+          opacity: 0,
+          transition: sheetTransition,
+        }
+      : { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.25 } },
+  };
+
   const modalContent = (
     <AnimatePresence>
       {isOpen && product && (
-        <div className="fixed inset-0 z-[250] flex items-end md:items-center justify-center p-0 md:p-6">
+        <div
+          className="fixed inset-0 z-[9999] pointer-events-none flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:p-5 md:p-6 no-print"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="configurator-modal-title"
+        >
           {/* Backdrop */}
           <motion.div
+            key="config-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs pointer-events-auto cursor-pointer"
             aria-hidden="true"
           />
 
-          {/* Modal (Laptop Pop-up) & App Drawer (Phone Bottom Sheet) Container */}
+          {/* Floating Sheet on Mobile / Centered Card on Desktop */}
           <motion.div
-            initial={isMobile ? { y: '100%' } : { scale: 0.95, opacity: 0, y: 15 }}
-            animate={isMobile ? { y: 0 } : { scale: 1, opacity: 1, y: 0 }}
-            exit={isMobile ? { y: '100%' } : { scale: 0.95, opacity: 0, y: 15 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            className="relative w-full max-h-[90dvh] md:max-h-[85vh] md:max-w-[560px] bg-white rounded-t-3xl md:rounded-3xl shadow-[0_16px_50px_rgba(0,0,0,0.22)] flex flex-col z-10 overflow-hidden border border-black/10 pb-[env(safe-area-inset-bottom,0px)]"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="configurator-modal-title"
+            key="config-card"
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            {...(isMobile ? dragProps : {})}
+            className="relative z-10 pointer-events-auto flex flex-col w-full max-w-[480px] sm:max-w-[520px] mx-auto"
           >
-            {/* Mobile Drag Pill */}
-            <div className="md:hidden flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-neutral-300" />
-            </div>
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-5 pb-5 sm:pb-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[85dvh] sm:max-h-[88vh] overflow-hidden">
+              {/* Decorative signature corner leaves */}
+              <AuthCornerLeaves />
 
-            {/* Header */}
-            <div className="flex items-start justify-between p-4 sm:p-5 border-b border-neutral-100 bg-neutral-50/60 shrink-0">
-              <div className="flex items-center gap-3.5 pr-6">
-                {imageSrc && (
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200/80 shrink-0">
-                    <CloudinaryImage
-                      src={imageSrc}
-                      alt={product.title}
-                      className="w-full h-full object-cover"
-                      containerClassName="w-full h-full"
-                      eager
-                    />
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#283618] bg-[#f7bb0e]/20 px-2 py-0.5 rounded-md inline-block mb-1 border border-[#f7bb0e]/30">
-                    Select Weight & Quantity
-                  </span>
-                  <h3
-                    id="configurator-modal-title"
-                    className="font-serif-heading text-[16px] sm:text-[18px] font-bold text-neutral-950 truncate leading-snug"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    {product.title}
-                  </h3>
-                </div>
+              {/* Grab handle for mobile bottom sheet */}
+              <div
+                className="sm:hidden w-full flex justify-center pt-0 pb-2 cursor-grab select-none z-20"
+                onClick={onClose}
+              >
+                <div className="w-10 h-1 rounded-full bg-neutral-300" />
               </div>
 
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-950 hover:bg-neutral-200/60 transition-colors shrink-0 cursor-pointer"
-                aria-label="Close dialog"
-              >
-                <X size={18} strokeWidth={2.5} />
-              </button>
-            </div>
+              {/* Top Header Row */}
+              <div className="relative z-10 flex items-center justify-between pb-3 mb-2 border-b border-black/[0.06] pr-10">
+                <div className="flex items-center gap-3 min-w-0">
+                  {imageSrc && (
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl overflow-hidden bg-neutral-100 border border-black/[0.08] shrink-0 shadow-2xs">
+                      <CloudinaryImage
+                        src={imageSrc}
+                        alt={product.title}
+                        className="w-full h-full object-cover"
+                        containerClassName="w-full h-full"
+                        eager
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#283618] bg-[#283618]/10 px-2 py-0.5 rounded-full inline-block mb-1">
+                      Select Weight & Quantity
+                    </span>
+                    <h3
+                      id="configurator-modal-title"
+                      className="font-serif-heading text-[16px] sm:text-[18px] font-bold text-neutral-900 truncate leading-snug"
+                      style={{ fontFamily: 'var(--font-display)' }}
+                    >
+                      {product.title}
+                    </h3>
+                  </div>
+                </div>
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-200">
-              <ProductConfigurator
-                product={product}
-                quantity={quantity}
-                onQuantityChange={setQuantity}
-                onAddToCart={handleAddToCartWrapper}
-                mode="modal"
-                isSubmitting={isSubmitting}
-                ctaLabel="Add to Bag"
-              />
+                {/* Circular close button matching Filter & Invoice panel */}
+                <button
+                  onClick={onClose}
+                  className="absolute top-0 right-0 w-8.5 h-8.5 rounded-full bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center text-neutral-700 hover:text-black transition-all z-20 cursor-pointer"
+                  aria-label="Close dialog"
+                >
+                  <X className="w-4 h-4 text-black" strokeWidth={2.2} />
+                </button>
+              </div>
+
+              {/* Scrollable Body */}
+              <div className="relative z-10 flex-1 overflow-y-auto overscroll-contain touch-pan-y no-scrollbar pt-1">
+                <ProductConfigurator
+                  product={product}
+                  quantity={quantity}
+                  onQuantityChange={setQuantity}
+                  onAddToCart={handleAddToCartWrapper}
+                  mode="modal"
+                  isSubmitting={isSubmitting}
+                  ctaLabel="Add to Bag"
+                />
+              </div>
             </div>
           </motion.div>
         </div>

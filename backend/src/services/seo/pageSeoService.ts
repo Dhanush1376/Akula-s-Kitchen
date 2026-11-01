@@ -274,13 +274,13 @@ export function buildHomePage(data: CatalogData): PageSeoDescriptor {
         `<p>${escapeHtml(HOME_DESCRIPTION)}</p>` +
         (cats.length ? `<h2>Shop by category</h2>${categoryLinksHtml(cats)}` : '') +
         (featured.length ? `<h2>Featured products</h2>${productListHtml(featured)}` : '') +
-        `<p><a href="/collections">Browse all products</a> · <a href="/menu">Menu &amp; price list</a> · <a href="/contact">Contact us</a></p>`,
+        `<p><a href="/shop">Browse all products</a> · <a href="/menu">Menu &amp; price list</a> · <a href="/contact">Contact us</a></p>`,
     ),
   };
 }
 
 export function buildShopPage(data: CatalogData, query: URLSearchParams): PageSeoDescriptor {
-  const canonical = `${SITE_URL}/collections`;
+  const canonical = `${SITE_URL}/shop`;
   const cats = listableCategories(data);
   const filtered = [
     'search',
@@ -314,18 +314,18 @@ export function buildShopPage(data: CatalogData, query: URLSearchParams): PageSe
       buildCollectionPageJsonLd({
         name: 'Shop all products',
         description: SHOP_DESCRIPTION,
-        path: '/collections',
+        path: '/shop',
         items,
       }),
       buildBreadcrumbJsonLd([
         { name: 'Home', path: '/' },
-        { name: 'Shop', path: '/collections' },
+        { name: 'Shop', path: '/shop' },
       ]),
     ],
     bodyHtml: shell(
       breadcrumbHtml([
         { name: 'Home', path: '/' },
-        { name: 'Shop', path: '/collections' },
+        { name: 'Shop', path: '/shop' },
       ]) +
         `<h1>Shop homemade foods online</h1><p>${escapeHtml(SHOP_DESCRIPTION)}</p>` +
         (cats.length ? `<h2>Categories</h2>${categoryLinksHtml(cats)}` : '') +
@@ -438,7 +438,7 @@ export function buildCategoryPage(category: any, data: CatalogData): PageSeoDesc
   const intro = (category.seoIntro || defaults?.intro || description).trim();
   const crumbs: Crumb[] = [
     { name: 'Home', path: '/' },
-    { name: 'Shop', path: '/collections' },
+    { name: 'Shop', path: '/shop' },
     { name: category.name, path },
   ];
   const coverImage = toOgImageUrl(
@@ -477,7 +477,7 @@ export function buildCategoryPage(category: any, data: CatalogData): PageSeoDesc
         `<h1>${escapeHtml(heading)}</h1><p>${escapeHtml(intro)}</p>` +
         (products.length
           ? `<h2>${escapeHtml(category.name)} available now</h2>${productListHtml(products)}`
-          : `<p>No products are available in this category right now. <a href="/collections">Browse all products</a>.</p>`),
+          : `<p>No products are available in this category right now. <a href="/shop">Browse all products</a>.</p>`),
     ),
   };
 }
@@ -566,7 +566,7 @@ export function buildNotFoundPage(status: 404 | 410 = 404): PageSeoDescriptor {
     head: baseHead({ title, description, robots: 'noindex, follow' }),
     jsonLd: [],
     bodyHtml: shell(
-      `<h1>${status === 410 ? 'Product no longer available' : 'Page not found'}</h1><p>${escapeHtml(description)}</p><p><a href="/collections">Browse all products</a></p>`,
+      `<h1>${status === 410 ? 'Product no longer available' : 'Page not found'}</h1><p>${escapeHtml(description)}</p><p><a href="/shop">Browse all products</a></p>`,
     ),
   };
 }
@@ -674,7 +674,7 @@ async function resolveProductRoute(key: string, data: CatalogData): Promise<Page
 
 /** Legacy and alias URLs that permanently moved (mirrors the SPA's <Navigate> routes). */
 const LEGACY_REDIRECTS: Record<string, string> = {
-  '/shop': '/collections',
+  '/collections': '/shop',
   '/about': '/',
   '/shipping': '/policy/shipping-policy',
   '/refund': '/policy/refund-policy',
@@ -689,6 +689,7 @@ const LEGACY_REDIRECTS: Record<string, string> = {
 /** First path segments the SPA routes; anything else is a real 404. */
 const SPA_SEGMENTS = new Set([
   '',
+  'shop',
   'collections',
   'product',
   'category',
@@ -724,7 +725,8 @@ export async function resolvePageSeo(rawPath: string): Promise<PageSeoDescriptor
   const data = await loadCatalog();
 
   if (normalized === '/') return buildHomePage(data);
-  if (normalized === '/collections') return buildShopPage(data, url.searchParams);
+  if (normalized === '/shop' || normalized === '/collections')
+    return buildShopPage(data, url.searchParams);
   if (normalized === '/menu') return buildMenuPage(data);
   if (normalized === '/contact') return buildContactPage(data);
 

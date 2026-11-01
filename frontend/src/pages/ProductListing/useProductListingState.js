@@ -127,7 +127,16 @@ export function useProductListingState() {
   }, [categoryParam, collectionParam, searchParam, pageParam, sortBy, filters, idsParam]);
 
   const { data: productsData, isLoading: loading, isFetching, isError } = useProducts(queryParams);
-  const { data: filterGroups = [] } = useDynamicFilters(queryParams);
+  const { data: rawFilterGroups = [] } = useDynamicFilters(queryParams);
+  const filterGroups = useMemo(() => {
+    return (rawFilterGroups || []).filter(
+      (g) =>
+        g.id?.toLowerCase() !== 'ingredients' &&
+        g.id?.toLowerCase() !== 'ingredient' &&
+        g.label?.toLowerCase() !== 'ingredients' &&
+        g.label?.toLowerCase() !== 'ingredient',
+    );
+  }, [rawFilterGroups]);
   const { data: categoriesData = [] } = useCategories();
 
   const categories = useMemo(() => {

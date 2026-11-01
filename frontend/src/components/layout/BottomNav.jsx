@@ -64,7 +64,7 @@ export function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: 'home', path: '/' },
-    { label: 'Shop', icon: 'storefront', path: '/collections' },
+    { label: 'Shop', icon: 'storefront', path: '/shop' },
     {
       label: 'Wishlist',
       icon: 'heart',

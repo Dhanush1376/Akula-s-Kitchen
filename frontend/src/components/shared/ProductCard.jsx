@@ -90,6 +90,13 @@ export const ProductCard = React.memo(function ProductCard({
   const { openQuickView } = useQuickView();
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const hasConfigurableOptions = Boolean(
+    (Array.isArray(optionGroups) && optionGroups.length > 0) ||
+    (Array.isArray(variants) && variants.length > 0) ||
+    weight ||
+    pack ||
+    size,
+  );
 
   const handleQuickViewAction = (e, data) => {
     if (onQuickView) {

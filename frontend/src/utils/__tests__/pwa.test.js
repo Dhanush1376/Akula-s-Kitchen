@@ -88,7 +88,7 @@ describe('PWA Module & Platform Detection', () => {
     // Verify shortcuts exist with valid urls
     expect(manifest.shortcuts).toBeInstanceOf(Array);
     expect(manifest.shortcuts.length).toBeGreaterThanOrEqual(3);
-    expect(manifest.shortcuts[0].url).toBe('/collections');
+    expect(manifest.shortcuts[0].url).toBe('/shop');
   });
 
   it('verifies sw.js contains strict cache exclusions for private routes and catalog network-first', () => {

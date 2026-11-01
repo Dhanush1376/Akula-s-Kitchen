@@ -548,7 +548,7 @@ export function productBreadcrumbs(product: any, categoryInput?: CategoryContext
   const category = getCategoryContext(product, categoryInput);
   const crumbs: Crumb[] = [
     { name: 'Home', path: '/' },
-    { name: 'Shop', path: '/collections' },
+    { name: 'Shop', path: '/shop' },
   ];
   if (category.slug && category.name) {
     crumbs.push({ name: category.name, path: `/category/${category.slug}` });

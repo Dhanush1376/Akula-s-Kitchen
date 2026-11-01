@@ -25,41 +25,39 @@
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  /* Everything above the cards, plus a rounded, uneven patch beside them at the right
-     (two overlapping ellipses) where the leaf fades out on a curve, never a straight line.
-     Behind the cards themselves nothing shows: they are opaque and in front. */
+  /* Leaves extend smoothly behind the hero title and through the glassy skeleton area */
   -webkit-mask-image:
     linear-gradient(
       to bottom,
-      #000 calc(var(--hl-floor, 220px) - 10px),
-      transparent calc(var(--hl-floor, 220px) + 14px)
+      #000 calc(var(--hl-floor, 220px) + 60px),
+      transparent calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 10px)
     ),
     radial-gradient(
       var(--hl-tail-w) var(--hl-tail-h) at 100% var(--hl-floor, 220px),
-      #000 30%,
+      #000 40%,
       transparent 100%
     ),
     radial-gradient(
       calc(var(--hl-tail-w) * 0.55) calc(var(--hl-tail-h) * 0.65) at
         calc(100% - var(--hl-tail-w) * 0.35) calc(var(--hl-floor, 220px) + var(--hl-tail-h) * 0.15),
-      #000 25%,
+      #000 35%,
       transparent 100%
     );
   mask-image:
     linear-gradient(
       to bottom,
-      #000 calc(var(--hl-floor, 220px) - 10px),
-      transparent calc(var(--hl-floor, 220px) + 14px)
+      #000 calc(var(--hl-floor, 220px) + 60px),
+      transparent calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 10px)
     ),
     radial-gradient(
       var(--hl-tail-w) var(--hl-tail-h) at 100% var(--hl-floor, 220px),
-      #000 30%,
+      #000 40%,
       transparent 100%
     ),
     radial-gradient(
       calc(var(--hl-tail-w) * 0.55) calc(var(--hl-tail-h) * 0.65) at
         calc(100% - var(--hl-tail-w) * 0.35) calc(var(--hl-floor, 220px) + var(--hl-tail-h) * 0.15),
-      #000 25%,
+      #000 35%,
       transparent 100%
     );
 }

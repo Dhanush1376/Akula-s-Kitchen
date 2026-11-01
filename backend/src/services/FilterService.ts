@@ -182,6 +182,9 @@ export class FilterService {
 
       result.variants.forEach((v: any) => {
         const name = v._id.name;
+        // Never include ingredients in storefront filter variants
+        if (name && (name.toLowerCase() === 'ingredients' || name.toLowerCase() === 'ingredient'))
+          return;
         const slug = v._id.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const canonical = canonicalMap.get(slug);
 
@@ -294,8 +297,17 @@ export class FilterService {
       });
     }
 
-    filterCache.set(cacheKey, filterGroups);
-    return filterGroups;
+    // Exclude any ingredient filter groups
+    const sanitizedGroups = filterGroups.filter(
+      (g) =>
+        g.id?.toLowerCase() !== 'ingredients' &&
+        g.id?.toLowerCase() !== 'ingredient' &&
+        g.label?.toLowerCase() !== 'ingredients' &&
+        g.label?.toLowerCase() !== 'ingredient',
+    );
+
+    filterCache.set(cacheKey, sanitizedGroups);
+    return sanitizedGroups;
   }
 
   static clearCache() {

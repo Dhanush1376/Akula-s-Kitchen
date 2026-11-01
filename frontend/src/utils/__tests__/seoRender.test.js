@@ -99,7 +99,7 @@ describe('request helpers', () => {
     for (const p of ['/cart', '/checkout', '/dashboard/orders', '/admin/products', '/track/123']) {
       expect(isPrivatePath(p)).toBe(true);
     }
-    for (const p of ['/', '/collections', '/product/cart-thing', '/category/pickles']) {
+    for (const p of ['/', '/shop', '/collections', '/product/cart-thing', '/category/pickles']) {
       expect(isPrivatePath(p)).toBe(false);
     }
   });
@@ -118,6 +118,6 @@ describe('product and category routes', () => {
     expect(getCategoryRoute('Pickles')).toBe('/category/pickles');
     expect(getCategoryRoute({ name: 'Podis & Masala' })).toBe('/category/podis-and-masala');
     expect(getCategoryRoute({ slug: 'masala', name: 'Masala' })).toBe('/category/masala');
-    expect(getCategoryRoute('')).toBe('/collections');
+    expect(getCategoryRoute('')).toBe('/shop');
   });
 });

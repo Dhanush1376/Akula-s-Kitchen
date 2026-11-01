@@ -94,21 +94,6 @@ export function useProductAI({
 
     const baseVariants = [...(aiAnalysisResult.suggested_variants || [])];
 
-    // Auto-map top-level ingredients/materials and colors to variants for storefront filtering!
-    if (aiAnalysisResult.materials?.length > 0) {
-      aiAnalysisResult.materials.forEach((m) => {
-        if (
-          !baseVariants.some(
-            (v) =>
-              (v.name.toLowerCase() === 'material' || v.name.toLowerCase() === 'ingredients') &&
-              v.value === m,
-          )
-        ) {
-          baseVariants.push({ name: 'Ingredients', value: m, price: 0 });
-        }
-      });
-    }
-
     if (aiAnalysisResult.colors?.length > 0) {
       aiAnalysisResult.colors.forEach((c) => {
         if (!baseVariants.some((v) => v.name.toLowerCase() === 'color' && v.value === c)) {

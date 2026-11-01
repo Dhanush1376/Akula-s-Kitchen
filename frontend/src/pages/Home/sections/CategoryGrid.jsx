@@ -90,7 +90,7 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
             key: dbMatch?._id || cat._id || cat.id || cat.key || `${slug}-${idx}`,
             name: finalName,
             slug: dbMatch?.slug || slug,
-            link: cat.link || `/collections?category=${encodeURIComponent(finalName)}`,
+            link: cat.link || `/shop?category=${encodeURIComponent(finalName)}`,
             image: dbMatch?.imageSrc || cat.image || cat.imageSrc || null,
           };
         })
@@ -117,10 +117,7 @@ export const CategoryGrid = React.memo(function CategoryGrid({ previewContent })
       <section className="ak-cats py-6 sm:py-8 lg:py-12">
         <div className="h1-container">
           {/* Header Section */}
-          <SectionHeader
-            title={config.sectionTitle || 'Shop by category'}
-            seeAllLink="/collections"
-          />
+          <SectionHeader title={config.sectionTitle || 'Shop by category'} seeAllLink="/shop" />
 
           {/* Bento Editorial Category Cards Grid */}
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-5">

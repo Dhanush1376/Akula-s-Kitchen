@@ -57,7 +57,7 @@ export function BestSellers({ previewContent }) {
       <div className="h1-container relative z-10">
         <SectionHeader
           title={config.sectionTitle || 'Bestsellers'}
-          seeAllLink={config.seeAllLink || '/collections'}
+          seeAllLink={config.seeAllLink || '/shop'}
         />
       </div>
       <div className="h1-container--full pl-4 lg:pl-9 relative z-10">

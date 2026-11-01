@@ -62,7 +62,7 @@ function CheckoutContent() {
             temporarily paused. Your bag items remain saved for when ordering resumes.
           </p>
           <Link
-            to="/collections"
+            to="/shop"
             className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full bg-black hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
           >
             <span>Explore Kitchen</span>

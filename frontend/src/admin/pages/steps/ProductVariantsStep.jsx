@@ -20,7 +20,7 @@ const DIETARY_FILTER_PRESETS = [
   'Mild',
   'Jain / No Garlic',
   'Gluten Free',
-  'Organic Ingredients',
+  'Organic',
   'Cold-Pressed Oil',
   'Sweet & Tangy',
 ];
@@ -240,37 +240,6 @@ export function ProductVariantsStep({ formData, setFormData, focusedField }) {
   // Automatically ensure configured portion/weight options from Pricing are active in tags
   return (
     <div className="space-y-5">
-      {/* ─── INGREDIENTS SECTION ─── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[var(--admin-border-subtle)]">
-          <span className="material-symbols-outlined text-[18px] text-[var(--admin-accent,#800000)]">
-            nutrition
-          </span>
-          <h2 className="text-[13px] font-bold text-[var(--admin-text-primary)] uppercase tracking-wider whitespace-nowrap">
-            Ingredients
-          </h2>
-          <span className="text-[10px] text-[var(--admin-text-secondary)] font-medium bg-[var(--admin-surface-muted)] px-2 py-0.5 rounded-full border border-[var(--admin-border)] whitespace-nowrap">
-            Recipe
-          </span>
-        </div>
-
-        <div className="p-3.5 sm:p-4 bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-[6px] shadow-2xs space-y-2">
-          <label className="text-[11px] font-bold text-[var(--admin-text-secondary)] uppercase tracking-wider mb-1 block">
-            Product Ingredients
-          </label>
-          <input
-            type="text"
-            value={formData.material || ''}
-            onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-            placeholder="e.g. Rice, Urad Dal, Red Chilli, Ghee, Fenugreek, Cumin"
-            className="w-full bg-[var(--admin-surface)] border border-[var(--admin-border)] focus:border-[var(--admin-accent)] rounded-[4px] px-3 h-9 text-[12.5px] outline-none transition-all placeholder:text-[var(--admin-text-tertiary)] font-medium"
-          />
-          <p className="text-[10.5px] text-[var(--admin-text-tertiary)]">
-            Comma-separated ingredients shown on the storefront dish details and recipe summary.
-          </p>
-        </div>
-      </div>
-
       {/* ─── UNIFIED DISCOVERY FILTERS & STOREFRONT TAGS ─── */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--admin-border-subtle)]">

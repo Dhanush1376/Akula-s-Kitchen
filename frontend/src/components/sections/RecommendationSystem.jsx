@@ -25,7 +25,7 @@ export function RecommendationSystem({
   compact = false,
   horizontalScroll = false,
   showViewMore = !compact && !horizontalScroll,
-  viewMoreLink = '/collections',
+  viewMoreLink = '/shop',
   viewMoreText = 'View More',
 }) {
   const { isAuthenticated } = useAuth();
@@ -232,7 +232,7 @@ export function RecommendationSystem({
         {!hideHeader && (
           <SectionHeader
             title="You May Also Like"
-            seeAllLink="/collections"
+            seeAllLink="/shop"
             linkText="View All"
             size="sm"
             className="mb-3"
@@ -308,7 +308,7 @@ export function RecommendationSystem({
           ) : null}
         </AnimatePresence>
 
-        {/* Minimal View More CTA redirecting to Shop page (/collections) */}
+        {/* Minimal View More CTA redirecting to Shop page (/shop) */}
         {showViewMore && activeList.length > 0 && (
           <div className="flex justify-center mt-6 sm:mt-8 pb-3">
             <Link

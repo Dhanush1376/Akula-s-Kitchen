@@ -61,6 +61,13 @@ function LegacyCollectionRedirect() {
   const { id = '' } = useParams();
   return <Navigate to={`/category/${id.toLowerCase()}`} replace />;
 }
+
+/** Legacy /collections URLs moved permanently to /shop with query preserved. */
+function LegacyCollectionsRedirect() {
+  const location = useLocation();
+  const target = location.search ? `/shop${location.search}` : '/shop';
+  return <Navigate to={target} replace />;
+}
 const Dashboard = lazy(() => import('../pages/Dashboard').then((m) => ({ default: m.Dashboard })));
 const OrderTrackingPublic = lazy(() =>
   import('../pages/OrderTrackingPublic').then((m) => ({ default: m.OrderTrackingPublic })),
@@ -201,7 +208,9 @@ export function AppRoutes() {
                 <Route path="/" element={<Home />} />
                 {/* The blog was removed; old links land on the homepage. */}
                 <Route path="/blog/*" element={<Navigate to="/" replace />} />
-                <Route path="/collections" element={<ProductListing />} />
+                <Route path="/shop" element={<ProductListing />} />
+                <Route path="/collections" element={<LegacyCollectionsRedirect />} />
+                <Route path="/collections/*" element={<LegacyCollectionsRedirect />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews" element={<ProductDetails />} />
                 <Route path="/product/:id/reviews/images" element={<ProductDetails />} />
@@ -212,7 +221,6 @@ export function AppRoutes() {
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/collection/:id" element={<LegacyCollectionRedirect />} />
-                <Route path="/shop" element={<Navigate to="/collections" replace />} />
                 <Route
                   path="/dashboard/*"
                   element={

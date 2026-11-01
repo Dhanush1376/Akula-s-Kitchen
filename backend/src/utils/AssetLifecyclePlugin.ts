@@ -206,6 +206,7 @@ export const AssetLifecyclePlugin = (schema: Schema, options?: AssetLifecycleOpt
       );
 
       setTimeout(() => {
+        if (!cleanupQueue) return;
         cleanupQueue.add(
           'clean-replaced-assets',
           {

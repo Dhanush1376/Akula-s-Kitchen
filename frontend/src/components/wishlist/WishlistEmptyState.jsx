@@ -17,7 +17,7 @@ export function WishlistEmptyState() {
         <h2 className="wl-empty__title">Your wishlist is empty</h2>
         <p className="wl-empty__text">Explore our kitchen and save your favourites for later.</p>
         <Link
-          to="/collections"
+          to="/shop"
           className="inline-flex items-center gap-3.5 bg-[#283618] hover:bg-[#1f2b13] text-white pl-6 pr-2 py-1.5 min-h-[48px] rounded-full shadow-md hover:shadow-lg transition-all duration-200 group select-none cursor-pointer active:scale-98"
           style={{ fontFamily: 'var(--font-display, inherit)' }}
         >

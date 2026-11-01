@@ -83,7 +83,7 @@ export const TrendingProducts = React.memo(function TrendingProducts({ previewCo
   return (
     <section className="h1-section !pt-4 lg:!pt-8 !pb-4 lg:!pb-8 relative isolate" id="h1-trending">
       <div className="h1-container relative z-10">
-        <SectionHeader title={headingTitle} seeAllLink={config.seeAllLink || '/collections'} />
+        <SectionHeader title={headingTitle} seeAllLink={config.seeAllLink || '/shop'} />
       </div>
       <div className="h1-container--full pl-4 lg:pl-9 relative z-10">
         <CarouselWrapper gap="16px">

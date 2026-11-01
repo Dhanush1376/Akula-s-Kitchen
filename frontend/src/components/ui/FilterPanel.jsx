@@ -646,6 +646,14 @@ export function FilterPanel({
     let extractedWeightOptions = [];
 
     (filterGroups || []).forEach((fg) => {
+      // Exclude ingredients from filter groups
+      if (
+        fg.id?.toLowerCase().includes('ingredient') ||
+        fg.label?.toLowerCase().includes('ingredient')
+      ) {
+        return;
+      }
+
       const isTagsGroup =
         fg.id?.toLowerCase().includes('tag') || fg.label?.toLowerCase().includes('tag');
       const isWeightGroup =

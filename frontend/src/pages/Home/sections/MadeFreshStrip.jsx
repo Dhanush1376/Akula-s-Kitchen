@@ -11,7 +11,7 @@ export function MadeFreshStrip() {
           Made fresh every morning.
         </p>
         <Link
-          to="/collections"
+          to="/shop"
           className="ak-btn ak-btn--dark shrink-0 hover:bg-[#1f2b13] transition-colors"
         >
           Shop now

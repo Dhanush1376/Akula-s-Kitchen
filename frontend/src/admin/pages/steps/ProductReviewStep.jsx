@@ -137,16 +137,6 @@ export function ProductReviewStep({ formData, setFormData }) {
               </div>
             );
           })()}
-          {formData.material && (
-            <div className="flex flex-col sm:flex-row sm:justify-between border-b border-[var(--admin-border)] pb-2 gap-1">
-              <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
-                Ingredients
-              </span>
-              <span className="font-bold text-[var(--admin-text-primary)] sm:text-right">
-                {formData.material}
-              </span>
-            </div>
-          )}
           <div className="flex flex-col sm:flex-row sm:justify-between pb-1 gap-1">
             <span className="font-semibold text-[var(--admin-text-secondary)] uppercase tracking-wider text-[11px]">
               Featured

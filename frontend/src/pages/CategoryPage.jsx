@@ -71,7 +71,7 @@ export function CategoryPage() {
             Home
           </Link>
           <span className="text-neutral-300">/</span>
-          <Link to="/collections" className="hover:text-neutral-950 transition-colors">
+          <Link to="/shop" className="hover:text-neutral-950 transition-colors">
             Shop
           </Link>
           <span className="text-neutral-300">/</span>
@@ -104,7 +104,7 @@ export function CategoryPage() {
         ) : (
           <p className="py-12 text-[#4b5563]">
             Nothing is available in this category right now.{' '}
-            <Link to="/collections" className="underline font-semibold">
+            <Link to="/shop" className="underline font-semibold">
               Browse all products
             </Link>
             .

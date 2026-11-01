@@ -4,7 +4,7 @@ import { m as motion, AnimatePresence } from 'framer-motion';
 import { prefetchManager } from '../../utils/performance/prefetchManager';
 import { preloadRazorpay } from '../../hooks/useRazorpay';
 
-const _PRIORITY_ROUTES = ['/cart', '/checkout', '/dashboard', '/collections'];
+const _PRIORITY_ROUTES = ['/cart', '/checkout', '/dashboard', '/shop', '/collections'];
 
 function shouldPrefetchAnchor(anchor) {
   if (!anchor) return false;
@@ -72,8 +72,8 @@ export function NavigationOrchestrator() {
 
   React.useEffect(() => {
     const schedulePrefetch = () => {
-      // Predictive prefetch: after collections, likely next action is product detail/cart.
-      if (location.pathname === '/collections') {
+      // Predictive prefetch: after shop/collections, likely next action is product detail/cart.
+      if (location.pathname === '/shop' || location.pathname === '/collections') {
         prefetchManager.prefetchRoute('/cart', { kind: 'predictive' });
         prefetchManager.prefetchRoute('/checkout', { kind: 'predictive' });
       }

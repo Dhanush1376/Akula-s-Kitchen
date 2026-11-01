@@ -18,7 +18,7 @@ export function ShopPageEditor({ content, onUpdate }) {
           </h2>
         </div>
         <a
-          href="/collections"
+          href="/shop"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[11.5px] font-bold text-[var(--admin-accent)] hover:underline inline-flex items-center gap-1 shrink-0"

@@ -64,7 +64,7 @@
       "name": "Shop Menu",
       "short_name": "Menu",
       "description": "Browse our handcrafted culinary collections and specialties",
-      "url": "/collections",
+      "url": "/shop",
       "icons": [
         {
           "src": "/pwa-icon-192.png",
