@@ -16,80 +16,24 @@
   right: 0;
   /* How far the right leaf carries on below the top of the cards, in the strip beside
      them, before it melts away */
-  --hl-tail-w: 90px;
-  --hl-tail-h: 170px;
+  --hl-tail-w: 120px;
+  --hl-tail-h: 220px;
   /* Down past where the cards begin (measured in HomeHeroLeaves.jsx) */
-  height: calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 20px);
+  height: calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 120px);
   /* Behind the hero content (z-10) and, being in the page, behind the fixed header */
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  /* Leaves extend smoothly behind the hero title and through the glassy skeleton area */
-  -webkit-mask-image:
-    linear-gradient(
-      to bottom,
-      #000 calc(var(--hl-floor, 220px) + 60px),
-      transparent calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 10px)
-    ),
-    radial-gradient(
-      var(--hl-tail-w) var(--hl-tail-h) at 100% var(--hl-floor, 220px),
-      #000 40%,
-      transparent 100%
-    ),
-    radial-gradient(
-      calc(var(--hl-tail-w) * 0.55) calc(var(--hl-tail-h) * 0.65) at
-        calc(100% - var(--hl-tail-w) * 0.35) calc(var(--hl-floor, 220px) + var(--hl-tail-h) * 0.15),
-      #000 35%,
-      transparent 100%
-    );
-  mask-image:
-    linear-gradient(
-      to bottom,
-      #000 calc(var(--hl-floor, 220px) + 60px),
-      transparent calc(var(--hl-floor, 220px) + var(--hl-tail-h) + 10px)
-    ),
-    radial-gradient(
-      var(--hl-tail-w) var(--hl-tail-h) at 100% var(--hl-floor, 220px),
-      #000 40%,
-      transparent 100%
-    ),
-    radial-gradient(
-      calc(var(--hl-tail-w) * 0.55) calc(var(--hl-tail-h) * 0.65) at
-        calc(100% - var(--hl-tail-w) * 0.35) calc(var(--hl-floor, 220px) + var(--hl-tail-h) * 0.15),
-      #000 35%,
-      transparent 100%
-    );
+  /* Leaves remain crisp and prominent, fading softly only at the stage base */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 90px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 90px), transparent 100%);
 }
 
-/* The leaves show everywhere above the heading (behind the header and in the gap below
-   it) and everywhere to the right of the heading text (around See all). Two gradients,
-   added together: the heading and eyebrow always sit on a clean background. */
+/* Zone container holding corner banana leaves */
 .ak-hl-zone {
   position: absolute;
   inset: 0;
-  -webkit-mask-image:
-    linear-gradient(
-      to bottom,
-      #000 calc(var(--hl-band, 140px) - 18px),
-      transparent calc(var(--hl-band, 140px) - 3px)
-    ),
-    linear-gradient(
-      to right,
-      transparent calc(var(--hl-clear, 100%) + 8px),
-      #000 calc(var(--hl-clear, 100%) + 34px)
-    );
-  mask-image:
-    linear-gradient(
-      to bottom,
-      #000 calc(var(--hl-band, 140px) - 18px),
-      transparent calc(var(--hl-band, 140px) - 3px)
-    ),
-    linear-gradient(
-      to right,
-      transparent calc(var(--hl-clear, 100%) + 8px),
-      #000 calc(var(--hl-clear, 100%) + 34px)
-    );
 }
 
 .ak-hl {
@@ -122,18 +66,15 @@
 .ak-hl--right {
   --hl-stem: 90% 100%;
   --hl-r0: -8deg;
-  right: -52px;
+  right: -16px;
   /* Measured from the top of the cards, so it stays put however tall the stage is */
-  top: calc(var(--hl-floor, 211px) - 157px);
-  width: 270px;
+  top: calc(var(--hl-floor, 211px) - 205px);
+  width: 310px;
 }
-/* Upright, unlike the left leaf. The top of the leaf fades in, so its upper end never
-   shows, whatever angle the wind holds it at. */
+/* Fully visible, crisp, rich green leaf without artificial top clipping */
 .ak-hl--right .ak-hl__img,
 .ak-hl--right .ak-hl__shadow {
   scale: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 4%, #000 34%);
-  mask-image: linear-gradient(to bottom, transparent 4%, #000 34%);
 }
 .ak-hl--right .ak-hl__enter {
   animation: ak-hl-unfurl-right 1.45s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
@@ -243,8 +184,8 @@
 /* Tablet: taller header, more room to either side of the heading */
 @media (min-width: 640px) {
   .ak-hero-leaves {
-    --hl-tail-w: 120px;
-    --hl-tail-h: 220px;
+    --hl-tail-w: 140px;
+    --hl-tail-h: 240px;
   }
   .ak-hl--left {
     left: -60px;
@@ -252,17 +193,17 @@
     width: 440px;
   }
   .ak-hl--right {
-    right: -64px;
-    top: calc(var(--hl-floor, 257px) - 218px);
-    width: 360px;
+    right: -36px;
+    top: calc(var(--hl-floor, 257px) - 245px);
+    width: 380px;
   }
 }
 
 /* Desktop: the heading row has a wide empty middle, so both tips can drape into it */
 @media (min-width: 1024px) {
   .ak-hero-leaves {
-    --hl-tail-w: 160px;
-    --hl-tail-h: 280px;
+    --hl-tail-w: 180px;
+    --hl-tail-h: 300px;
   }
   .ak-hl--left {
     left: -70px;
@@ -270,16 +211,13 @@
     width: 600px;
   }
   .ak-hl--right {
-    right: -80px;
-    top: calc(var(--hl-floor, 240px) - 213px);
-    width: 500px;
+    right: -45px;
+    top: calc(var(--hl-floor, 240px) - 245px);
+    width: 520px;
   }
-  /* Wide screens leave open space beside the header, so the leaf would show all the way
-     up: it sits lower here and fades in over a shorter stretch */
   .ak-hl--right .ak-hl__img,
   .ak-hl--right .ak-hl__shadow {
-    -webkit-mask-image: linear-gradient(to bottom, transparent 6%, #000 26%);
-    mask-image: linear-gradient(to bottom, transparent 6%, #000 26%);
+    scale: none;
   }
 }
 

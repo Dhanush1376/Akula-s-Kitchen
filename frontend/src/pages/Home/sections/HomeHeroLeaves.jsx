@@ -159,13 +159,16 @@ export function HomeHeroLeaves() {
     const measure = () => {
       frame = 0;
       const origin = stage.getBoundingClientRect();
-      const text = page.querySelector('.ak-today__head > :first-child')?.getBoundingClientRect();
+      const text = (
+        page.querySelector('.ak-today__title') ||
+        page.querySelector('.ak-today__head > :first-child')
+      )?.getBoundingClientRect();
       const grid = page.querySelector('.ak-today__grid')?.getBoundingClientRect();
       // Without a hero (the admin can hide it), stay above wherever the content starts
       const contentTop = parseFloat(getComputedStyle(page).paddingTop) || 130;
       const band = text?.height ? text.top - origin.top : contentTop + 6;
       const clear = text?.width ? text.right - origin.left : origin.width;
-      const floor = grid?.height ? grid.top - origin.top : band + 24;
+      const floor = grid?.height ? grid.top - origin.top : band + 40;
       stage.style.setProperty('--hl-band', `${Math.round(band)}px`);
       stage.style.setProperty('--hl-clear', `${Math.round(clear)}px`);
       stage.style.setProperty('--hl-floor', `${Math.round(floor)}px`);
