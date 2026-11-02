@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { prefetchManager } from '../../utils/performance/prefetchManager';
 import { useDashboardData } from '../../hooks/useDashboardData';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Home, Store, Heart, ReceiptText, User, LogIn } from 'lucide-react';
 
 const ICONS = {
