@@ -41,6 +41,7 @@ export default function CheckoutPaymentStep() {
     handleConfirmOrder,
     isProcessing,
     backendTotals,
+    hasLoadedTotals,
     isTotalsLoading,
     totalsError,
     fetchBackendTotals,
@@ -77,12 +78,21 @@ export default function CheckoutPaymentStep() {
   const shippingFee = backendTotals?.shippingFee || 0;
   const currentPayableTotal = Math.max(0, (backendTotals?.total ?? 0) - shippingFee);
 
+  const isZeroTotalOrder = Boolean(
+    !isTotalsLoading &&
+    !totalsError &&
+    hasLoadedTotals &&
+    typeof backendTotals?.total === 'number' &&
+    backendTotals.total === 0 &&
+    (backendTotals.subtotal > 0 || (backendTotals?.discount ?? 0) > 0),
+  );
+
   const getSubmitButtonLabel = () => {
     if (isProcessing) return 'Processing...';
     if (isTotalsLoading) return 'Calculating...';
     if (totalsError) return 'Pricing Load Error';
 
-    if (currentPayableTotal === 0) {
+    if (isZeroTotalOrder) {
       return 'Place Order (Fully Paid)';
     }
 
@@ -99,10 +109,10 @@ export default function CheckoutPaymentStep() {
     if (!isCodEnabled) {
       return 'COD Unavailable';
     }
-    if (currentPayableTotal < codMinOrder) {
+    if (hasLoadedTotals && currentPayableTotal < codMinOrder) {
       return `COD Unavailable (< ₹${codMinOrder})`;
     }
-    if (currentPayableTotal > codMaxOrder) {
+    if (hasLoadedTotals && currentPayableTotal > codMaxOrder) {
       return `COD Unavailable (> ₹${codMaxOrder})`;
     }
     if (!codOtpSent) {
@@ -119,7 +129,7 @@ export default function CheckoutPaymentStep() {
   };
 
   const handleBottomSubmit = async () => {
-    if (isProcessing) return;
+    if (isProcessing || isTotalsLoading) return;
 
     if (!activeSelectedAddress) {
       toast.error('Please select a delivery address');
@@ -132,7 +142,7 @@ export default function CheckoutPaymentStep() {
       return;
     }
 
-    if (backendTotals?.total === 0 || currentPayableTotal === 0) {
+    if (isZeroTotalOrder) {
       handleConfirmOrder();
     } else if (paymentOption === 'razorpay') {
       if (!isRazorpayEnabled) {
@@ -145,7 +155,8 @@ export default function CheckoutPaymentStep() {
         toast.error('Cash on Delivery is currently disabled.');
         return;
       }
-      if (backendTotals.total < codMinOrder || backendTotals.total > codMaxOrder) {
+      const effectiveTotal = backendTotals?.total ?? currentPayableTotal;
+      if (hasLoadedTotals && (effectiveTotal < codMinOrder || effectiveTotal > codMaxOrder)) {
         toast.error(
           `COD is only serviceable for order totals between ₹${codMinOrder} and ₹${codMaxOrder}.`,
         );
@@ -175,7 +186,7 @@ export default function CheckoutPaymentStep() {
     if (isProcessing || isSendingOtp) return true;
     if (isTotalsLoading) return true;
     if (totalsError) return true;
-    if (backendTotals?.total === 0 || currentPayableTotal === 0) return false;
+    if (isZeroTotalOrder) return false;
 
     if (!isRazorpayEnabled && !isCodEnabled) return true;
 
@@ -184,7 +195,11 @@ export default function CheckoutPaymentStep() {
     }
 
     if (paymentOption === 'cod') {
-      if (!isCodEnabled || backendTotals.total < codMinOrder || backendTotals.total > codMaxOrder) {
+      const effectiveTotal = backendTotals?.total ?? currentPayableTotal;
+      if (
+        !isCodEnabled ||
+        (hasLoadedTotals && (effectiveTotal < codMinOrder || effectiveTotal > codMaxOrder))
+      ) {
         return true;
       }
       if (!isCodOtpRequired) return false;
@@ -201,7 +216,7 @@ export default function CheckoutPaymentStep() {
       <TargetDeliveryDatePicker needByDate={needByDate} setNeedByDate={setNeedByDate} />
 
       {/* Payment Options Section */}
-      {backendTotals?.total === 0 ? (
+      {isZeroTotalOrder ? (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -298,12 +313,18 @@ export default function CheckoutPaymentStep() {
             {isCodEnabled && (
               <div
                 onClick={() => {
-                  if (backendTotals.total >= codMinOrder && backendTotals.total <= codMaxOrder) {
+                  const effectiveTotal = backendTotals?.total ?? currentPayableTotal;
+                  if (
+                    !hasLoadedTotals ||
+                    (effectiveTotal >= codMinOrder && effectiveTotal <= codMaxOrder)
+                  ) {
                     setPaymentOption('cod');
                   }
                 }}
                 className={`relative px-4 py-3.5 rounded-lg border transition-all duration-200 overflow-hidden ${
-                  backendTotals.total > codMaxOrder || backendTotals.total < codMinOrder
+                  hasLoadedTotals &&
+                  ((backendTotals?.total ?? currentPayableTotal) > codMaxOrder ||
+                    (backendTotals?.total ?? currentPayableTotal) < codMinOrder)
                     ? 'opacity-50 cursor-not-allowed border-neutral-200 bg-neutral-50/60 shadow-xs'
                     : 'cursor-pointer active:scale-[0.99] ' +
                       (paymentOption === 'cod'
@@ -335,7 +356,9 @@ export default function CheckoutPaymentStep() {
                     >
                       Cash on Delivery (COD)
                     </span>
-                    {backendTotals.total <= codMaxOrder && backendTotals.total >= codMinOrder && (
+                    {(!hasLoadedTotals ||
+                      ((backendTotals?.total ?? currentPayableTotal) <= codMaxOrder &&
+                        (backendTotals?.total ?? currentPayableTotal) >= codMinOrder)) && (
                       <p
                         className={`text-[11px] mt-0.5 truncate ${
                           paymentOption === 'cod' ? 'text-white/70' : 'text-neutral-500'
@@ -344,34 +367,36 @@ export default function CheckoutPaymentStep() {
                         Pay with cash upon delivery at your doorstep
                       </p>
                     )}
-                    {backendTotals.total > codMaxOrder && (
-                      <p
-                        className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${
-                          paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
-                        }`}
-                      >
-                        <AlertTriangle
-                          className={`w-3.5 h-3.5 shrink-0 ${
+                    {hasLoadedTotals &&
+                      (backendTotals?.total ?? currentPayableTotal) > codMaxOrder && (
+                        <p
+                          className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${
                             paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
                           }`}
-                        />
-                        COD unavailable for orders above ₹{codMaxOrder.toLocaleString('en-IN')}
-                      </p>
-                    )}
-                    {backendTotals.total < codMinOrder && (
-                      <p
-                        className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${
-                          paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
-                        }`}
-                      >
-                        <AlertTriangle
-                          className={`w-3.5 h-3.5 shrink-0 ${
+                        >
+                          <AlertTriangle
+                            className={`w-3.5 h-3.5 shrink-0 ${
+                              paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
+                            }`}
+                          />
+                          COD unavailable for orders above ₹{codMaxOrder.toLocaleString('en-IN')}
+                        </p>
+                      )}
+                    {hasLoadedTotals &&
+                      (backendTotals?.total ?? currentPayableTotal) < codMinOrder && (
+                        <p
+                          className={`text-[11px] font-bold mt-1 flex items-center gap-1 ${
                             paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
                           }`}
-                        />
-                        COD requires minimum order of ₹{codMinOrder.toLocaleString('en-IN')}
-                      </p>
-                    )}
+                        >
+                          <AlertTriangle
+                            className={`w-3.5 h-3.5 shrink-0 ${
+                              paymentOption === 'cod' ? 'text-amber-200' : 'text-red-600'
+                            }`}
+                          />
+                          COD requires minimum order of ₹{codMinOrder.toLocaleString('en-IN')}
+                        </p>
+                      )}
                   </div>
                 </div>
               </div>

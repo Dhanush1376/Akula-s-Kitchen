@@ -274,13 +274,25 @@ export function useCheckoutFlow({
   const handleConfirmOrder = async () => {
     if (isProcessing) return;
 
+    if (totals.isTotalsLoading) {
+      toast.error('Please wait while order totals are being calculated');
+      return;
+    }
+
     if (!shipping.activeSelectedAddress) {
       toast.error('Please select a delivery address');
       setActiveStep(1);
       return;
     }
 
-    const isFullyPaid = (totals.backendTotals?.total ?? 0) === 0;
+    const isFullyPaid = Boolean(
+      !totals.isTotalsLoading &&
+      !totals.totalsError &&
+      totals.hasLoadedTotals &&
+      typeof totals.backendTotals?.total === 'number' &&
+      totals.backendTotals.total === 0 &&
+      (totals.backendTotals.subtotal > 0 || (totals.backendTotals?.discount ?? 0) > 0),
+    );
 
     if (!isFullyPaid && paymentOption === 'cod') {
       const codMinOrder = settings?.payments?.codMinOrder ?? 500;
@@ -291,7 +303,11 @@ export function useCheckoutFlow({
         toast.error('Cash on Delivery is currently disabled.');
         return;
       }
-      if (totals.backendTotals.total < codMinOrder || totals.backendTotals.total > codMaxOrder) {
+      const effectiveTotal = totals.backendTotals?.total ?? 0;
+      if (
+        totals.hasLoadedTotals &&
+        (effectiveTotal < codMinOrder || effectiveTotal > codMaxOrder)
+      ) {
         toast.error(
           `Cash on Delivery (COD) is only serviceable for order totals between ₹${codMinOrder} and ₹${codMaxOrder}.`,
         );

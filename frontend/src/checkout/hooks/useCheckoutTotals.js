@@ -1,22 +1,50 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { orderService } from '../../services/domainServices';
 import logger from '../../utils/core/logger';
 
 export function useCheckoutTotals({ isAuthenticated, activeItems, paymentOption, location }) {
-  const [backendTotals, setBackendTotals] = useState({
-    subtotal: 0,
+  // Pre-calculate estimated subtotal from activeItems so we have an initial non-zero baseline
+  const estimatedSubtotal = useMemo(() => {
+    if (!activeItems || !Array.isArray(activeItems) || activeItems.length === 0) return 0;
+    return activeItems.reduce((sum, item) => {
+      const price = Number(item.finalPrice ?? item.price ?? 0);
+      const qty = Number(item.quantity) || 1;
+      return sum + price * qty;
+    }, 0);
+  }, [activeItems]);
+
+  const [backendTotals, setBackendTotals] = useState(() => ({
+    subtotal: estimatedSubtotal,
     shippingFee: 0,
     platformFee: 0,
-    total: 0,
-  });
-  const [isTotalsLoading, setIsTotalsLoading] = useState(false);
+    codFee: 0,
+    discount: 0,
+    total: estimatedSubtotal,
+  }));
+  const [hasLoadedTotals, setHasLoadedTotals] = useState(false);
+  const [isTotalsLoading, setIsTotalsLoading] = useState(() =>
+    Boolean(activeItems && activeItems.length > 0),
+  );
   const [totalsError, setTotalsError] = useState(null);
 
   const totalsRequestRef = useRef(0);
 
+  useEffect(() => {
+    if (!hasLoadedTotals && estimatedSubtotal > 0) {
+      setBackendTotals((prev) => ({
+        ...prev,
+        subtotal: prev.subtotal || estimatedSubtotal,
+        total: prev.total || estimatedSubtotal,
+      }));
+    }
+  }, [estimatedSubtotal, hasLoadedTotals]);
+
   const fetchBackendTotals = useCallback(async () => {
-    if (!activeItems || activeItems.length === 0) return;
+    if (!activeItems || activeItems.length === 0) {
+      setIsTotalsLoading(false);
+      return;
+    }
     const requestId = totalsRequestRef.current + 1;
     totalsRequestRef.current = requestId;
 
@@ -46,6 +74,7 @@ export function useCheckoutTotals({ isAuthenticated, activeItems, paymentOption,
       if (res.success && res.data) {
         if (requestId !== totalsRequestRef.current) return;
         setBackendTotals(res.data);
+        setHasLoadedTotals(true);
         setTotalsError(null);
       }
     } catch (err) {
@@ -68,6 +97,7 @@ export function useCheckoutTotals({ isAuthenticated, activeItems, paymentOption,
   return {
     backendTotals,
     setBackendTotals,
+    hasLoadedTotals,
     isTotalsLoading,
     setIsTotalsLoading,
     totalsError,
