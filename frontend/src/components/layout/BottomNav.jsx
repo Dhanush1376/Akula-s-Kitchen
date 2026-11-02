@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { prefetchManager } from '../../utils/performance/prefetchManager';
 import { useDashboardData } from '../../hooks/useDashboardData';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Home, Store, Heart, ReceiptText, User, LogIn } from 'lucide-react';
 
 const ICONS = {
@@ -19,8 +19,24 @@ const ICONS = {
 
 export function BottomNav() {
   const location = useLocation();
+  const bottomNavRef = useRef(null);
   const { cartCount, setIsCartOpen, isCartOpen, items = [] } = useCart();
   const { isAuthenticated, isAuthInitialized, openAuthModal, isAuthModalOpen, user } = useAuth();
+
+  useEffect(() => {
+    const el = bottomNavRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const publish = () => {
+      document.documentElement.style.setProperty('--ak-bottom-nav-h', `${el.offsetHeight}px`);
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--ak-bottom-nav-h');
+    };
+  }, []);
 
   let wishlistCount = 0;
   try {
@@ -101,12 +117,14 @@ export function BottomNav() {
 
   return (
     <motion.nav
+      ref={bottomNavRef}
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       aria-label="Primary"
-      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto z-[var(--z-overlay)] bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-2xl sm:rounded-3xl px-2 py-1 select-none"
+      className="bottom-nav lg:hidden fixed bottom-3 sm:bottom-3.5 left-3 right-3 max-w-[390px] mx-auto bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-white/80 rounded-2xl sm:rounded-3xl px-2 py-1 select-none"
       style={{
+        zIndex: 125,
         marginBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >

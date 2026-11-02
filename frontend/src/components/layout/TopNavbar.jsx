@@ -386,10 +386,10 @@ export function TopNavbar() {
     <>
       <nav
         ref={navRef}
-        className={`top-navbar fixed top-0 left-0 right-0 w-full transition-transform duration-300 z-50 pointer-events-none ${
+        className={`top-navbar fixed top-0 left-0 right-0 w-full transition-transform duration-300 pointer-events-none ${
           hideNavbar ? '-translate-y-full' : 'translate-y-0'
         }`}
-        style={{ zIndex: 'var(--z-sticky)' }}
+        style={{ zIndex: 125 }}
       >
         <div className="max-w-[1400px] lg:max-w-[1120px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 lg:pt-4 pb-1.5 sm:pb-2 pointer-events-auto">
           <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
@@ -707,7 +707,7 @@ export function TopNavbar() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: '110%', opacity: 0 }}
                   transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-                  className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-2xl sm:rounded-3xl border border-black/[0.08]"
+                  className="fixed right-3 sm:right-4 top-[calc(var(--ak-header-h,72px)+8px)] sm:top-[calc(var(--ak-header-h,76px)+10px)] bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+20px+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+22px+env(safe-area-inset-bottom,0px))] w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-var(--ak-header-h,72px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-28px-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-var(--ak-header-h,76px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-var(--ak-header-h,72px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-28px-env(safe-area-inset-bottom,0px))] sm:max-h-[calc(100dvh-var(--ak-header-h,76px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 py-4 flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-2xl sm:rounded-3xl border border-black/[0.08]"
                 >
                   {/* Drawer Header */}
                   <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">

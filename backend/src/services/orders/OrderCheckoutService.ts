@@ -30,6 +30,10 @@ export class OrderCheckoutService {
     const isCod = paymentMethod === 'cod';
 
     const settings = await storeSettingsService.getSettings();
+    const isCodOtpRequired =
+      isCod &&
+      settings.payments?.codOtpChannel !== 'none' &&
+      settings.payments?.codOtpChannel !== 'disabled';
 
     const MAX_QUANTITY_PER_ITEM = settings.orders.maxQuantityPerItem;
     const MAX_ITEMS_PER_ORDER = settings.orders.maxItemsPerOrder;
@@ -240,70 +244,73 @@ export class OrderCheckoutService {
           throw new ApiError(400, 'Invalid delivery address phone number format.');
         }
 
-        if (!codVerificationToken) {
-          throw new ApiError(
-            400,
-            'Cash on Delivery verification is required. Please verify with OTP.',
-          );
-        }
-
-        const jwt = require('jsonwebtoken');
-        let decodedCodToken: any;
-        try {
-          decodedCodToken = jwt.verify(codVerificationToken, process.env.JWT_SECRET!);
-        } catch {
-          throw new ApiError(
-            400,
-            'Invalid or expired COD verification session. Please verify again.',
-          );
-        }
-
-        if (decodedCodToken.purpose !== 'COD_ORDER_VERIFICATION') {
-          throw new ApiError(400, 'Invalid COD verification token purpose.');
-        }
-
-        if (decodedCodToken.userId && decodedCodToken.userId.toString() !== userId.toString()) {
-          throw new ApiError(403, 'COD verification does not match the active customer account.');
-        }
-
-        if (
-          decodedCodToken.channel === 'email' ||
-          (!decodedCodToken.phone && decodedCodToken.email)
-        ) {
-          const orderEmail = (shippingAddress.email || user?.email || '').toLowerCase().trim();
-          const tokenEmail = (decodedCodToken.email || '').toLowerCase().trim();
-          if (!tokenEmail || tokenEmail !== orderEmail) {
+        // --- STRICT COD PHONE VERIFICATION VALIDATION (Only when OTP is enabled in Store Settings) ---
+        if (isCodOtpRequired) {
+          if (!codVerificationToken) {
             throw new ApiError(
               400,
-              'Verified COD email does not match the customer delivery email. Please re-verify with OTP.',
+              'Cash on Delivery verification is required. Please verify with OTP.',
             );
           }
-        } else {
-          if (decodedCodToken.phone !== normalizedShippingPhone) {
+
+          const jwt = require('jsonwebtoken');
+          let decodedCodToken: any;
+          try {
+            decodedCodToken = jwt.verify(codVerificationToken, process.env.JWT_SECRET!);
+          } catch {
             throw new ApiError(
               400,
-              'Verified COD phone does not match the selected delivery address phone. Please re-verify with OTP.',
+              'Invalid or expired COD verification session. Please verify again.',
             );
           }
-        }
 
-        // Atomic single-use consumption of OtpChallenge to prevent replay
-        const OtpChallenge = require('../../models/OtpChallenge').default;
-        const consumedChallenge = await OtpChallenge.findOneAndUpdate(
-          {
-            challengeId: decodedCodToken.challengeId,
-            purpose: 'COD_VERIFICATION',
-            consumedAt: null,
-          },
-          { $set: { consumedAt: new Date(), exhausted: true } },
-          { session },
-        );
+          if (decodedCodToken.purpose !== 'COD_ORDER_VERIFICATION') {
+            throw new ApiError(400, 'Invalid COD verification token purpose.');
+          }
 
-        if (!consumedChallenge) {
-          throw new ApiError(
-            400,
-            'COD verification code has already been used or expired. Please verify again.',
+          if (decodedCodToken.userId && decodedCodToken.userId.toString() !== userId.toString()) {
+            throw new ApiError(403, 'COD verification does not match the active customer account.');
+          }
+
+          if (
+            decodedCodToken.channel === 'email' ||
+            (!decodedCodToken.phone && decodedCodToken.email)
+          ) {
+            const orderEmail = (shippingAddress.email || user?.email || '').toLowerCase().trim();
+            const tokenEmail = (decodedCodToken.email || '').toLowerCase().trim();
+            if (!tokenEmail || tokenEmail !== orderEmail) {
+              throw new ApiError(
+                400,
+                'Verified COD email does not match the customer delivery email. Please re-verify with OTP.',
+              );
+            }
+          } else {
+            if (decodedCodToken.phone !== normalizedShippingPhone) {
+              throw new ApiError(
+                400,
+                'Verified COD phone does not match the selected delivery address phone. Please re-verify with OTP.',
+              );
+            }
+          }
+
+          // Atomic single-use consumption of OtpChallenge to prevent replay
+          const OtpChallenge = require('../../models/OtpChallenge').default;
+          const consumedChallenge = await OtpChallenge.findOneAndUpdate(
+            {
+              challengeId: decodedCodToken.challengeId,
+              purpose: 'COD_VERIFICATION',
+              consumedAt: null,
+            },
+            { $set: { consumedAt: new Date(), exhausted: true } },
+            { session },
           );
+
+          if (!consumedChallenge) {
+            throw new ApiError(
+              400,
+              'COD verification code has already been used or expired. Please verify again.',
+            );
+          }
         }
       } else if (paymentMethod === 'razorpay' && !isZeroTotalOrder) {
         if (!settings.payments.enableRazorpay) {
@@ -356,8 +363,8 @@ export class OrderCheckoutService {
           customerEmail: user?.email || shippingAddress?.email || '',
           customerPhone: user?.phone || normalizedShippingPhone,
           shippingPhone: normalizedShippingPhone,
-          codPhoneVerified: isCod,
-          codVerifiedAt: isCod ? new Date() : undefined,
+          codPhoneVerified: isCod ? Boolean(isCodOtpRequired) : false,
+          codVerifiedAt: isCod && isCodOtpRequired ? new Date() : undefined,
           subtotal,
           shippingFee,
           platformFee,

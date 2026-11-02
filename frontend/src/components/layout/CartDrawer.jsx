@@ -87,13 +87,14 @@ export function CartDrawer({ isOpen, onClose }) {
       {isOpen && (
         <>
           {/* Backdrop */}
+          {/* Backdrop spanning beyond viewport bounds */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[200]"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[115]"
           />
 
           {/* Drawer Panel */}
@@ -112,7 +113,7 @@ export function CartDrawer({ isOpen, onClose }) {
                 onClose();
               }
             }}
-            className="fixed right-3 top-3 bottom-3 sm:right-4 sm:top-4 sm:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-24px)] sm:h-[calc(100dvh-32px)] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.22)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] font-body pt-[calc(0.5rem+env(safe-area-inset-top,0px))] sm:pt-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0 overflow-hidden"
+            className="fixed right-3 sm:right-4 lg:right-4 top-[calc(var(--ak-header-h,72px)+8px)] sm:top-[calc(var(--ak-header-h,76px)+10px)] lg:top-[calc(var(--ak-header-h,76px)+12px)] bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+20px+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+22px+env(safe-area-inset-bottom,0px))] lg:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] lg:max-w-[380px] h-[calc(100dvh-var(--ak-header-h,72px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-28px-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-var(--ak-header-h,76px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] lg:h-[calc(100dvh-var(--ak-header-h,76px)-28px)] max-h-[calc(100dvh-var(--ak-header-h,72px)-var(--bottom-nav-height,65px)-28px-env(safe-area-inset-bottom,0px))] sm:max-h-[calc(100dvh-var(--ak-header-h,76px)-var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] lg:max-h-[calc(100dvh-var(--ak-header-h,76px)-28px)] bg-white/95 backdrop-blur-2xl z-[120] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.22)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] font-body overflow-hidden"
           >
             {/* Header */}
             <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">

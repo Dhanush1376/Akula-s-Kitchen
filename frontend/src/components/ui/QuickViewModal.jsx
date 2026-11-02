@@ -1,5 +1,5 @@
 import { Star, ChevronLeft, ChevronRight, ArrowRight, X } from 'lucide-react';
-import { m as motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { CloudinaryImage } from './CloudinaryImage';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -48,11 +48,12 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
       setIsConverting(true);
       const targetRoute = getProductRoute(product);
 
-      // Smooth cinematic dissolve transition
+      // The sheet glides up and dissolves into the page colour (see the `converting`
+      // variant and the cover below), then the details page takes over underneath it
       setTimeout(() => {
         onClose();
         navigate(targetRoute, { state: { product, fromQuickView: true } });
-      }, 260);
+      }, 340);
     },
     [isConverting, product, onClose, navigate],
   );
@@ -63,6 +64,11 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
     onExpand: handleConvertToDetails,
     expandThreshold: -40,
   });
+
+  // The sheet's vertical drag, so the "view details" pill can respond as it is pulled up
+  const sheetY = useMotionValue(0);
+  const hintScale = useTransform(sheetY, [-140, 0], [1.08, 1]);
+  const hintY = useTransform(sheetY, [-140, 0], [-10, 0]);
 
   const modalRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -220,6 +226,17 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
           transition: sheetTransition,
         }
       : { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.25 } },
+    // Swiped up: carries on upward from wherever the finger let go, easing out as it fades
+    converting: {
+      y: isMobile ? -220 : -40,
+      opacity: 0,
+      scale: 1.02,
+      transition: {
+        y: { type: 'spring', stiffness: 260, damping: 32, mass: 0.9 },
+        opacity: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+        scale: { duration: 0.34, ease: [0.22, 1, 0.36, 1] },
+      },
+    },
   };
 
   return createPortal(
@@ -238,12 +255,21 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={isConverting ? undefined : onClose}
-            className={`fixed -inset-x-0 -top-40 -bottom-40 pointer-events-auto transition-all duration-300 ${
-              isConverting
-                ? 'bg-surface opacity-100 backdrop-blur-none'
-                : 'bg-black/60 sm:bg-black/40 backdrop-blur-xs cursor-pointer'
-            }`}
+            className="fixed -inset-x-0 -top-40 -bottom-40 pointer-events-auto bg-black/60 sm:bg-black/40 backdrop-blur-xs cursor-pointer"
           />
+
+          {/* Swiped up: the page colour washes in so the details page appears seamlessly */}
+          <AnimatePresence>
+            {isConverting && (
+              <motion.div
+                key="quickview-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1], delay: 0.04 }}
+                className="fixed -inset-x-0 -top-40 -bottom-40 bg-surface pointer-events-auto z-[11]"
+              />
+            )}
+          </AnimatePresence>
 
           {/* Floating Sheet on Mobile / Centered Card on Desktop */}
           <motion.div
@@ -251,36 +277,45 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
             key="quickview-card"
             variants={modalVariants}
             initial="hidden"
-            animate="visible"
+            animate={isConverting ? 'converting' : 'visible'}
             exit="exit"
+            style={{ y: sheetY }}
             {...(!isConverting && isMobile ? dragProps : {})}
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
-            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-[500px] lg:max-w-4xl mx-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              isConverting
-                ? '!fixed !inset-0 !z-[10000] !max-w-none !max-h-none !h-screen !rounded-none !m-0 !p-0 shadow-none opacity-0 scale-[1.02] pointer-events-none'
-                : ''
+            className={`relative z-10 pointer-events-auto flex flex-col w-full max-w-[500px] lg:max-w-4xl mx-auto will-change-transform ${
+              isConverting ? 'pointer-events-none' : ''
             }`}
           >
-            <div
-              className={`relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 pb-4 sm:pb-5 lg:pb-7 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[92dvh] sm:max-h-[90vh] overflow-hidden transition-all duration-300 ${
-                isConverting ? '!rounded-none !border-none !bg-surface' : ''
-              }`}
+            {/* Full details: floats in the blurred space above the sheet, and lifts as the
+                sheet is pulled up */}
+            <motion.button
+              type="button"
+              onClick={handleViewDetails}
+              style={{ scale: hintScale, y: hintY, x: '-50%' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isConverting ? 0 : 1 }}
+              transition={{ duration: 0.3, delay: isConverting ? 0 : 0.15 }}
+              className="absolute bottom-full left-1/2 mb-3 inline-flex items-center gap-2 pl-1.5 pr-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-xl border border-white/30 text-white shadow-[0_8px_24px_rgba(0,0,0,0.18)] whitespace-nowrap cursor-pointer select-none transition-colors"
+              aria-label="View complete product details"
             >
+              <span className="w-6 h-6 rounded-full bg-white text-[#283618] flex items-center justify-center shrink-0">
+                <motion.span
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                  className="material-symbols-outlined text-[15px]"
+                >
+                  keyboard_double_arrow_up
+                </motion.span>
+              </span>
+              <span className="font-sans text-[11px] font-bold uppercase tracking-wider">
+                {isMobile ? 'Swipe up for full details' : 'View complete details'}
+              </span>
+            </motion.button>
+
+            <div className="relative w-full bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 pb-4 sm:pb-5 lg:pb-7 shadow-[0_16px_50px_rgba(0,0,0,0.22)] border border-black/[0.08] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden">
               {/* Atmospheric Corner Leaves matching AuthModal */}
               <AuthCornerLeaves />
-
-              {/* Top conversion progress bar */}
-              {isConverting && (
-                <div className="absolute inset-x-0 top-0 z-[100] h-1 bg-[#283618]/20 overflow-hidden">
-                  <motion.div
-                    initial={{ x: '-100%' }}
-                    animate={{ x: '0%' }}
-                    transition={{ duration: 0.22, ease: 'easeOut' }}
-                    className="h-full w-full bg-[#283618]"
-                  />
-                </div>
-              )}
 
               {/* Grab handle for mobile bottom sheet */}
               <div
@@ -309,7 +344,7 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
               >
                 {/* ── Left Column: Media Presentation ────────────────── */}
                 <div className="w-full lg:w-1/2 shrink-0 flex flex-col gap-2.5">
-                  <div className="relative bg-neutral-100 rounded-2xl overflow-hidden aspect-[16/11] sm:aspect-[4/3] lg:aspect-square w-full border border-black/[0.06] shadow-2xs shrink-0 group">
+                  <div className="relative bg-neutral-100 rounded-2xl overflow-hidden aspect-[4/5] max-h-[58dvh] sm:max-h-none sm:aspect-[4/3] lg:aspect-square w-full border border-black/[0.06] shadow-2xs shrink-0 group">
                     {/* Carousel Container */}
                     <div
                       ref={scrollContainerRef}
@@ -408,26 +443,6 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                         ))}
                       </div>
                     )}
-
-                    {/* Wishlist toggle heart button on image bottom-right */}
-                    <button
-                      type="button"
-                      onClick={handleWishlist}
-                      className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-sm border border-black/5 hover:scale-110 active:scale-95 transition-all z-20 cursor-pointer"
-                      aria-label={wishlisted ? 'Saved' : 'Save to Wishlist'}
-                      title={wishlisted ? 'Saved' : 'Save'}
-                    >
-                      <motion.span
-                        animate={{
-                          scale: wishlisted ? [1, 1.3, 1] : 1,
-                          color: wishlisted ? '#dc2626' : '#262626',
-                        }}
-                        className="material-symbols-outlined text-[17px]"
-                        style={{ fontVariationSettings: wishlisted ? "'FILL' 1" : "'FILL' 0" }}
-                      >
-                        favorite
-                      </motion.span>
-                    </button>
                   </div>
 
                   {/* Thumbnail Strip (Desktop) */}
@@ -465,87 +480,32 @@ export const QuickViewModal = ({ isOpen, onClose, product, onNext, onPrev, hasNe
                   )}
                 </div>
 
-                {/* ── Right Column: Information & Details ────────────── */}
-                <div className="w-full lg:w-1/2 flex flex-col justify-between min-w-0">
-                  <div className="space-y-2.5">
-                    {/* Telugu Title Subtitle */}
-                    {(product.teluguTitle || product.nameTE || product.teluguName) && (
-                      <span className="block font-label text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-neutral-400 leading-tight">
-                        {product.teluguTitle || product.nameTE || product.teluguName}
-                      </span>
-                    )}
-
-                    {/* Main Title */}
+                {/* ── Right Column: title and price on one line ─────── */}
+                <div className="w-full lg:w-1/2 flex flex-col lg:justify-center min-w-0">
+                  <div className="flex items-baseline gap-3 min-w-0">
                     <h2
                       id="quickview-title"
                       onClick={handleViewDetails}
-                      className="font-serif-heading text-[18px] sm:text-[21px] lg:text-[24px] font-bold text-neutral-950 leading-snug tracking-tight hover:text-[#283618] transition-colors cursor-pointer"
+                      className="flex-1 min-w-0 truncate text-[18px] sm:text-[21px] lg:text-[24px] font-bold text-neutral-950 leading-snug tracking-tight hover:text-[#283618] transition-colors cursor-pointer"
                       style={{ fontFamily: 'var(--font-display)' }}
-                      title="Click to view full product details"
+                      title={product.title}
                     >
                       {product.title}
                     </h2>
-
-                    {/* Price Block */}
-                    <div className="flex items-baseline gap-2.5 flex-wrap">
-                      <span className="text-[22px] sm:text-[25px] font-bold text-neutral-950 lining-nums">
+                    <div className="flex items-baseline gap-1.5 shrink-0">
+                      <span className="text-[19px] sm:text-[22px] font-bold text-neutral-950 lining-nums">
                         ₹{product.price?.toLocaleString('en-IN') || '0'}
                       </span>
-                      {product.oldPrice && product.oldPrice > product.price && (
+                      {discountPercent > 0 && (
                         <>
-                          <span className="text-[14px] sm:text-[15px] text-neutral-400 line-through lining-nums">
+                          <span className="text-[12.5px] sm:text-[13.5px] text-neutral-400 line-through lining-nums">
                             ₹{product.oldPrice.toLocaleString('en-IN')}
                           </span>
-                          <span className="text-[10.5px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                          <span className="self-center text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 whitespace-nowrap">
                             {discountPercent}% OFF
                           </span>
                         </>
                       )}
-                    </div>
-
-                    {/* Trust Badges */}
-                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                      <span className="inline-flex items-center gap-1 bg-neutral-100/90 border border-neutral-200/60 text-neutral-700 px-2.5 py-1 rounded-full text-[10.5px] font-semibold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Fresh Daily
-                      </span>
-                      <span className="inline-flex items-center gap-1 bg-neutral-100/90 border border-neutral-200/60 text-neutral-700 px-2.5 py-1 rounded-full text-[10.5px] font-semibold">
-                        100% Homemade
-                      </span>
-                      <span className="inline-flex items-center gap-1 bg-neutral-100/90 border border-neutral-200/60 text-neutral-700 px-2.5 py-1 rounded-full text-[10.5px] font-semibold">
-                        Pure Ingredients
-                      </span>
-                    </div>
-
-                    {/* Affordance bar for full details */}
-                    <div
-                      onClick={handleConvertToDetails}
-                      className="w-full my-2 p-2.5 sm:p-3 rounded-2xl bg-neutral-50/80 hover:bg-neutral-100/80 border border-black/[0.06] flex items-center justify-between transition-all cursor-pointer group shadow-2xs select-none"
-                      title="Tap for full product details and reviews"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-[#283618]/10 text-[#283618] flex items-center justify-center shrink-0">
-                          <motion.span
-                            animate={{ y: [0, -2, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                            className="material-symbols-outlined text-[16px]"
-                          >
-                            keyboard_double_arrow_up
-                          </motion.span>
-                        </div>
-                        <div className="flex flex-col text-left min-w-0">
-                          <span className="font-sans text-[11px] sm:text-[11.5px] font-bold text-neutral-900 tracking-wide uppercase truncate">
-                            View Complete Details
-                          </span>
-                          <span className="text-[10px] text-neutral-500 font-normal truncate">
-                            Nutritional specs, reviews & options
-                          </span>
-                        </div>
-                      </div>
-                      <ArrowRight
-                        className="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-1 group-hover:text-[#283618] transition-all shrink-0 ml-2"
-                        strokeWidth={2}
-                      />
                     </div>
                   </div>
                 </div>

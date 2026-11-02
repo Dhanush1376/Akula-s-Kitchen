@@ -152,40 +152,42 @@ export default function CodOtpVerificationSection({
 
           {!codVerified ? (
             <div className="space-y-3.5">
-              {/* Channel Selector if configured as 'both' and OTP not yet sent */}
-              {configuredCodChannel === 'both' && !codOtpSent && (
-                <div className="flex items-center gap-2.5 bg-neutral-50/80 p-1.5 rounded-lg border border-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-neutral-500 px-2 shrink-0">
-                    Verify via:
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5 flex-1">
-                    <button
-                      type="button"
-                      onClick={() => onSelectCodChannel && onSelectCodChannel('phone')}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                        selectedCodChannel === 'phone'
-                          ? 'bg-[#283618] text-white border border-[#283618] shadow-xs'
-                          : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
-                      }`}
-                    >
-                      <Phone className="w-3.5 h-3.5" strokeWidth={2.2} />
-                      <span>Phone</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSelectCodChannel && onSelectCodChannel('email')}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
-                        selectedCodChannel === 'email'
-                          ? 'bg-[#283618] text-white border border-[#283618] shadow-xs'
-                          : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
-                      }`}
-                    >
-                      <Mail className="w-3.5 h-3.5" strokeWidth={2.2} />
-                      <span>Email</span>
-                    </button>
+              {/* Channel Selector if configured as 'both' OR if customer email & phone are available */}
+              {(configuredCodChannel === 'both' ||
+                (Boolean(customerEmail) && Boolean(deliveryPhone))) &&
+                !codOtpSent && (
+                  <div className="flex items-center gap-2.5 bg-neutral-50/80 p-1.5 rounded-lg border border-neutral-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-neutral-500 px-2 shrink-0">
+                      Verify via:
+                    </span>
+                    <div className="grid grid-cols-2 gap-1.5 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => onSelectCodChannel && onSelectCodChannel('phone')}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                          selectedCodChannel === 'phone'
+                            ? 'bg-[#283618] text-white border border-[#283618] shadow-xs'
+                            : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
+                        }`}
+                      >
+                        <Phone className="w-3.5 h-3.5" strokeWidth={2.2} />
+                        <span>Phone</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onSelectCodChannel && onSelectCodChannel('email')}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md text-[11px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                          selectedCodChannel === 'email'
+                            ? 'bg-[#283618] text-white border border-[#283618] shadow-xs'
+                            : 'text-neutral-600 hover:text-black hover:bg-white/80 border border-transparent'
+                        }`}
+                      >
+                        <Mail className="w-3.5 h-3.5" strokeWidth={2.2} />
+                        <span>Email</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {isTargetMissing ? (
                 <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center gap-2 text-amber-900 text-xs">
@@ -272,8 +274,8 @@ export default function CodOtpVerificationSection({
                     ))}
                   </div>
 
-                  {/* Resend option */}
-                  <div className="flex justify-center pt-2 border-t border-neutral-200">
+                  {/* Resend and Switch channel options */}
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-neutral-200 flex-wrap">
                     <button
                       type="button"
                       onClick={handleSendCodOtp}
@@ -283,6 +285,24 @@ export default function CodOtpVerificationSection({
                       <RefreshCw className="w-3 h-3 text-neutral-500" />
                       <span>Resend OTP</span>
                     </button>
+
+                    {Boolean(customerEmail) && Boolean(deliveryPhone) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextChannel = isEmailActive ? 'phone' : 'email';
+                          if (onSelectCodChannel) onSelectCodChannel(nextChannel);
+                          setCodOtpInput('');
+                          setOtpDigits(['', '', '', '', '', '']);
+                        }}
+                        disabled={isSendingOtp || isProcessing}
+                        className="text-[11px] text-[#283618] hover:text-black font-semibold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      >
+                        {isEmailActive
+                          ? 'Send to Phone SMS instead'
+                          : "Didn't get SMS? Verify via Email instead"}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

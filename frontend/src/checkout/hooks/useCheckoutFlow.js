@@ -96,6 +96,8 @@ export function useCheckoutFlow({
   const [paymentError, setPaymentError] = useState('');
 
   const configuredCodChannel = settings?.payments?.codOtpChannel || 'phone';
+  const isCodOtpRequired = configuredCodChannel !== 'none' && configuredCodChannel !== 'disabled';
+
   const [selectedCodChannel, setSelectedCodChannel] = useState(() => {
     return configuredCodChannel === 'email' ? 'email' : 'phone';
   });
@@ -109,7 +111,9 @@ export function useCheckoutFlow({
   }, [configuredCodChannel]);
 
   const effectiveCodChannel =
-    configuredCodChannel === 'both' ? selectedCodChannel : configuredCodChannel;
+    configuredCodChannel === 'both' || selectedCodChannel === 'email'
+      ? selectedCodChannel
+      : configuredCodChannel;
 
   // Enforce address binding: changing address/phone resets prior COD verification!
   const activeAddrId = shipping.activeSelectedAddress?._id || shipping.activeSelectedAddress?.id;
@@ -177,6 +181,11 @@ export function useCheckoutFlow({
 
       const res = await orderService.sendCodOtp(payload);
       if (res.success) {
+        if (res.data?.otpNotRequired) {
+          setCodVerified(true);
+          toast.success('Cash on Delivery verified.');
+          return;
+        }
         setCodOtpSent(true);
         if (effectiveCodChannel === 'email') {
           toast.success(
@@ -292,8 +301,12 @@ export function useCheckoutFlow({
         toast.error('Please confirm Cash on Delivery');
         return;
       }
-      if (!codVerified) {
-        toast.error('Please verify your mobile number with OTP to place a Cash on Delivery order.');
+      if (isCodOtpRequired && !codVerified) {
+        toast.error(
+          effectiveCodChannel === 'email'
+            ? 'Please verify your email address with OTP to place a Cash on Delivery order.'
+            : 'Please verify your mobile number with OTP to place a Cash on Delivery order.',
+        );
         return;
       }
     }
@@ -324,7 +337,9 @@ export function useCheckoutFlow({
       needByDate: needByDate || undefined,
       idempotencyKey: createIdempotencyKey(),
       codVerificationToken:
-        !isFullyPaid && paymentOption === 'cod' ? codVerificationToken : undefined,
+        !isFullyPaid && paymentOption === 'cod' && isCodOtpRequired
+          ? codVerificationToken
+          : undefined,
     };
 
     if (isFullyPaid) {
@@ -419,6 +434,7 @@ export function useCheckoutFlow({
     paymentError,
     setPaymentError,
     configuredCodChannel,
+    isCodOtpRequired,
     effectiveCodChannel,
     selectedCodChannel,
     setSelectedCodChannel,

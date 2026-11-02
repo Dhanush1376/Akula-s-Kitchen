@@ -207,13 +207,21 @@ export const sendCodOtp = asyncHandler(async (req: Request, res: Response) => {
   const settings = await storeSettingsService.getSettings();
   const configuredChannel = settings?.payments?.codOtpChannel || 'phone';
 
+  // If COD OTP is disabled in store settings, no OTP is needed
+  if (configuredChannel === 'none' || configuredChannel === 'disabled') {
+    return res.status(200).json(
+      new ApiResponse(true, 'COD verification OTP is not required.', {
+        otpNotRequired: true,
+      }),
+    );
+  }
+
+  // Allow explicit fallback to email, or use email if configured or phone is missing
   const effectiveChannel: 'phone' | 'email' =
     configuredChannel === 'email'
       ? 'email'
-      : configuredChannel === 'both'
-        ? channel === 'email' || (email && !phone)
-          ? 'email'
-          : 'phone'
+      : channel === 'email' || (email && !phone)
+        ? 'email'
         : 'phone';
 
   const targetPhone = phone || (req.user as any)?.phone;

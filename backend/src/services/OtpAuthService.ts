@@ -773,7 +773,10 @@ class OtpAuthService {
           'Mobile SMS verification is temporarily unavailable. Please verify via Email OTP.',
         );
       }
-      throw new ApiError(500, 'Failed to send SMS verification code. Please try again.');
+      throw new ApiError(
+        500,
+        'Failed to deliver SMS verification code. Please choose Email OTP or try again.',
+      );
     }
 
     SecurityAuditService.log({

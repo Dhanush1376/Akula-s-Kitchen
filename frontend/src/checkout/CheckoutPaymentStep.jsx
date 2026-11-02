@@ -32,6 +32,7 @@ export default function CheckoutPaymentStep() {
     paymentError,
     _setPaymentError,
     configuredCodChannel,
+    isCodOtpRequired,
     effectiveCodChannel,
     selectedCodChannel,
     setSelectedCodChannel,
@@ -150,14 +151,18 @@ export default function CheckoutPaymentStep() {
         );
         return;
       }
-      if (!codOtpSent) {
-        handleSendCodOtp();
-      } else if (!codVerified) {
-        if (!codOtpInput.trim() || codOtpInput.length < 6) {
-          toast.error('Please enter the 6-digit verification code');
-          return;
+      if (isCodOtpRequired) {
+        if (!codOtpSent) {
+          handleSendCodOtp();
+        } else if (!codVerified) {
+          if (!codOtpInput.trim() || codOtpInput.length < 6) {
+            toast.error('Please enter the 6-digit verification code');
+            return;
+          }
+          handleVerifyCodOtp(codOtpInput);
+        } else {
+          handleConfirmOrder();
         }
-        handleVerifyCodOtp(codOtpInput);
       } else {
         handleConfirmOrder();
       }
@@ -182,6 +187,7 @@ export default function CheckoutPaymentStep() {
       if (!isCodEnabled || backendTotals.total < codMinOrder || backendTotals.total > codMaxOrder) {
         return true;
       }
+      if (!isCodOtpRequired) return false;
       if (!codOtpSent) return false;
       if (!codVerified) return codOtpInput.length < 6;
       return false;
@@ -383,7 +389,7 @@ export default function CheckoutPaymentStep() {
 
           {/* Dedicated Separate COD OTP Verification Box */}
           <AnimatePresence>
-            {isCodEnabled && paymentOption === 'cod' && (
+            {isCodEnabled && paymentOption === 'cod' && isCodOtpRequired && (
               <motion.div
                 key="cod-otp-section"
                 initial={{ opacity: 0, height: 0, marginTop: 0 }}

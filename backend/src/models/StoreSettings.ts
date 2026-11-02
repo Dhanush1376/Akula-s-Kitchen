@@ -34,7 +34,7 @@ export interface IStoreSettings extends Document {
     codFee: number;
     codMinOrder: number;
     codMaxOrder: number;
-    codOtpChannel?: 'phone' | 'email' | 'both';
+    codOtpChannel?: 'none' | 'disabled' | 'phone' | 'email' | 'both';
     enableRazorpay: boolean;
     enableWallet: boolean;
     enableUPI: boolean;
@@ -197,7 +197,7 @@ const StoreSettingsSchema: Schema = new Schema(
       codMaxOrder: { type: Number, default: 50000 },
       codOtpChannel: {
         type: String,
-        enum: ['phone', 'email', 'both'],
+        enum: ['none', 'disabled', 'phone', 'email', 'both'],
         default: 'phone',
       },
       enableRazorpay: { type: Boolean, default: true },

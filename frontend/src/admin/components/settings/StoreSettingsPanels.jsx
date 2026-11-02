@@ -678,16 +678,19 @@ export const PaymentSettingsPanel = ({ formData, handleChange, handleSave, savin
         </div>
         {formData.enableCOD && (
           <>
-            <FormGroup label="COD OTP Verification Channel">
+            <FormGroup
+              label="COD OTP Verification Channel"
+              helperText="Choose how customers verify Cash on Delivery orders, or disable OTP for instant checkout."
+            >
               <Select
                 name="codOtpChannel"
-                value={
-                  formData.codOtpChannel === 'both' ? 'phone' : formData.codOtpChannel || 'phone'
-                }
+                value={formData.codOtpChannel || 'phone'}
                 onChange={handleChange}
                 options={[
+                  { value: 'none', label: 'Disabled (Instant Checkout - No OTP Required)' },
+                  { value: 'email', label: 'Email (Verification Code via Email - Recommended)' },
+                  { value: 'both', label: 'Both (Customer chooses Phone SMS or Email)' },
                   { value: 'phone', label: 'Phone (SMS Verification)' },
-                  { value: 'email', label: 'Email (Verification Code)' },
                 ]}
               />
             </FormGroup>
@@ -804,18 +807,19 @@ export const PaymentsTaxesPanel = ({
           </div>
           {paymentsFormData.enableCOD && (
             <>
-              <FormGroup label="COD OTP Verification Channel">
+              <FormGroup
+                label="COD OTP Verification Channel"
+                helperText="Choose how customers verify Cash on Delivery orders, or disable OTP for instant checkout."
+              >
                 <Select
                   name="codOtpChannel"
-                  value={
-                    paymentsFormData.codOtpChannel === 'both'
-                      ? 'phone'
-                      : paymentsFormData.codOtpChannel || 'phone'
-                  }
+                  value={paymentsFormData.codOtpChannel || 'phone'}
                   onChange={onPaymentsChange}
                   options={[
+                    { value: 'none', label: 'Disabled (Instant Checkout - No OTP Required)' },
+                    { value: 'email', label: 'Email (Verification Code via Email - Recommended)' },
+                    { value: 'both', label: 'Both (Customer chooses Phone SMS or Email)' },
                     { value: 'phone', label: 'Phone (SMS Verification)' },
-                    { value: 'email', label: 'Email (Verification Code)' },
                   ]}
                 />
               </FormGroup>
