@@ -607,9 +607,7 @@ export function ProductConfigurator({
             className="w-full h-[48px] sm:h-[52px] rounded-full flex items-center justify-center gap-2 sm:gap-2.5 font-sans font-bold text-[12.5px] sm:text-[13px] uppercase tracking-wider bg-[#283618] text-white hover:bg-[#1f2b13] shadow-md hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer px-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" strokeWidth={2.2} />
-            <span className="truncate">
-              {ctaLabel} • ₹{formatPrice(configuredUnitPrice * quantity)}
-            </span>
+            <span className="truncate">{ctaLabel}</span>
           </button>
 
           {secondaryAction}
