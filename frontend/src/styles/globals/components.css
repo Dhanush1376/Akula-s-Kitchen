@@ -352,8 +352,7 @@ img.image-fallback-active {
 }
 
 /* ─── Universal Mobile Toast Standardization ───
-   Strictly 1 single line on mobile phones, with a fixed uniform capsule width
-   and height that never fluctuates across different screen sizes. */
+   Centered toast container with dynamic height and clean wrapping for longer messages */
 @media (max-width: 1023px) {
   .toaster-container {
     width: 100vw !important;
@@ -374,15 +373,15 @@ img.image-fallback-active {
   .toaster-container .go2072408551 {
     width: auto !important;
     min-width: 0 !important;
-    max-width: min(348px, calc(100vw - 32px)) !important;
-    height: 42px !important;
+    max-width: min(420px, calc(100vw - 24px)) !important;
+    height: auto !important;
     min-height: 42px !important;
-    max-height: 42px !important;
-    border-radius: 9999px !important;
-    padding: 0 12px !important;
+    border-radius: 18px !important;
+    padding: 8px 14px !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
     margin: 0 auto !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -395,15 +394,16 @@ img.image-fallback-active {
   .toaster-container .go3958317564 {
     margin: 0 !important;
     padding: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    flex: 0 1 auto !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    flex: 1 1 auto !important;
     min-width: 0 !important;
     max-width: 100% !important;
     display: inline-flex !important;
     align-items: center !important;
-    line-height: 1 !important;
+    line-height: 1.35 !important;
     font-size: 11.5px !important;
     font-weight: 500 !important;
   }
@@ -412,9 +412,10 @@ img.image-fallback-active {
   .toaster-container p {
     font-size: 11.5px !important;
     font-weight: 500 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    line-height: 1 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.35 !important;
   }
 }

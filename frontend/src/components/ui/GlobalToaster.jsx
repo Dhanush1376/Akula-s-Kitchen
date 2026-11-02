@@ -12,7 +12,7 @@ export function GlobalToaster() {
   const recentMessagesRef = useRef(new Map());
 
   const isMobile = toastPosition === 'top-center';
-  const mobileMaxWidth = 'min(348px, calc(100vw - 32px))';
+  const mobileMaxWidth = 'min(420px, calc(100vw - 24px))';
 
   // Strict deduplication & single-toast enforcement on mobile
   useEffect(() => {
@@ -68,7 +68,7 @@ export function GlobalToaster() {
     };
   }, []);
 
-  // Admin styles (sharp edges, solid background)
+  // Admin styles (sharp edges on desktop, dynamic height for long messages)
   const adminStyle = {
     background: 'var(--admin-surface, #ffffff)',
     border: '1px solid var(--admin-border, #e5e7eb)',
@@ -76,24 +76,22 @@ export function GlobalToaster() {
     fontSize: '11.5px',
     fontFamily: 'var(--font-body)',
     fontWeight: '500',
-    borderRadius: isMobile ? '9999px' : 'var(--admin-radius-lg, 8px)',
-    padding: '0 12px',
+    borderRadius: isMobile ? '18px' : 'var(--admin-radius-lg, 8px)',
+    padding: '8px 14px',
     width: 'auto',
     minWidth: '0',
-    maxWidth: isMobile ? mobileMaxWidth : '380px',
-    height: '42px',
+    maxWidth: isMobile ? mobileMaxWidth : '460px',
     minHeight: '42px',
-    maxHeight: '42px',
+    height: 'auto',
     boxSizing: 'border-box',
     display: 'inline-flex',
     alignItems: 'center',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
     boxShadow: '0 8px 20px -3px rgba(0, 0, 0, 0.14), 0 2px 6px -1px rgba(0, 0, 0, 0.05)',
   };
 
-  // Storefront styles (dynamic capsule geometry matching text size, clean small 11.5px font)
+  // Storefront styles (clean modern pill geometry, dynamic height, no cutoff for long messages)
   const storefrontStyle = {
     background: '#ffffff',
     border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -101,20 +99,18 @@ export function GlobalToaster() {
     fontSize: '11.5px',
     fontFamily: 'var(--font-body)',
     fontWeight: '500',
-    borderRadius: '9999px',
-    padding: '0 12px',
+    borderRadius: '18px',
+    padding: '8px 14px',
     width: 'auto',
     minWidth: '0',
-    maxWidth: isMobile ? mobileMaxWidth : '380px',
-    height: '42px',
+    maxWidth: isMobile ? mobileMaxWidth : '460px',
     minHeight: '42px',
-    maxHeight: '42px',
+    height: 'auto',
     boxSizing: 'border-box',
     display: 'inline-flex',
     alignItems: 'center',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
     boxShadow: '0 8px 20px -3px rgba(0, 0, 0, 0.14), 0 2px 6px -1px rgba(0, 0, 0, 0.05)',
   };
 
@@ -141,7 +137,7 @@ export function GlobalToaster() {
             className="pointer-events-auto cursor-pointer transition-transform duration-150 active:scale-95 inline-flex justify-center"
             style={{
               width: 'auto',
-              maxWidth: isMobile ? mobileMaxWidth : '380px',
+              maxWidth: isMobile ? mobileMaxWidth : '460px',
               display: 'inline-flex',
               justifyContent: 'center',
             }}
@@ -152,24 +148,22 @@ export function GlobalToaster() {
                 ...t.style,
                 width: 'auto',
                 minWidth: '0',
-                maxWidth: isMobile ? mobileMaxWidth : '380px',
-                height: '42px',
+                maxWidth: isMobile ? mobileMaxWidth : '460px',
                 minHeight: '42px',
-                maxHeight: '42px',
-                borderRadius: '9999px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                padding: '0 12px',
+                height: 'auto',
+                borderRadius: '18px',
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+                padding: '8px 14px',
                 boxSizing: 'border-box',
                 display: 'inline-flex',
                 alignItems: 'center',
               }}
             >
               {({ icon, message }) => (
-                <div className="inline-flex items-center gap-2 w-auto h-full min-w-0 max-w-full overflow-hidden select-none">
+                <div className="inline-flex items-center gap-2.5 w-auto min-h-[26px] min-w-0 max-w-full select-none">
                   <span className="shrink-0 flex items-center justify-center scale-90">{icon}</span>
-                  <span className="text-[11.5px] sm:text-[12px] font-medium text-neutral-800 dark:text-neutral-200 truncate whitespace-nowrap overflow-hidden text-ellipsis leading-none tracking-normal">
+                  <span className="text-[11.5px] sm:text-[12px] font-medium text-neutral-800 dark:text-neutral-200 break-words whitespace-normal leading-snug tracking-normal">
                     {message}
                   </span>
                   {t.type !== 'loading' && (

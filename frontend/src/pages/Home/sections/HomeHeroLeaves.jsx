@@ -159,12 +159,26 @@ export function HomeHeroLeaves() {
     const measure = () => {
       frame = 0;
       const origin = stage.getBoundingClientRect();
-      const text = page.querySelector('.ak-today__head > :first-child')?.getBoundingClientRect();
+      // Measure the words themselves (the date line and the title), not their rows, which
+      // stretch across the page and would push the leaf out to the screen edge
+      const textBoxes = ['.ak-today__eyebrow', '.ak-today__title']
+        .map((selector) => page.querySelector(selector))
+        .filter(Boolean)
+        .map((el) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect();
+        })
+        .filter((r) => r.width && r.height);
       const grid = page.querySelector('.ak-today__grid')?.getBoundingClientRect();
       // Without a hero (the admin can hide it), stay above wherever the content starts
       const contentTop = parseFloat(getComputedStyle(page).paddingTop) || 130;
-      const band = text?.height ? text.top - origin.top : contentTop + 6;
-      const clear = text?.width ? text.right - origin.left : origin.width;
+      const band = textBoxes.length
+        ? Math.min(...textBoxes.map((r) => r.top)) - origin.top
+        : contentTop + 6;
+      const clear = textBoxes.length
+        ? Math.max(...textBoxes.map((r) => r.right)) - origin.left
+        : origin.width;
       const floor = grid?.height ? grid.top - origin.top : band + 24;
       stage.style.setProperty('--hl-band', `${Math.round(band)}px`);
       stage.style.setProperty('--hl-clear', `${Math.round(clear)}px`);
