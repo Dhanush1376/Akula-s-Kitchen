@@ -164,17 +164,30 @@ export function TopNavbar() {
   const activeCategory = searchParams.get('category');
   const [chipsScrolled, setChipsScrolled] = useState(false);
 
-  // Publish the real header height so pages can offset content beneath the fixed bar
+  // Publish the real header height and top pill inset so drawers & pages align cleanly
   const navRef = React.useRef(null);
+  const navPillRef = React.useRef(null);
   useEffect(() => {
     const el = navRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return undefined;
-    const publish = () =>
+    const publish = () => {
       document.documentElement.style.setProperty('--ak-header-h', `${el.offsetHeight}px`);
+      if (navPillRef.current) {
+        const topOffset = navPillRef.current.offsetTop;
+        if (topOffset > 0) {
+          document.documentElement.style.setProperty('--ak-top-nav-top', `${topOffset}px`);
+        }
+      }
+    };
     publish();
     const ro = new ResizeObserver(publish);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener('resize', publish);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', publish);
+      document.documentElement.style.removeProperty('--ak-top-nav-top');
+    };
   }, []);
 
   const adminRoles = [
@@ -254,7 +267,7 @@ export function TopNavbar() {
     resetScrollDirection();
   }, [location.pathname]);
 
-  useScrollLock(isOpen && isMobile);
+  useScrollLock(isOpen && isMobileOrTablet);
 
   // Handle mobile menu focus trap and escape key
   useEffect(() => {
@@ -266,7 +279,7 @@ export function TopNavbar() {
     };
     window.addEventListener('keydown', handleGlobalEscape);
 
-    if (isOpen && isMobile) {
+    if (isOpen && isMobileOrTablet) {
       mobileTriggerRef.current = document.activeElement;
 
       const focusableElements = mobileMenuRef.current?.querySelectorAll(
@@ -303,7 +316,7 @@ export function TopNavbar() {
     return () => {
       window.removeEventListener('keydown', handleGlobalEscape);
     };
-  }, [isOpen, isMobile]);
+  }, [isOpen, isMobileOrTablet]);
 
   // Site navigation pages mapped directly from storefront routes
   const navLinks = [
@@ -389,10 +402,13 @@ export function TopNavbar() {
         className={`top-navbar fixed top-0 left-0 right-0 w-full transition-transform duration-300 pointer-events-none ${
           hideNavbar ? '-translate-y-full' : 'translate-y-0'
         }`}
-        style={{ zIndex: 125 }}
+        style={{ zIndex: 'var(--z-sticky)' }}
       >
         <div className="max-w-[1400px] lg:max-w-[1120px] mx-auto px-3 sm:px-6 pt-3.5 sm:pt-4 md:pt-5 lg:pt-4 pb-1.5 sm:pb-2 pointer-events-auto">
-          <div className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5">
+          <div
+            ref={navPillRef}
+            className="bg-white/70 backdrop-blur-2xl backdrop-saturate-180 border border-neutral-200 rounded-2xl sm:rounded-3xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1.5px_rgba(255,255,255,0.95)] flex items-center gap-3 sm:gap-4 md:gap-5"
+          >
             {/* Big Circular Logo spanning full height on left */}
             <Link to="/" className="shrink-0 flex items-center self-center group pl-0.5 sm:pl-1">
               <BrandLogo
@@ -707,10 +723,10 @@ export function TopNavbar() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: '110%', opacity: 0 }}
                   transition={{ type: 'spring', damping: 28, stiffness: 260, mass: 0.8 }}
-                  className="fixed right-3 sm:right-4 top-[calc(var(--ak-header-h,72px)+8px)] sm:top-[calc(var(--ak-header-h,76px)+10px)] bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+20px+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+22px+env(safe-area-inset-bottom,0px))] w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] h-[calc(100dvh-var(--ak-header-h,72px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-28px-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-var(--ak-header-h,76px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] max-h-[calc(100dvh-var(--ak-header-h,72px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-28px-env(safe-area-inset-bottom,0px))] sm:max-h-[calc(100dvh-var(--ak-header-h,76px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 py-4 flex flex-col overflow-y-auto overflow-x-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-2xl sm:rounded-3xl border border-black/[0.08]"
+                  className="fixed right-3 sm:right-4 top-[var(--ak-top-nav-top,14px)] sm:top-[var(--ak-top-nav-top,16px)] md:top-[var(--ak-top-nav-top,20px)] bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(0.875rem+env(safe-area-inset-bottom,0px))] w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] bg-white/95 backdrop-blur-2xl z-[120] lg:hidden px-4 sm:px-5 py-4 flex flex-col overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.22)] rounded-2xl sm:rounded-3xl border border-black/[0.08]"
                 >
                   {/* Drawer Header */}
-                  <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06]">
+                  <div className="flex justify-between items-center pb-4 mb-3 border-b border-black/[0.06] shrink-0">
                     <BrandLogo size="50px" />
                     <button
                       onClick={() => setIsOpen(false)}
@@ -722,7 +738,7 @@ export function TopNavbar() {
                   </div>
 
                   {/* Navigation List */}
-                  <div className="flex-grow flex flex-col justify-start items-start w-full">
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar flex flex-col justify-start items-start w-full">
                     <ul className="relative z-10 flex flex-col items-start w-full divide-y divide-black/[0.06]">
                       {navLinks.map((link, idx) => {
                         const active = isActive(link.href);
@@ -872,7 +888,7 @@ export function TopNavbar() {
 
                   {/* Persistent Install App CTA Button inside Mobile Drawer */}
                   {!isStandalone && !isInstalled && (
-                    <div className="w-full mt-auto pt-3 pb-2.5">
+                    <div className="w-full pt-3 pb-2.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => {
@@ -905,7 +921,7 @@ export function TopNavbar() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.3 }}
-                    className="w-full pt-3.5 border-t border-black/[0.06]"
+                    className="w-full pt-3.5 border-t border-black/[0.06] shrink-0"
                   >
                     <div className="flex items-center justify-between w-full px-1">
                       {/* Left: Utilities */}

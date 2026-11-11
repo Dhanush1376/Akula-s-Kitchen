@@ -94,7 +94,7 @@ export function CartDrawer({ isOpen, onClose }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             onClick={onClose}
-            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[115]"
+            className="fixed -inset-x-0 -top-40 -bottom-40 bg-black/60 sm:bg-black/40 backdrop-blur-xs z-[200]"
           />
 
           {/* Drawer Panel */}
@@ -113,10 +113,10 @@ export function CartDrawer({ isOpen, onClose }) {
                 onClose();
               }
             }}
-            className="fixed right-3 sm:right-4 lg:right-4 top-[calc(var(--ak-header-h,72px)+8px)] sm:top-[calc(var(--ak-header-h,76px)+10px)] lg:top-[calc(var(--ak-header-h,76px)+12px)] bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+20px+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))+22px+env(safe-area-inset-bottom,0px))] lg:bottom-4 w-[calc(100vw-24px)] max-w-[320px] sm:max-w-[340px] lg:max-w-[380px] h-[calc(100dvh-var(--ak-header-h,72px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-28px-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-var(--ak-header-h,76px)-var(--ak-bottom-nav-h,var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] lg:h-[calc(100dvh-var(--ak-header-h,76px)-28px)] max-h-[calc(100dvh-var(--ak-header-h,72px)-var(--bottom-nav-height,65px)-28px-env(safe-area-inset-bottom,0px))] sm:max-h-[calc(100dvh-var(--ak-header-h,76px)-var(--bottom-nav-height,65px))-32px-env(safe-area-inset-bottom,0px))] lg:max-h-[calc(100dvh-var(--ak-header-h,76px)-28px)] bg-white/95 backdrop-blur-2xl z-[120] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.22)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] font-body overflow-hidden"
+            className="fixed right-3 sm:right-4 top-[var(--ak-top-nav-top,14px)] sm:top-[var(--ak-top-nav-top,16px)] md:top-[var(--ak-top-nav-top,20px)] lg:top-[var(--ak-top-nav-top,16px)] bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(0.875rem+env(safe-area-inset-bottom,0px))] lg:bottom-4 w-[calc(100vw-24px)] max-w-[360px] sm:max-w-[380px] bg-white/95 backdrop-blur-2xl z-[210] flex flex-col shadow-[0_16px_50px_rgba(0,0,0,0.22)] touch-pan-y overscroll-contain rounded-2xl sm:rounded-3xl border border-black/[0.08] font-body overflow-hidden"
           >
             {/* Header */}
-            <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md">
+            <div className="flex justify-between items-center px-4 sm:px-4.5 py-3.5 border-b border-black/[0.06] bg-white/80 sticky top-0 z-10 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-2">
                 <span
                   className="font-display text-[15px] sm:text-[16px] font-bold text-[#283618] leading-none"
@@ -144,7 +144,7 @@ export function CartDrawer({ isOpen, onClose }) {
             </div>
 
             {/* Items List */}
-            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-3.5 sm:px-4 pt-3 pb-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-black/10 hover:scrollbar-thumb-black/20">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-3.5 sm:px-4 pt-3 pb-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-black/10 hover:scrollbar-thumb-black/20">
               {loading && items.length === 0 ? (
                 <div className="space-y-3">
                   {Array.from({ length: Math.max(1, cartCount || 3) }).map((_, i) => (
@@ -387,12 +387,7 @@ export function CartDrawer({ isOpen, onClose }) {
 
             {/* Footer with Totals & Promotions */}
             {items.length > 0 && (
-              <div
-                className="p-3.5 sm:p-4 pt-2.5 border-t border-black/[0.04] space-y-1.5 bg-white/90 backdrop-blur-xl relative flex-shrink-0"
-                style={{
-                  paddingBottom: `calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))`,
-                }}
-              >
+              <div className="p-3.5 sm:p-4 pt-2.5 pb-3.5 sm:pb-4 border-t border-black/[0.04] space-y-1.5 bg-white/90 backdrop-blur-xl relative flex-shrink-0">
                 {/* Subtotal */}
                 <div className="flex justify-between items-center text-[12px]">
                   <span className="font-body text-neutral-700 font-bold">Subtotal</span>
