@@ -290,22 +290,6 @@ export function Menu() {
 
   const isSelectedDayLive = selectedDayKey === effectiveSchedule.effectiveDayKey;
 
-  // Selected day's badge text from schedule or fallback
-  const dayBadgeText = useMemo(() => {
-    const customBadge = menuConfig.weeklySchedule?.[selectedDayKey]?.badgeText;
-    if (customBadge && customBadge.trim()) return customBadge.trim();
-    if (isSelectedDayLive) {
-      return effectiveSchedule.isTomorrow ? "Tomorrow's Special" : "Today's Special";
-    }
-    return `${selectedDayMeta?.label || 'Day'}'s Special`;
-  }, [
-    menuConfig.weeklySchedule,
-    selectedDayKey,
-    isSelectedDayLive,
-    effectiveSchedule.isTomorrow,
-    selectedDayMeta?.label,
-  ]);
-
   const { data, isPending, isError, refetch } = useProducts({ limit: 200 });
 
   const activeProducts = useMemo(() => {
@@ -491,8 +475,8 @@ export function Menu() {
           id="menu-top"
           className="mb-6 lg:mb-8 pt-2 sm:pt-4 pb-4 sm:pb-6 border-b border-[#283618]/12"
         >
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div>
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1">
               <nav
                 aria-label="Breadcrumb"
                 className="text-[7.5px] sm:text-[8px] uppercase font-medium tracking-[0.14em] text-[#283618]/50 mb-2 flex items-center gap-1.5 select-none"
@@ -504,12 +488,7 @@ export function Menu() {
                 <span className="text-[#283618]/70 font-semibold">Menu</span>
               </nav>
 
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-[0.14em] bg-[#f7bb0e]/20 text-[#283618] border border-[#f7bb0e]/40 mb-2">
-                <Sparkles className="w-3 h-3 text-[#c89611]" />
-                {dayBadgeText}
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-[#283618] tracking-tight">
+              <h1 className="text-[28px] sm:text-4xl lg:text-5xl font-extrabold font-display text-[#283618] tracking-tight leading-tight">
                 {title}
               </h1>
               {subtitle && (
