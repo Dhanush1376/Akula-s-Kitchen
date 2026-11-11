@@ -382,6 +382,21 @@ export function Menu() {
     setActive('all');
   }, [selectedDayKey, setActive]);
 
+  const calendarScrollerRef = useRef(null);
+  const selectedDayBtnRef = useRef(null);
+
+  // Keep the selected day centered inside the horizontal mobile strip without scrolling the page
+  useEffect(() => {
+    const container = calendarScrollerRef.current;
+    const btn = selectedDayBtnRef.current;
+    if (!container || !btn || container.scrollWidth <= container.clientWidth) return;
+    const targetLeft = btn.offsetLeft - container.clientWidth / 2 + btn.offsetWidth / 2;
+    container.scrollTo({
+      left: Math.max(0, targetLeft),
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
+  }, [selectedDayKey]);
+
   const dateInfo = useMemo(() => {
     if (selectedDayMeta?.date) {
       const d = selectedDayMeta.date;
@@ -526,26 +541,48 @@ export function Menu() {
         {/* Weekly Menu Calendar Navigation Strip */}
         <section
           aria-label="Weekly Menu Calendar"
-          className="mb-8 p-3.5 sm:p-4 rounded-2xl bg-[#fdfbf7] border border-[#283618]/12 shadow-xs"
+          className="mb-7 sm:mb-9 p-3.5 sm:p-5 rounded-[18px] bg-[#fdfbf7] border border-[#283618]/12 shadow-[0_2px_12px_rgba(40,54,24,0.04)]"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-[#283618]/8 text-xs">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#283618]" />
-              <span className="font-display font-bold uppercase tracking-wider text-[#283618]">
-                Weekly Menu Rotation
-              </span>
-              {effectiveSchedule.cutoffDisplay && (
-                <span className="text-[11px] text-[#4b5563] hidden sm:inline">
-                  • Ordering cutoff: {effectiveSchedule.cutoffDisplay}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3 mb-3.5 border-b border-[#283618]/8">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7.5 h-7.5 rounded-[8px] bg-[#283618]/8 text-[#283618] flex items-center justify-center shrink-0">
+                <Clock className="w-3.5 h-3.5" strokeWidth={2.2} />
+              </div>
+              <div className="min-w-0">
+                <span className="block font-display font-extrabold text-[12px] sm:text-[13px] uppercase tracking-[0.08em] text-[#283618] leading-tight">
+                  Weekly Schedule
                 </span>
-              )}
+                {effectiveSchedule.cutoffDisplay && (
+                  <span className="block text-[10.5px] sm:text-[11px] text-[#4b5563] font-normal leading-tight mt-0.5">
+                    Ordering cutoff: {effectiveSchedule.cutoffDisplay}
+                  </span>
+                )}
+              </div>
             </div>
-            <span className="text-[11px] text-[#4b5563]">
-              Select a day to view its daily batch specials
-            </span>
+
+            {selectedDayKey !== effectiveSchedule.effectiveDayKey ? (
+              <button
+                type="button"
+                onClick={() => handleSelectDay(effectiveSchedule.effectiveDayKey)}
+                className="min-h-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#283618] text-white hover:bg-[#1f2b13] text-[10px] font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer shrink-0"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e] animate-pulse" />
+                <span>Back to {effectiveSchedule.isTomorrow ? 'Tomorrow' : 'Today'}</span>
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#f7bb0e]/15 border border-[#f7bb0e]/35 text-[10px] font-sans font-bold uppercase tracking-wider text-[#283618] shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f7bb0e] animate-pulse" />
+                <span>
+                  {selectedDayMeta?.label} · {selectedDayMeta?.formattedDate}
+                </span>
+              </span>
+            )}
           </div>
 
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+          <div
+            ref={calendarScrollerRef}
+            className="relative flex gap-2 overflow-x-auto no-scrollbar snap-x py-0.5 sm:grid sm:grid-cols-7 sm:gap-2.5 sm:overflow-visible"
+          >
             {weekDays.map((d) => {
               const isSelected = d.key === selectedDayKey;
               const isLiveDay = d.key === effectiveSchedule.effectiveDayKey;
@@ -554,79 +591,74 @@ export function Menu() {
               return (
                 <button
                   key={d.key}
+                  ref={isSelected ? selectedDayBtnRef : null}
                   type="button"
                   onClick={() => handleSelectDay(d.key)}
                   aria-pressed={isSelected}
-                  className={`flex flex-col items-center justify-center py-2 sm:py-2.5 px-1 rounded-xl transition-all duration-200 border text-center cursor-pointer ${
+                  className={`shrink-0 w-[74px] sm:w-auto snap-center flex flex-col items-center justify-between py-2.5 px-1.5 rounded-[12px] transition-all duration-200 border text-center cursor-pointer ${
                     isSelected
-                      ? 'bg-[#283618] text-white border-[#283618] shadow-md shadow-[#283618]/20 scale-[1.02]'
-                      : 'bg-white hover:bg-[#f7bb0e]/10 text-[#283618] border-[#283618]/10 hover:border-[#283618]/30'
+                      ? 'bg-[#283618] text-white border-[#283618] shadow-[0_6px_16px_rgba(40,54,24,0.2)]'
+                      : isLiveDay
+                        ? 'bg-[#f7bb0e]/10 hover:bg-[#f7bb0e]/18 text-[#283618] border-[#f7bb0e]/50'
+                        : count === 0
+                          ? 'bg-white/60 hover:bg-white text-[#283618]/50 hover:text-[#283618]/80 border-[#283618]/8'
+                          : 'bg-white hover:bg-[#fdfbf7] text-[#283618] border-[#283618]/12 hover:border-[#283618]/30'
                   }`}
                 >
                   <span
-                    className={`text-[9px] sm:text-[10px] font-sans font-bold uppercase tracking-wider ${
-                      isSelected ? 'text-[#f7bb0e]' : 'text-[#4b5563]'
+                    className={`h-3.5 inline-flex items-center justify-center gap-1 text-[10px] font-sans font-extrabold uppercase tracking-[0.12em] leading-none ${
+                      isSelected
+                        ? 'text-[#f7bb0e]'
+                        : isLiveDay
+                          ? 'text-[#9a7000]'
+                          : 'text-[#4b5563]'
                     }`}
                   >
-                    {d.shortName}
+                    {d.short}
+                    {isLiveDay && (
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          isSelected ? 'bg-[#f7bb0e]' : 'bg-[#e0a800]'
+                        }`}
+                        aria-hidden="true"
+                      />
+                    )}
                   </span>
-                  <span className="font-display font-extrabold text-sm sm:text-lg leading-tight my-0.5">
+
+                  <span className="font-display font-extrabold text-[19px] sm:text-[21px] leading-none my-1.5 tabular-nums">
                     {d.dayNumber}
                   </span>
-                  <span
-                    className={`text-[8.5px] sm:text-[9.5px] font-sans font-semibold uppercase tracking-tight ${
-                      isSelected ? 'text-white/80' : 'text-[#283618]/60'
-                    }`}
-                  >
-                    {count} {count === 1 ? 'dish' : 'dishes'}
+
+                  <span className="h-5 flex items-center justify-center">
+                    {isLiveDay ? (
+                      <span
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[8.5px] font-sans font-extrabold uppercase tracking-[0.03em] leading-none whitespace-nowrap ${
+                          isSelected
+                            ? 'bg-[#f7bb0e] text-[#283618]'
+                            : 'bg-[#283618]/10 text-[#283618]'
+                        }`}
+                      >
+                        {effectiveSchedule.isTomorrow ? 'Next' : 'Today'} · {count}
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-[10px] font-sans font-semibold leading-none whitespace-nowrap ${
+                          isSelected
+                            ? 'text-white/80'
+                            : count === 0
+                              ? 'text-[#283618]/40'
+                              : 'text-[#6b7163]'
+                        }`}
+                      >
+                        {count} {count === 1 ? 'dish' : 'dishes'}
+                      </span>
+                    )}
                   </span>
-                  {isLiveDay && (
-                    <span
-                      className={`mt-1 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-bold uppercase tracking-wider ${
-                        isSelected
-                          ? 'bg-[#f7bb0e] text-[#283618]'
-                          : 'bg-[#283618]/10 text-[#283618]'
-                      }`}
-                    >
-                      {effectiveSchedule.isTomorrow ? 'Next' : 'Today'}
-                    </span>
-                  )}
                 </button>
               );
             })}
           </div>
         </section>
-
-        {/* Section Chips on Mobile */}
-        {sections.length > 1 && (
-          <div className="menu-chips-wrap lg:hidden mb-6">
-            <div className="menu-chips">
-              <button
-                type="button"
-                onClick={() => {
-                  setActive('all');
-                  scrollToSection('all');
-                }}
-                className={`menu-chip${active === 'all' || !active ? ' menu-chip--active' : ''}`}
-              >
-                All ({total})
-              </button>
-              {sections.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    setActive(s.id);
-                    scrollToSection(s.id);
-                  }}
-                  className={`menu-chip${active === s.id ? ' menu-chip--active' : ''}`}
-                >
-                  {s.name} ({s.items.length})
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Desktop: the sections, in the policy sidebar's card */}
