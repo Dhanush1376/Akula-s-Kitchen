@@ -182,6 +182,9 @@ const AdminRecycleBin = lazy(() =>
 );
 
 const InvoicePreviewPage = lazy(() => import('../pages/InvoicePreviewPage'));
+const IntroAnimationPreview = lazy(() =>
+  import('../pages/IntroAnimationPreview').then((m) => ({ default: m.IntroAnimationPreview })),
+);
 
 export function AppRoutes() {
   return (
@@ -203,6 +206,15 @@ export function AppRoutes() {
             {import.meta.env.DEV && (
               <Route path="/invoice-preview" element={<InvoicePreviewPage />} />
             )}
+            {/* Temporary intro animation preview route until approved */}
+            <Route
+              path="/introanimation"
+              element={
+                <Suspense fallback={<div className="min-h-screen bg-[#faf7f0]" />}>
+                  <IntroAnimationPreview />
+                </Suspense>
+              }
+            />
             <Route element={<MaintenanceGate />}>
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Home />} />
